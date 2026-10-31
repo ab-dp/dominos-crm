@@ -10,7 +10,7 @@ import { METHOD_LABEL, STATUS_LABEL } from '../../data/types';
 import { FixButton, OrderMarks } from './OrderActions';
 import './OrdersTable.css';
 
-export function OrdersTable({ rows, showDate = true, emptyText, caption }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string }) {
+export function OrdersTable({ rows, showDate = true, emptyText, caption, density = 'dense' }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string; density?: 'dense' | 'comfy' }) {
   const panel = usePanel();
   const { update, updateMany } = useStore();
   const [selected, setSelected] = useState<number[]>([]);
@@ -51,7 +51,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption }: { row
           <button className="bulkbar__clear" onClick={() => setSelected([])}>ניקוי בחירה</button>
         </div>
       )}
-      <table className="otable">
+      <table className={`otable otable--${density}`}>
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr>

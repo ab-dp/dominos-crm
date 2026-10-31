@@ -81,3 +81,32 @@ button.info__item:hover { border-color: var(--gray-300); color: var(--gray-900);
   .tl__marks { display: none; }
 }
 .today__grid > * { min-width: 0; }
+
+/* ---------- כותרת אישית ---------- */
+.today__date { margin: 0 0 2px; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
+.today__summary { margin: 4px 0 0; color: var(--gray-600); }
+.today__summary b { font-weight: 600; }
+.today__summary .is-critical { color: var(--danger-fg); }
+.today__summary .is-urgent { color: var(--urgent-fg); }
+
+/* ---------- התקדמות משימות הבוקר ---------- */
+.section-title { margin: 0; font-size: var(--text-card-title); font-weight: 600; }
+.morning__head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.progress { flex: 0 1 220px; height: 6px; border-radius: 3px; background: var(--gray-100); overflow: hidden; }
+.progress__bar { display: block; height: 100%; border-radius: 3px; background: var(--ok-fg); }
+.morning__count { font-size: var(--text-label); color: var(--gray-600); }
+
+/* ---------- דחוף עכשיו בקבוצות ---------- */
+.urgent { display: grid; gap: 12px; }
+.urgent ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.urgent__label { margin: 0 4px 6px; font-size: var(--text-label); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.urgent__label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+.urgent__label--critical { color: var(--danger-fg); }
+.urgent__label--critical::before { background: var(--danger-fg); }
+.urgent__label--urgent { color: var(--urgent-fg); }
+.urgent__label--urgent::before { background: #E8892F; }
+
+/* ---------- הבאה בתור ---------- */
+.tl__row.is-next { background: var(--brand-50); box-shadow: inset -3px 0 0 var(--brand-600); }
+.tl__next { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: 8px; padding: 1px 8px; border-radius: 10px; background: var(--white); color: var(--brand-800); font-size: 12px; font-weight: 600; vertical-align: 1px; }
+.tl__row.is-past:not(.is-closed) { opacity: 0.72; }

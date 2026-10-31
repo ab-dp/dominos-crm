@@ -180,3 +180,20 @@
   .user { padding-inline-start: 4px; border: 0; }
   .user__avatar { display: none; }
 }
+
+/* ---------- קבוצות בתפריט ---------- */
+.sidebar__groups { display: grid; gap: 14px; overflow-y: auto; }
+.navgroup__title {
+  margin: 0 0 4px; padding: 0 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--gray-600); opacity: 0.8;
+  white-space: nowrap; overflow: hidden;
+  transition: opacity var(--dur-quick) var(--ease), height var(--dur-standard) var(--ease);
+}
+.shell--collapsed .navgroup__title { opacity: 0; height: 0; margin: 0; }
+.shell--collapsed .navgroup + .navgroup { border-top: 1px solid var(--gray-100); padding-top: 10px; }
+.nav__count--alert { background: var(--danger-bg); color: var(--danger-fg); }
+@media (max-width: 900px) {
+  .navgroup__title { display: none; }
+  .navgroup + .navgroup { border-top: 1px solid var(--gray-100); padding-top: 10px; }
+}

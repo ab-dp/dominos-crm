@@ -60,3 +60,8 @@
   .otable .mark__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .otable .mark-btn { padding: 0 4px; }
 }
+
+/* צפיפות: צפוף (ברירת מחדל, ~44px) או מרווח */
+.otable--dense td { height: 46px; }
+.otable--dense .orow__sub { display: none; }
+.otable--comfy td { height: 60px; }

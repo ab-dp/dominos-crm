@@ -1,5 +1,5 @@
 /* תיק הזמנה בפאנל צדדי (אפיון 6.3): כותרת קבועה, "מה חסר" לחיץ, גלילה אחת עם עוגנים, טאב היסטוריה. */
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Maximize2, Minimize2, X } from 'lucide-react';
@@ -57,11 +57,26 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   const panel = usePanel();
   const toast = useToast();
   const [tab, setTab] = useState<'file' | 'history'>('file');
+  const [activeSec, setActiveSec] = useState<string>('details');
+  const [scrolled, setScrolled] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const gap = o.qAmount !== undefined && o.qAmount !== o.amount;
+
+  // הדגשת העוגן של החלק שקוראים כרגע
+  useEffect(() => {
+    const root = bodyRef.current;
+    if (!root || tab !== 'file') return;
+    const io = new IntersectionObserver((entries) => {
+      const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+      if (top) setActiveSec(top.target.id.replace('sec-', ''));
+    }, { root, rootMargin: '0px 0px -65% 0px' });
+    root.querySelectorAll('.sec').forEach((s) => io.observe(s));
+    return () => io.disconnect();
+  }, [tab, o.id]);
 
   return (
     <>
-      <header className="panel__head">
+      <header className={`panel__head ${scrolled ? 'is-scrolled' : ''}`}>
         <div className="panel__row">
           <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>הזמנה <Ltr>{o.id}</Ltr></Dialog.Title>
           <HealthBadge health={o.health} issues={o.issues} />
@@ -95,13 +110,13 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         <nav className="panel__tabs" aria-label="ניווט בתיק">
           <button className={tab === 'file' ? 'is-on' : ''} onClick={() => setTab('file')}>תיק</button>
           {tab === 'file' && ANCHORS.map(([id, label]) => (
-            <a key={id} href={`#sec-${id}`} onClick={(e) => { e.preventDefault(); document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{label}</a>
+            <a key={id} href={`#sec-${id}`} className={activeSec === id ? 'is-on' : ''} aria-current={activeSec === id ? 'location' : undefined} onClick={(e) => { e.preventDefault(); document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{label}</a>
           ))}
           <button className={`panel__tab-history ${tab === 'history' ? 'is-on' : ''}`} onClick={() => setTab('history')}>היסטוריה</button>
         </nav>
       </header>
 
-      <div className="panel__body" tabIndex={0} role="region" aria-label="תוכן תיק ההזמנה">
+      <div className="panel__body" ref={bodyRef} onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)} tabIndex={0} role="region" aria-label="תוכן תיק ההזמנה">
         {tab === 'history' ? <History o={o} /> : (
           <>
             <Section id="details" title="פרטים">

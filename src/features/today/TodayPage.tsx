@@ -45,13 +45,24 @@ export function TodayPage() {
   const nowIdx = todays.findIndex((o) => orderDateTime(o) > now);
   const month = today.slice(0, 7);
   const monthTotal = scope.filter((o) => o.date.startsWith(month) && o.status !== 'cancelled').reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+  const tasksDone = tasks.filter((t) => t.list.length === 0).length;
+  const criticalNow = urgent.filter((o) => o.health === 'critical');
+  const urgentOnly = urgent.filter((o) => o.health === 'urgent');
+  const nextUp = todays.find((o) => orderDateTime(o) > now && !CLOSED.includes(o.status));
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : 'ערב טוב';
 
   return (
     <div className="page today">
       <header className="page__head">
         <div>
-          <h1 className="page__title">היום</h1>
-          <p className="page__sub">יום {weekday(today)} · <Ltr>{fmtDate(today)}</Ltr></p>
+          <p className="today__date">יום {weekday(today)} · <Ltr>{fmtDate(today)}</Ltr></p>
+          <h1 className="page__title">{greeting}, {ME}</h1>
+          <p className="today__summary" aria-live="polite">
+            {urgent.length === 0
+              ? <>אין כרגע שום דבר דחוף <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>
+              : <><b className={criticalNow.length ? 'is-critical' : 'is-urgent'}><Ltr>{urgent.length}</Ltr> דורשות טיפול</b> <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום <span aria-hidden="true">·</span> משימות הבוקר <Ltr>{`${tasksDone}/4`}</Ltr></>}
+          </p>
         </div>
         <div className="page__head-end">
           <div className="seg" role="group" aria-label="הזמנות של">
@@ -63,7 +74,13 @@ export function TodayPage() {
 
       {/* ---------- משימות הבוקר ---------- */}
       <section aria-labelledby="h-morning" className="morning">
-        <h2 id="h-morning" className="sr-only">משימות הבוקר</h2>
+        <div className="morning__head">
+          <h2 id="h-morning" className="section-title">משימות הבוקר</h2>
+          <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={4} aria-valuenow={tasksDone} aria-label={`${tasksDone} מתוך 4 הושלמו`}>
+            <motion.span className="progress__bar" animate={{ width: `${(tasksDone / 4) * 100}%` }} transition={{ type: 'spring', stiffness: 200, damping: 30 }} />
+          </div>
+          <span className="morning__count"><Ltr>{tasksDone}</Ltr> מתוך <Ltr>4</Ltr></span>
+        </div>
         <AnimatePresence mode="wait" initial={false}>
           {allDone ? (
             <motion.div key="done" className="morning__done"
@@ -116,22 +133,29 @@ export function TodayPage() {
           {urgent.length === 0 ? (
             <p className="calm"><CircleCheckBig size={18} aria-hidden="true" /> אין כרגע שום דבר דחוף</p>
           ) : (
-            <ul className="urgent">
-              <AnimatePresence initial={false}>
-                {urgent.map((o) => (
-                  <motion.li key={o.id} layout={!reduce}
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.24 } }}
-                    className={`urgent__row urgent__row--${o.health}`}>
-                    <button className="urgent__main" onClick={(e) => panel.open(o.id, e.currentTarget)}>
-                      <span className="urgent__issue">{o.issues[0].label}</span>
-                      <span className="urgent__meta">{o.customerName} · {o.date === today ? 'היום' : o.date === tomorrow ? 'מחר' : <Ltr>{fmtDate(o.date)}</Ltr>} <Ltr>{o.time}</Ltr> · {o.branchName}</span>
-                    </button>
-                    <FixButton key={o.issues[0].rule} o={o} issue={o.issues[0]} onOpen={() => panel.open(o.id)} />
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </ul>
+            <div className="urgent">
+              {([['critical', 'חריגות', criticalNow], ['urgent', 'דחוף', urgentOnly]] as const).map(([level, title, list]) => list.length > 0 && (
+                <div key={level} className="urgent__group">
+                  <p className={`urgent__label urgent__label--${level}`}>{title} <Ltr>{list.length}</Ltr></p>
+                  <ul>
+                    <AnimatePresence initial={false}>
+                      {list.map((o) => (
+                        <motion.li key={o.id} layout={!reduce}
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                          exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.24 } }}
+                          className={`urgent__row urgent__row--${o.health}`}>
+                          <button className="urgent__main" onClick={(e) => panel.open(o.id, e.currentTarget)}>
+                            <span className="urgent__issue">{o.issues[0].label}</span>
+                            <span className="urgent__meta">{o.customerName} · {o.date === today ? 'היום' : o.date === tomorrow ? 'מחר' : <Ltr>{fmtDate(o.date)}</Ltr>} <Ltr>{o.time}</Ltr> · {o.branchName}</span>
+                          </button>
+                          <FixButton key={o.issues[0].rule} o={o} issue={o.issues[0]} onOpen={() => panel.open(o.id)} />
+                        </motion.li>
+                      ))}
+                    </AnimatePresence>
+                  </ul>
+                </div>
+              ))}
+            </div>
           )}
         </section>
 
@@ -144,7 +168,7 @@ export function TodayPage() {
           {todays.length === 0 ? <p className="calm">אין הזמנות להיום</p> : (
             <ol className="tl">
               {todays.map((o, i) => (
-                <TimelineRow key={o.id} o={o} isNowBefore={i === nowIdx} now={now} onOpen={(el) => panel.open(o.id, el)}
+                <TimelineRow key={o.id} o={o} isNowBefore={i === nowIdx} isNext={o.id === nextUp?.id} now={now} onOpen={(el) => panel.open(o.id, el)}
                   status={<StatusMenu status={o.status} onChange={(s) => update(o.id, { status: s }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <Ltr>{o.id}</Ltr></>)} />} />
               ))}
               {nowIdx === -1 && <NowLine now={now} />}
@@ -167,15 +191,19 @@ function NowLine({ now }: { now: Date }) {
   return <li className="tl__now" aria-label="עכשיו"><span>עכשיו <Ltr>{`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`}</Ltr></span></li>;
 }
 
-function TimelineRow({ o, isNowBefore, now, onOpen, status }: { o: OrderView; isNowBefore: boolean; now: Date; onOpen: (el: HTMLElement) => void; status: ReactNode }) {
+function TimelineRow({ o, isNowBefore, isNext, now, onOpen, status }: { o: OrderView; isNowBefore: boolean; isNext: boolean; now: Date; onOpen: (el: HTMLElement) => void; status: ReactNode }) {
   const past = orderDateTime(o) <= now;
+  const minutes = Math.round((orderDateTime(o).getTime() - now.getTime()) / 60000);
   return (
     <>
       {isNowBefore && <NowLine now={now} />}
-      <li className={`tl__row ${past ? 'is-past' : ''} ${CLOSED.includes(o.status) ? 'is-closed' : ''}`}>
+      <li className={`tl__row ${past ? 'is-past' : ''} ${isNext ? 'is-next' : ''} ${CLOSED.includes(o.status) ? 'is-closed' : ''}`}>
         <span className="tl__time"><Ltr>{o.time}</Ltr></span>
         <button className="tl__main" onClick={(e) => onOpen(e.currentTarget)}>
-          <span className="tl__cust">{o.customerName}</span>
+          <span className="tl__cust">
+            {o.customerName}
+            {isNext && <span className="tl__next">הבאה בתור · בעוד <Ltr>{minutes >= 60 ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}` : `${minutes}`}</Ltr> {minutes >= 60 ? 'שעות' : 'דק\''}</span>}
+          </span>
           <span className="tl__meta">{o.branchName} · <Money value={o.amount} /></span>
         </button>
         <HealthBadge health={o.health} issues={o.issues} compact />

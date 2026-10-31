@@ -36,3 +36,20 @@
 .card__head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--gray-100); }
 .card__title { margin: 0; font-size: var(--text-card-title); font-weight: 600; }
 .card__body { padding: 8px 16px 14px; }
+
+/* ---------- שורת סיכום מעל טבלה ---------- */
+.tablebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.tablebar__summary { margin: 0; font-size: var(--text-table); color: var(--gray-600); }
+.tablebar__summary b { color: var(--gray-900); font-weight: 600; }
+.tablebar__needs { color: var(--urgent-fg); font-weight: 600; }
+.tablebar__search {
+  margin-inline-start: auto;
+  display: flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 10px; min-width: min(320px, 100%);
+  border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white); color: var(--gray-600);
+  transition: border-color var(--dur-instant) var(--ease), box-shadow var(--dur-instant) var(--ease);
+}
+.tablebar__search:focus-within { border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0,120,174,0.18); }
+.tablebar__search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: var(--text-table); color: var(--gray-900); }
+.tablebar__search button { display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: var(--gray-100); color: var(--gray-600); cursor: pointer; }
+.seg--sm button { height: 30px; padding: 0 8px; display: grid; place-items: center; }

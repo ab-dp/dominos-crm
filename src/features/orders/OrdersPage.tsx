@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { Rows3, Rows4, Search, X } from 'lucide-react';
+import { usePref } from '../../lib/prefs';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
 import { HEALTH_RANK } from '../../rules-engine/health';
-import { Ltr, toISODate } from '../../lib/format';
+import { Ltr, fmtMoney, toISODate } from '../../lib/format';
 import { OrdersTable } from './OrdersTable';
 import '../pages.css';
 
@@ -45,7 +46,14 @@ export function OrdersPage() {
     } satisfies Record<Tab, OrderView[]>;
   }, [orders, today, tomorrow, rangeEnd]);
 
-  const rows = filter ? lists[tab].filter(filter.test) : lists[tab];
+  const [query, setQuery] = useState('');
+  const [density, setDensity] = usePref<'dense' | 'comfy'>('tableDensity', 'dense');
+  const q = query.trim().toLowerCase();
+  const rows = lists[tab]
+    .filter((o) => !filter || filter.test(o))
+    .filter((o) => !q || o.customerName.toLowerCase().includes(q) || String(o.id).includes(q) || (o.qNumber ?? '').toLowerCase().includes(q) || o.branchName.includes(q));
+  const total = rows.filter((o) => o.status !== 'cancelled').reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+  const needs = rows.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
   const set = (k: string, v: string | null) => {
     const p = new URLSearchParams(params);
     if (v === null) p.delete(k); else p.set(k, v);
@@ -85,7 +93,24 @@ export function OrdersPage() {
         </div>
       </div>
 
+      <div className="tablebar">
+        <p className="tablebar__summary" aria-live="polite">
+          <b><Ltr>{rows.length}</Ltr></b> הזמנות <span aria-hidden="true">·</span> <b><Ltr>{fmtMoney(total)}</Ltr></b>
+          {needs > 0 && <> <span aria-hidden="true">·</span> <span className="tablebar__needs"><Ltr>{needs}</Ltr> דורשות טיפול</span></>}
+        </p>
+        <label className="tablebar__search">
+          <Search size={16} aria-hidden="true" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="סינון בטבלה: לקוח, מס' הזמנה, Q, סניף" aria-label="סינון בטבלה" />
+          {query && <button onClick={() => setQuery('')} aria-label="נקה סינון"><X size={14} /></button>}
+        </label>
+        <div className="seg seg--sm" role="group" aria-label="צפיפות הטבלה">
+          <button className={density === 'dense' ? 'is-on' : ''} aria-pressed={density === 'dense'} onClick={() => setDensity('dense')} title="צפוף"><Rows4 size={16} aria-hidden="true" /><span className="sr-only">צפוף</span></button>
+          <button className={density === 'comfy' ? 'is-on' : ''} aria-pressed={density === 'comfy'} onClick={() => setDensity('comfy')} title="מרווח"><Rows3 size={16} aria-hidden="true" /><span className="sr-only">מרווח</span></button>
+        </div>
+      </div>
+
       <OrdersTable
+        density={density}
         rows={rows}
         showDate={tab !== 'today' && tab !== 'tomorrow'}
         caption={`הזמנות – ${TABS.find((t) => t[0] === tab)![1]}${filter ? ` – ${filter.label}` : ''}`}

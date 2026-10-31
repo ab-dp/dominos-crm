@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useMatch } from 'react-router-dom';
+import { Link, useLocation, useMatch } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   Bell, ChartColumn, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
 } from 'lucide-react';
@@ -9,6 +10,7 @@ import { useToast } from '../design/Toast';
 import { useStore } from '../data/store';
 import { ME } from '../data/mock';
 import { Ltr } from '../lib/format';
+import { usePref } from '../lib/prefs';
 import { CommandSearch } from './CommandSearch';
 import { usePanel } from './PanelContext';
 import { OrderPanel } from '../features/orders/OrderPanel';
@@ -16,11 +18,15 @@ import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
 
+type NavDef = { to: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { orders } = useStore();
   const toast = useToast();
   const panel = usePanel();
-  const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+  const reduce = useReducedMotion();
+  const [collapsed, setCollapsed] = usePref('sidebarCollapsed', false);
   const [searchOpen, setSearchOpen] = useState(false);
 
   useHotkey('/', () => setSearchOpen(true));
@@ -33,15 +39,30 @@ export function AppShell({ children }: { children: ReactNode }) {
     toast({ message: 'יצירת הזמנה (מהירה · מלאה · לקוח חדש) תיבנה בשלב 5' });
   }
 
-  const items: { to: string; label: string; icon: ReactNode; count?: number }[] = [
-    { to: '/today', label: 'היום', icon: <House size={20} />, count: urgentCount },
-    { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
-    { to: '/customers', label: 'לקוחות', icon: <Users size={20} /> },
-    { to: '/pricelists', label: 'מחירונים', icon: <Tags size={20} /> },
-    { to: '/exceptions', label: 'חריגים ומשימות', icon: <TriangleAlert size={20} />, count: urgentCount },
-    { to: '/reports', label: 'דוחות', icon: <ChartColumn size={20} /> },
-    { to: '/branches', label: 'סניפים ואשכולות', icon: <Store size={20} /> },
-    { to: '/settings', label: 'הגדרות', icon: <Settings size={20} /> },
+  const groups: { title: string; items: NavDef[] }[] = [
+    {
+      title: 'עבודה יומית',
+      items: [
+        { to: '/today', label: 'היום', icon: <House size={20} />, count: urgentCount, alert: critical.length > 0 },
+        { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
+        { to: '/exceptions', label: 'חריגים ומשימות', icon: <TriangleAlert size={20} />, count: urgentCount, alert: critical.length > 0 },
+      ],
+    },
+    {
+      title: 'מאגרים',
+      items: [
+        { to: '/customers', label: 'לקוחות', icon: <Users size={20} /> },
+        { to: '/pricelists', label: 'מחירונים', icon: <Tags size={20} /> },
+        { to: '/branches', label: 'סניפים ואשכולות', icon: <Store size={20} /> },
+      ],
+    },
+    {
+      title: 'ניהול',
+      items: [
+        { to: '/reports', label: 'דוחות', icon: <ChartColumn size={20} /> },
+        { to: '/settings', label: 'הגדרות', icon: <Settings size={20} /> },
+      ],
+    },
   ];
 
   return (
@@ -97,23 +118,30 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <nav className="sidebar" aria-label="ניווט ראשי">
-        <ul>
-          {items.map((it) => (
-            <li key={it.to}>
-              <NavItem to={it.to} label={it.label} collapsed={collapsed}>
-                <span className="nav__icon" aria-hidden="true">{it.icon}</span>
-                <span className="nav__label">{it.label}</span>
-                {!!it.count && <span className="nav__count"><Ltr>{it.count}</Ltr></span>}
-              </NavItem>
-            </li>
+        <div className="sidebar__groups">
+          {groups.map((g) => (
+            <div key={g.title} className="navgroup">
+              <p className="navgroup__title" aria-hidden={collapsed}>{g.title}</p>
+              <ul>
+                {g.items.map((it) => (
+                  <li key={it.to}>
+                    <NavItem to={it.to} label={it.label} collapsed={collapsed}>
+                      <span className="nav__icon" aria-hidden="true">{it.icon}</span>
+                      <span className="nav__label">{it.label}</span>
+                      {!!it.count && <span className={`nav__count ${it.alert ? 'nav__count--alert' : ''}`}><Ltr>{it.count}</Ltr></span>}
+                    </NavItem>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
         <div className="sidebar__foot">
           <NavItem to="/styleguide" label="מדריך סגנון" collapsed={collapsed} quiet>
             <span className="nav__icon" aria-hidden="true"><Palette size={20} /></span>
             <span className="nav__label">מדריך סגנון</span>
           </NavItem>
-          <button className="nav nav--quiet" onClick={() => setCollapsed((c) => !c)} aria-expanded={!collapsed} aria-label={collapsed ? 'הרחב תפריט' : 'קפל תפריט'}>
+          <button className="nav nav--quiet" onClick={() => setCollapsed(!collapsed)} aria-expanded={!collapsed} aria-label={collapsed ? 'הרחב תפריט' : 'קפל תפריט'}>
             <span className="nav__icon" aria-hidden="true">{collapsed ? <PanelRightOpen size={20} /> : <PanelRightClose size={20} />}</span>
             <span className="nav__label">קפל תפריט</span>
           </button>
@@ -122,7 +150,18 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main id="main" className="content" tabIndex={-1}>
         <div className="proto-banner" role="note">אב-טיפוס לחיץ · נתוני דמה · שעון הדגמה מתחיל ב-<Ltr>10:30</Ltr> · שינויים לא נשמרים ומתאפסים ברענון</div>
-        {children}
+        {/* מעבר רך בין מסכים: הופעה הדרגתית ותזוזה קטנה, בלי לעכב את העבודה */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.08 } }}
+            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} onPick={(id) => { setSearchOpen(false); panel.open(id, null); }} />

@@ -64,3 +64,8 @@
   .panel { width: 100vw; min-width: 0; }
   .kv { grid-template-columns: 1fr; gap: 0; }
 }
+
+.panel__head { position: relative; z-index: 1; transition: box-shadow var(--dur-standard) var(--ease); }
+.panel__head.is-scrolled { box-shadow: 0 6px 16px -10px rgba(20,24,31,0.25); }
+.panel__tabs a.is-on { color: var(--brand-800); border-bottom-color: var(--brand-600); font-weight: 600; }
+.panel__tabs a { transition: color var(--dur-quick) var(--ease), border-color var(--dur-quick) var(--ease); }
