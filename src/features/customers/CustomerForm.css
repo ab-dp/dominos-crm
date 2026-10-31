@@ -1,0 +1,37 @@
+.cform {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 48px);
+  display: flex; flex-direction: column;
+  background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-panel);
+  z-index: 61;
+  animation: dlg-in var(--dur-standard) var(--ease);
+}
+.cform__head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 8px; }
+.cform__head .udialog__title { margin: 0; font-size: var(--text-screen-title); }
+.cform__body { flex: 1; overflow: auto; padding: 0 20px 12px; }
+.cform__sec { border: 0; margin: 0; padding: 14px 0 6px; border-top: 1px solid var(--gray-100); }
+.cform__sec:first-child { border-top: 0; }
+.cform__sec legend { padding: 0; margin-bottom: 8px; font-size: var(--text-card-title); font-weight: 600; float: right; width: 100%; }
+.cform__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 10px; clear: both; }
+.cform__field { display: grid; gap: 4px; align-content: start; }
+.cform__field .input { height: 42px; }
+.cform__field .seg { width: fit-content; }
+.cform__field .seg button { height: 34px; }
+.cform__ta { height: auto !important; padding: 10px 12px; resize: vertical; font: inherit; line-height: 1.5; }
+.cform__err { font-size: var(--text-label); color: var(--danger-fg); font-weight: 500; }
+.cform__hint { font-size: var(--text-label); color: var(--brand-800); }
+.cform__twin { font-size: var(--text-label); justify-self: start; }
+.cform__check { height: 42px; }
+.input[aria-invalid="true"] { border-color: var(--danger-fg); box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12); }
+.cform__warn {
+  display: flex; gap: 10px; margin-top: 8px; padding: 12px 14px;
+  border-radius: var(--radius); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-table);
+  animation: pop-in var(--dur-quick) var(--ease);
+}
+.cform__warn svg { flex: none; margin-top: 2px; }
+.cform__warn ul { margin: 4px 0; padding-inline-start: 18px; }
+.cform__formerr { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; padding: 10px 12px; border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-table); }
+.cform__foot { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--gray-100); }
+.cform__live { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-label); color: var(--urgent-fg); }
+@media (max-width: 640px) { .cform__row { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .cform, .cform__warn { animation: none; } }

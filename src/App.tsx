@@ -15,6 +15,9 @@ import { CreditReportPage } from './features/reports/CreditReportPage';
 import { StyleGuidePage } from './features/styleguide/StyleGuidePage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { BranchesPage } from './features/branches/BranchesPage';
+import { CustomersPage } from './features/customers/CustomersPage';
+import { CustomerFile } from './features/customers/CustomerFile';
+import { PriceListsPage } from './features/pricelists/PriceListsPage';
 import { Placeholder, ReportsHub } from './features/Placeholder';
 
 export function App() {
@@ -56,8 +59,9 @@ function Gate() {
               <Route path="/reports/credit" element={<CreditReportPage />} />
               <Route path="/styleguide" element={<StyleGuidePage />} />
               <Route path="/settings/*" element={<SettingsPage />} />
-              <Route path="/customers" element={<Placeholder title="לקוחות" stage={4} />} />
-              <Route path="/pricelists" element={<Placeholder title="מחירונים" stage={4} />} />
+              <Route path="/customers" element={<CustomersPage />} />
+              <Route path="/customers/:id" element={<CustomerFile />} />
+              <Route path="/pricelists" element={<PriceListsPage />} />
               <Route path="/exceptions" element={<Placeholder title="חריגים ומשימות" stage={6} />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="*" element={<Navigate to="/today" replace />} />

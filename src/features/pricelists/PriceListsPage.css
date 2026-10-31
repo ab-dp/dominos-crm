@@ -1,0 +1,23 @@
+.pl-new { display: grid; gap: 8px; margin-bottom: 6px; }
+.pl-new .seg { justify-self: start; }
+.pl-new__actions { display: flex; gap: 6px; }
+.pl-item { height: auto; min-height: 48px; flex-wrap: wrap; padding: 8px 12px; }
+.pl-item .citem__count { flex-basis: 100%; margin: 0; text-align: start; }
+.pl-rename { flex: 1; max-width: 360px; }
+.pl-rename .input { flex: 1; }
+.pl-head-actions { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pl-price { width: 120px; }
+.pl-table td:nth-child(2) { width: 160px; }
+.pl-add {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  height: 44px; padding: 0 16px;
+  border: 0; border-top: 1px dashed var(--gray-300); background: var(--white);
+  font: inherit; font-weight: 500; color: var(--brand-600); cursor: pointer; text-align: start;
+}
+.pl-add:hover { background: var(--brand-50); }
+.pl-customers { padding: 14px 16px 16px; border-top: 1px solid var(--gray-100); }
+.pl-customers__title { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: var(--text-table); font-weight: 600; }
+.pl-customers__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pl-customers__list a { display: inline-flex; height: 28px; align-items: center; padding: 0 10px; border-radius: 14px; background: var(--gray-100); color: var(--gray-900); text-decoration: none; font-size: var(--text-label); }
+.pl-customers__list a:hover { background: var(--brand-50); color: var(--brand-800); }
+.pl-customers .muted { margin: 0; font-size: var(--text-label); }

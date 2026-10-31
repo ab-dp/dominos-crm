@@ -1,0 +1,10 @@
+.cust-skel { display: grid; gap: 10px; padding: 16px; }
+.cust-table td:last-child, .cust-table th:last-child { position: static; box-shadow: none; width: 40px; }
+.is-inactive-row td { color: var(--gray-600); }
+.cust-inactive { margin-inline-start: 8px; }
+.ctype { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--radius-tag); font-size: 12px; font-weight: 500; }
+.ctype--regular { background: var(--brand-50); color: var(--brand-800); }
+.ctype--occasional { background: var(--gray-100); color: var(--gray-600); }
+.shared-tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: 8px; background: var(--missing-bg); color: var(--missing-fg); font-size: 11px; font-weight: 600; }
+.po-tag { display: inline-grid; place-items: center; color: var(--brand-600); }
+.tablebar .seg button { display: inline-flex; align-items: center; gap: 6px; }

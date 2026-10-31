@@ -92,6 +92,72 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------- לקוחות (אפיון 6.5, 12, 13) ----------
+    // שדות טקסט חופשי לא מקבלים רצף של 13 ספרות ומעלה – כדי שאיש לא ירשום מספר כרטיס אשראי
+    function noCard(s) { return s is string && s.size() <= 2000 && !s.matches('.*[0-9]{13,}.*'); }
+    function taxPath(t) { return /databases/$(database)/documents/taxIds/$(t); }
+    function validCustomer(d, cid) {
+      return d.name is string && d.name.size() > 0 && d.name.size() <= 120
+        && d.type in ['regular', 'occasional']
+        && d.status in ['active', 'inactive', 'merged']
+        && d.taxId is string && d.taxId.size() <= 9
+        && (d.taxId == '' || (existsAfter(taxPath(d.taxId)) && getAfter(taxPath(d.taxId)).data.customerId == cid))
+        && d.paymentMethod is string
+        && d.accountPhone is string && d.accountPhone.size() <= 10
+        && d.poRequired is bool
+        && noCard(d.instructions) && noCard(d.billingInstructions)
+        && d.contacts is list && d.contacts.size() <= 30
+        && d.addresses is list && d.addresses.size() <= 30
+        && d.customPrices is list && d.customPrices.size() <= 500;
+    }
+
+    match /customers/{cid} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && validCustomer(request.resource.data, cid)
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isActive()
+        && validCustomer(request.resource.data, cid)
+        && request.resource.data.updatedBy == request.auth.uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'createdAt']);
+      allow delete: if false;
+
+      match /activity/{aid} {
+        allow read: if isActive();
+        allow create: if isActive()
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.kind in ['note', 'call', 'followup']
+          && noCard(request.resource.data.text) && request.resource.data.text.size() > 0;
+        allow update, delete: if false;
+      }
+    }
+
+    // ח.פ ייחודי: מסמך לכל ח.פ. יצירה כפולה נכשלת (נחשבת עדכון, ועדכון אסור).
+    match /taxIds/{taxId} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && taxId.matches('^[0-9]{5,9}$')
+        && request.resource.data.customerId is string
+        && getAfter(/databases/$(database)/documents/customers/$(request.resource.data.customerId)).data.taxId == taxId;
+      // שחרור ח.פ רק כשהלקוח שלו עובר לח.פ אחר באותה פעולה
+      allow delete: if isActive()
+        && getAfter(/databases/$(database)/documents/customers/$(resource.data.customerId)).data.taxId != taxId;
+      allow update: if false;
+    }
+
+    // ---------- מחירונים (אפיון 6.7) ----------
+    match /priceLists/{pid} {
+      allow read: if isActive();
+      allow create, update: if isActive()
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
+        && request.resource.data.kind in ['shared', 'unique']
+        && request.resource.data.active is bool
+        && request.resource.data.items is list && request.resource.data.items.size() <= 500
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+
     // ---------- הגדרות: רשימות וספים. כולם קוראים, רק מנהל משנה. ----------
     match /settings/{key} {
       allow read: if isActive();
