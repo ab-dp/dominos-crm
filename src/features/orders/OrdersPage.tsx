@@ -1,0 +1,96 @@
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { X } from 'lucide-react';
+import { useStore, type OrderView } from '../../data/store';
+import { CLOSED } from '../../data/types';
+import { HEALTH_RANK } from '../../rules-engine/health';
+import { Ltr, toISODate } from '../../lib/format';
+import { OrdersTable } from './OrdersTable';
+import '../pages.css';
+
+type Tab = 'today' | 'tomorrow' | 'future' | 'overdue' | 'archive';
+const TABS: [Tab, string][] = [['today', 'היום'], ['tomorrow', 'מחר'], ['future', 'עתידיות'], ['overdue', 'פתוחות שעבר מועדן'], ['archive', 'ארכיון']];
+const RANGES = [3, 7, 14, 30, 0] as const;
+
+export const FILTERS: Record<string, { label: string; test: (o: OrderView) => boolean }> = {
+  branch: { label: 'בלי אישור סניף', test: (o) => !o.branchApproval },
+  q: { label: 'לא הועברו ל-Q', test: (o) => !o.qNumber },
+  credit: { label: 'אשראי לחייב', test: (o) => o.method === 'credit' && o.payment === 'pending' },
+  issues: { label: 'עם חריג', test: (o) => o.health === 'critical' || o.health === 'urgent' },
+};
+
+const byTime = (a: OrderView, b: OrderView) => (a.date + a.time).localeCompare(b.date + b.time);
+const urgentFirst = (a: OrderView, b: OrderView) => HEALTH_RANK[b.health] - HEALTH_RANK[a.health] || byTime(a, b);
+
+export function OrdersPage() {
+  const { orders, now } = useStore();
+  const [params, setParams] = useSearchParams();
+  const tab = (params.get('tab') as Tab) || 'today';
+  const range = Number(params.get('range') ?? 7);
+  const filterKey = params.get('filter');
+  const filter = filterKey ? FILTERS[filterKey] : undefined;
+
+  const today = toISODate(now);
+  const tomorrow = toISODate(new Date(now.getTime() + 86400000));
+  const rangeEnd = range ? toISODate(new Date(now.getTime() + range * 86400000)) : '9999';
+
+  const lists = useMemo(() => {
+    const open = orders.filter((o) => !CLOSED.includes(o.status));
+    return {
+      today: open.filter((o) => o.date === today).sort(urgentFirst),
+      tomorrow: open.filter((o) => o.date === tomorrow).sort(urgentFirst),
+      future: open.filter((o) => o.date > tomorrow && o.date <= rangeEnd).sort(byTime),
+      overdue: open.filter((o) => o.date < today).sort(byTime),
+      archive: orders.filter((o) => CLOSED.includes(o.status)).sort((a, b) => byTime(b, a)),
+    } satisfies Record<Tab, OrderView[]>;
+  }, [orders, today, tomorrow, rangeEnd]);
+
+  const rows = filter ? lists[tab].filter(filter.test) : lists[tab];
+  const set = (k: string, v: string | null) => {
+    const p = new URLSearchParams(params);
+    if (v === null) p.delete(k); else p.set(k, v);
+    setParams(p, { replace: true });
+  };
+
+  return (
+    <div className="page">
+      <header className="page__head">
+        <h1 className="page__title">הזמנות</h1>
+      </header>
+
+      <div className="tabs" role="tablist" aria-label="תצוגת הזמנות">
+        {TABS.map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={tab === k} className={`tab ${tab === k ? 'is-on' : ''} ${k === 'overdue' && lists.overdue.length ? 'tab--alert' : ''}`} onClick={() => set('tab', k)}>
+            {label}
+            <span className="tab__count"><Ltr>{lists[k].length}</Ltr></span>
+          </button>
+        ))}
+      </div>
+
+      <div className="toolbar">
+        {tab === 'future' && (
+          <div className="seg" role="group" aria-label="טווח ימים">
+            {RANGES.map((r) => (
+              <button key={r} className={range === r ? 'is-on' : ''} aria-pressed={range === r} onClick={() => set('range', String(r))}>{r ? <><Ltr>{r}</Ltr> ימים</> : 'הכל'}</button>
+            ))}
+          </div>
+        )}
+        <div className="chips" role="group" aria-label="סינון מהיר">
+          {Object.entries(FILTERS).map(([k, f]) => (
+            <button key={k} className={`chip ${filterKey === k ? 'is-on' : ''}`} aria-pressed={filterKey === k} onClick={() => set('filter', filterKey === k ? null : k)}>
+              {f.label}
+              {filterKey === k && <X size={14} aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <OrdersTable
+        rows={rows}
+        showDate={tab !== 'today' && tab !== 'tomorrow'}
+        caption={`הזמנות – ${TABS.find((t) => t[0] === tab)![1]}${filter ? ` – ${filter.label}` : ''}`}
+        emptyText={filter ? `אין הזמנות: ${filter.label}` : tab === 'tomorrow' ? 'אין הזמנות למחר' : tab === 'overdue' ? 'אין הזמנות פתוחות שעבר מועדן ✓' : 'אין הזמנות בתצוגה הזו'}
+      />
+    </div>
+  );
+}
