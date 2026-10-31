@@ -3,6 +3,7 @@ import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { Placeholder } from '../Placeholder';
 import { UsersPage } from './UsersPage';
+import { ListsPage } from './ListsPage';
 
 export function SettingsPage() {
   const { isAdmin } = useAuth();
@@ -18,7 +19,7 @@ export function SettingsPage() {
       <Routes>
         <Route index element={<Navigate to="users" replace />} />
         <Route path="users" element={<UsersPage />} />
-        <Route path="lists" element={<Placeholder title="רשימות" stage={3}>ערוצי קבלה, סיבות ביטול, אמצעי תשלום וסוגי מסמכים.</Placeholder>} />
+        <Route path="lists" element={<ListsPage />} />
         <Route path="thresholds" element={<Placeholder title="ספי התראות" stage={6}>"שעות סמוכות", "היום או מחר" וספים נוספים לחריגים.</Placeholder>} />
       </Routes>
     </>

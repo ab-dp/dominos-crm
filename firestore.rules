@@ -52,6 +52,53 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ---------- סניפים ואשכולות (אפיון 6.10): כל משתמש פעיל מוסיף ועורך. אין מחיקה – רק "לא פעיל". ----------
+    function validName(d) { return d.name is string && d.name.size() > 0 && d.name.size() <= 60; }
+    function stampedByMe(d) { return d.updatedBy == request.auth.uid; }
+    function clusterExists(id) { return id is string && exists(/databases/$(database)/documents/clusters/$(id)); }
+    function validPhone(p) { return p is string && p.size() <= 10 && (p.size() == 0 || p.matches('^0[0-9]{8,9}$')); }
+
+    match /clusters/{id} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && validName(request.resource.data)
+        && request.resource.data.active == true
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly(['name', 'active', 'createdAt', 'createdBy']);
+      allow update: if isActive()
+        && validName(request.resource.data)
+        && request.resource.data.active is bool
+        && stampedByMe(request.resource.data)
+        && onlyChanges(['name', 'active', 'updatedAt', 'updatedBy']);
+      allow delete: if false;
+    }
+
+    match /branches/{id} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && validName(request.resource.data)
+        && clusterExists(request.resource.data.clusterId)
+        && validPhone(request.resource.data.phone)
+        && request.resource.data.active == true
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly(['name', 'clusterId', 'phone', 'active', 'createdAt', 'createdBy']);
+      allow update: if isActive()
+        && validName(request.resource.data)
+        && clusterExists(request.resource.data.clusterId)
+        && validPhone(request.resource.data.phone)
+        && request.resource.data.active is bool
+        && stampedByMe(request.resource.data)
+        && onlyChanges(['name', 'clusterId', 'phone', 'active', 'updatedAt', 'updatedBy']);
+      allow delete: if false;
+    }
+
+    // ---------- הגדרות: רשימות וספים. כולם קוראים, רק מנהל משנה. ----------
+    match /settings/{key} {
+      allow read: if isActive();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
     // כל השאר חסום עד שייבנה
     match /{document=**} {
       allow read, write: if false;

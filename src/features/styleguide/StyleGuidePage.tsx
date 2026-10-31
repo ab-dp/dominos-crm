@@ -4,6 +4,7 @@ import { Plus, Save, Trash2 } from 'lucide-react';
 import { Button, EmptyState, HealthBadge, MarkGlyph, RollingNumber, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { DominoTile } from '../../components/DominoTile';
+import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
 import { Ltr } from '../../lib/format';
 import '../pages.css';
 import './StyleGuidePage.css';
@@ -31,6 +32,7 @@ export function StyleGuidePage() {
   const [done, setDone] = useState(false);
   const [n, setN] = useState(4);
   const [replay, setReplay] = useState(0);
+  const [branch, setBranch] = useState<BranchChoice | null>(null);
 
   return (
     <div className="page sg">
@@ -112,6 +114,12 @@ export function StyleGuidePage() {
           <DominoTile key={replay} size={96} animate />
           <span className="muted">רגע המותג – רק במסכי הכניסה. כל התנועה מתבטלת ב"הפחתת תנועה".</span>
         </div>
+      </section>
+
+      <section className="card sg__sec">
+        <h2 className="card__title">בחירת סניף – כמו בטופס ההזמנה</h2>
+        <p className="muted" style={{ marginTop: -6 }}>נתונים אמיתיים מ"סניפים ואשכולות". הקלד שם שלא קיים כדי לראות את "+ הוסף סניף / אשכול חדש".</p>
+        <BranchPicker value={branch} onChange={setBranch} />
       </section>
 
       <section className="card sg__sec">

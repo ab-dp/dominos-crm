@@ -14,6 +14,7 @@ import { OrdersPage } from './features/orders/OrdersPage';
 import { CreditReportPage } from './features/reports/CreditReportPage';
 import { StyleGuidePage } from './features/styleguide/StyleGuidePage';
 import { SettingsPage } from './features/settings/SettingsPage';
+import { BranchesPage } from './features/branches/BranchesPage';
 import { Placeholder, ReportsHub } from './features/Placeholder';
 
 export function App() {
@@ -58,7 +59,7 @@ function Gate() {
               <Route path="/customers" element={<Placeholder title="לקוחות" stage={4} />} />
               <Route path="/pricelists" element={<Placeholder title="מחירונים" stage={4} />} />
               <Route path="/exceptions" element={<Placeholder title="חריגים ומשימות" stage={6} />} />
-              <Route path="/branches" element={<Placeholder title="סניפים ואשכולות" stage={3} />} />
+              <Route path="/branches" element={<BranchesPage />} />
               <Route path="*" element={<Navigate to="/today" replace />} />
             </Routes>
           </AppShell>
