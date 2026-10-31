@@ -1,0 +1,55 @@
+/* טוקנים של מערכת העיצוב – תוכנית הבנייה, סעיף 3 */
+:root {
+  /* מותג */
+  --brand-50: #EAF4FA;
+  --brand-600: #0078AE;
+  --brand-700: #00668F;
+  --brand-800: #004F70;
+  --brand-red: #E31937; /* רק בלוגו ובמסכי הכניסה */
+
+  /* ניטרליים */
+  --gray-25: #F7F8FA;
+  --gray-100: #EEF0F3;
+  --gray-300: #C9CED6;
+  --gray-600: #5B6472;
+  --gray-900: #14181F;
+  --white: #FFFFFF;
+
+  /* מצבים: רקע / טקסט */
+  --danger-bg: #FDECEC;  --danger-fg: #B42318;
+  --urgent-bg: #FFF1E6;  --urgent-fg: #B54708;
+  --missing-bg: #FFF8DB; --missing-fg: #8A6100;
+  --ok-bg: #E8F6EE;      --ok-fg: #1E7A46;
+
+  /* טיפוגרפיה */
+  --font: 'Rubik', system-ui, sans-serif;
+  --text-label: 13px;
+  --text-table: 14px;
+  --text-body: 15px;
+  --text-card-title: 17px;
+  --text-screen-title: 22px;
+  --text-kpi: 28px;
+
+  /* צורות */
+  --radius-tag: 6px;
+  --radius: 8px;
+  --radius-panel: 12px;
+  --shadow-card: 0 1px 2px rgba(20, 24, 31, 0.06);
+  --shadow-float: 0 6px 20px rgba(20, 24, 31, 0.10);
+  --shadow-panel: 0 16px 48px rgba(20, 24, 31, 0.16);
+  --focus-ring: 0 0 0 2px var(--white), 0 0 0 4px var(--brand-600);
+
+  /* תנועה */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-instant: 100ms;
+  --dur-quick: 160ms;
+  --dur-standard: 240ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms;
+    --dur-quick: 0ms;
+    --dur-standard: 0ms;
+  }
+}

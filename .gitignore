@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.local
+.env*
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# מסמכי אפיון ותכנון נשמרים מחוץ לריפו הציבורי
+PLAN.md
+*.docx

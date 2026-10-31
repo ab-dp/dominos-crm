@@ -1,0 +1,22 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--gray-900);
+  background: var(--gray-25);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-tag);
+}
+
+/* מספרים, תאריכים וטלפונים בתוך טקסט עברי */
+.ltr { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }

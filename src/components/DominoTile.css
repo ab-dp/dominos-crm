@@ -1,0 +1,26 @@
+/* רגע המותג: שני חצאי האריח מחליקים ונפגשים (רק במסכי הכניסה) */
+.dpz-tile { display: block; overflow: visible; }
+
+.dpz-tile--enter .dpz-tile__red,
+.dpz-tile--enter .dpz-tile__blue {
+  transform-box: fill-box;
+  animation-duration: 820ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+.dpz-tile--enter .dpz-tile__red  { animation-name: dpz-red-in; animation-delay: 120ms; }
+.dpz-tile--enter .dpz-tile__blue { animation-name: dpz-blue-in; animation-delay: 220ms; }
+
+@keyframes dpz-red-in {
+  from { transform: translate(22%, -22%); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes dpz-blue-in {
+  from { transform: translate(-22%, 22%); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dpz-tile--enter .dpz-tile__red,
+  .dpz-tile--enter .dpz-tile__blue { animation: none; }
+}
