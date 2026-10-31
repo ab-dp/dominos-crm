@@ -20,3 +20,9 @@ body {
 
 /* מספרים, תאריכים וטלפונים בתוך טקסט עברי */
 .ltr { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+
+/* טעינה ראשונה – האריח פועם עד שמצב ההתחברות ידוע */
+.boot { min-height: 100%; display: grid; place-items: center; background: var(--brand-600); }
+.boot .dpz-tile { animation: boot-pulse 1.2s ease-in-out infinite; }
+@keyframes boot-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.94); opacity: 0.85; } }
+@media (prefers-reduced-motion: reduce) { .boot .dpz-tile { animation: none; } }

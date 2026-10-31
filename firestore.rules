@@ -1,10 +1,58 @@
 rules_version = '2';
 
-// שלב 0: המסד נעול לגמרי. אף אחד לא קורא ולא כותב.
-// בשלב 2 נוסף אוסף users עם מצבי חשבון, ומנהל המערכת הקבוע:
-//   alonberger16@gmail.com
+// כללי האבטחה של המערכת (אפיון סעיף 11 ו-13). ההרשאות נאכפות כאן, בצד השרת – לא רק בממשק.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // מנהל המערכת הקבוע – תמיד יכול להיכנס ולאשר. נדרש מייל מאומת (כניסה עם Google).
+    function bootEmail() { return 'alonberger16@gmail.com'; }
+    function isBoot() {
+      return signedIn() && request.auth.token.email == bootEmail() && request.auth.token.email_verified == true;
+    }
+
+    function myPath() { return /databases/$(database)/documents/users/$(request.auth.uid); }
+    function isActive() { return signedIn() && exists(myPath()) && get(myPath()).data.status == 'active'; }
+    function isAdmin() { return isBoot() || (isActive() && get(myPath()).data.role == 'admin'); }
+    function onlyChanges(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      // בקשת הצטרפות: רק לעצמך, במצב "ממתין" ובתפקיד "משתמש". מנהל המערכת הקבוע נוצר ישר כפעיל.
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && (
+          (request.resource.data.status == 'pending' && request.resource.data.role == 'user')
+          || (isBoot() && request.resource.data.status == 'active' && request.resource.data.role == 'admin')
+        );
+
+      allow update: if
+        // משתמש על עצמו: רק זמן כניסה אחרונה
+        (request.auth.uid == uid && onlyChanges(['lastLogin']))
+        // משתמש שנמחק ונכנס שוב: בקשה חדשה במצב "ממתין"
+        || (request.auth.uid == uid
+            && resource.data.status == 'deleted'
+            && request.resource.data.status == 'pending'
+            && request.resource.data.role == 'user'
+            && onlyChanges(['status', 'role', 'requestedAt', 'name', 'lastLogin', 'rejectReason']))
+        // מנהל: הכל – חוץ מהשבתה, מחיקה או הורדת תפקיד של מנהל המערכת הקבוע
+        || (isAdmin() && !(resource.data.email == bootEmail()
+            && (request.resource.data.status != 'active' || request.resource.data.role != 'admin')));
+
+      // אין מחיקה פיזית – רק מצב "נמחק"
+      allow delete: if false;
+    }
+
+    // יומן פעולות: אפשר רק להוסיף. אף אחד, כולל מנהל, לא עורך ולא מוחק.
+    match /auditLog/{id} {
+      allow create: if isActive() && request.resource.data.by == request.auth.uid;
+      allow read: if isActive();
+      allow update, delete: if false;
+    }
+
+    // כל השאר חסום עד שייבנה
     match /{document=**} {
       allow read, write: if false;
     }

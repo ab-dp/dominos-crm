@@ -1,14 +1,16 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useLocation, useMatch } from 'react-router-dom';
+import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
-  Bell, ChartColumn, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
+  Bell, ChartColumn, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
 } from 'lucide-react';
 import { Button, Tip, useHotkey } from '../design/components';
 import { useToast } from '../design/Toast';
 import { useStore } from '../data/store';
-import { ME } from '../data/mock';
+import { useAuth } from '../auth/AuthContext';
+import { usePendingRequests } from '../auth/usePendingRequests';
+import { ROLE_LABEL } from '../auth/types';
 import { Ltr } from '../lib/format';
 import { usePref } from '../lib/prefs';
 import { CommandSearch } from './CommandSearch';
@@ -28,6 +30,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const reduce = useReducedMotion();
   const [collapsed, setCollapsed] = usePref('sidebarCollapsed', false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { profile, isAdmin, logout } = useAuth();
+  const pendingUsers = usePendingRequests();
+  const nav = useNavigate();
+  const firstName = (profile?.name ?? '').split(' ')[0];
 
   useHotkey('/', () => setSearchOpen(true));
   useHotkey('n', () => newOrder());
@@ -60,7 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       title: 'ניהול',
       items: [
         { to: '/reports', label: 'דוחות', icon: <ChartColumn size={20} /> },
-        { to: '/settings', label: 'הגדרות', icon: <Settings size={20} /> },
+        ...(isAdmin ? [{ to: '/settings', label: 'הגדרות', icon: <Settings size={20} />, count: pendingUsers, alert: pendingUsers > 0 }] : []),
       ],
     },
   ];
@@ -85,13 +91,18 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <Popover.Root>
             <Popover.Trigger asChild>
-              <button className="icon-btn bell" aria-label={`התראות: ${critical.length} חריגות`}>
+              <button className="icon-btn bell" aria-label={`התראות: ${critical.length + pendingUsers} חדשות`}>
                 <Bell size={20} />
-                {critical.length > 0 && <span className="bell__count"><Ltr>{critical.length}</Ltr></span>}
+                {critical.length + pendingUsers > 0 && <span className="bell__count"><Ltr>{critical.length + pendingUsers}</Ltr></span>}
               </button>
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content className="pop bell-pop" align="end" sideOffset={8} dir="rtl">
+                {pendingUsers > 0 && (
+                  <button className="bell-join" onClick={() => nav('/settings/users')}>
+                    <UserPlus size={18} aria-hidden="true" /> <span><b><Ltr>{pendingUsers}</Ltr></b> בקשות הצטרפות ממתינות</span>
+                  </button>
+                )}
                 <p className="pop__title">חריגות שדורשות טיפול</p>
                 {critical.length === 0 ? <p className="pop__text">אין חריגות כרגע ✓</p> : (
                   <ul className="bell-list">
@@ -110,9 +121,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Popover.Root>
 
           <div className="user">
-            <span className="user__avatar" aria-hidden="true">{ME[0]}</span>
-            <span className="user__name">{ME}</span>
-            <Button variant="ghost" size="sm" icon={<LogOut size={16} />} onClick={() => toast({ message: 'התחברות והתנתקות ייבנו בשלב 2' })}>התנתק</Button>
+            <span className="user__avatar" aria-hidden="true">{firstName[0] ?? '?'}</span>
+            <span className="user__id">
+              <span className="user__name">{profile?.name}</span>
+              <span className="user__role">{profile ? ROLE_LABEL[profile.role] : ''}</span>
+            </span>
+            <Button variant="ghost" size="sm" icon={<LogOut size={16} />} onClick={() => logout()}>התנתק</Button>
           </div>
         </div>
       </header>
@@ -149,7 +163,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <main id="main" className="content" tabIndex={-1}>
-        <div className="proto-banner" role="note">אב-טיפוס לחיץ · נתוני דמה · שעון הדגמה מתחיל ב-<Ltr>10:30</Ltr> · שינויים לא נשמרים ומתאפסים ברענון</div>
+        <div className="proto-banner" role="note">ההזמנות עדיין נתוני דמה (שלב 5) · שעון הדגמה מתחיל ב-<Ltr>10:30</Ltr> · שינויים לא נשמרים ומתאפסים ברענון</div>
         {/* מעבר רך בין מסכים: הופעה הדרגתית ותזוזה קטנה, בלי לעכב את העבודה */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

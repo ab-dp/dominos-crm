@@ -1,0 +1,52 @@
+.users td { height: 56px; }
+.users__actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; height: 56px; }
+.ucell { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; }
+.ucell__avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-50); color: var(--brand-800); font-weight: 600; font-size: var(--text-label); }
+.you { margin-inline-start: 6px; padding: 1px 6px; border-radius: 8px; background: var(--gray-100); color: var(--gray-600); font-size: 11px; font-weight: 500; }
+.role { display: inline-flex; align-items: center; gap: 4px; }
+.role--admin { color: var(--brand-800); font-weight: 600; }
+.users-skel { display: grid; gap: 10px; padding: 16px; }
+
+.menu__item--danger { color: var(--danger-fg); }
+.menu__item--danger[data-highlighted] { background: var(--danger-bg); color: var(--danger-fg); }
+.menu__item[data-disabled] { opacity: 0.5; cursor: not-allowed; }
+.menu__hint { margin-inline-start: auto; font-size: 11px; color: var(--gray-600); }
+.menu__sep { height: 1px; margin: 4px 6px; background: var(--gray-100); }
+
+.console-hint {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 14px; padding: 12px 14px;
+  border: 1px solid #BBDDF0; border-radius: var(--radius); background: var(--brand-50);
+  font-size: var(--text-table); color: var(--brand-800);
+  animation: pop-in var(--dur-standard) var(--ease);
+}
+.console-hint span { flex: 1 1 320px; }
+a.btn { text-decoration: none; }
+
+.udialog {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(460px, calc(100vw - 32px));
+  padding: 22px;
+  background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-panel);
+  z-index: 61;
+  animation: dlg-in var(--dur-standard) var(--ease);
+}
+@keyframes dlg-in { from { opacity: 0; transform: translate(-50%, -48%) scale(0.98); } to { opacity: 1; transform: translate(-50%, -50%); } }
+.udialog__title { margin: 0 0 6px; font-size: var(--text-card-title); font-weight: 600; }
+.udialog__danger { padding: 12px 14px; border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-table); }
+.udialog__danger p { margin: 0; }
+.udialog__danger p + p { margin-top: 6px; }
+.udialog__actions { display: flex; gap: 8px; margin-top: 20px; }
+.rolepick { border: 0; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; }
+.rolepick__opt {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); cursor: pointer;
+  transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease);
+}
+.rolepick__opt:hover { border-color: var(--gray-600); }
+.rolepick__opt.is-on { border-color: var(--brand-600); background: var(--brand-50); }
+.rolepick__opt input { margin-top: 3px; accent-color: var(--brand-600); }
+.rolepick__opt span { display: grid; gap: 2px; }
+.rolepick__opt small { color: var(--gray-600); font-size: var(--text-label); }
+.rolepick:disabled { opacity: 0.6; }
+@media (prefers-reduced-motion: reduce) { .udialog, .console-hint { animation: none; } }

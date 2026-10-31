@@ -15,8 +15,8 @@ npm run dev
 
 ## כללי אבטחה
 
-הכללים נמצאים ב-`firestore.rules`. כדי לפרסם אותם: Firebase Console ← Firestore ← Rules ← מדביקים ← Publish.
+הכללים נמצאים ב-`firestore.rules`. פרסום: `npx firebase-tools deploy --only firestore:rules` (אחרי `npx firebase-tools login` פעם אחת).
 
 ## מצב
 
-שלב 0 – תשתית.
+שלב 2 – כניסה (Google או מייל וסיסמה), הרשמה, אישור מנהל וניהול משתמשים. ההזמנות עדיין נתוני דמה.

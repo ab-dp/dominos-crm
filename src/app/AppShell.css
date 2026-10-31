@@ -197,3 +197,14 @@
   .navgroup__title { display: none; }
   .navgroup + .navgroup { border-top: 1px solid var(--gray-100); padding-top: 10px; }
 }
+
+.user__id { display: grid; line-height: 1.2; }
+.user__role { font-size: 11px; color: var(--gray-600); }
+.bell-join {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px; padding: 10px 12px;
+  border: 0; border-radius: var(--radius); background: var(--brand-50); color: var(--brand-800);
+  font: inherit; font-size: var(--text-table); text-align: start; cursor: pointer;
+}
+.bell-join:hover { background: #D9ECF7; }
+@media (max-width: 900px) { .user__id { display: none; } }

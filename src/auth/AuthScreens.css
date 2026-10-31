@@ -1,0 +1,112 @@
+.auth { min-height: 100%; display: grid; grid-template-columns: 1fr 1fr; background: var(--white); }
+
+.auth__brand {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 48px 24px;
+  background: var(--brand-600); color: var(--white);
+}
+/* עומק עדין מאחורי האריח – רק במסך הכניסה, לא במסכי העבודה */
+.auth__brand::before {
+  content: ""; position: absolute; inset: -20%;
+  background: radial-gradient(closest-side, rgba(255,255,255,0.14), transparent 70%) 50% 42% / 60% 60% no-repeat;
+  pointer-events: none;
+}
+.auth__brand-title { margin: 28px 0 0; font-size: 32px; font-weight: 600; animation: rise 700ms var(--ease) 500ms both; }
+.auth__brand-sub { margin: 0; font-size: 17px; animation: rise 700ms var(--ease) 600ms both; }
+
+.auth__panel { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; }
+.auth__mobile-logo { display: none; }
+.auth__card { width: 100%; max-width: 400px; }
+.auth__title { margin: 0; font-size: 28px; font-weight: 600; }
+.auth__lead { margin: 6px 0 24px; color: var(--gray-600); }
+.auth__back {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 0 -8px 12px; padding: 6px 8px;
+  border: 0; border-radius: var(--radius); background: none;
+  font: inherit; font-size: var(--text-table); color: var(--gray-600); cursor: pointer;
+}
+.auth__back:hover { background: var(--gray-25); color: var(--gray-900); }
+.auth__submit { width: 100%; margin-top: 18px; }
+.auth__switch { margin: 20px 0 0; text-align: center; }
+.auth__help { margin: 8px 0 0; text-align: center; font-size: var(--text-label); color: var(--gray-600); }
+
+.gbtn {
+  width: 100%; height: 48px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  border: 1px solid var(--gray-300); border-radius: var(--radius);
+  background: var(--white); color: var(--gray-900);
+  font: inherit; font-weight: 500; cursor: pointer;
+  transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease), box-shadow var(--dur-quick) var(--ease), transform var(--dur-instant) var(--ease);
+}
+.gbtn:hover:not(:disabled) { border-color: var(--gray-600); box-shadow: var(--shadow-card); }
+.gbtn:active:not(:disabled) { transform: translateY(1px); }
+.gbtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.gbtn__spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--gray-300); border-top-color: var(--brand-600); animation: spin 0.8s linear infinite; }
+
+.adivider { display: flex; align-items: center; gap: 12px; margin: 20px 0 8px; color: var(--gray-600); font-size: var(--text-label); }
+.adivider::before, .adivider::after { content: ""; flex: 1; height: 1px; background: var(--gray-100); }
+
+.afield { display: grid; gap: 6px; margin-top: 14px; }
+.afield__label { font-size: var(--text-label); font-weight: 500; color: var(--gray-900); }
+.afield__hint { font-size: var(--text-label); color: var(--ok-fg); }
+.afield .input { height: 44px; }
+.req { margin-inline-start: 4px; font-weight: 400; color: var(--gray-600); }
+.pw { position: relative; display: block; }
+.pw .input { padding-inline-start: 44px; }
+.pw__toggle {
+  position: absolute; top: 50%; inset-inline-start: 4px; transform: translateY(-50%);
+  width: 36px; height: 36px; display: grid; place-items: center;
+  border: 0; border-radius: 6px; background: none; color: var(--gray-600); cursor: pointer;
+}
+.pw__toggle:hover { background: var(--gray-100); color: var(--gray-900); }
+/* בשדה LTR בתוך עמוד RTL, הכפתור בצד שמאל של השדה */
+.pw .input--ltr { padding-inline-start: 12px; padding-left: 44px; }
+.pw__toggle { inset-inline-start: auto; left: 4px; }
+
+.pwrules { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: var(--text-label); color: var(--gray-600); }
+.pwrules li { display: flex; align-items: center; gap: 6px; transition: color var(--dur-quick) var(--ease); }
+.pwrules__icon {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px dashed var(--gray-300); color: var(--white);
+  transition: all var(--dur-quick) var(--ease);
+}
+.pwrules li.is-ok { color: var(--ok-fg); }
+.pwrules li.is-ok .pwrules__icon { border: 0; background: var(--ok-fg); animation: pop var(--dur-standard) var(--ease); }
+
+.aerror {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 12px 0 0; padding: 10px 12px;
+  border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg);
+  font-size: var(--text-table); font-weight: 500;
+}
+.aerror svg { flex: none; margin-top: 2px; }
+.anotice { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; padding: 12px 14px; border-radius: var(--radius); font-size: var(--text-table); }
+.anotice--danger { background: var(--danger-bg); color: var(--danger-fg); }
+.anotice span { flex: 1; }
+.anotice button { border: 0; background: none; color: inherit; cursor: pointer; padding: 2px; border-radius: 4px; }
+
+.pending { display: grid; justify-items: center; text-align: center; }
+.pending__icon { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-50); color: var(--brand-600); margin-bottom: 18px; animation: tilt 2.4s var(--ease) infinite; }
+.pending__who { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 10px 14px; border-radius: var(--radius); background: var(--gray-25); font-size: var(--text-table); }
+.pending__dots { display: flex; gap: 6px; margin: 22px 0; }
+.pending__dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-600); opacity: 0.25; animation: dot 1.2s ease-in-out infinite; }
+.pending__dots span:nth-child(2) { animation-delay: 0.2s; }
+.pending__dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot { 0%, 100% { opacity: 0.25; transform: none; } 50% { opacity: 1; transform: translateY(-3px); } }
+@keyframes tilt { 0%, 40%, 100% { transform: none; } 50%, 90% { transform: rotate(180deg); } }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { transform: scale(0.5); } to { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__brand-title, .auth__brand-sub, .pending__icon, .pending__dots span, .pwrules li.is-ok .pwrules__icon, .gbtn__spin { animation: none; }
+}
+
+/* מובייל: הלוגו האנכי מעל הטופס על רקע לבן (אפיון 2.1) */
+@media (max-width: 860px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth__brand { display: none; }
+  .auth__panel { justify-content: flex-start; padding: 28px 16px 40px; }
+  .auth__mobile-logo { display: block; width: 132px; height: auto; margin: 4px 0 24px; }
+}

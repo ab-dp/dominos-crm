@@ -2,12 +2,14 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet } from 'lucide-react';
+import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
+import { useAuth } from '../../auth/AuthContext';
+import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
 import { ME } from '../../data/mock';
 import { CLOSED } from '../../data/types';
-import { HealthBadge, RollingNumber, StatusMenu } from '../../design/components';
+import { Button, HealthBadge, RollingNumber, StatusMenu } from '../../design/components';
 import { HEALTH_RANK, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { FixButton, OrderMarks } from '../orders/OrderActions';
@@ -21,6 +23,9 @@ export function TodayPage() {
   const nav = useNavigate();
   const reduce = useReducedMotion();
   const [mine, setMine] = useState(false);
+  const { profile } = useAuth();
+  const pendingUsers = usePendingRequests();
+  const firstName = (profile?.name ?? '').split(' ')[0];
 
   const today = toISODate(now);
   const tomorrow = toISODate(new Date(now.getTime() + 86400000));
@@ -57,7 +62,7 @@ export function TodayPage() {
       <header className="page__head">
         <div>
           <p className="today__date">יום {weekday(today)} · <Ltr>{fmtDate(today)}</Ltr></p>
-          <h1 className="page__title">{greeting}, {ME}</h1>
+          <h1 className="page__title">{greeting}{firstName && <>, {firstName}</>}</h1>
           <p className="today__summary" aria-live="polite">
             {urgent.length === 0
               ? <>אין כרגע שום דבר דחוף <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>
@@ -71,6 +76,14 @@ export function TodayPage() {
           </div>
         </div>
       </header>
+
+      {pendingUsers > 0 && (
+        <div className="admin-banner" role="status">
+          <UserPlus size={20} aria-hidden="true" />
+          <span><Ltr>{pendingUsers}</Ltr> בקשות הצטרפות ממתינות לאישור</span>
+          <Button size="sm" variant="primary" onClick={() => nav('/settings/users')}>לאישור</Button>
+        </div>
+      )}
 
       {/* ---------- משימות הבוקר ---------- */}
       <section aria-labelledby="h-morning" className="morning">
