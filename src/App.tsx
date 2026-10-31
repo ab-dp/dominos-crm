@@ -1,6 +1,6 @@
 /* שלב 0: עמוד תשתית. מוודא שהאתר עלה ושהחיבור ל-Firebase עובד.
    יוחלף במסך הכניסה בשלב 2. */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { DominoTile } from './components/DominoTile';
@@ -25,10 +25,11 @@ export function App() {
     checkFirestoreLocked().then(setFirestore);
   }, []);
 
-  const checks: { label: string; state: CheckState; detail: string }[] = [
-    { label: 'האתר עלה', state: 'ok', detail: 'GitHub Pages, פריסה אוטומטית מ-main' },
-    { label: 'מחובר ל-Firebase', state: firestore, detail: 'פרויקט dominos-crm' },
-    { label: 'מסד הנתונים נעול', state: firestore, detail: 'Firestore חוסם כל גישה עד שלב 2' },
+  // מונחים לועזיים עטופים ב-<bdi> כדי שלא יתהפכו בתוך שורה עברית
+  const checks: { label: ReactNode; state: CheckState; detail: ReactNode }[] = [
+    { label: 'האתר עלה', state: 'ok', detail: <>פריסה אוטומטית ל-<bdi>GitHub Pages</bdi> בכל עדכון</> },
+    { label: <>מחובר ל-<bdi>Firebase</bdi></>, state: firestore, detail: <>פרויקט <bdi>dominos-crm</bdi></> },
+    { label: 'מסד הנתונים נעול', state: firestore, detail: <>כל גישה חסומה עד שלב 2</> },
   ];
 
   return (
@@ -46,8 +47,8 @@ export function App() {
           <p className="stage0__lead">מסך הכניסה, ההרשמה ואישור המנהל ייבנו בשלב 2.</p>
 
           <ul className="checks" aria-live="polite">
-            {checks.map((c) => (
-              <li key={c.label} className={`check check--${c.state}`}>
+            {checks.map((c, i) => (
+              <li key={i} className={`check check--${c.state}`}>
                 <span className="check__icon" aria-hidden="true">
                   {c.state === 'ok' ? '✓' : c.state === 'fail' ? '!' : ''}
                 </span>
