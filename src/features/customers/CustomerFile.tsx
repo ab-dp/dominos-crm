@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { motion, useReducedMotion } from 'motion/react';
 import {
-  ArrowRight, CalendarClock, Check, ClipboardList, FileCheck2, GitMerge, Mail, MapPin, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon,
+  ArrowRight, Check, ClipboardList, FileCheck2, GitMerge, Mail, MapPin, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon,
   Plus, Star, Trash2, UserCheck, UserRound, UserX, Wallet,
 } from 'lucide-react';
 import {
@@ -21,6 +21,8 @@ import { healthOf, issuesFor } from '../../rules-engine/health';
 import { usePanel } from '../../app/PanelContext';
 import { OrdersTable } from '../orders/OrdersTable';
 import { CustomerDocsSection } from '../orders/OrderDocs';
+import { BarChart } from '../reports/BarChart';
+import '../reports/ReportsPage.css';
 import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
@@ -144,7 +146,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
       <motion.div key={tab} role="tabpanel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.16 }}>
           {tab === 'overview' && <Overview c={c} onTab={setTab} orders={corders} loading={ordersLoading} />}
           {tab === 'orders' && <OrdersTab c={c} orders={corders} loading={ordersLoading} />}
-          {tab === 'monthly' && <Later stage={8} icon={<CalendarClock size={24} />} title="סיכומים חודשיים">שורה לכל חודש: הזמנות · סך · ממוצע · ביטולים · פער Q · מצב תשלום · נעול.</Later>}
+          {tab === 'monthly' && <MonthlyTab orders={corders} loading={ordersLoading} />}
           {tab === 'prices' && <PricesTab c={c} />}
           {tab === 'payment' && <PaymentTab c={c} sharing={sharing} method={method} onEdit={() => setEditing(true)} />}
           {tab === 'contacts' && <ContactsTab c={c} />}
@@ -207,7 +209,13 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
           <div key={k} className="kpi card"><span className="kpi__label">{k}</span><span className={`kpi__value ${loading ? '' : 'is-live'}`}>{loading ? <Skeleton w={60} h={22} /> : v}</span></div>
         ))}
       </div>
-      <p className="ov__note muted">לפי תאריך אספקה, בלי הזמנות שבוטלו. הגרף ל-12 חודשים ייבנה בשלב 8.</p>
+      <p className="ov__note muted">לפי תאריך אספקה, בלי הזמנות שבוטלו.</p>
+      {!loading && orders.length > 0 && (
+        <section className="card ov__chart" aria-label="סך לפי חודש – 12 חודשים">
+          <div className="card__head"><h2 className="card__title">12 חודשים אחרונים</h2><button className="link" onClick={() => onTab('monthly')}>לסיכומים החודשיים</button></div>
+          <BarChart kind="time" money data={lastMonths(orders, now).reverse().map((m) => ({ id: m.key, label: m.label, value: m.sum }))} onPick={() => onTab('monthly')} />
+        </section>
+      )}
       <div className="ov__cards">
         {card('הזמנה אחרונה', last, 'אין עדיין הזמנות')}
         {card('הזמנה הבאה', next, 'אין הזמנה פתוחה')}
@@ -223,6 +231,74 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
 }
 
 /* ---------- הזמנות הלקוח: אותה טבלה של מרכז ההזמנות, מסוננת ללקוח ---------- */
+/* ---------- 12 חודשים אחרונים: שורה לכל חודש (אפיון 6.6, 10) ---------- */
+type MonthRow = { key: string; label: string; count: number; sum: number; avg: number; cancelled: number; gaps: number; unpaid: number; orders: OrderView[] };
+function lastMonths(orders: OrderView[], now: Date): MonthRow[] {
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const all = orders.filter((o) => o.date.startsWith(key));
+    const lv = all.filter((o) => o.status !== 'cancelled');
+    const sum = lv.reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+    return {
+      key, label: `${key.slice(5)}.${key.slice(0, 4)}`, count: lv.length, sum, avg: lv.length ? Math.round(sum / lv.length) : 0,
+      cancelled: all.length - lv.length, gaps: lv.filter((o) => o.qAmount !== undefined && o.qAmount !== o.amount).length,
+      unpaid: lv.filter((o) => o.payment === 'pending' || o.payment === 'failed').reduce((t, o) => t + (o.qAmount ?? o.amount), 0), orders: all,
+    };
+  });
+}
+
+function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean }) {
+  const { now } = useStore();
+  const panel = usePanel();
+  const [open, setOpen] = useState<string | null>(null);
+  if (loading) return <div className="card cfile__loading"><Skeleton h={18} /><Skeleton h={18} /></div>;
+  const rows = lastMonths(orders, now);
+  const total = rows.reduce((t, r) => ({ count: t.count + r.count, sum: t.sum + r.sum, cancelled: t.cancelled + r.cancelled, gaps: t.gaps + r.gaps, unpaid: t.unpaid + r.unpaid }), { count: 0, sum: 0, cancelled: 0, gaps: 0, unpaid: 0 });
+  const picked = rows.find((r) => r.key === open);
+  return (
+    <div className="card monthly">
+      <div className="card__head"><h2 className="card__title">סיכומים חודשיים</h2><span className="muted monthly__hint">12 חודשים · לפי תאריך אספקה וסכום Q · לחיצה על חודש מציגה את ההזמנות</span></div>
+      <div className="report__scroll">
+        <table className="rtable">
+          <caption className="sr-only">סיכום חודשי ל-12 החודשים האחרונים</caption>
+          <thead><tr><th>חודש</th><th className="num">הזמנות</th><th className="num">סך</th><th className="num">ממוצע</th><th className="num">ביטולים</th><th className="num">פערי Q</th><th className="num">פתוח לתשלום</th><th>מצב חודש</th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.key} className={open === r.key ? 'is-picked' : ''} tabIndex={0} onClick={() => setOpen(open === r.key ? null : r.key)} onKeyDown={(e) => { if (e.key === 'Enter') setOpen(open === r.key ? null : r.key); }}>
+                <td><Ltr>{r.label}</Ltr></td>
+                <td className="num"><Ltr>{r.count}</Ltr></td>
+                <td className="num"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
+                <td className="num"><Ltr>{r.count ? fmtMoney(r.avg) : '—'}</Ltr></td>
+                <td className="num"><Ltr>{r.cancelled}</Ltr></td>
+                <td className={`num ${r.gaps ? 'monthly__warn' : ''}`}><Ltr>{r.gaps}</Ltr></td>
+                <td className={`num ${r.unpaid ? 'monthly__warn' : ''}`}><Ltr>{fmtMoney(r.unpaid)}</Ltr></td>
+                <td><span className="muted" title="סגירת חודש – שלב 9">פתוח</span></td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot><tr><td>סה"כ</td><td className="num"><Ltr>{total.count}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.sum)}</Ltr></td><td className="num"><Ltr>{total.count ? fmtMoney(Math.round(total.sum / total.count)) : '—'}</Ltr></td><td className="num"><Ltr>{total.cancelled}</Ltr></td><td className="num"><Ltr>{total.gaps}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.unpaid)}</Ltr></td><td /></tr></tfoot>
+        </table>
+      </div>
+      {picked && (
+        <ul className="report__orders monthly__orders" aria-label={`ההזמנות של ${picked.label}`}>
+          {picked.orders.length === 0 && <li className="muted monthly__none">אין הזמנות בחודש הזה</li>}
+          {[...picked.orders].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).map((o) => (
+            <li key={o.id}>
+              <button onClick={(e) => panel.open(o.id, e.currentTarget)}>
+                <span className="report__oid"><Ltr>{o.id}</Ltr></span>
+                <span className="report__odate"><Ltr>{fmtDate(o.date)}</Ltr> <Ltr>{o.time}</Ltr></span>
+                <span className="report__ocust">{o.branchName}</span>
+                <span className="report__osum"><Ltr>{fmtMoney(o.qAmount ?? o.amount)}</Ltr>{o.status === 'cancelled' && <span className="muted"> · בוטלה</span>}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function OrdersTab({ c, orders, loading }: { c: Customer; orders: OrderView[]; loading: boolean }) {
   const { now, openNewOrder } = useStore();
   const [view, setView] = useState<'open' | 'past' | 'cancelled'>('open');
@@ -264,10 +340,6 @@ function missingOf(c: Customer): [string, Tab][] {
   if (c.type === 'regular' && !c.priceListId) m.push(['מחירון', 'prices']);
   if (c.paymentMethod === 'account' && !c.billingInstructions) m.push(['הנחיות חיוב', 'payment']);
   return m;
-}
-
-function Later({ stage, icon, title, children }: { stage: number; icon: ReactNode; title: string; children: ReactNode }) {
-  return <div className="card"><EmptyState icon={icon} title={`${title} – שלב ${stage}`}>{children}</EmptyState></div>;
 }
 
 /* ---------- מחירון + מחירים ייחודיים ללקוח ---------- */

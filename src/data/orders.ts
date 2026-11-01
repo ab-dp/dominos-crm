@@ -3,7 +3,7 @@
    (נאכף גם בכללי האבטחה). כל שינוי נכתב יחד עם רשומת יומן; אין מחיקה. */
 import { useEffect, useState } from 'react';
 import {
-  collection, deleteDoc, deleteField, doc, onSnapshot, query, runTransaction, serverTimestamp, setDoc, where, writeBatch, type DocumentData, type Timestamp,
+  collection, deleteDoc, deleteField, doc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, setDoc, where, writeBatch, type DocumentData, type Timestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { toISODate } from '../lib/format';
@@ -226,4 +226,27 @@ export function useOrderViewers(orderId: number) {
     return () => { clearInterval(t); unsub(); deleteDoc(mine).catch(() => undefined); };
   }, [orderId]);
   return others;
+}
+
+/* ---------- דוחות (אפיון 10): כל ההזמנות בטווח תאריכי אספקה, בקריאה אחת לפי דרישה ----------
+   לא מאזינים בזמן אמת – דוח נטען בפתיחה ובלחיצה על "רענן", כדי לשמור על מכסת הקריאות החינמית. */
+export function useOrdersRange(from: string, to: string) {
+  const [state, setState] = useState<{ orders: Order[]; loading: boolean; error: string }>({ orders: [], loading: true, error: '' });
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    setState((s) => ({ ...s, loading: true }));
+    getDocs(query(collection(db, 'orders'), where('date', '>=', from), where('date', '<=', to)))
+      .then((s) => { if (alive) setState({ orders: s.docs.map((d) => fromDoc(d.id, d.data())), loading: false, error: '' }); })
+      .catch(() => { if (alive) setState({ orders: [], loading: false, error: 'אין הרשאה או אין חיבור' }); });
+    return () => { alive = false; };
+  }, [from, to, tick]);
+  return { ...state, reload: () => setTick((t) => t + 1) };
+}
+
+/* ייצוא דוח נרשם ביומן */
+export async function logReportExport(reportId: string, after: Record<string, unknown>) {
+  const batch = writeBatch(db);
+  batch.set(doc(collection(db, 'auditLog')), { ...auditDoc('order', `report:${reportId}`, 'export', null, after, 'form'), entity: 'report', entityId: reportId });
+  await batch.commit();
 }

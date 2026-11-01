@@ -82,3 +82,8 @@
 .cfile__orders { display: grid; gap: 12px; }
 .cfile__orders > .seg { justify-self: start; }
 .cfile__loading { display: grid; gap: 10px; padding: 16px; }
+.ov__chart .cols { height: 180px; }
+.monthly__hint { margin-inline-start: auto; font-size: var(--text-label); }
+.monthly__warn bdi { color: var(--urgent-fg); font-weight: 600; }
+.monthly__orders { border-top: 1px solid var(--gray-100); }
+.monthly__none { padding: 10px; }

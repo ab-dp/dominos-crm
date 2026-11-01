@@ -19,7 +19,7 @@ import { CustomersPage } from './features/customers/CustomersPage';
 import { CustomerFile } from './features/customers/CustomerFile';
 import { PriceListsPage } from './features/pricelists/PriceListsPage';
 import { ExceptionsPage } from './features/exceptions/ExceptionsPage';
-import { ReportsHub } from './features/Placeholder';
+import { ReportsHub, ReportView } from './features/reports/ReportsPage';
 
 export function App() {
   return (
@@ -58,6 +58,7 @@ function Gate() {
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/reports" element={<ReportsHub />} />
               <Route path="/reports/credit" element={<CreditReportPage />} />
+              <Route path="/reports/:id" element={<ReportView />} />
               <Route path="/styleguide" element={<StyleGuidePage />} />
               <Route path="/settings/*" element={<SettingsPage />} />
               <Route path="/customers" element={<CustomersPage />} />
