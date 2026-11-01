@@ -39,6 +39,8 @@
 .stepper button { width: 30px; height: 32px; display: grid; place-items: center; border: 0; background: var(--gray-25); cursor: pointer; color: var(--gray-900); }
 .stepper button:hover { background: var(--brand-50); }
 .stepper .input { width: 48px; height: 32px; border: 0; border-radius: 0; text-align: center; }
+.no-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.no-quick .chip { display: inline-flex; align-items: center; gap: 4px; }
 .no-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 .no-add__pick { flex: 1; min-width: 220px; max-width: 380px; height: 38px; }
 

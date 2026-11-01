@@ -144,15 +144,18 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               {o.instructions && <Kv k="הנחיות" v={o.instructions} />}
             </Section>
             <Section id="items" title="פריטים ומחיר">
-              <table className="items">
+              {o.contents && <p className="order-contents">{o.contents}</p>}
+              {o.items.length > 0 && <table className="items">
                 <thead><tr><th>פריט</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
                 <tbody>
                   {o.items.map((it) => (
                     <tr key={it.name}><td>{it.name}</td><td><Ltr>{it.qty}</Ltr></td><td><Money value={it.unitPrice} /></td><td><Money value={it.qty * it.unitPrice} /></td></tr>
                   ))}
                 </tbody>
-              </table>
+              </table>}
+              {!o.contents && o.items.length === 0 && <p className="muted">לא נרשמה תכולה – רק סכום.</p>}
               <div className="sums">
+                {!!o.deliveryFee && <div><span>מתוכו דמי משלוח</span><b><Money value={o.deliveryFee} /></b></div>}
                 <div><span>סכום הזמנה</span><b><Money value={o.amount} /></b></div>
                 <div className={gap ? 'is-gap' : ''}>
                   <span>סכום Q</span>

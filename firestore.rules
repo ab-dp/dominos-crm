@@ -181,7 +181,8 @@ service cloud.firestore {
         && d.items is list && d.items.size() <= 200
         && d.notes is list && d.notes.size() <= 200
         && noCard(opt(d, 'instructions')) && noCard(opt(d, 'note')) && noCard(opt(d, 'billingNote'))
-        && noCard(opt(d, 'address')) && noCard(opt(d, 'poNumber')) && noCard(opt(d, 'qNumber'))
+        && noCard(opt(d, 'address')) && noCard(opt(d, 'poNumber')) && noCard(opt(d, 'qNumber')) && noCard(opt(d, 'contents'))
+        && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee < 10000))
         && d.keys().size() <= 50;
     }
 

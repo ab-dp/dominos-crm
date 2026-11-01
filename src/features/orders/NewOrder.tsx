@@ -70,6 +70,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const [contactId, setContactId] = useState('');
   const [contact, setContact] = useState({ name: '', phone: '' });
   const [amount, setAmount] = useState('');
+  const [contents, setContents] = useState('');
+  const [fee, setFee] = useState('');
   const [lines, setLines] = useState<Line[]>([]);
   const [status, setStatus] = useState<OrderStatus>('new');
   const [channel, setChannel] = useState('');
@@ -120,7 +122,9 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   })), [priceList, c]);
   const linesTotal = lines.reduce((t, l) => t + l.qty * l.unitPrice, 0);
   const useLines = mode !== 'quick' && lines.length > 0;
-  const total = useLines ? linesTotal : money(amount);
+  // בהזמנה מלאה דמי המשלוח נוספים לסכום; בהזמנה מהירה הסכום שנרשם הוא הסכום הכולל
+  const feeValue = mode !== 'quick' && delivery === 'delivery' ? money(fee) : 0;
+  const total = (useLines ? linesTotal : money(amount)) + feeValue;
   const addLine = (itemId?: string) => {
     const it = catalog.find((x) => x.id === itemId);
     setLines((ls) => [...ls, { key: newId(), itemId: it?.id, name: it?.name ?? '', qty: 1, unitPrice: it?.price ?? 0 }]);
@@ -165,12 +169,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     else if (date < today) e.date = 'התאריך כבר עבר';
     if (!/^\d{2}:\d{2}$/.test(time)) e.time = 'חובה: שעת אספקה';
     if (!branch) e.branch = 'חובה: סניף';
-    if (total <= 0) e.amount = mode === 'quick' || !lines.length ? 'חובה: סכום ההזמנה' : 'סכום הפריטים הוא 0';
+    if (total - feeValue <= 0) e.amount = mode === 'quick' || !lines.length ? 'חובה: סכום ההזמנה' : 'סכום הפריטים הוא 0';
     if (useLines && lines.some((l) => !l.name.trim() || l.qty <= 0)) e.amount = 'לכל פריט צריך שם וכמות';
     if (effMethod === 'account') {
       if (!cleanPhone(effAccountPhone)) e[isNew ? 'ncAccount' : 'account'] = 'חובה בהקפה: טלפון ההקפה';
       else { const pe = phoneError(effAccountPhone); if (pe) e[isNew ? 'ncAccount' : 'account'] = pe; }
     }
+    if (CARD_RE.test(contents)) e.contents = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(note)) e.note = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(address)) e.address = 'אסור לרשום כאן מספר כרטיס אשראי';
@@ -210,6 +215,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       poRequired: !!c?.poRequired,
       poNumber: poNumber.trim() || undefined,
       items: useLines ? lines.map(({ key: _k, itemId, ...l }) => ({ ...(itemId ? { itemId } : {}), ...l, name: l.name.trim() })) : [],
+      contents: contents.trim() || undefined,
+      deliveryFee: feeValue || undefined,
       instructions: instructions.trim() || undefined,
       note: note.trim() || undefined,
       billingNote: c?.billingInstructions || undefined,
@@ -343,18 +350,27 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
           </tbody>
         </table>
       )}
+      {catalog.length > 0 && (
+        <div className="no-quick" role="group" aria-label="הוספה מהירה מהמחירון">
+          {catalog.slice(0, 8).map((i) => (
+            <button type="button" key={i.id} className="chip" onClick={() => addLine(i.id)}>
+              <Plus size={14} aria-hidden="true" /> {i.name} <span className="muted"><Ltr>{fmtMoney(i.price)}</Ltr></span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="no-add">
-        {catalog.length > 0 && (
+        {catalog.length > 8 && (
           <select className="input no-add__pick" value="" onChange={(e) => e.target.value && addLine(e.target.value)} aria-label={`הוסף פריט מהמחירון ${priceList?.name ?? ''}`}>
-            <option value="">+ פריט מהמחירון "{priceList?.name}"</option>
+            <option value="">+ עוד פריטים מהמחירון "{priceList?.name}"</option>
             {catalog.map((i) => <option key={i.id} value={i.id}>{i.name} · {fmtMoney(i.price)}{i.custom ? ' (מחיר ללקוח)' : ''}</option>)}
           </select>
         )}
-        <Button size="sm" variant="ghost" type="button" icon={<Plus size={16} />} onClick={() => addLine()}>פריט חופשי</Button>
+        <Button size="sm" variant="ghost" type="button" icon={<Plus size={16} />} onClick={() => addLine()}>{catalog.length ? 'פריט שלא במחירון' : 'הוסף פריט'}</Button>
       </div>
       {lines.length === 0 && (
         <Row>
-          <L label="או סכום כולל (₪, כולל מע״מ)" req>
+          <L label={catalog.length ? 'או סכום כולל (₪, כולל מע״מ)' : 'סכום הפריטים (₪, כולל מע״מ)'} req>
             <input className="input input--ltr" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value); clearErr('amount'); }} placeholder="0" {...inv('amount')} />
             {err('amount')}
           </L>
@@ -362,6 +378,17 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         </Row>
       )}
       {lines.length > 0 && err('amount')}
+      {delivery === 'delivery' && (
+        <Row>
+          <L label="דמי משלוח (₪)">
+            <input className="input input--ltr" inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" />
+          </L>
+        </Row>
+      )}
+      <L label={lines.length ? 'פירוט נוסף (לא חובה)' : 'תכולת ההזמנה'} wide>
+        <textarea className="input cform__ta" rows={2} value={contents} onChange={(e) => { setContents(e.target.value); clearErr('contents'); }} placeholder="למשל: 12 משפחתיות (6 זיתים, 6 פטריות), 10 לחם שום, 6 שתייה 1.5 ל'" {...inv('contents')} />
+        {err('contents')}
+      </L>
       <p className="muted no-hint">המחיר נשמר בתוך ההזמנה. שינוי מחירון בעתיד לא ישנה אותה.</p>
     </Section>
   );
@@ -512,9 +539,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             )}
 
             {mode === 'quick' ? (
-              <Section title="סכום והערה">
+              <Section title="תכולה וסכום">
+                <L label="מה מזמינים" wide>
+                  <textarea className="input cform__ta" rows={2} value={contents} onChange={(e) => { setContents(e.target.value); clearErr('contents'); }} placeholder="למשל: 12 משפחתיות, 10 לחם שום, 6 שתייה, משלוח" {...inv('contents')} />
+                  {err('contents')}
+                </L>
                 <Row>
-                  <L label="סכום (₪, כולל מע״מ)" req>
+                  <L label="סכום כולל (₪, כולל מע״מ ומשלוח)" req>
                     <input className="input input--ltr" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value); clearErr('amount'); }} placeholder="0" {...inv('amount')} />
                     {err('amount')}
                   </L>

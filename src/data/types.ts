@@ -57,6 +57,8 @@ export type Order = {
   poRequired: boolean;
   poNumber?: string;
   items: OrderItem[];
+  contents?: string; // תכולה במילים: "12 משפחתיות, 6 שתייה" – בעיקר בהזמנה מהירה
+  deliveryFee?: number; // דמי משלוח, כלולים בסכום ההזמנה
   instructions?: string;
   note?: string; // הערה פנימית שנרשמה ביצירה
   notes: { by: string; at: string; text: string }[];
