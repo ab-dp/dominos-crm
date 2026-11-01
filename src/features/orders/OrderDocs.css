@@ -1,0 +1,18 @@
+.fdrop {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; border: 1px dashed var(--gray-300); border-radius: var(--radius);
+  background: var(--gray-25); font-size: var(--text-table); color: var(--gray-600);
+  transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease);
+}
+.fdrop.is-over { border-color: var(--brand-600); background: var(--brand-50); color: var(--brand-800); }
+.fdrop__hint { font-size: var(--text-label); }
+.fdrop--file { border-style: solid; background: var(--white); color: var(--gray-900); animation: pop-in var(--dur-quick) var(--ease); }
+.fdrop__name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+.odocs { display: grid; gap: 8px; }
+.odocs__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.odocs__list li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--gray-100); border-radius: var(--radius); font-size: var(--text-table); }
+.odocs__list li.is-old { opacity: 0.7; }
+.odocs__main { flex: 1; display: grid; min-width: 0; }
+.odocs__main b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.odocs__main .muted { font-size: var(--text-label); }
+@media (prefers-reduced-motion: reduce) { .fdrop--file { animation: none; } }

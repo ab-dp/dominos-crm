@@ -111,7 +111,7 @@ export async function createOrder(input: NewOrderInput, newCustomer?: NewCustome
 
     const data = clean({
       ...input, customerId, number: n, notes: [],
-      createdAt: serverTimestamp(), createdBy: u.name, createdByUid: u.uid, updatedAt: serverTimestamp(), updatedBy: u.uid,
+      createdAt: serverTimestamp(), createdBy: input.handler || u.name, createdByUid: u.uid, updatedAt: serverTimestamp(), updatedBy: u.uid,
     });
     tx.set(counterRef, { next: n + 1 });
     tx.set(doc(db, 'orders', String(n)), data);

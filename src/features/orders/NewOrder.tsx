@@ -23,6 +23,8 @@ import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/
 import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
+import { uploadOrderDoc } from '../../data/orderDocs';
+import { FileDrop } from './OrderDocs';
 import '../customers/CustomerForm.css';
 import './NewOrder.css';
 
@@ -72,6 +74,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const [amount, setAmount] = useState('');
   const [contents, setContents] = useState('');
   const [fee, setFee] = useState('');
+  const [override, setOverride] = useState<string | null>(null); // סכום לחיוב שהוקלד ידנית
+  const [poFile, setPoFile] = useState<File | null>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [status, setStatus] = useState<OrderStatus>('new');
   const [channel, setChannel] = useState('');
@@ -112,9 +116,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c?.id]);
 
-  useEffect(() => {
-    if (!channel && lists?.channels.length) setChannel(lists.channels.find((x) => x.active)?.id ?? '');
-  }, [lists, channel]);
+  /* ערוץ ההזמנה נכתב ידנית (וואטסאפ, מכירות, מוקד, WellBe…). ההצעות רק משלימות הקלדה. */
+  const channelHints = useMemo(() => [...new Set([...(lists?.channels ?? []).filter((x) => x.active).map((x) => x.label), ...orders.map((o) => o.channel).filter(Boolean)])].slice(0, 30), [lists, orders]);
 
   /* ---------- פריטים ומחיר ---------- */
   const catalog = useMemo(() => (priceList?.items ?? []).filter((i) => i.active).map((i) => ({
@@ -125,6 +128,9 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   // בהזמנה מלאה דמי המשלוח נוספים לסכום; בהזמנה מהירה הסכום שנרשם הוא הסכום הכולל
   const feeValue = mode !== 'quick' && delivery === 'delivery' ? money(fee) : 0;
   const total = (useLines ? linesTotal : money(amount)) + feeValue;
+  const canOverride = mode !== 'quick' && (lines.length > 0 || feeValue > 0);
+  const finalAmount = canOverride && override !== null ? money(override) : total;
+  const isManual = canOverride && override !== null && finalAmount !== total;
   const addLine = (itemId?: string) => {
     const it = catalog.find((x) => x.id === itemId);
     setLines((ls) => [...ls, { key: newId(), itemId: it?.id, name: it?.name ?? '', qty: 1, unitPrice: it?.price ?? 0 }]);
@@ -169,12 +175,17 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     else if (date < today) e.date = 'התאריך כבר עבר';
     if (!/^\d{2}:\d{2}$/.test(time)) e.time = 'חובה: שעת אספקה';
     if (!branch) e.branch = 'חובה: סניף';
+    if (!channel.trim()) e.channel = 'חובה: ערוץ ההזמנה';
+    else if (CARD_RE.test(channel)) e.channel = 'אסור לרשום כאן מספר כרטיס אשראי';
+    if (isManual && finalAmount <= 0) e.final = 'חובה: סכום לחיוב';
     if (total - feeValue <= 0) e.amount = mode === 'quick' || !lines.length ? 'חובה: סכום ההזמנה' : 'סכום הפריטים הוא 0';
     if (useLines && lines.some((l) => !l.name.trim() || l.qty <= 0)) e.amount = 'לכל פריט צריך שם וכמות';
     if (effMethod === 'account') {
       if (!cleanPhone(effAccountPhone)) e[isNew ? 'ncAccount' : 'account'] = 'חובה בהקפה: טלפון ההקפה';
       else { const pe = phoneError(effAccountPhone); if (pe) e[isNew ? 'ncAccount' : 'account'] = pe; }
     }
+    if (!isNew && contact.phone.trim()) { const pe = phoneError(contact.phone); if (pe) e.contactPhone = pe; }
+    if (CARD_RE.test(poNumber)) e.po = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(contents)) e.contents = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(note)) e.note = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
@@ -199,7 +210,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       date, time,
       branchId: b.id, branchName: b.name, branchPhone: b.phone,
       cluster: clusters.find((x) => x.id === b.clusterId)?.name ?? '',
-      amount: total,
+      amount: finalAmount,
+      calcAmount: isManual ? total : undefined,
       status,
       payment: 'pending',
       method: effMethod,
@@ -207,7 +219,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       accountPhone: effMethod === 'account' ? cleanPhone(effAccountPhone) : undefined,
       handler: profile?.name ?? '',
       handlerUid: profile?.uid,
-      channel: lists?.channels.find((x) => x.id === channel)?.label ?? '',
+      channel: channel.trim(),
       delivery,
       address: delivery === 'delivery' ? address.trim() || undefined : undefined,
       contactName: (isNew ? nc.contactName : contact.name).trim() || undefined,
@@ -232,6 +244,10 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     setBusy(true);
     try {
       const n = await createOrder(input, draft);
+      if (poFile) {
+        // הקובץ נשמר אחרי ההזמנה; אם נכשל – ההזמנה כבר שמורה ואפשר לצרף שוב מהתיק
+        await uploadOrderDoc(n, poFile).catch(() => toast({ message: <>ההזמנה נשמרה, אבל צירוף תעודת הרכש נכשל – אפשר לצרף אותה מתיק ההזמנה <Ltr>{n}</Ltr></> }));
+      }
       toast({
         message: <>הזמנה <Ltr>{n}</Ltr> נשמרה · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr></>,
         action: { label: 'פתח תיק', run: () => panel.open(n) },
@@ -292,14 +308,25 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             <button type="button" role="radio" aria-checked={delivery === 'pickup'} className={delivery === 'pickup' ? 'is-on' : ''} onClick={() => setDelivery('pickup')}>איסוף עצמי</button>
           </div>
         </L>
-        {!isNew && c && c.contacts.length > 0 && (
-          <L label="איש קשר לקבלה">
-            <select className="input" value={contactId} onChange={(e) => { const p = c.contacts.find((x) => x.id === e.target.value); setContactId(e.target.value); setContact({ name: p?.name ?? '', phone: p?.phone ?? '' }); }}>
+        {!isNew && c && c.contacts.length > 1 && (
+          <L label="מאנשי הקשר של הלקוח">
+            <select className="input" value={contactId} onChange={(e) => { const p = c.contacts.find((x) => x.id === e.target.value); setContactId(e.target.value); setContact({ name: p?.name ?? '', phone: p?.phone ?? '' }); clearErr('contactPhone'); }}>
               {c.contacts.map((p) => <option key={p.id} value={p.id}>{p.name}{p.phone ? ` · ${fmtPhone(p.phone)}` : ''}</option>)}
             </select>
           </L>
         )}
       </Row>
+      {!isNew && (
+        <Row>
+          <L label="איש קשר לקבלת ההזמנה">
+            <input className="input" value={contact.name} onChange={(e) => { setContact({ ...contact, name: e.target.value }); setContactId(''); }} placeholder="מי מקבל את ההזמנה" />
+          </L>
+          <L label="טלפון">
+            <input className="input input--ltr" inputMode="tel" value={contact.phone} onChange={(e) => { setContact({ ...contact, phone: e.target.value }); setContactId(''); clearErr('contactPhone'); }} placeholder="05X-XXXXXXX" {...inv('contactPhone')} />
+            {err('contactPhone')}
+          </L>
+        </Row>
+      )}
       {delivery === 'delivery' && (
         <Row>
           {!isNew && c && c.addresses.length > 1 && (
@@ -319,7 +346,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   );
 
   const itemsSection = (
-    <Section title="פריטים ומחיר" aside={<span className="no-total">סה״כ <b><Ltr>{fmtMoney(total)}</Ltr></b></span>}>
+    <Section title="פריטים ומחיר" aside={<span className="no-total">{isManual ? 'לחיוב' : 'סה״כ'} <b><Ltr>{fmtMoney(finalAmount)}</Ltr></b></span>}>
       {lines.length > 0 && (
         <table className="no-items">
           <thead><tr><th>פריט</th><th>כמות</th><th>מחיר ליח׳</th><th className="num">סה״כ</th><th><span className="sr-only">הסר</span></th></tr></thead>
@@ -385,6 +412,20 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
           </L>
         </Row>
       )}
+      {canOverride && (
+        <div className={`no-final ${isManual ? 'is-manual' : ''}`}>
+          <L label="סכום לחיוב (לפי הסגירה מול הלקוח)">
+            <input className="input input--ltr" inputMode="decimal" value={override ?? String(total)} onChange={(e) => { setOverride(e.target.value); clearErr('final'); }} {...inv('final')} />
+            {err('final')}
+          </L>
+          {isManual ? (
+            <p className="no-final__note">
+              <span className="no-final__tag">שונה ידנית</span> מחושב: <Ltr>{fmtMoney(total)}</Ltr>
+              <button type="button" className="link" onClick={() => setOverride(null)}>חזור לחישוב</button>
+            </p>
+          ) : <p className="muted no-hint">מתעדכן לבד מהפריטים{feeValue ? ' ודמי המשלוח' : ''}. אפשר להקליד סכום אחר.</p>}
+        </div>
+      )}
       <L label={lines.length ? 'פירוט נוסף (לא חובה)' : 'תכולת ההזמנה'} wide>
         <textarea className="input cform__ta" rows={2} value={contents} onChange={(e) => { setContents(e.target.value); clearErr('contents'); }} placeholder="למשל: 12 משפחתיות (6 זיתים, 6 פטריות), 10 לחם שום, 6 שתייה 1.5 ל'" {...inv('contents')} />
         {err('contents')}
@@ -410,13 +451,20 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
           {err(isNew ? 'ncAccount' : 'account')}
         </L>
       )}
-      {c?.poRequired && (
-        <L label="מס' תעודת רכש">
-          <input className="input input--ltr" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} placeholder="אפשר גם אחר כך" />
-          <span className="cform__hint">ללקוח הזה נדרשת תעודת רכש לכל הזמנה</span>
-        </L>
-      )}
     </Row>
+  );
+
+  const poFields = (
+    <>
+      <Row>
+        <L label="מס' תעודת רכש (לא חובה)">
+          <input className="input input--ltr" value={poNumber} onChange={(e) => { setPoNumber(e.target.value); clearErr('po'); }} placeholder="אפשר גם אחר כך" {...inv('po')} />
+          {err('po')}
+          {c?.poRequired && <span className="cform__hint">הלקוח בדרך כלל עובד עם תעודת רכש</span>}
+        </L>
+      </Row>
+      <FileDrop file={poFile} onFile={setPoFile} busy={busy} />
+    </>
   );
 
   const notesFields = (
@@ -430,13 +478,6 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
           <input className="input" value={note} onChange={(e) => { setNote(e.target.value); clearErr('note'); }} placeholder="נראית רק במוקד" {...inv('note')} />
           {err('note')}
         </L>
-        {lists && lists.channels.length > 0 && (
-          <L label="ערוץ קבלה">
-            <select className="input" value={channel} onChange={(e) => setChannel(e.target.value)}>
-              {lists.channels.filter((x) => x.active || x.id === channel).map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-            </select>
-          </L>
-        )}
       </Row>
     </>
   );
@@ -449,7 +490,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       <span>{address ? <>משלוח ל{address}</> : <span className="warn-text">אין כתובת שמורה</span>}</span>
       {contact.name && <span>{contact.name}{contact.phone && <> · <Ltr>{fmtPhone(contact.phone)}</Ltr></>}</span>}
       {c.instructions && <span className="no-auto__instr">"{c.instructions}"</span>}
-      {c.poRequired && <span className="warn-text">נדרשת תעודת רכש</span>}
+      {c.poRequired && <span>בדרך כלל עם תעודת רכש</span>}
       <button type="button" className="link" onClick={() => setMode('full')}>לשינוי – הזמנה מלאה</button>
     </motion.div>
   );
@@ -523,6 +564,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             <Section title="מועד וסניף">
               {whenSection}
               <Row>{branchField}{statusField}</Row>
+              <Row>
+                <L label="ערוץ ההזמנה" req>
+                  <input className="input" list="no-channels" value={channel} onChange={(e) => { setChannel(e.target.value); clearErr('channel'); }} placeholder="למשל: וואטסאפ, מכירות, מוקד, WellBe" {...inv('channel')} />
+                  <datalist id="no-channels">{channelHints.map((h) => <option key={h} value={h} />)}</datalist>
+                  {err('channel')}
+                </L>
+              </Row>
             </Section>
 
             {dup && (
@@ -554,6 +602,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                     {err('note')}
                   </L>
                 </Row>
+                {c?.poRequired && poFields}
                 {effMethod === 'account' && !cleanPhone(accountPhone) && c && (
                   <Row>
                     <L label="טלפון הקפה" req>
@@ -568,6 +617,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                 <Section title="אספקה">{deliveryFields}</Section>
                 {itemsSection}
                 <Section title="תשלום">{paymentFields}</Section>
+                <Section title="תעודת רכש">{poFields}</Section>
                 <Section title="הנחיות והערות">{notesFields}</Section>
               </>
             )}
@@ -579,7 +629,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             <Button variant="primary" loading={busy} onClick={submit} kbd="Ctrl+Enter">{dup && ackDup ? 'צור בכל זאת' : isNew ? 'שמור לקוח והזמנה' : 'שמור הזמנה'}</Button>
             <Button variant="ghost" onClick={onClose}>ביטול</Button>
             <span className="norder__sum" aria-live="polite">
-              {total > 0 && <><Ltr>{fmtMoney(total)}</Ltr>{time && <> · <Ltr>{time}</Ltr></>}{branchObj && <> · {branchObj.name}</>}</>}
+              {finalAmount > 0 && <><Ltr>{fmtMoney(finalAmount)}</Ltr>{time && <> · <Ltr>{time}</Ltr></>}{branchObj && <> · {branchObj.name}</>}</>}
             </span>
           </footer>
         </Dialog.Content>

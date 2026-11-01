@@ -11,7 +11,8 @@ import { Ltr, Money, Phone, fmtDate, fmtMoney, toISODate, weekday } from '../../
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 import { useOrderDoc, useOrderHistory, type OrderAuditRow } from '../../data/orders';
 import { healthOf, issuesFor } from '../../rules-engine/health';
-import { FixButton, OrderMarks } from './OrderActions';
+import { FixButton, OrderMarks, PoEdit } from './OrderActions';
+import { OrderDocsSection } from './OrderDocs';
 import './OrderPanel.css';
 
 const ANCHORS = [
@@ -156,7 +157,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               {!o.contents && o.items.length === 0 && <p className="muted">לא נרשמה תכולה – רק סכום.</p>}
               <div className="sums">
                 {!!o.deliveryFee && <div><span>מתוכו דמי משלוח</span><b><Money value={o.deliveryFee} /></b></div>}
-                <div><span>סכום הזמנה</span><b><Money value={o.amount} /></b></div>
+                {o.calcAmount !== undefined && <div><span>מחושב מהפריטים</span><b className="muted"><Money value={o.calcAmount} /></b></div>}
+                <div><span>סכום לחיוב{o.calcAmount !== undefined && <span className="no-final__tag"> שונה ידנית</span>}</span><b><Money value={o.amount} /></b></div>
                 <div className={gap ? 'is-gap' : ''}>
                   <span>סכום Q</span>
                   <b>{o.qAmount !== undefined ? <Money value={o.qAmount} /> : '—'}</b>
@@ -173,11 +175,11 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <Kv k="אמצעי תשלום" v={o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method} />
               {o.accountPhone && <Kv k="טלפון הקפה" v={<Phone value={o.accountPhone} />} />}
               <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
-              <Kv k="תעודת רכש" v={o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <span className="warn-text">נדרשת – חסרה</span> : '—'} />
+              <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
               {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
             </Section>
             <Section id="docs" title="מסמכים">
-              <p className="muted">העלאה בגרירה או בכפתור "בחר קובץ" – תיבנה בשלב 7.</p>
+              <OrderDocsSection orderId={o.id} />
             </Section>
             <Section id="notes" title="הערות פנימיות">
               {o.note && <p className="note"><b>{o.createdBy}</b> <span className="muted"><Ltr>{fmtDate(o.createdAt)}</Ltr></span><br />{o.note}</p>}
@@ -211,7 +213,7 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 /* יומן ההזמנה – נקרא מ-auditLog, שאי אפשר לערוך או למחוק (נאכף בשרת) */
 const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
-  date: 'תאריך', time: 'שעה', amount: 'סכום', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
+  date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
 };
 function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -234,10 +236,11 @@ function History({ o }: { o: OrderView }) {
         <li key={r.id}>
           <span className="timeline__at"><Ltr>{r.at ? fmtAt(r.at.toDate()) : '…'}</Ltr></span>
           <span>
-            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
-            {r.action !== 'create' && r.after && Object.keys(r.after).filter((k) => FIELD[k]).map((k) => (
+            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.action === 'doc' ? 'צירוף תעודת רכש' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
+            {r.action !== 'create' && r.action !== 'doc' && r.after && Object.keys(r.after).filter((k) => FIELD[k]).map((k) => (
               <span key={k} className="hist__change">{FIELD[k]}: <span className="muted">{showVal(k, r.before?.[k])}</span> ← {showVal(k, r.after?.[k])}</span>
             ))}
+            {r.action === 'doc' && r.after && <span className="hist__change">{String(r.after.docName ?? '')}</span>}
             {r.note && r.note !== 'ביטול פעולה' && <span className="hist__change muted">הערה: {r.note}</span>}
           </span>
         </li>

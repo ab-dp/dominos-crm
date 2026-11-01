@@ -38,7 +38,8 @@ export type Order = {
   branchName: string;
   cluster: string; // שם האשכול, קפוא ביום ההזמנה
   branchPhone: string;
-  amount: number;
+  amount: number; // הסכום לחיוב, לפי הסגירה מול הלקוח
+  calcAmount?: number; // הסכום המחושב מהפריטים – נשמר רק כשהסכום לחיוב שונה ידנית
   qNumber?: string;
   qAmount?: number;
   status: OrderStatus;

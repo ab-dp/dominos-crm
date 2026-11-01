@@ -181,7 +181,8 @@ service cloud.firestore {
         && d.items is list && d.items.size() <= 200
         && d.notes is list && d.notes.size() <= 200
         && noCard(opt(d, 'instructions')) && noCard(opt(d, 'note')) && noCard(opt(d, 'billingNote'))
-        && noCard(opt(d, 'address')) && noCard(opt(d, 'poNumber')) && noCard(opt(d, 'qNumber')) && noCard(opt(d, 'contents'))
+        && noCard(opt(d, 'address')) && noCard(opt(d, 'poNumber')) && noCard(opt(d, 'qNumber')) && noCard(opt(d, 'contents')) && noCard(opt(d, 'channel'))
+        && (!('calcAmount' in d) || (d.calcAmount is number && d.calcAmount >= 0))
         && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee < 10000))
         && d.keys().size() <= 50;
     }
@@ -215,6 +216,28 @@ service cloud.firestore {
         && request.resource.data.next == resource.data.next + 1
         && existsAfter(orderPath(resource.data.next));
       allow delete: if false;
+    }
+
+    // ---------- מסמכי הזמנה: הקובץ נשמר בתוך Firestore בחלקים (בלי Storage בתשלום). אין עריכה ואין מחיקה. ----------
+    match /orderDocs/{did} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.orderId is string
+        && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+        && request.resource.data.name is string && request.resource.data.name.size() <= 200
+        && request.resource.data.type in ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+        && request.resource.data.size is int && request.resource.data.size <= 2097152
+        && request.resource.data.chunks is int && request.resource.data.chunks >= 1 && request.resource.data.chunks <= 4;
+      allow update, delete: if false;
+
+      match /chunks/{ci} {
+        allow read: if isActive();
+        allow create: if isActive()
+          && getAfter(/databases/$(database)/documents/orderDocs/$(did)).data.by == request.auth.uid
+          && request.resource.data.data is bytes && request.resource.data.data.size() <= 720000;
+        allow update, delete: if false;
+      }
     }
 
     // ---------- הגדרות: רשימות וספים. כולם קוראים, רק מנהל משנה. ----------

@@ -102,6 +102,25 @@ function PoForm({ o, done }: { o: OrderView; done: () => void }) {
   );
 }
 
+/* מס' תעודת רכש – לא חובה; אפשר להוסיף או לתקן בכל הזמנה */
+export function PoEdit({ o }: { o: OrderView }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <button className="link">{o.poNumber ? 'שנה' : 'הוסף'}</button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content className="pop" sideOffset={6} align="start" dir="rtl">
+          <p className="pop__title">תעודת רכש</p>
+          <PoForm o={o} done={() => setOpen(false)} />
+          <Popover.Arrow className="pop__arrow" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 /* ---------- שלושת הסימונים ---------- */
 export function OrderMarks({ o, only }: { o: OrderView; only?: 'branch' | 'q' | 'pay' }) {
   const [open, setOpen] = useState<null | 'branch' | 'q' | 'pay'>(null);

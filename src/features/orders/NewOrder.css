@@ -55,3 +55,11 @@
   .norder__sum { display: none; }
   .no-items th:nth-child(3), .no-items td:nth-child(3) { display: none; }
 }
+
+/* סכום לחיוב – ברירת מחדל מחושבת, ניתן לשינוי ידני */
+.no-final { margin: 4px 0 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-25); }
+.no-final .cform__field { max-width: 280px; }
+.no-final.is-manual { background: var(--missing-bg); }
+.no-final__note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0; font-size: var(--text-label); }
+.no-final__tag { padding: 1px 8px; border-radius: 10px; background: var(--white); font-weight: 600; color: #6B4B00; }
+.norder .fdrop { margin-bottom: 10px; }
