@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: GitHub Pages redirect
 
 on:
   push:
@@ -19,14 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - run: npm ci --no-audit --no-fund
-      - run: npm run build
+      # המערכת מתארחת ב-Firebase Hosting; כאן נשאר רק דף שמפנה לכתובת החדשה
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: redirect
 
   deploy:
     needs: build
