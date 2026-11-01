@@ -3,14 +3,14 @@ import { useMemo, useState } from 'react';
 import { CheckCheck, Download } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
-import { Button } from '../../design/components';
+import { Button, Skeleton } from '../../design/components';
 import { Ltr, Money, Phone, fmtDate, fmtMoney, fmtPhone } from '../../lib/format';
 import { PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 import '../pages.css';
 import './CreditReportPage.css';
 
 export function CreditReportPage() {
-  const { orders, now, updateMany } = useStore();
+  const { orders, now, updateMany, loading } = useStore();
   const panel = usePanel();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const [customer, setCustomer] = useState('');
@@ -70,7 +70,7 @@ export function CreditReportPage() {
         </div>
       </div>
 
-      <div className="otable-wrap">
+      {loading ? <div className="card loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} h={30} />)}</div> : <div className="otable-wrap">
         <table className="otable creport">
           <caption className="sr-only">דוח הקפות מקובץ לפי לקוח</caption>
           <thead>
@@ -109,7 +109,7 @@ export function CreditReportPage() {
             <tr><th colSpan={4}>סה"כ</th><th className="num"><Ltr>{fmtMoney(sum(rows))}</Ltr></th><th colSpan={4}><Ltr>{rows.length}</Ltr> הזמנות</th></tr>
           </tfoot>
         </table>
-      </div>
+      </div>}
     </div>
   );
 }

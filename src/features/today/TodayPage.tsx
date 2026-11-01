@@ -8,7 +8,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
-import { Button, HealthBadge, RollingNumber, StatusMenu } from '../../design/components';
+import { Button, HealthBadge, RollingNumber, StatusMenu, Skeleton } from '../../design/components';
 import { HEALTH_RANK, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { FixButton, OrderMarks } from '../orders/OrderActions';
@@ -16,7 +16,7 @@ import '../pages.css';
 import './TodayPage.css';
 
 export function TodayPage() {
-  const { orders, now, requestStatus, dueTasks } = useStore();
+  const { orders, now, requestStatus, dueTasks, loading } = useStore();
   const panel = usePanel();
   const nav = useNavigate();
   const reduce = useReducedMotion();
@@ -37,7 +37,7 @@ export function TodayPage() {
     { key: 'q', title: 'להעביר ל-Q', icon: <Send size={20} />, list: open.filter((o) => o.date === today && !o.qNumber), to: '/orders?tab=today&filter=q', doneText: 'הכל הועבר' },
     { key: 'credit', title: 'אשראי לחייב', icon: <CreditCard size={20} />, list: open.filter((o) => o.date === today && o.method === 'credit' && (o.payment === 'pending' || o.payment === 'failed')), to: '/orders?tab=today&filter=credit', doneText: 'הכל חויב' },
   ];
-  const allDone = tasks.every((t) => t.list.length === 0);
+  const allDone = !loading && tasks.every((t) => t.list.length === 0);
 
   const urgent = open
     .filter((o) => o.health === 'critical' || o.health === 'urgent')
@@ -120,7 +120,7 @@ export function TodayPage() {
                             </motion.span>
                           ) : (
                             <motion.span key="n" exit={reduce ? { opacity: 0 } : { rotateY: -90, opacity: 0 }} transition={{ duration: 0.16 }}>
-                              <RollingNumber value={n} />
+                              {loading ? <Skeleton w={28} h={26} /> : <RollingNumber value={n} />}
                             </motion.span>
                           )}
                         </AnimatePresence>
@@ -141,7 +141,7 @@ export function TodayPage() {
             <h2 id="h-urgent" className="card__title">דחוף עכשיו</h2>
             {urgent.length > 0 && <span className="pill pill--alert"><Ltr>{urgent.length}</Ltr></span>}
           </div>
-          {urgent.length === 0 ? (
+          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2].map((i) => <Skeleton key={i} h={34} />)}</div> : urgent.length === 0 ? (
             <p className="calm"><CircleCheckBig size={18} aria-hidden="true" /> אין כרגע שום דבר דחוף</p>
           ) : (
             <div className="urgent">
@@ -157,7 +157,7 @@ export function TodayPage() {
                           className={`urgent__row urgent__row--${o.health}`}>
                           <button className="urgent__main" onClick={(e) => panel.open(o.id, e.currentTarget)}>
                             <span className="urgent__issue">{o.issues[0].label}</span>
-                            <span className="urgent__meta">{o.customerName} · {o.date === today ? 'היום' : o.date === tomorrow ? 'מחר' : <Ltr>{fmtDate(o.date)}</Ltr>} <Ltr>{o.time}</Ltr> · {o.branchName}</span>
+                            <span className="urgent__meta" title={`${o.customerName} · ${o.time} · ${o.branchName}`}>{o.customerName} · {o.date === today ? 'היום' : o.date === tomorrow ? 'מחר' : <Ltr>{fmtDate(o.date)}</Ltr>} <Ltr>{o.time}</Ltr> · {o.branchName}</span>
                           </button>
                           <FixButton key={o.issues[0].rule} o={o} issue={o.issues[0]} onOpen={() => panel.open(o.id)} />
                         </motion.li>
@@ -176,7 +176,7 @@ export function TodayPage() {
             <h2 id="h-timeline" className="card__title">ציר הזמנות היום</h2>
             <span className="muted"><Ltr>{todays.length}</Ltr> הזמנות</span>
           </div>
-          {todays.length === 0 ? <p className="calm">אין הזמנות להיום</p> : (
+          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={34} />)}</div> : todays.length === 0 ? <p className="calm">אין הזמנות להיום</p> : (
             <ol className="tl">
               {todays.map((o, i) => (
                 <TimelineRow key={o.id} o={o} isNowBefore={i === nowIdx} isNext={o.id === nextUp?.id} now={now} onOpen={(el) => panel.open(o.id, el)}
@@ -212,7 +212,7 @@ function TimelineRow({ o, isNowBefore, isNext, now, onOpen, status }: { o: Order
       <li className={`tl__row ${past ? 'is-past' : ''} ${isNext ? 'is-next' : ''} ${CLOSED.includes(o.status) ? 'is-closed' : ''}`}>
         <span className="tl__time"><Ltr>{o.time}</Ltr></span>
         <button className="tl__main" onClick={(e) => onOpen(e.currentTarget)}>
-          <span className="tl__cust">
+          <span className="tl__cust" title={o.customerName}>
             {o.customerName}
             {isNext && <span className="tl__next">הבאה בתור · בעוד <Ltr>{minutes >= 60 ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}` : `${minutes}`}</Ltr> {minutes >= 60 ? 'שעות' : 'דק\''}</span>}
           </span>

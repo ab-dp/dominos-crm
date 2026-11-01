@@ -1,13 +1,14 @@
 .bpick { display: grid; gap: 4px; max-width: 420px; }
 .bpick__trigger {
   display: flex; align-items: center; gap: 8px;
-  height: 44px; padding: 0 12px;
-  border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white);
+  height: 38px; padding: 0 12px;
+  border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white);
+  box-shadow: inset 0 1px 1px rgba(15, 27, 42, 0.03);
   font: inherit; text-align: start; cursor: pointer;
   transition: border-color var(--dur-instant) var(--ease), box-shadow var(--dur-instant) var(--ease);
 }
-.bpick__trigger:hover { border-color: var(--gray-600); }
-.bpick__trigger[aria-expanded="true"] { border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0,120,174,0.18); }
+.bpick__trigger:hover { border-color: var(--gray-300); }
+.bpick__trigger[aria-expanded="true"] { border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0,100,145,0.16); }
 .bpick__value { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
 .bpick__value b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bpick__placeholder { flex: 1; color: var(--gray-600); }

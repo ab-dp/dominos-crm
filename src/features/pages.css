@@ -113,3 +113,4 @@
   .head-stats > div { flex: 1; min-width: 0; padding: 8px 12px; }
   .head-stats dd { font-size: 18px; }
 }
+.loading-rows { display: grid; gap: 10px; padding: 16px 18px; }

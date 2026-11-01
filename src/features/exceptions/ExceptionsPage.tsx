@@ -9,6 +9,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useStore, type OrderView } from '../../data/store';
 import { setTaskDone, type Task } from '../../data/tasks';
 import { useToast } from '../../design/Toast';
+import { Skeleton } from '../../design/components';
 import { Ltr, fmtDate, toISODate } from '../../lib/format';
 import { RULE_LABEL, type Issue, type Severity } from '../../rules-engine/health';
 import { FixButton } from '../orders/OrderActions';
@@ -19,7 +20,7 @@ type Row = { o: OrderView; issue: Issue };
 const GROUPS: [Severity, string][] = [['red', 'חריגות'], ['orange', 'דחוף'], ['yellow', 'חסר']];
 
 export function ExceptionsPage() {
-  const { orders, now, tasks } = useStore();
+  const { orders, now, tasks, loading } = useStore();
   const { profile } = useAuth();
   const panel = usePanel();
   const reduce = useReducedMotion();
@@ -80,7 +81,7 @@ export function ExceptionsPage() {
       <div className="exc__grid">
         <section className="card" aria-labelledby="h-exc">
           <div className="card__head"><h2 id="h-exc" className="card__title">הזמנות שדורשות טיפול</h2><span className="muted exc__n"><Ltr>{rows.length}</Ltr> שורות</span></div>
-          {rows.length === 0 ? (
+          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={40} />)}</div> : rows.length === 0 ? (
             <p className="calm exc__calm"><CircleCheckBig size={18} aria-hidden="true" /> {rule ? `אין "${RULE_LABEL[Number(rule)]}"` : 'אין חריגים. הכל מטופל'}</p>
           ) : GROUPS.map(([sev, title]) => {
             const list = by(sev);

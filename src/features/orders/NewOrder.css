@@ -61,5 +61,5 @@
 .no-final .cform__field { max-width: 280px; }
 .no-final.is-manual { background: var(--missing-bg); }
 .no-final__note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0; font-size: var(--text-label); }
-.no-final__tag { padding: 1px 8px; border-radius: 10px; background: var(--white); font-weight: 600; color: #6B4B00; }
+.no-final__tag { padding: 1px 8px; border-radius: 10px; background: var(--white); font-weight: 600; color: var(--missing-fg); }
 .norder .fdrop { margin-bottom: 10px; }

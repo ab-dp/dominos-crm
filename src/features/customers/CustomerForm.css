@@ -14,7 +14,7 @@
 .cform__sec legend { padding: 0; margin-bottom: 8px; font-size: var(--text-card-title); font-weight: 600; float: right; width: 100%; }
 .cform__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 10px; clear: both; }
 .cform__field { display: grid; gap: 4px; align-content: start; }
-.cform__field .input { height: 42px; }
+.cform__field .input, .cform .bpick__trigger { height: 40px; }
 .cform__field .seg { width: fit-content; }
 .cform__field .seg button { height: 34px; }
 .cform__ta { height: auto !important; padding: 10px 12px; resize: vertical; font: inherit; line-height: 1.5; }
@@ -35,3 +35,6 @@
 .cform__live { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-label); color: var(--urgent-fg); }
 @media (max-width: 640px) { .cform__row { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .cform, .cform__warn { animation: none; } }
+/* כותרת החלק צפה לרוחב מלא – כל מה שאחריה מתחיל בשורה חדשה, גם שדה רחב שלא בתוך שורה */
+.cform__sec > :not(legend) { clear: both; }
+.cform__field.is-wide { grid-column: 1 / -1; }
