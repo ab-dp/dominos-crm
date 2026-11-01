@@ -6,7 +6,7 @@ import { usePref } from '../../lib/prefs';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
 import { HEALTH_RANK } from '../../rules-engine/health';
-import { Ltr, fmtMoney, toISODate } from '../../lib/format';
+import { Ltr, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { OrdersTable } from './OrdersTable';
 import '../pages.css';
 
@@ -64,7 +64,16 @@ export function OrdersPage() {
   return (
     <div className="page">
       <header className="page__head">
-        <h1 className="page__title">הזמנות</h1>
+        <div>
+          <h1 className="page__title">הזמנות</h1>
+          <p className="page__sub">יום {weekday(today)} · <Ltr>{fmtDate(today)}</Ltr></p>
+        </div>
+        {/* סיכום התצוגה הנוכחית – מתעדכן עם הטאב, הסינון והחיפוש */}
+        <dl className="head-stats" aria-live="polite">
+          <div><dt>הזמנות בתצוגה</dt><dd><Ltr>{rows.length}</Ltr></dd></div>
+          <div><dt>סך הכל</dt><dd><Ltr>{fmtMoney(total)}</Ltr></dd></div>
+          <div className={needs ? 'is-alert' : ''}><dt>דורשות טיפול</dt><dd><Ltr>{needs}</Ltr></dd></div>
+        </dl>
       </header>
       {error && <p className="cform__formerr" role="alert">{error} – ההזמנות לא נטענו. רענן את הדף.</p>}
 
@@ -77,7 +86,7 @@ export function OrdersPage() {
         ))}
       </div>
 
-      <div className="toolbar">
+      <div className="tablebar">
         {tab === 'future' && (
           <div className="seg" role="group" aria-label="טווח ימים">
             {RANGES.map((r) => (
@@ -93,13 +102,6 @@ export function OrdersPage() {
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="tablebar">
-        <p className="tablebar__summary" aria-live="polite">
-          <b><Ltr>{rows.length}</Ltr></b> הזמנות <span aria-hidden="true">·</span> <b><Ltr>{fmtMoney(total)}</Ltr></b>
-          {needs > 0 && <> <span aria-hidden="true">·</span> <span className="tablebar__needs"><Ltr>{needs}</Ltr> דורשות טיפול</span></>}
-        </p>
         <label className="tablebar__search">
           <Search size={16} aria-hidden="true" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="סינון בטבלה: לקוח, מס' הזמנה, Q, סניף" aria-label="סינון בטבלה" />

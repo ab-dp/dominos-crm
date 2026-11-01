@@ -1,110 +1,114 @@
-.today__hero {
-  position: relative; isolation: isolate;
-  margin: -28px calc(-1 * var(--gutter)) 0; padding: 28px var(--gutter) 76px;
-  align-items: flex-end;
-  background-color: var(--navy);
-  color: var(--white);
-  overflow: hidden;
-}
-.today__hero::before {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  background-image: radial-gradient(rgba(255,255,255,0.09) 1.6px, transparent 2px), radial-gradient(rgba(255,255,255,0.09) 1.6px, transparent 2px);
-  background-size: 26px 26px; background-position: 0 0, 13px 13px;
-  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.9), rgba(0,0,0,0.15) 70%);
-  mask-image: linear-gradient(to left, rgba(0,0,0,0.9), rgba(0,0,0,0.15) 70%);
-}
-.today__hero::after {
-  content: ""; position: absolute; z-index: -1; left: -60px; top: -80px; width: 360px; height: 360px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(79,176,220,0.22), transparent 65%);
-}
-.today__hero .page__title { color: var(--white); font-size: 28px; }
-.today__hero .today__date { color: var(--navy-muted); }
-.today__hero .today__summary { color: var(--navy-text); }
-.today__hero .today__summary b { color: var(--white); }
-.today__hero .today__summary .is-critical, .today__hero .today__summary .is-urgent { color: #FFB4BF; }
-.today__hero .seg { background: rgba(255,255,255,0.1); }
-.today__hero .seg button { color: var(--navy-text); }
-.today__hero .seg button.is-on { background: var(--white); color: var(--navy); }
+/* מסך "היום": כותרת שקטה על משטח העבודה, רצועת משימות בוקר אחת, ושני טורים – דחוף עכשיו וציר היום. */
 .today { display: flex; flex-direction: column; }
 .today > .admin-banner { order: 2; }
 .today > .morning { order: 1; }
 .today > .today__grid { order: 3; }
-.morning { position: relative; margin: -52px 0 20px; }
-.morning__head .section-title { color: var(--white); }
-.morning__head .morning__count { color: var(--navy-text); }
-.morning__head .progress { background: rgba(255,255,255,0.16); }
-.morning__head .progress__bar { background: #5FD39A; }
+.today > .info { order: 4; }
 
-.morning__cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; transform-origin: top; }
+/* ---------- כותרת אישית ---------- */
+.today__hero { align-items: flex-end; padding-bottom: 4px; }
+.today__hero .page__title { font-size: 26px; }
+.today__date { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
+.today__date::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok-fg); box-shadow: 0 0 0 3px var(--ok-bg); }
+.today__summary { margin: 4px 0 0; color: var(--gray-600); font-size: var(--text-table); }
+.today__summary b { font-weight: 600; color: var(--gray-900); }
+.today__summary .is-critical { color: var(--danger-fg); }
+.today__summary .is-urgent { color: var(--urgent-fg); }
+
+/* ---------- משימות הבוקר: רצועה אחת, ארבעה טורים, התקדמות בקצה העליון ---------- */
+.morning { position: relative; margin: 0 0 20px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); overflow: hidden; }
+.section-title { margin: 0; font-size: var(--text-card-title); font-weight: 600; }
+.morning__head { display: flex; align-items: center; gap: 14px; padding: 14px 20px 0; }
+.morning__head .section-title { font-size: var(--text-micro); font-weight: 600; letter-spacing: 0.04em; color: var(--gray-600); }
+.morning__count { margin-inline-start: auto; font: 500 var(--text-micro) var(--font-mono); color: var(--gray-600); }
+.progress { position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--gray-100); overflow: hidden; }
+.progress__bar { display: block; height: 100%; background: var(--ok-fg); }
+.morning__cards { list-style: none; margin: 0; padding: 4px 0 6px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); transform-origin: top; }
+.morning__cards > li + li { border-inline-start: 1px solid var(--gray-100); }
 .task {
   position: relative;
   width: 100%; height: 100%;
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px 18px;
-  border: 0; border-radius: var(--radius-panel);
-  background: var(--white); box-shadow: var(--shadow-float);
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
+  padding: 14px 20px 16px;
+  border: 0; background: transparent;
   font: inherit; text-align: start; cursor: pointer;
-  transition: border-color var(--dur-quick) var(--ease), box-shadow var(--dur-quick) var(--ease), transform var(--dur-quick) var(--ease);
+  transition: background var(--dur-instant) var(--ease);
 }
-.task:hover { box-shadow: 0 0 0 1px var(--brand-100), 0 12px 28px rgba(15,27,42,0.16); transform: translateY(-2px); }
-.task__step {
-  position: absolute; top: 8px; inset-inline-end: 10px;
-  font: 500 11px var(--font-mono); color: var(--gray-300);
-}
-.task__icon { flex: none; width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; background: var(--gray-25); color: var(--navy); }
-.task__text { flex: 1; display: grid; min-width: 0; }
-.task__title { font-weight: 600; }
+.task:hover { background: var(--gray-50); }
+.task:hover .task__title { color: var(--brand-700); }
+.task__step { display: none; }
+.task__icon { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--gray-25); color: var(--navy); border: 1px solid var(--gray-100); }
+.task__icon svg { width: 18px; height: 18px; }
+.task__text { display: grid; min-width: 0; }
+.task__title { font-weight: 600; transition: color var(--dur-instant) var(--ease); }
 .task__sub { font-size: var(--text-label); color: var(--gray-600); }
-.task__count { font: 500 var(--text-kpi) var(--font-mono); color: var(--gray-900); perspective: 400px; min-width: 36px; text-align: center; letter-spacing: -0.02em; }
-.task__ok { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--ok-fg); color: var(--white); }
-.task--done { background: var(--white); }
-.task--done .task__sub { color: var(--ok-fg); }
-.task--done .task__icon { background: var(--ok-bg); color: var(--ok-fg); }
-.task--done .task__title { color: var(--gray-600); }
+.task__count { font: 500 30px/1 var(--font-mono); color: var(--gray-900); perspective: 400px; min-width: 36px; text-align: center; letter-spacing: -0.03em; }
+.task__ok { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ok-bg); color: var(--ok-fg); }
+.task--done .task__title { color: var(--gray-600); font-weight: 500; }
+.task--done .task__icon { background: var(--ok-bg); color: var(--ok-fg); border-color: transparent; }
 .morning__done {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  height: 52px; border-radius: var(--radius-panel);
-  background: var(--white); color: var(--ok-fg); font-weight: 600; box-shadow: var(--shadow-float);
+  height: 56px; color: var(--ok-fg); font-weight: 600;
   transform-origin: top;
 }
 
-.today__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; align-items: start; }
+/* ---------- שני הטורים ---------- */
+.today__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+.today__grid > * { min-width: 0; }
 .pill { min-width: 22px; height: 20px; padding: 0 7px; border-radius: 10px; font: 600 11px/20px var(--font-mono); text-align: center; }
-.pill--alert { background: var(--brand-red); color: var(--white); }
-.calm { display: flex; align-items: center; gap: 8px; margin: 0; padding: 22px 16px; color: var(--ok-fg); font-weight: 500; }
+.pill--alert { background: var(--danger-bg); color: var(--danger-fg); }
+.calm { display: flex; align-items: center; gap: 8px; margin: 0; padding: 22px 18px; color: var(--ok-fg); font-weight: 500; }
 
-.urgent { list-style: none; margin: 0; padding: 8px; display: grid; gap: 6px; }
-.urgent__row { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 4px; border-radius: var(--radius); overflow: hidden; background: var(--white); border: 1px solid var(--gray-100); }
-.urgent__row--critical { box-shadow: inset -3px 0 0 var(--danger-fg); }
-.urgent__row--urgent { box-shadow: inset -3px 0 0 var(--urgent-edge); }
-.urgent__main { flex: 1; min-width: 0; display: grid; gap: 1px; padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; font: inherit; text-align: start; cursor: pointer; }
-.urgent__main:hover { background: var(--gray-50); }
+/* ---------- דחוף עכשיו: שורות על קו הפרדה, פס דק בקצה, בלי קופסאות ---------- */
+.urgent { display: grid; gap: 0; padding: 4px 0 8px; }
+.urgent__group + .urgent__group { border-top: 1px solid var(--gray-100); margin-top: 4px; padding-top: 4px; }
+.urgent ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.urgent__label { margin: 10px 18px 4px; font-size: var(--text-micro); font-weight: 600; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; }
+.urgent__label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+.urgent__label--critical { color: var(--danger-fg); }
+.urgent__label--critical::before { background: var(--danger-fg); }
+.urgent__label--urgent { color: var(--urgent-fg); }
+.urgent__label--urgent::before { background: var(--urgent-edge); }
+.urgent__row { position: relative; display: flex; align-items: center; gap: 8px; padding: 2px 12px 2px 10px; }
+.urgent__row + .urgent__row::after { content: ""; position: absolute; top: 0; inset-inline: 18px; height: 1px; background: var(--gray-100); }
+.urgent__row::before { content: ""; position: absolute; inset-inline-start: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; }
+.urgent__row--critical::before { background: var(--danger-fg); }
+.urgent__row--urgent::before { background: var(--urgent-edge); }
+.urgent__main { flex: 1; min-width: 0; display: grid; gap: 1px; padding: 10px 8px; border: 0; border-radius: 6px; background: transparent; font: inherit; text-align: start; cursor: pointer; }
+.urgent__main:hover .urgent__issue { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .urgent__issue { font-weight: 600; font-size: var(--text-table); }
 .urgent__row--critical .urgent__issue { color: var(--danger-fg); }
 .urgent__row--urgent .urgent__issue { color: var(--urgent-fg); }
 .urgent__meta { font-size: var(--text-label); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.tl { list-style: none; margin: 0; padding: 4px 8px 8px; }
-.tl__row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius); }
-.tl__row:hover { background: var(--gray-25); }
+/* ---------- ציר היום ---------- */
+.tl { list-style: none; margin: 0; padding: 6px 10px 10px; }
+.tl__row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius); transition: background var(--dur-instant) var(--ease); }
+.tl__row:hover { background: var(--gray-50); }
 .tl__row.is-past .tl__time, .tl__row.is-past .tl__cust { color: var(--gray-600); }
+.tl__row.is-past:not(.is-closed) .tl__meta { color: var(--gray-600); }
 .tl__time { width: 50px; flex: none; font: 500 15px var(--font-mono); letter-spacing: -0.02em; }
 .tl__main { flex: 1; min-width: 0; display: grid; padding: 2px 4px; border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; border-radius: 6px; }
 .tl__cust { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tl__meta { font-size: var(--text-label); color: var(--gray-600); }
 .tl__marks { display: inline-flex; flex: none; }
-.tl__now { position: relative; display: flex; align-items: center; gap: 8px; height: 26px; margin: 2px 0; color: var(--brand-600); font-size: var(--text-label); font-weight: 600; }
-.tl__now::after { content: ""; flex: 1; height: 2px; background: var(--brand-600); border-radius: 1px; }
-.tl__now::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand-600); box-shadow: 0 0 0 4px rgba(0,100,145,0.15); }
+.tl__now { position: relative; display: flex; align-items: center; gap: 8px; height: 26px; margin: 4px 0; color: var(--brand-700); font-size: var(--text-micro); font-weight: 600; }
+.tl__now::after { content: ""; flex: 1; height: 1px; background: var(--brand-600); }
+.tl__now::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-600); box-shadow: 0 0 0 3px rgba(0, 100, 145, 0.15); }
 .tl__now bdi { font-family: var(--font-mono); }
+.tl__row.is-next { background: var(--brand-50); box-shadow: inset -2px 0 0 var(--brand-600); }
+.tl__row.is-next .tl__time { color: var(--brand-700); }
+.tl__next { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: 8px; padding: 1px 8px; border-radius: 10px; background: var(--white); border: 1px solid var(--brand-100); color: var(--brand-700); font-size: 11px; font-weight: 600; vertical-align: 1px; }
 
-.info { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+/* ---------- שורת מידע תחתונה ---------- */
+.info { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
 .info__item {
   display: inline-flex; align-items: center; gap: 8px;
-  height: 44px; padding: 0 14px;
+  height: 40px; padding: 0 14px;
   border: 1px solid var(--gray-100); border-radius: var(--radius);
   background: var(--white); color: var(--gray-600);
-  font: inherit; font-size: var(--text-table);
+  font: inherit; font-size: var(--text-label);
+  transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease);
 }
 button.info__item { cursor: pointer; }
 button.info__item:hover { border-color: var(--gray-300); color: var(--gray-900); }
@@ -112,47 +116,13 @@ button.info__item:hover { border-color: var(--gray-300); color: var(--gray-900);
 
 @media (max-width: 1200px) {
   .morning__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .morning__cards > li:nth-child(3) { border-inline-start: 0; }
+  .morning__cards > li:nth-child(n+3) { border-top: 1px solid var(--gray-100); }
   .today__grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
-  .today__hero { margin: -18px -16px 0; padding: 22px 16px 72px; }
   .today__hero .page__head-end { margin-inline-start: 0; }
   .morning__cards { grid-template-columns: 1fr; }
-  .morning__head { flex-wrap: wrap; }
+  .morning__cards > li + li { border-inline-start: 0; border-top: 1px solid var(--gray-100); }
   .tl__marks { display: none; }
 }
-.today__grid > * { min-width: 0; }
-
-/* ---------- כותרת אישית ---------- */
-.today__date { margin: 0 0 2px; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
-.today__summary { margin: 4px 0 0; color: var(--gray-600); }
-.today__summary b { font-weight: 600; }
-.today__summary .is-critical { color: var(--danger-fg); }
-.today__summary .is-urgent { color: var(--urgent-fg); }
-
-/* ---------- התקדמות משימות הבוקר ---------- */
-.section-title { margin: 0; font-size: var(--text-card-title); font-weight: 600; }
-.morning__head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-.progress { flex: 0 1 220px; height: 6px; border-radius: 3px; background: var(--gray-100); overflow: hidden; }
-.progress__bar { display: block; height: 100%; border-radius: 3px; background: var(--ok-fg); }
-.morning__count { font-size: var(--text-label); color: var(--gray-600); }
-
-/* ---------- דחוף עכשיו בקבוצות ---------- */
-.urgent { display: grid; gap: 12px; }
-.urgent ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.urgent__label { margin: 0 4px 6px; font-size: var(--text-label); font-weight: 600; display: flex; align-items: center; gap: 6px; }
-.urgent__label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
-.urgent__label--critical { color: var(--danger-fg); }
-.urgent__label--critical::before { background: var(--danger-fg); }
-.urgent__label--urgent { color: var(--urgent-fg); }
-.urgent__label--urgent::before { background: var(--urgent-edge); }
-
-/* ---------- הבאה בתור ---------- */
-.tl__row.is-next { background: var(--brand-50); box-shadow: inset -3px 0 0 var(--brand-600); }
-.tl__row.is-next .tl__time { color: var(--brand-700); }
-.tl__next { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: 8px; padding: 1px 8px; border-radius: 10px; background: var(--white); color: var(--brand-800); font-size: 12px; font-weight: 600; vertical-align: 1px; }
-.tl__row.is-past:not(.is-closed) .tl__meta { color: var(--gray-600); }
-.today > .info { order: 4; }
-@media (max-width: 700px) { .morning__head .morning__count { display: none; } .morning__head .progress { flex: 1; } }
-/* במסך רחב התוכן מוגבל ל-1440px, אבל הפס הכחול ממשיך לכל רוחב משטח העבודה */
-.today__hero { box-shadow: 0 0 0 100vmax var(--navy); clip-path: inset(0 -100vmax); }
