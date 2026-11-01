@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileCheck2, Plus, Search, Users, X } from 'lucide-react';
-import { primaryContact, useCustomers, type Customer } from '../../data/customers';
+import { customerGaps, primaryContact, useCustomers, type Customer } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
 import { Button, EmptyState, Skeleton, Tip } from '../../design/components';
@@ -21,6 +21,7 @@ export function CustomersPage() {
   const nav = useNavigate();
   const [type, setType] = usePref<TypeFilter>('customersType', 'regular');
   const [showInactive, setShowInactive] = useState(false);
+  const [gapsOnly, setGapsOnly] = useState(false); // "השלמת תיק לקוח": רק לקוחות שחסרים להם פרטים
   const [q, setQ] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -38,9 +39,11 @@ export function CustomersPage() {
   const rows = live
     .filter((c) => type === 'all' || c.type === type)
     .filter((c) => showInactive || c.status === 'active')
+    .filter((c) => !gapsOnly || customerGaps(c).length > 0)
     .filter((c) => !s || c.name.toLowerCase().includes(s)
       || (digits.length >= 3 && (c.taxId.includes(digits) || c.accountPhone.includes(digits) || c.contacts.some((x) => x.phone.includes(digits))))
       || c.contacts.some((x) => x.name.includes(q.trim())));
+  const gapCount = live.filter((c) => (type === 'all' || c.type === type) && c.status === 'active' && customerGaps(c).length > 0).length;
   const counts = { regular: live.filter((c) => c.type === 'regular' && (showInactive || c.status === 'active')).length, occasional: live.filter((c) => c.type === 'occasional' && (showInactive || c.status === 'active')).length };
 
   return (
@@ -61,6 +64,7 @@ export function CustomersPage() {
           <button className={type === 'occasional' ? 'is-on' : ''} aria-pressed={type === 'occasional'} onClick={() => setType('occasional')}>מזדמנים <Ltr>{counts.occasional}</Ltr></button>
           <button className={type === 'all' ? 'is-on' : ''} aria-pressed={type === 'all'} onClick={() => setType('all')}>הכל</button>
         </div>
+        <button className={`chip ${gapsOnly ? 'is-on' : ''}`} aria-pressed={gapsOnly} onClick={() => setGapsOnly(!gapsOnly)}>חסרים פרטים <Ltr>{gapCount}</Ltr></button>
         <label className="check-inline"><input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> הצג לא פעילים</label>
         <label className="tablebar__search">
           <Search size={16} aria-hidden="true" />
@@ -75,7 +79,7 @@ export function CustomersPage() {
           <div className="card">
             <EmptyState icon={<Users size={24} />} title={q ? 'לא נמצא לקוח מתאים' : live.length === 0 ? 'עוד אין לקוחות' : 'אין לקוחות בתצוגה הזו'}
               action={<Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>{q ? `לקוח חדש: "${q}"` : 'לקוח חדש'}</Button>}>
-              {live.length === 0 ? 'מוסיפים את הלקוחות הקבועים כאן, או מייבאים מאקסל בשלב 10.' : undefined}
+              {live.length === 0 ? 'מוסיפים כאן את לקוחות ההקפה הקבועים. לקוח אחר נוצר בהזמנה הראשונה שלו (במסך ההזמנה ← "לקוח חדש").' : gapsOnly ? 'לכל הלקוחות בתצוגה הזו יש תיק מלא.' : undefined}
             </EmptyState>
           </div>
         ) : (
@@ -83,10 +87,10 @@ export function CustomersPage() {
             <table className="otable otable--dense cust-table">
               <caption className="sr-only">לקוחות</caption>
               <thead>
-                <tr><th>שם</th><th>סוג</th><th>ח.פ</th><th>איש קשר</th><th>טלפון</th><th>אמצעי תשלום</th><th>טלפון הקפה</th><th>מחירון</th><th><span className="sr-only">תעודת רכש</span></th></tr>
+                <tr><th>שם</th><th>סוג</th><th>ח.פ</th><th>איש קשר</th><th>טלפון</th><th>אמצעי תשלום</th><th>טלפון הקפה</th><th>מחירון</th><th><span className="sr-only">תעודת רכש</span></th>{gapsOnly && <th>מה חסר</th>}</tr>
               </thead>
               <tbody>
-                {rows.map((c) => <CustomerRow key={c.id} c={c} methodLabel={methodLabel} plName={plName} shared={(sharedPhones[c.accountPhone] ?? 0) > 1} onOpen={() => nav(`/customers/${c.id}`)} />)}
+                {rows.map((c) => <CustomerRow key={c.id} c={c} methodLabel={methodLabel} plName={plName} shared={(sharedPhones[c.accountPhone] ?? 0) > 1} gaps={gapsOnly} onOpen={() => nav(`/customers/${c.id}`)} />)}
               </tbody>
             </table>
           </div>
@@ -97,7 +101,7 @@ export function CustomersPage() {
   );
 }
 
-function CustomerRow({ c, methodLabel, plName, shared, onOpen }: { c: Customer; methodLabel: (id: string) => string; plName: (id: string) => string; shared: boolean; onOpen: () => void }) {
+function CustomerRow({ c, methodLabel, plName, shared, gaps, onOpen }: { c: Customer; methodLabel: (id: string) => string; plName: (id: string) => string; shared: boolean; gaps: boolean; onOpen: () => void }) {
   const pc = primaryContact(c);
   return (
     <tr className={`orow ${c.status === 'inactive' ? 'is-inactive-row' : ''}`} tabIndex={0} onClick={onOpen}
@@ -117,6 +121,7 @@ function CustomerRow({ c, methodLabel, plName, shared, onOpen }: { c: Customer; 
       <td className="num">{c.accountPhone ? <><Ltr>{fmtPhone(c.accountPhone)}</Ltr>{shared && <span className="shared-tag">כללי</span>}</> : <span className="muted">—</span>}</td>
       <td>{plName(c.priceListId) || <span className="muted">—</span>}</td>
       <td>{c.poRequired && <Tip label="נדרשת תעודת רכש"><span className="po-tag" role="img" tabIndex={0} aria-label="נדרשת תעודת רכש"><FileCheck2 size={15} /></span></Tip>}</td>
+      {gaps && <td className="cust-gaps">{customerGaps(c).map((g) => <span key={g.label} className="mgaps__tag">{g.label}</span>)}</td>}
     </tr>
   );
 }

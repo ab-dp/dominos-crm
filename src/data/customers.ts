@@ -150,3 +150,17 @@ export async function mergeCustomers(source: Customer, target: Customer, note: s
   audit(batch, target.id, 'merge', null, { mergedFrom: source.id, sourceName: source.name }, note);
   await batch.commit();
 }
+
+/* מה חסר בתיק הלקוח (אפיון 10: התחלה נקייה – משלימים בהדרגה). tab: איפה משלימים בתיק. */
+export type CustomerGap = { label: string; tab: 'overview' | 'prices' | 'payment' | 'contacts' };
+export function customerGaps(c: Customer): CustomerGap[] {
+  const g: CustomerGap[] = [];
+  if (!c.contacts.length) g.push({ label: 'איש קשר', tab: 'contacts' });
+  else if (!c.contacts.some((x) => x.phone)) g.push({ label: 'טלפון איש קשר', tab: 'contacts' });
+  if (!c.addresses.length) g.push({ label: 'כתובת אספקה', tab: 'contacts' });
+  if (c.type === 'regular' && !c.taxId) g.push({ label: 'ח.פ', tab: 'overview' });
+  if (c.type === 'regular' && !c.priceListId) g.push({ label: 'מחירון', tab: 'prices' });
+  if (c.paymentMethod === 'account' && !c.accountPhone) g.push({ label: 'טלפון הקפה', tab: 'payment' });
+  if (c.paymentMethod === 'account' && !c.billingInstructions) g.push({ label: 'הנחיות חיוב', tab: 'payment' });
+  return g;
+}

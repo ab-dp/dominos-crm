@@ -8,7 +8,7 @@ import {
   Plus, Star, Trash2, UserCheck, UserRound, UserX, Wallet,
 } from 'lucide-react';
 import {
-  addActivity, newId, primaryContact, updateCustomer, useActivity, useCustomerHistory, useCustomers,
+  addActivity, customerGaps, newId, primaryContact, updateCustomer, useActivity, useCustomerHistory, useCustomers,
   type Address, type Contact, type Customer,
 } from '../../data/customers';
 import { useBranches, useClusters } from '../../data/branches';
@@ -334,12 +334,7 @@ function OrdersTab({ c, orders, loading }: { c: Customer; orders: OrderView[]; l
 }
 
 function missingOf(c: Customer): [string, Tab][] {
-  const m: [string, Tab][] = [];
-  if (!c.contacts.length) m.push(['איש קשר', 'contacts']);
-  if (!c.addresses.length) m.push(['כתובת אספקה קבועה', 'contacts']);
-  if (c.type === 'regular' && !c.priceListId) m.push(['מחירון', 'prices']);
-  if (c.paymentMethod === 'account' && !c.billingInstructions) m.push(['הנחיות חיוב', 'payment']);
-  return m;
+  return customerGaps(c).map((g) => [g.label, g.tab]);
 }
 
 /* ---------- מחירון + מחירים ייחודיים ללקוח ---------- */

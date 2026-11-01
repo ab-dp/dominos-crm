@@ -2,7 +2,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX } from 'lucide-react';
+import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX, Download } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
@@ -12,6 +12,9 @@ import { Button, HealthBadge, Missing, RollingNumber, StatusMenu, Skeleton } fro
 import { HEALTH_RANK, missingOf, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { FixButton, OrderMarks } from '../orders/OrderActions';
+import { downloadCsv } from '../../lib/csv';
+import { PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
+import { fmtPhone } from '../../lib/format';
 import '../pages.css';
 import './TodayPage.css';
 
@@ -56,6 +59,19 @@ export function TodayPage() {
   const hour = now.getHours();
   const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : 'ערב טוב';
 
+  /* "הורד היום ומחר" (אפיון 16): כל הזמנות היום ומחר לאקסל – לעבודה גם אם המערכת לא זמינה. תמיד של כולם, לא רק "שלי". */
+  const downloadTodayTomorrow = () => {
+    const list = orders.filter((o) => (o.date === today || o.date === tomorrow) && o.status !== 'cancelled')
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    downloadCsv(`הזמנות היום ומחר ${fmtDate(today)}.csv`, [
+      ['תאריך', 'שעה', 'הזמנה', 'לקוח', 'סניף', 'טלפון סניף', 'סטטוס', 'אישור סניף', "מס' Q", 'סכום', 'אמצעי תשלום', 'טלפון הקפה', 'מצב תשלום', 'משלוח/איסוף', 'כתובת', 'איש קשר', 'טלפון', 'תכולה', 'הנחיות'],
+      ...list.map((o) => [fmtDate(o.date), o.time, o.id, o.customerName, o.branchName, o.branchPhone ? fmtPhone(o.branchPhone) : '', STATUS_LABEL[o.status],
+        o.branchApproval?.manager ?? '', o.qNumber ?? '', o.qAmount ?? o.amount, o.methodLabel ?? o.method, o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment],
+        o.delivery === 'delivery' ? 'משלוח' : 'איסוף', o.address ?? '', o.contactName ?? '', o.contactPhone ? fmtPhone(o.contactPhone) : '',
+        o.items.length ? o.items.map((i) => `${i.qty}× ${i.name}`).join(', ') + (o.contents ? ` · ${o.contents}` : '') : o.contents ?? '', o.instructions ?? '']),
+    ]);
+  };
+
   return (
     <div className="page today">
       <header className="page__head today__hero">
@@ -73,6 +89,7 @@ export function TodayPage() {
             <button className={!mine ? 'is-on' : ''} aria-pressed={!mine} onClick={() => setMine(false)}>כולם</button>
             <button className={mine ? 'is-on' : ''} aria-pressed={mine} onClick={() => setMine(true)}>שלי</button>
           </div>
+          <Button variant="secondary" icon={<Download size={16} />} onClick={downloadTodayTomorrow} title="קובץ אקסל לגיבוי – לעבודה גם אם המערכת לא זמינה">הורד היום ומחר</Button>
         </div>
       </header>
 

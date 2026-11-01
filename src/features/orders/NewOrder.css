@@ -72,3 +72,4 @@
 .no-suggest--on .link { margin-inline-start: 8px; font-weight: 400; }
 .no-keep { display: inline-flex; align-items: center; gap: 8px; margin: -2px 0 10px; font-size: var(--text-table); color: var(--gray-700); cursor: pointer; }
 .no-keep input { width: 16px; height: 16px; accent-color: var(--brand-600); }
+.no-regular { margin-top: 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--brand-50); color: var(--brand-800); }

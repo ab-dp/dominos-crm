@@ -593,6 +593,14 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                       onChange={(id) => { setCustomerId(id); clearErr('customer'); setAckDup(false); }}
                       onNew={(name) => { setNc((x) => ({ ...x, name })); setMode('newCustomer'); setErrors({}); }} />
                     {err('customer')}
+                    {c && c.type === 'occasional' && orders.some((o) => o.customerId === c.id && o.status !== 'cancelled') && (
+                      <p className="no-suggest no-regular">
+                        <span>לקוח מזדמן שכבר הזמין בעבר – להפוך אותו ל"קבוע"?</span>
+                        <button type="button" className="link" onClick={() => updateCustomer(c, { type: 'regular' }, 'הוצע בהזמנה חוזרת')
+                          .then(() => toast({ message: <>{c.name} סומן כלקוח קבוע · כדאי להשלים בתיק: מחירון, כתובות והנחיות חיוב</>, action: { label: 'לתיק', run: () => { onClose(); window.location.hash = `#/customers/${c.id}`; } } }))
+                          .catch(() => toast({ message: 'העדכון נכשל – בדוק חיבור' }))}>הפוך לקבוע</button>
+                      </p>
+                    )}
                   </Section>
                 )}
               </motion.div>

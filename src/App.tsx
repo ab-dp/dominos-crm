@@ -1,3 +1,4 @@
+import { Suspense, lazy, type ComponentType } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { MotionConfig } from 'motion/react';
@@ -11,16 +12,29 @@ import { InactivityGuard } from './auth/Inactivity';
 import { DominoTile } from './components/DominoTile';
 import { TodayPage } from './features/today/TodayPage';
 import { OrdersPage } from './features/orders/OrdersPage';
-import { CreditReportPage } from './features/reports/CreditReportPage';
-import { MonthClosePage } from './features/reports/MonthClosePage';
-import { StyleGuidePage } from './features/styleguide/StyleGuidePage';
-import { SettingsPage } from './features/settings/SettingsPage';
-import { BranchesPage } from './features/branches/BranchesPage';
-import { CustomersPage } from './features/customers/CustomersPage';
-import { CustomerFile } from './features/customers/CustomerFile';
-import { PriceListsPage } from './features/pricelists/PriceListsPage';
-import { ExceptionsPage } from './features/exceptions/ExceptionsPage';
-import { ReportsHub, ReportView } from './features/reports/ReportsPage';
+
+/* מסכים משניים נטענים רק כשנכנסים אליהם – הטעינה הראשונה (כניסה, היום, הזמנות) קלה ומהירה יותר */
+/* אחרי עדכון גרסה, טאב פתוח עלול לבקש קובץ ישן שכבר לא קיים – טוענים מחדש פעם אחת ומקבלים את הגרסה החדשה */
+const named = <K extends string>(load: () => Promise<Record<K, ComponentType>>, k: K) => lazy(() => load().then((m) => {
+  try { sessionStorage.removeItem("chunkReload"); } catch { /* מצב פרטי */ }
+  return { default: m[k] };
+}, (e) => {
+  let tried = false;
+  try { tried = sessionStorage.getItem("chunkReload") === "1"; sessionStorage.setItem("chunkReload", "1"); } catch { /* מצב פרטי */ }
+  if (!tried) { window.location.reload(); return new Promise<never>(() => undefined); }
+  throw e;
+}));
+const CreditReportPage = named(() => import('./features/reports/CreditReportPage'), 'CreditReportPage');
+const MonthClosePage = named(() => import('./features/reports/MonthClosePage'), 'MonthClosePage');
+const StyleGuidePage = named(() => import('./features/styleguide/StyleGuidePage'), 'StyleGuidePage');
+const SettingsPage = named(() => import('./features/settings/SettingsPage'), 'SettingsPage');
+const BranchesPage = named(() => import('./features/branches/BranchesPage'), 'BranchesPage');
+const CustomersPage = named(() => import('./features/customers/CustomersPage'), 'CustomersPage');
+const CustomerFile = named(() => import('./features/customers/CustomerFile'), 'CustomerFile');
+const PriceListsPage = named(() => import('./features/pricelists/PriceListsPage'), 'PriceListsPage');
+const ExceptionsPage = named(() => import('./features/exceptions/ExceptionsPage'), 'ExceptionsPage');
+const ReportsHub = named(() => import('./features/reports/ReportsPage'), 'ReportsHub');
+const ReportView = named(() => import('./features/reports/ReportsPage'), 'ReportView');
 
 export function App() {
   return (
@@ -53,6 +67,7 @@ function Gate() {
         <HashRouter>
           <InactivityGuard />
           <AppShell>
+            <Suspense fallback={<div className="page" aria-busy="true" aria-label="טוען מסך" />}>
             <Routes>
               <Route path="/" element={<Navigate to="/today" replace />} />
               <Route path="/today" element={<TodayPage />} />
@@ -70,6 +85,7 @@ function Gate() {
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="*" element={<Navigate to="/today" replace />} />
             </Routes>
+            </Suspense>
           </AppShell>
         </HashRouter>
       </PanelProvider>
