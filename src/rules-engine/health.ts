@@ -7,7 +7,8 @@ import { DEFAULT_THRESHOLDS, type Thresholds } from '../data/thresholds';
 export type Severity = 'red' | 'orange' | 'yellow' | 'info';
 export type FixAction = 'q' | 'branch' | 'pay' | 'status' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel' | 'ackQUpdate';
 
-export type Issue = { rule: number; severity: Severity; label: string; action: FixAction; actionLabel: string };
+/* alert: false – אדום (חסר), אבל עוד רחוק; לא קופץ בפעמון ובהתראה לכולם עד שמתקרב */
+export type Issue = { rule: number; severity: Severity; label: string; action: FixAction; actionLabel: string; alert?: boolean };
 
 export type Health = 'ok' | 'missing' | 'urgent' | 'critical';
 
@@ -34,6 +35,8 @@ export function missingOf(o: Order): string[] {
   if (!o.contactPhone) m.push('טלפון');
   if (o.delivery === 'delivery' && !o.address) m.push('כתובת');
   if (o.method === 'account' && !o.accountPhone) m.push('טלפון הקפה');
+  if (!o.items?.length && !o.contents?.trim()) m.push('תכולה');
+  if (o.poRequired && !o.poNumber) m.push('תעודת רכש'); // רק ללקוח שמסומן "עובד עם תעודת רכש"
   return m;
 }
 
@@ -43,6 +46,10 @@ function dayDiff(iso: string, now: Date): number {
   return Math.round((a - b) / 86400000);
 }
 const minutesOfDay = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
+const nowMinutes = (d: Date) => d.getHours() * 60 + d.getMinutes();
+
+/* האם ההזמנה צריכה לקפוץ בהתראה לכולם (פעמון + הודעה) */
+export const isAlert = (i: Issue) => i.severity === 'red' && i.alert !== false;
 
 export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOLDS): Issue[] {
   const out: Issue[] = [];
@@ -72,25 +79,24 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
   if (minutesLeft < 0) {
     out.push({ rule: 3, severity: diff < 0 ? 'red' : 'orange', label: diff < 0 ? 'מועד עבר, לא נסגרה' : 'שעת האספקה עברה', action: 'close', actionLabel: 'סמן סופקה' });
   }
-  if (diff === 0 && !o.qNumber && minutesLeft >= 0 && minutesLeft < th.qLeadMinutes) {
+  // העברה ל-Q: רק ביום האספקה, החל מהשעה שנקבעה (12:00) או X דקות לפני האספקה – המוקדם מביניהם
+  if (diff === 0 && !o.qNumber && (nowMinutes(now) >= minutesOfDay(th.qFromTime) || minutesLeft < th.qLeadMinutes)) {
     out.push({ rule: 1, severity: 'red', label: 'לא הועברה ל-Q', action: 'q', actionLabel: 'סמן הועברה ל-Q' });
   }
   if (soon && !o.branchApproval) {
-    out.push({ rule: 4, severity: 'orange', label: 'אין אישור סניף', action: 'branch', actionLabel: 'סמן אישור' });
+    out.push({ rule: 4, severity: 'red', label: 'אין אישור סניף', action: 'branch', actionLabel: 'סמן אישור' });
   }
   if (diff === 0 && o.method === 'credit' && o.payment === 'pending') {
     const late = minutesOfDay(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`) >= minutesOfDay(th.creditDeadline);
     out.push({ rule: 5, severity: late ? 'red' : 'orange', label: late ? 'אשראי לא חויב – עבר המועד' : 'אשראי לא חויב', action: 'pay', actionLabel: 'סמן שולם' });
   }
   if (soon && (o.status === 'new' || o.status === 'pending_customer')) {
-    out.push({ rule: 6, severity: 'orange', label: 'אין אישור לקוח', action: 'status', actionLabel: 'שנה סטטוס' });
+    out.push({ rule: 6, severity: 'red', label: 'אין אישור לקוח', action: 'status', actionLabel: 'שנה סטטוס' });
   }
   const miss = missingOf(o);
   if (miss.length) {
-    out.push({ rule: 8, severity: 'red', label: `חסר: ${miss.join(', ')}`, action: 'open', actionLabel: 'השלם פרטים' });
-  }
-  if (o.poRequired && o.status === 'approved' && !o.poNumber) {
-    out.push({ rule: 9, severity: 'yellow', label: 'תעודת רכש חסרה', action: 'po', actionLabel: 'הוסף מס\'' });
+    // תמיד אדום; התראה לכולם רק כשההזמנה בחלון "בקרוב" (היום/מחר לפי הספים)
+    out.push({ rule: 8, severity: 'red', label: `חסר: ${miss.join(', ')}`, action: 'open', actionLabel: 'השלם פרטים', alert: soon || diff < 0 });
   }
   if (diff > th.soonDays && !o.branchApproval) {
     out.push({ rule: 0, severity: 'yellow', label: 'חסר אישור סניף', action: 'branch', actionLabel: 'סמן אישור' });

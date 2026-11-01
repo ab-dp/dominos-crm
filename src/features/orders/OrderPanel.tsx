@@ -205,7 +205,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
                       ))}
                     </tbody>
                   </table>}
-                  {!o.contents && o.items.length === 0 && <p className="muted">לא נרשמה תכולה – רק סכום. <button className="link" onClick={() => setEditItems(true)}>הוסף פירוט</button></p>}
+                  {!o.contents && o.items.length === 0 && <p><Missing>חסרה תכולת ההזמנה</Missing> · <button className="link" onClick={() => setEditItems(true)}>הוסף פירוט</button></p>}
                 </>
               )}
               <div className="sums">
@@ -228,7 +228,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <MethodEdit o={o} />
               {o.method === 'account' && <EditKv k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />}
               <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
-              <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
+              <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
               {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
             </Section>
             <Section id="docs" title="מסמכים">

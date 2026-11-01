@@ -10,7 +10,10 @@ import { useStore } from '../data/store';
 import { useAuth } from '../auth/AuthContext';
 import { usePendingRequests } from '../auth/usePendingRequests';
 import { ROLE_LABEL } from '../auth/types';
-import { Ltr } from '../lib/format';
+import { Ltr, fmtDate } from '../lib/format';
+import { isAlert } from '../rules-engine/health';
+import { useToast } from '../design/Toast';
+import type { OrderView } from '../data/store';
 import { usePref } from '../lib/prefs';
 import { CommandSearch } from './CommandSearch';
 import { usePanel } from './PanelContext';
@@ -44,7 +47,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   useHotkey('/', () => setSearchOpen(true));
   useHotkey('n', () => newOrder());
 
-  const critical = orders.filter((o) => o.health === 'critical');
+  // בפעמון: רק חריגות שדורשות טיפול עכשיו (פרט חסר בהזמנה רחוקה אדום, אבל לא קופץ עד שמתקרב)
+  const critical = orders.filter((o) => o.issues.some(isAlert));
+  useApproachingAlert(orders);
   const urgentCount = orders.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
 
   function newOrder() {
@@ -131,8 +136,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                     {critical.map((o) => (
                       <li key={o.id}>
                         <button onClick={(e) => panel.open(o.id, e.currentTarget)}>
-                          <span className="bell-list__issue">{o.issues[0].label}</span>
-                          <span className="bell-list__meta">{o.customerName} · <Ltr>{o.time}</Ltr></span>
+                          <span className="bell-list__issue">{(o.issues.find(isAlert) ?? o.issues[0]).label}</span>
+                          <span className="bell-list__meta">{o.customerName} · <Ltr>{fmtDate(o.date)}</Ltr> {o.time && <Ltr>{o.time}</Ltr>}</span>
                         </button>
                       </li>
                     ))}
@@ -243,4 +248,29 @@ function NavItem({ to, label, collapsed, quiet, children }: { to: string; label:
     </Link>
   );
   return collapsed ? <Tip label={label} side="left">{link}</Tip> : link;
+}
+
+/* התראה לכל המשתמשים: הזמנה שנכנסה לחלון "בקרוב" בלי פרט חובה או בלי אישור סניף/לקוח.
+   כל דפדפן מחושב מאותם נתונים, כך שכולם רואים אותה; הודעה אחת לכל הזמנה בכל כניסה (sessionStorage). */
+const ALERT_RULES = [8, 4, 6];
+function useApproachingAlert(orders: OrderView[]) {
+  const toast = useToast();
+  const nav = useNavigate();
+  const ids = orders.filter((o) => o.issues.some((i) => ALERT_RULES.includes(i.rule) && isAlert(i))).map((o) => String(o.id));
+  const key = ids.join(',');
+  useEffect(() => {
+    if (!ids.length) return;
+    let seen: string[] = [];
+    try { seen = JSON.parse(sessionStorage.getItem('alerted') ?? '[]'); } catch { /* מצב פרטי */ }
+    const fresh = ids.filter((id) => !seen.includes(id));
+    if (!fresh.length) return;
+    try { sessionStorage.setItem('alerted', JSON.stringify([...seen, ...fresh])); } catch { /* מצב פרטי */ }
+    toast({
+      message: fresh.length === 1
+        ? <>הזמנה <Ltr>{fresh[0]}</Ltr> מתקרבת וחסרים בה פרטים קריטיים</>
+        : <><Ltr>{fresh.length}</Ltr> הזמנות קרובות חסרות פרטים קריטיים</>,
+      action: { label: 'לטיפול', run: () => nav('/exceptions') },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 }

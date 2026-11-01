@@ -6,16 +6,18 @@ import { auth, db } from '../lib/firebase';
 
 export type Thresholds = {
   qLeadMinutes: number;      // כמה דקות לפני האספקה ההזמנה חייבת להיות ב-Q (חריגה אדומה)
+  qFromTime: string;         // מאיזו שעה ביום האספקה הזמנה שלא הועברה ל-Q היא חריגה (המוקדם מבין זה לבין qLeadMinutes)
   soonDays: number;          // "בקרוב": היום ועוד X ימים – אישור סניף, אישור לקוח ופרטי אספקה הופכים לדחופים
   nearMinutes: number;       // בדיקת כפילות: אותו לקוח, תאריך וסניף בהפרש של עד X דקות
   creditDeadline: string;    // עד איזו שעה ביום האספקה אשראי צריך להיות מחויב; אחריה – חריגה אדומה
 };
 
-export const DEFAULT_THRESHOLDS: Thresholds = { qLeadMinutes: 120, soonDays: 1, nearMinutes: 180, creditDeadline: '12:00' };
+export const DEFAULT_THRESHOLDS: Thresholds = { qLeadMinutes: 120, qFromTime: '12:00', soonDays: 1, nearMinutes: 180, creditDeadline: '12:00' };
 
 export const THRESHOLD_META: Record<keyof Thresholds, { title: string; hint: string; unit: string; min: number; max: number }> = {
-  qLeadMinutes: { title: 'העברה ל-Q', hint: 'הזמנה של היום שלא הועברה ל-Q כשנשאר פחות מזה עד האספקה – חריגה אדומה', unit: 'דקות', min: 15, max: 600 },
-  soonDays: { title: 'חלון "בקרוב"', hint: 'הזמנות של היום ועוד מספר הימים הזה: חסר אישור סניף, אישור לקוח או פרטי אספקה – דחוף', unit: 'ימים', min: 0, max: 7 },
+  qLeadMinutes: { title: 'העברה ל-Q – לפני האספקה', hint: 'הזמנה של היום שלא הועברה ל-Q כשנשאר פחות מזה עד האספקה – חריגה אדומה', unit: 'דקות', min: 15, max: 600 },
+  qFromTime: { title: 'העברה ל-Q – החל מהשעה', hint: 'ביום האספקה, החל מהשעה הזו כל הזמנה שלא הועברה ל-Q היא חריגה אדומה (או לפי הדקות לפני האספקה, המוקדם מביניהם)', unit: 'שעה', min: 0, max: 0 },
+  soonDays: { title: 'חלון "בקרוב"', hint: 'הזמנות של היום ועוד מספר הימים הזה: חסר אישור סניף, אישור לקוח או פרט חובה – חריגה אדומה והתראה לכל המשתמשים', unit: 'ימים', min: 0, max: 7 },
   nearMinutes: { title: 'שעות סמוכות לכפילות', hint: 'אזהרת כפילות כשאותו לקוח מזמין לאותו סניף באותו יום בהפרש של עד', unit: 'דקות', min: 15, max: 720 },
   creditDeadline: { title: 'מועד חיוב אשראי', hint: 'אשראי שלא חויב עד השעה הזו ביום האספקה עובר מדחוף לחריגה אדומה', unit: 'שעה', min: 0, max: 0 },
 };

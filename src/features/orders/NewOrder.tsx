@@ -37,7 +37,7 @@ const START_STATUS: OrderStatus[] = ['new', 'pending_customer', 'approved'];
 const MISS = 'חסר – אפשר להשלים אחר כך';
 const MISS_LABEL: Record<string, string> = {
   ncContact: 'איש קשר', contactName: 'איש קשר', ncPhone: 'טלפון', contactPhone: 'טלפון', time: 'שעה', branch: 'סניף',
-  channel: 'ערוץ', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה',
+  channel: 'ערוץ', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'תכולה', po: 'תעודת רכש',
 };
 
 type Line = OrderItem & { key: string };
@@ -203,6 +203,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     if (isManual && finalAmount <= 0) m.final = MISS;
     if (total - feeValue <= 0) m.amount = lines.length ? 'סכום הפריטים הוא 0' : MISS;
     if (useLines && lines.some((l) => !l.name.trim() || l.qty <= 0)) e.amount = 'לכל פריט צריך שם וכמות';
+    if (!lines.length && !contents.trim()) m.contents = MISS;
+    if (c?.poRequired && !poNumber.trim()) m.po = MISS;
     if (effMethod === 'account') {
       if (!cleanPhone(effAccountPhone)) m[isNew ? 'ncAccount' : 'account'] = MISS;
       else { const pe = phoneError(effAccountPhone); if (pe) e[isNew ? 'ncAccount' : 'account'] = pe; }
@@ -471,7 +473,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
           ) : <p className="muted no-hint">מתעדכן לבד מהפריטים{feeValue ? ' ודמי המשלוח' : ''}. אפשר להקליד סכום אחר.</p>}
         </div>
       )}
-      <L label={lines.length ? 'פירוט נוסף (לא חובה)' : 'תכולת ההזמנה'} wide>
+      <L label={lines.length ? 'פירוט נוסף (לא חובה)' : 'תכולת ההזמנה'} req={!lines.length} wide>
         <textarea className="input cform__ta" rows={2} value={contents} onChange={(e) => { setContents(e.target.value); clearErr('contents'); }} placeholder="למשל: 12 משפחתיות (6 זיתים, 6 פטריות), 10 לחם שום, 6 שתייה 1.5 ל'" {...inv('contents')} />
         {err('contents')}
       </L>
@@ -506,7 +508,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const poFields = (
     <>
       <Row>
-        <L label="מס' תעודת רכש (לא חובה)">
+        <L label={c?.poRequired ? "מס' תעודת רכש" : "מס' תעודת רכש (לא חובה)"} req={!!c?.poRequired}>
           <input className="input input--ltr" value={poNumber} onChange={(e) => { setPoNumber(e.target.value); clearErr('po'); }} placeholder="אפשר גם אחר כך" {...inv('po')} />
           {err('po')}
           {c?.poRequired && <span className="cform__hint">הלקוח בדרך כלל עובד עם תעודת רכש</span>}
