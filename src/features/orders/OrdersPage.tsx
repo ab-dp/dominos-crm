@@ -17,7 +17,7 @@ const RANGES = [3, 7, 14, 30, 0] as const;
 export const FILTERS: Record<string, { label: string; test: (o: OrderView) => boolean }> = {
   branch: { label: 'בלי אישור סניף', test: (o) => !o.branchApproval },
   q: { label: 'לא הועברו ל-Q', test: (o) => !o.qNumber },
-  credit: { label: 'אשראי לחייב', test: (o) => o.method === 'credit' && o.payment === 'pending' },
+  credit: { label: 'אשראי לחייב', test: (o) => o.method === 'credit' && (o.payment === 'pending' || o.payment === 'failed') },
   issues: { label: 'עם חריג', test: (o) => o.health === 'critical' || o.health === 'urgent' },
 };
 

@@ -51,7 +51,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const panel = usePanel();
   const reduce = useReducedMotion();
   const { profile } = useAuth();
-  const { orders, now } = useStore();
+  const { orders, now, thresholds } = useStore();
   const { items: customers } = useCustomers();
   const { items: branches } = useBranches();
   const { items: clusters } = useClusters();
@@ -140,7 +140,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const setLine = (key: string, p: Partial<Line>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...p } : l)));
 
   /* ---------- כפילויות ---------- */
-  const dup = isNew ? undefined : findDuplicate(orders, { customerId, date, time, branchId: branch?.branchId ?? '' });
+  const dup = isNew ? undefined : findDuplicate(orders, { customerId, date, time, branchId: branch?.branchId ?? '' }, thresholds.nearMinutes);
   const ncPhone = cleanPhone(nc.contactPhone);
   const ncTax = cleanTaxId(nc.taxId);
   const taxTwin = isNew && ncTax ? customers.find((x) => x.taxId === ncTax && x.status !== 'merged') : undefined;

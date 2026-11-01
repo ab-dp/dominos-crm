@@ -5,6 +5,9 @@ import { useToast } from '../design/Toast';
 import { healthOf, issuesFor, type Health, type Issue } from '../rules-engine/health';
 import { updateOrders, useLiveOrders } from './orders';
 import { STATUS_LABEL } from './types';
+import { useThresholds, type Thresholds } from './thresholds';
+import { useOpenTasks, type Task } from './tasks';
+import { toISODate } from '../lib/format';
 import type { Order, OrderStatus } from './types';
 
 export type OrderView = Order & { issues: Issue[]; health: Health };
@@ -27,6 +30,10 @@ type Store = {
   requestStatus: (o: Order, s: OrderStatus) => void;
   closing: ClosingRequest | null;
   endClosing: () => void;
+  thresholds: Thresholds;
+  /* משימות מעקב פתוחות, וכמה מהן להיום או באיחור – לתפריט, לפעמון ולמסך היום */
+  tasks: Task[];
+  dueTasks: Task[];
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -39,6 +46,8 @@ export function useStore() {
 export function StoreProvider({ children }: { children: ReactNode }) {
   const toast = useToast();
   const { orders: raw, loading, error } = useLiveOrders();
+  const { th: thresholds } = useThresholds();
+  const tasks = useOpenTasks();
   const [now, setNow] = useState(() => new Date());
   const [newOrder, setNewOrder] = useState<NewOrderRequest | null>(null);
   const [closing, setClosing] = useState<ClosingRequest | null>(null);
@@ -53,10 +62,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const orders = useMemo(
     () => raw.map((o) => {
-      const issues = issuesFor(o, now);
+      const issues = issuesFor(o, now, thresholds);
       return { ...o, issues, health: healthOf(issues) };
     }),
-    [raw, now],
+    [raw, now, thresholds],
   );
 
   const updateMany = useCallback((ids: number[], patch: Partial<Order>, message: ReactNode) => {
@@ -94,9 +103,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <bdi dir="ltr">{o.id}</bdi></>);
   }, [updateMany]);
   const endClosing = useCallback(() => setClosing(null), []);
+  const today = toISODate(now);
+  const dueTasks = useMemo(() => tasks.filter((t) => t.due <= today), [tasks, today]);
 
   return (
-    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing }}>
+    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks }}>
       {children}
     </Ctx.Provider>
   );

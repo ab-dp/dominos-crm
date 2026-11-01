@@ -63,9 +63,9 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
   const pl = priceLists.find((p) => p.id === c.priceListId);
   const sharing = c.accountPhone ? all.filter((x) => x.id !== c.id && x.status !== 'merged' && x.accountPhone === c.accountPhone) : [];
 
-  const { now, openNewOrder } = useStore();
+  const { now, openNewOrder, thresholds } = useStore();
   const { orders: raw, loading: ordersLoading } = useCustomerOrders(c.id);
-  const corders = useMemo<OrderView[]>(() => raw.map((o) => { const issues = issuesFor(o, now); return { ...o, issues, health: healthOf(issues) }; }), [raw, now]);
+  const corders = useMemo<OrderView[]>(() => raw.map((o) => { const issues = issuesFor(o, now, thresholds); return { ...o, issues, health: healthOf(issues) }; }), [raw, now, thresholds]);
 
   const openNote = () => { setTab('activity'); setTimeout(() => noteRef.current?.focus(), 50); };
 
@@ -177,7 +177,7 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
   const last = live.filter((o) => key(o) <= nowKey).sort((x, y) => key(y).localeCompare(key(x)))[0];
   const next = orders.filter((o) => !CLOSED.includes(o.status) && key(o) > nowKey).sort((x, y) => key(x).localeCompare(key(y)))[0];
   const days = last ? Math.round((new Date(today + 'T12:00').getTime() - new Date(last.date + 'T12:00').getTime()) / 86400000) : null;
-  const unpaid = qSum(live.filter((o) => o.payment === 'pending' && o.date <= today));
+  const unpaid = qSum(live.filter((o) => (o.payment === 'pending' || o.payment === 'failed') && o.date <= today));
   const kpis: [string, ReactNode][] = [
     ['הזמנות בתקופה', <Ltr key="a">{inPeriod.length}</Ltr>],
     ['סך (לפי סכום Q)', <Ltr key="b">{fmtMoney(total)}</Ltr>],
@@ -482,7 +482,7 @@ function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextA
     if (!text.trim()) return setErr('כתוב משהו לפני השמירה');
     if (/\d{13,}/.test(text)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     if (kind === 'followup' && !due) return setErr('למשימת חזרה צריך תאריך');
-    try { await addActivity(c.id, { kind, text, due: kind === 'followup' ? due : undefined }); setText(''); setDue(''); setErr(''); toast({ message: `${KIND[kind]} נשמרה` }); }
+    try { await addActivity(c.id, { kind, text, due: kind === 'followup' ? due : undefined }, c.name); setText(''); setDue(''); setErr(''); toast({ message: `${KIND[kind]} נשמרה` }); }
     catch { setErr('השמירה נכשלה'); }
   };
   return (

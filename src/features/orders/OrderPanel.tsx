@@ -25,7 +25,7 @@ const ANCHORS = [
 
 export function OrderPanel() {
   const panel = usePanel();
-  const { orders, now } = useStore();
+  const { orders, now, thresholds } = useStore();
   const reduce = useReducedMotion();
   const [full, setFull] = useState(false);
   const listed = orders.find((x) => x.id === panel.openId);
@@ -34,9 +34,9 @@ export function OrderPanel() {
   const o = useMemo(() => {
     if (listed) return listed;
     if (!single) return undefined;
-    const issues = issuesFor(single, now);
+    const issues = issuesFor(single, now, thresholds);
     return { ...single, issues, health: healthOf(issues) };
-  }, [listed, single, now]);
+  }, [listed, single, now, thresholds]);
 
   return (
     <Dialog.Root open={!!o} onOpenChange={(v) => !v && panel.close()}>
@@ -230,7 +230,7 @@ const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הנחיות', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
-  items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
+  qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
 };
 function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -239,6 +239,8 @@ function showVal(k: string, v: unknown): string {
   if (k === 'amount' || k === 'qAmount') return fmtMoney(Number(v));
   if (k === 'branchApproval') return `אושר ע"י ${(v as { manager?: string }).manager ?? ''}`;
   if (k === 'date') return fmtDate(String(v));
+  if (k === 'qGapAck') return v ? `אושר שהפער מוסבר: ${(v as { note?: string }).note ?? ''}` : '—';
+  if (k === 'qCancelAck') return v ? 'אושר שבוטלה גם בקופה' : '—';
   if (k === 'items') return Array.isArray(v) ? `${v.length} פריטים` : '—';
   if (k === 'delivery') return v === 'pickup' ? 'איסוף עצמי' : 'משלוח';
   if (k === 'deliveryFee') return fmtMoney(Number(v));

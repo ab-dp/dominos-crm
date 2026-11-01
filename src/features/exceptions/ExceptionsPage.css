@@ -1,0 +1,49 @@
+/* מסך החריגים: אותה שפה של "דחוף עכשיו" – שורות על קו הפרדה, נקודה ופס דק בקצה */
+.exc__grid { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 5fr); gap: 20px; align-items: start; }
+.exc__grid > * { min-width: 0; }
+.exc__n { margin-inline-start: auto; font-size: var(--text-label); }
+.exc__n bdi { font-family: var(--font-mono); }
+.exc__calm { padding: 28px 18px; }
+.exc__group + .exc__group { border-top: 1px solid var(--gray-100); }
+.exc__group { padding-bottom: 6px; }
+.exc__label { display: flex; align-items: center; gap: 6px; margin: 12px 18px 4px; font-size: var(--text-micro); font-weight: 600; letter-spacing: 0.04em; }
+.exc__label bdi { font-family: var(--font-mono); font-weight: 500; }
+.exc__label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.exc__label--red { color: var(--danger-fg); }
+.exc__label--orange { color: var(--urgent-fg); }
+.exc__label--yellow { color: var(--missing-fg); }
+.exc__label--brand { color: var(--brand-700); }
+.exc__label--muted { color: var(--gray-600); }
+.exc__list, .tasks { list-style: none; margin: 0; padding: 0; }
+.exc__row { position: relative; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 10px; overflow: hidden; }
+.exc__row + .exc__row::after, .task-row + .task-row::after { content: ""; position: absolute; top: 0; inset-inline: 18px; height: 1px; background: var(--gray-100); }
+.exc__row::before { content: ""; position: absolute; inset-inline-start: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; }
+.exc__row--red::before { background: var(--danger-fg); }
+.exc__row--orange::before { background: var(--urgent-edge); }
+.exc__row--yellow::before { background: var(--missing-edge); }
+.exc__main { flex: 1; min-width: 0; display: grid; gap: 2px; padding: 11px 8px; border: 0; background: none; font: inherit; text-align: start; cursor: pointer; }
+.exc__main:hover .exc__issue { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.exc__issue { font-weight: 600; font-size: var(--text-table); }
+.exc__row--red .exc__issue { color: var(--danger-fg); }
+.exc__row--orange .exc__issue { color: var(--urgent-fg); }
+.exc__row--yellow .exc__issue { color: var(--missing-fg); }
+.exc__meta { font-size: var(--text-label); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exc__meta b { color: var(--gray-900); font-weight: 600; }
+.exc__meta bdi { font-family: var(--font-mono); font-size: 12.5px; }
+.chip__n { font: 500 11px var(--font-mono); color: var(--gray-600); }
+.chip.is-on .chip__n { color: var(--brand-700); }
+
+/* משימות מעקב */
+.exc__empty { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 22px 18px; color: var(--gray-600); font-size: var(--text-table); line-height: 1.5; }
+.exc__empty svg { flex: none; margin-top: 2px; color: var(--brand-600); }
+.task-row { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 11px 18px; }
+.task-row__check { padding-top: 2px; }
+.task-row__check input { width: 17px; height: 17px; accent-color: var(--ok-fg); cursor: pointer; }
+.task-row__main { display: grid; gap: 2px; min-width: 0; }
+.task-row__text { font-size: var(--text-table); font-weight: 500; }
+.task-row__meta { font-size: var(--text-label); color: var(--gray-600); }
+.task-row__meta a { color: var(--brand-700); font-weight: 600; text-decoration: none; }
+.task-row__meta a:hover { text-decoration: underline; }
+.task-row__meta bdi { font-family: var(--font-mono); font-size: 12.5px; }
+@media (max-width: 1100px) { .exc__grid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .exc__meta { white-space: normal; } }

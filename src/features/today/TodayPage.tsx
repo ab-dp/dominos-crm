@@ -2,7 +2,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet } from 'lucide-react';
+import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet, ListChecks } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
@@ -16,7 +16,7 @@ import '../pages.css';
 import './TodayPage.css';
 
 export function TodayPage() {
-  const { orders, now, requestStatus } = useStore();
+  const { orders, now, requestStatus, dueTasks } = useStore();
   const panel = usePanel();
   const nav = useNavigate();
   const reduce = useReducedMotion();
@@ -35,7 +35,7 @@ export function TodayPage() {
     { key: 'yesterday', title: 'לסגור מאתמול', icon: <PackageCheck size={20} />, list: open.filter((o) => o.date < today), to: '/orders?tab=overdue', doneText: 'הכל נסגר' },
     { key: 'branch', title: 'אישורי סניף חסרים', sub: 'היום ומחר', icon: <Store size={20} />, list: open.filter((o) => (o.date === today || o.date === tomorrow) && !o.branchApproval), to: '/orders?tab=today&filter=branch', doneText: 'כל הסניפים אישרו' },
     { key: 'q', title: 'להעביר ל-Q', icon: <Send size={20} />, list: open.filter((o) => o.date === today && !o.qNumber), to: '/orders?tab=today&filter=q', doneText: 'הכל הועבר' },
-    { key: 'credit', title: 'אשראי לחייב', icon: <CreditCard size={20} />, list: open.filter((o) => o.date === today && o.method === 'credit' && o.payment === 'pending'), to: '/orders?tab=today&filter=credit', doneText: 'הכל חויב' },
+    { key: 'credit', title: 'אשראי לחייב', icon: <CreditCard size={20} />, list: open.filter((o) => o.date === today && o.method === 'credit' && (o.payment === 'pending' || o.payment === 'failed')), to: '/orders?tab=today&filter=credit', doneText: 'הכל חויב' },
   ];
   const allDone = tasks.every((t) => t.list.length === 0);
 
@@ -190,6 +190,7 @@ export function TodayPage() {
 
       {/* ---------- שורת מידע ---------- */}
       <section className="info" aria-label="סיכום">
+        {dueTasks.length > 0 && <button className="info__item info__item--tasks" onClick={() => nav('/exceptions')}><ListChecks size={18} aria-hidden="true" /> משימות מעקב להיום <b><Ltr>{dueTasks.length}</Ltr></b></button>}
         <button className="info__item" onClick={() => nav('/orders?tab=tomorrow')}><CalendarClock size={18} aria-hidden="true" /> מחר <b><Ltr>{open.filter((o) => o.date === tomorrow).length}</Ltr></b> הזמנות</button>
         <button className="info__item" onClick={() => nav('/orders?tab=future&range=7')}><CalendarDays size={18} aria-hidden="true" /> <Ltr>7</Ltr> ימים קרובים <b><Ltr>{open.filter((o) => o.date > today && o.date <= week).length}</Ltr></b></button>
         <span className="info__item"><Wallet size={18} aria-hidden="true" /> סך החודש <b><Ltr>{fmtMoney(monthTotal)}</Ltr></b></span>

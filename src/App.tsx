@@ -18,7 +18,8 @@ import { BranchesPage } from './features/branches/BranchesPage';
 import { CustomersPage } from './features/customers/CustomersPage';
 import { CustomerFile } from './features/customers/CustomerFile';
 import { PriceListsPage } from './features/pricelists/PriceListsPage';
-import { Placeholder, ReportsHub } from './features/Placeholder';
+import { ExceptionsPage } from './features/exceptions/ExceptionsPage';
+import { ReportsHub } from './features/Placeholder';
 
 export function App() {
   return (
@@ -62,7 +63,7 @@ function Gate() {
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/customers/:id" element={<CustomerFile />} />
               <Route path="/pricelists" element={<PriceListsPage />} />
-              <Route path="/exceptions" element={<Placeholder title="חריגים ומשימות" stage={6} />} />
+              <Route path="/exceptions" element={<ExceptionsPage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="*" element={<Navigate to="/today" replace />} />
             </Routes>

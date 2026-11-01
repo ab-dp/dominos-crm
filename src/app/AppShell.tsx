@@ -3,7 +3,7 @@ import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
-  Bell, ChartColumn, Ellipsis, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
+  Bell, CalendarClock, ChartColumn, Ellipsis, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
 } from 'lucide-react';
 import { Button, Tip, useHotkey } from '../design/components';
 import { useStore } from '../data/store';
@@ -27,7 +27,7 @@ const MOBILE_MAIN = ['/today', '/orders', '/exceptions', '/customers'];
 type NavDef = { to: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { orders, openNewOrder, closeNewOrder } = useStore();
+  const { orders, openNewOrder, closeNewOrder, dueTasks } = useStore();
   const panel = usePanel();
   const location = useLocation();
   const reduce = useReducedMotion();
@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       items: [
         { to: '/today', label: 'היום', icon: <House size={20} />, count: urgentCount, alert: critical.length > 0 },
         { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
-        { to: '/exceptions', label: 'חריגים ומשימות', icon: <TriangleAlert size={20} />, count: urgentCount, alert: critical.length > 0 },
+        { to: '/exceptions', label: 'חריגים ומשימות', icon: <TriangleAlert size={20} />, count: urgentCount + dueTasks.length, alert: critical.length > 0 },
       ],
     },
     {
@@ -106,9 +106,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <Popover.Root>
             <Popover.Trigger asChild>
-              <button className="icon-btn bell" aria-label={`התראות: ${critical.length + pendingUsers} חדשות`}>
+              <button className="icon-btn bell" aria-label={`התראות: ${critical.length + pendingUsers + dueTasks.length} חדשות`}>
                 <Bell size={20} />
-                {critical.length + pendingUsers > 0 && <span className="bell__count"><Ltr>{critical.length + pendingUsers}</Ltr></span>}
+                {critical.length + pendingUsers + dueTasks.length > 0 && <span className="bell__count"><Ltr>{critical.length + pendingUsers + dueTasks.length}</Ltr></span>}
               </button>
             </Popover.Trigger>
             <Popover.Portal>
@@ -116,6 +116,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {pendingUsers > 0 && (
                   <button className="bell-join" onClick={() => nav('/settings/users')}>
                     <UserPlus size={18} aria-hidden="true" /> <span><b><Ltr>{pendingUsers}</Ltr></b> בקשות הצטרפות ממתינות</span>
+                  </button>
+                )}
+                {dueTasks.length > 0 && (
+                  <button className="bell-join" onClick={() => nav('/exceptions')}>
+                    <CalendarClock size={18} aria-hidden="true" /> <span><b><Ltr>{dueTasks.length}</Ltr></b> משימות מעקב להיום</span>
                   </button>
                 )}
                 <p className="pop__title">חריגות שדורשות טיפול</p>

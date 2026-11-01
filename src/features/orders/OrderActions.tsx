@@ -7,6 +7,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { PAYMENT_LABEL, type PaymentState } from '../../data/types';
 import { Ltr, fmtMoney } from '../../lib/format';
 import type { Issue } from '../../rules-engine/health';
+import { useAuth } from '../../auth/AuthContext';
 
 /* ---------- טפסים קטנים שנפתחים במקום ---------- */
 function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
@@ -125,7 +126,7 @@ export function PoEdit({ o }: { o: OrderView }) {
 export function OrderMarks({ o, only }: { o: OrderView; only?: 'branch' | 'q' | 'pay' }) {
   const [open, setOpen] = useState<null | 'branch' | 'q' | 'pay'>(null);
   const set = (k: 'branch' | 'q' | 'pay') => (v: boolean) => setOpen(v ? k : null);
-  const payDone = o.payment !== 'pending';
+  const payDone = o.payment === 'paid' || o.payment === 'cancelled';
   const show = (k: string) => !only || only === k;
   return (
     <>
@@ -152,6 +153,55 @@ export function OrderMarks({ o, only }: { o: OrderView; only?: 'branch' | 'q' | 
 }
 
 /* ---------- כפתור הפתרון: כל בעיה עם הכפתור שפותר אותה ---------- */
+/* פער מול Q (כלל 2): או שמעדכנים את הסכום לחיוב לסכום שבקופה, או מאשרים שהפער מוסבר – עם סיבה */
+function GapForm({ o, done }: { o: OrderView; done: () => void }) {
+  const { update } = useStore();
+  const { profile } = useAuth();
+  const [note, setNote] = useState('');
+  const [err, setErr] = useState('');
+  const q = o.qAmount ?? o.amount;
+  const diff = q - o.amount;
+  const ack = (e: FormEvent) => {
+    e.preventDefault();
+    if (!note.trim()) { setErr('חובה: למה הפער בסדר (למשל: הנחה שסוכמה בטלפון)'); return; }
+    if (/\d{13,}/.test(note)) { setErr('אסור לרשום כאן מספר כרטיס אשראי'); return; }
+    update(o.id, { qGapAck: { amount: o.amount, qAmount: q, by: profile?.name ?? '', at: new Date().toISOString(), note: note.trim() } }, <>הפער מול Q אושר · הזמנה <Ltr>{o.id}</Ltr></>);
+    done();
+  };
+  return (
+    <form onSubmit={ack}>
+      <div className="gap-sum">
+        <span>לחיוב <b><Ltr>{fmtMoney(o.amount)}</Ltr></b></span>
+        <span>ב-Q <b><Ltr>{fmtMoney(q)}</Ltr></b></span>
+        <span className="gap-sum__diff">פער <b><Ltr>{`${diff > 0 ? '+' : '−'}${fmtMoney(Math.abs(diff))}`}</Ltr></b></span>
+      </div>
+      <Button size="sm" variant="secondary" type="button" className="gap-fix" onClick={() => { update(o.id, { amount: q }, <>הסכום לחיוב עודכן לסכום Q · <Ltr>{fmtMoney(q)}</Ltr></>); done(); }}>
+        עדכן את הסכום לחיוב ל-<Ltr>{fmtMoney(q)}</Ltr>
+      </Button>
+      <p className="pop__text gap-or">או, אם הפער נכון:</p>
+      <Field label="למה הפער בסדר (חובה)">
+        <input className="input" value={note} onChange={(e) => { setNote(e.target.value); setErr(''); }} placeholder="למשל: הנחה שסוכמה מול הלקוח" aria-invalid={!!err} />
+      </Field>
+      {err && <p className="pop__err">{err}</p>}
+      <div className="pop__row"><Button variant="primary" size="sm" type="submit">אשר שהפער מוסבר</Button></div>
+    </form>
+  );
+}
+
+/* בוטלה אחרי Q (כלל 10): אישור שההזמנה בוטלה גם בקופה */
+function CancelAckForm({ o, done }: { o: OrderView; done: () => void }) {
+  const { update } = useStore();
+  const { profile } = useAuth();
+  return (
+    <>
+      <p className="pop__text">ההזמנה בוטלה במערכת אחרי שהועברה לקופה (<Ltr>{o.qNumber}</Ltr>). צריך לוודא שהיא בוטלה גם ב-Q.</p>
+      <div className="pop__row">
+        <Button variant="primary" size="sm" onClick={() => { update(o.id, { qCancelAck: { by: profile?.name ?? '', at: new Date().toISOString() } }, <>אושר שהזמנה <Ltr>{o.id}</Ltr> בוטלה גם ב-Q</>); done(); }}>בוטלה גם ב-Q</Button>
+      </div>
+    </>
+  );
+}
+
 export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; onOpen: () => void }) {
   const { update } = useStore();
   const [open, setOpen] = useState(false);
@@ -175,6 +225,8 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
     case 'q': return pop(<QForm o={o} done={done} />, 'הועברה ל-Q');
     case 'pay': return pop(<PayForm o={o} done={done} />, 'מצב תשלום');
     case 'po': return pop(<PoForm o={o} done={done} />, 'תעודת רכש');
+    case 'ackGap': return pop(<GapForm o={o} done={done} />, 'פער מול Q');
+    case 'ackCancel': return pop(<CancelAckForm o={o} done={done} />, 'בוטלה אחרי Q');
     case 'close':
       return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); update(o.id, { status: 'delivered' }, <>הזמנה <Ltr>{o.id}</Ltr> סומנה כסופקה ועברה לארכיון</>); }}>{issue.actionLabel}</Button>;
     case 'status':

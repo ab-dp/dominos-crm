@@ -140,12 +140,12 @@ export async function updateOrders(orders: Order[], patch: Partial<Order>, sourc
 }
 
 /* ---------- כפילות (אפיון 6.4): אותו לקוח, אותו תאריך, אותו סניף, בשעות סמוכות ---------- */
-export const NEAR_MINUTES = 180;
+export const NEAR_MINUTES = 180; // ברירת מחדל; בפועל נלקח מספי ההתראות
 const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-export function findDuplicate(all: Order[], c: { customerId: string; date: string; time: string; branchId: string }) {
+export function findDuplicate(all: Order[], c: { customerId: string; date: string; time: string; branchId: string }, near = NEAR_MINUTES) {
   if (!c.customerId || !c.date || !c.time || !c.branchId) return undefined;
   return all.find((o) => o.customerId === c.customerId && o.date === c.date && o.branchId === c.branchId
-    && o.status !== 'cancelled' && Math.abs(toMin(o.time) - toMin(c.time)) <= NEAR_MINUTES);
+    && o.status !== 'cancelled' && Math.abs(toMin(o.time) - toMin(c.time)) <= near);
 }
 
 export const isClosed = (o: Pick<Order, 'status'>) => CLOSED.includes(o.status);

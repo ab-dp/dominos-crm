@@ -1,9 +1,9 @@
 /* הגדרות (מנהל מערכת בלבד): משתמשים · רשימות · ספי התראות */
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { Placeholder } from '../Placeholder';
 import { UsersPage } from './UsersPage';
 import { ListsPage } from './ListsPage';
+import { ThresholdsPage } from './ThresholdsPage';
 
 export function SettingsPage() {
   const { isAdmin } = useAuth();
@@ -21,7 +21,7 @@ export function SettingsPage() {
         <Route index element={<Navigate to="users" replace />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="lists" element={<ListsPage />} />
-        <Route path="thresholds" element={<Placeholder title="ספי התראות" stage={6}>"שעות סמוכות", "היום או מחר" וספים נוספים לחריגים.</Placeholder>} />
+        <Route path="thresholds" element={<ThresholdsPage />} />
       </Routes>
     </>
   );

@@ -29,7 +29,7 @@ export function CreditReportPage() {
   }, [rows]);
 
   const sum = (list: OrderView[]) => list.reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
-  const unpaid = rows.filter((o) => o.payment === 'pending');
+  const unpaid = rows.filter((o) => o.payment === 'pending' || o.payment === 'failed');
   const [y, mo] = month.split('-');
 
   return (

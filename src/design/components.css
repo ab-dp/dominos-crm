@@ -229,3 +229,11 @@
   .mark-btn, .btn--sm, .icon-btn, .status, .chip, .seg button { min-height: 44px; }
   .icon-btn { min-width: 44px; }
 }
+
+/* חלון בדיקת פער מול Q */
+.gap-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-bottom: 12px; background: var(--gray-100); border: 1px solid var(--gray-100); border-radius: var(--radius); overflow: hidden; font-size: var(--text-micro); color: var(--gray-600); }
+.gap-sum span { display: grid; gap: 2px; padding: 8px 10px; background: var(--white); }
+.gap-sum b { font: 500 14px var(--font-mono); color: var(--gray-900); }
+.gap-sum__diff b { color: var(--danger-fg); }
+.gap-fix { width: 100%; }
+.gap-or { margin: 12px 0 6px !important; }

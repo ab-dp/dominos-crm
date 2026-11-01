@@ -1,5 +1,5 @@
 export type OrderStatus = 'new' | 'pending_customer' | 'approved' | 'delivered' | 'partial' | 'cancelled';
-export type PaymentState = 'pending' | 'paid' | 'cancelled';
+export type PaymentState = 'pending' | 'paid' | 'failed' | 'cancelled';
 // אמצעי התשלום הבסיסיים נעולים ברשימות המערכת; אפשר להוסיף אחרים, לכן המזהה הוא מחרוזת
 export type PaymentMethod = 'credit' | 'account' | 'cash' | (string & {});
 
@@ -16,6 +16,7 @@ export const CLOSED: OrderStatus[] = ['delivered', 'partial', 'cancelled'];
 export const PAYMENT_LABEL: Record<PaymentState, string> = {
   pending: 'ממתין לתשלום',
   paid: 'שולם',
+  failed: 'חיוב נכשל',
   cancelled: 'בוטל',
 };
 export const METHOD_LABEL: Record<string, string> = {
@@ -69,5 +70,8 @@ export type Order = {
   billingNote?: string;
   partialNote?: string; // מה סופק בפועל, בסגירה "סופקה חלקית"
   cancelReason?: string;
+  /* אישורים שמנקים חריג (אפיון 9): פער מול Q שהוסבר, וביטול שבוצע גם בקופה */
+  qGapAck?: { amount: number; qAmount: number; by: string; at: string; note?: string };
+  qCancelAck?: { by: string; at: string };
   cancelNote?: string;
 };

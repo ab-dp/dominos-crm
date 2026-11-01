@@ -6,6 +6,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { cleanTaxId } from '../lib/taxid';
+import { addTaskTo } from './tasks';
 
 export type Contact = { id: string; name: string; role: string; phone: string; email: string; primary: boolean };
 export type Address = { id: string; label: string; address: string; directions: string; preferredBranchId: string };
@@ -117,12 +118,14 @@ export async function updateCustomer(c: Customer, raw: Partial<CustomerInput> & 
   await batch.commit();
 }
 
-export async function addActivity(customerId: string, a: Pick<Activity, 'kind' | 'text' | 'due'>) {
+export async function addActivity(customerId: string, a: Pick<Activity, 'kind' | 'text' | 'due'>, customerName = '') {
   const u = auth.currentUser!;
   const batch = writeBatch(db);
   batch.set(doc(collection(db, 'customers', customerId, 'activity')), {
     kind: a.kind, text: a.text.trim(), ...(a.due ? { due: a.due } : {}), by: u.uid, byName: u.displayName ?? u.email ?? '', at: serverTimestamp(),
   });
+  // משימת חזרה עם תאריך מופיעה גם במסך החריגים ביום שלה
+  if (a.kind === 'followup' && a.due) addTaskTo(batch, { customerId, customerName, text: a.text, due: a.due });
   await batch.commit();
 }
 
