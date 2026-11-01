@@ -172,8 +172,10 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
   const live = orders.filter((o) => o.status !== 'cancelled');
   const inPeriod = live.filter((o) => o.date >= since && o.date <= today);
   const total = qSum(inPeriod);
-  const last = live.filter((o) => o.date <= today).sort((x, y) => (y.date + y.time).localeCompare(x.date + x.time))[0];
-  const next = orders.filter((o) => !CLOSED.includes(o.status) && o.date >= today).sort((x, y) => (x.date + x.time).localeCompare(y.date + y.time))[0];
+  const nowKey = `${today}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const key = (o: OrderView) => `${o.date}T${o.time}`;
+  const last = live.filter((o) => key(o) <= nowKey).sort((x, y) => key(y).localeCompare(key(x)))[0];
+  const next = orders.filter((o) => !CLOSED.includes(o.status) && key(o) > nowKey).sort((x, y) => key(x).localeCompare(key(y)))[0];
   const days = last ? Math.round((new Date(today + 'T12:00').getTime() - new Date(last.date + 'T12:00').getTime()) / 86400000) : null;
   const unpaid = qSum(live.filter((o) => o.payment === 'pending' && o.date <= today));
   const kpis: [string, ReactNode][] = [

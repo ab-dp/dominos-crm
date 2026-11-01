@@ -14,6 +14,7 @@ import { Ltr } from '../lib/format';
 import { usePref } from '../lib/prefs';
 import { CommandSearch } from './CommandSearch';
 import { usePanel } from './PanelContext';
+import { ScreenBoundary } from './ErrorBoundary';
 import { OrderPanel } from '../features/orders/OrderPanel';
 import { NewOrderDialog } from '../features/orders/NewOrder';
 import './AppShell.css';
@@ -171,7 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             exit={{ opacity: 0, transition: { duration: 0.08 } }}
             transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
           >
-            {children}
+            <ScreenBoundary resetKey={location.pathname}>{children}</ScreenBoundary>
           </motion.div>
         </AnimatePresence>
       </main>

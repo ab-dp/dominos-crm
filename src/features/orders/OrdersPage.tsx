@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Rows3, Rows4, Search, X } from 'lucide-react';
-import { Button, Skeleton } from '../../design/components';
+import { Rows3, Rows4, Search, X } from 'lucide-react';
+import { Skeleton } from '../../design/components';
 import { usePref } from '../../lib/prefs';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
@@ -25,7 +25,7 @@ const byTime = (a: OrderView, b: OrderView) => (a.date + a.time).localeCompare(b
 const urgentFirst = (a: OrderView, b: OrderView) => HEALTH_RANK[b.health] - HEALTH_RANK[a.health] || byTime(a, b);
 
 export function OrdersPage() {
-  const { orders, now, loading, error, openNewOrder } = useStore();
+  const { orders, now, loading, error } = useStore();
   const [params, setParams] = useSearchParams();
   const tab = (params.get('tab') as Tab) || 'today';
   const range = Number(params.get('range') ?? 7);
@@ -65,7 +65,6 @@ export function OrdersPage() {
     <div className="page">
       <header className="page__head">
         <h1 className="page__title">הזמנות</h1>
-        <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ date: tab === 'tomorrow' ? tomorrow : undefined })}>הזמנה חדשה</Button></div>
       </header>
       {error && <p className="cform__formerr" role="alert">{error} – ההזמנות לא נטענו. רענן את הדף.</p>}
 

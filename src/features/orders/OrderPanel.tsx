@@ -13,6 +13,7 @@ import { useOrderDoc, useOrderHistory, type OrderAuditRow } from '../../data/ord
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, OrderMarks, PoEdit } from './OrderActions';
 import { OrderDocsSection } from './OrderDocs';
+import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import './OrderPanel.css';
 
 const ANCHORS = [
@@ -43,7 +44,7 @@ export function OrderPanel() {
             <Dialog.Overlay asChild forceMount>
               <motion.div className="panel-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
             </Dialog.Overlay>
-            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined}
+            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
               onOpenAutoFocus={(e) => { e.preventDefault(); document.getElementById('panel-title')?.focus(); }}
               onCloseAutoFocus={(e) => e.preventDefault()}>
               <motion.aside

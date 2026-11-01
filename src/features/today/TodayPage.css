@@ -109,4 +109,4 @@ button.info__item:hover { border-color: var(--gray-300); color: var(--gray-900);
 /* ---------- הבאה בתור ---------- */
 .tl__row.is-next { background: var(--brand-50); box-shadow: inset -3px 0 0 var(--brand-600); }
 .tl__next { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: 8px; padding: 1px 8px; border-radius: 10px; background: var(--white); color: var(--brand-800); font-size: 12px; font-weight: 600; vertical-align: 1px; }
-.tl__row.is-past:not(.is-closed) { opacity: 0.72; }
+.tl__row.is-past:not(.is-closed) .tl__meta { color: var(--gray-600); }

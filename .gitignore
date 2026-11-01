@@ -13,3 +13,7 @@ PLAN.md
 
 # הגדרות מקומיות
 .claude/
+
+# סביבת בדיקה מקומית עם נתוני דמה
+.harness/
+vite.harness.config.ts

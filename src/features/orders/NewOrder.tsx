@@ -25,6 +25,7 @@ import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
 import { uploadOrderDoc } from '../../data/orderDocs';
 import { FileDrop } from './OrderDocs';
+import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import '../customers/CustomerForm.css';
 import './NewOrder.css';
 
@@ -499,7 +500,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
-        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined}
+        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
           <header className="cform__head norder__head">
             <Dialog.Title className="udialog__title">הזמנה חדשה</Dialog.Title>
@@ -642,7 +643,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 function CustomerPicker({ customers, value, onChange, onNew, invalid }: {
   customers: Customer[]; value: string; onChange: (id: string) => void; onNew: (name: string) => void; invalid: boolean;
 }) {
-  const [open, setOpen] = useState(!value);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (value) return;
+    const t = setTimeout(() => setOpen(true), 160);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
   const listId = useId();
@@ -668,7 +675,7 @@ function CustomerPicker({ customers, value, onChange, onNew, invalid }: {
       <span className="field__label" id={`${listId}-label`}>בחר לקוח<span className="req">חובה</span></span>
       <Popover.Root open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQ(''); }}>
         <Popover.Trigger asChild>
-          <button ref={triggerRef} type="button" className="bpick__trigger" aria-labelledby={`${listId}-label`} aria-haspopup="listbox" aria-expanded={open} aria-invalid={invalid || undefined}>
+          <button ref={triggerRef} type="button" onKeyDown={(e) => { if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); setQ(e.key); setOpen(true); } }} className="bpick__trigger" aria-labelledby={`${listId}-label`} aria-haspopup="listbox" aria-expanded={open} aria-invalid={invalid || undefined}>
             {selected ? (
               <span className="bpick__value"><b>{selected.name}</b>{selected.type === 'regular' && <span className="bpick__cluster">קבוע</span>}</span>
             ) : <span className="bpick__placeholder">חפש לקוח לפי שם, ח.פ או טלפון…</span>}
