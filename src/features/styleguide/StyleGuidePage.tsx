@@ -70,7 +70,7 @@ export function StyleGuidePage() {
       </section>
 
       <section className="card sg__sec">
-        <h2 className="card__title">טיפוגרפיה · Rubik</h2>
+        <h2 className="card__title">טיפוגרפיה · IBM Plex Sans Hebrew</h2>
         <p style={{ fontSize: 28, fontWeight: 600, margin: '4px 0' }}>מונה <Ltr>12</Ltr> · <Ltr>28/600</Ltr></p>
         <p style={{ fontSize: 22, fontWeight: 600, margin: '4px 0' }}>כותרת מסך · <Ltr>22/600</Ltr></p>
         <p style={{ fontSize: 17, fontWeight: 600, margin: '4px 0' }}>כותרת כרטיס · <Ltr>17/600</Ltr></p>

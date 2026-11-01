@@ -77,9 +77,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <header className="topbar">
         <Link to="/today" className="topbar__logo" aria-label="Domino's CRM – חזרה למסך היום">
-          <img src={`${BASE}logo-horizontal.svg`} alt="" height={30} />
+          <img src={`${BASE}logo-tile.svg`} alt="" />
         </Link>
-
         <button className="search-trigger" onClick={() => setSearchOpen(true)}>
           <Search size={18} aria-hidden="true" />
           <span>חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון…</span>
@@ -132,6 +131,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <nav className="sidebar" aria-label="ניווט ראשי">
+        <Link to="/today" className="sidebar__logo" aria-label="Domino's CRM – חזרה למסך היום">
+          <img className="sidebar__logo-full" src={`${BASE}logo-horizontal-white.svg`} alt="" />
+          <img className="sidebar__logo-tile" src={`${BASE}logo-tile.svg`} alt="" />
+        </Link>
         <div className="sidebar__groups">
           {groups.map((g) => (
             <div key={g.title} className="navgroup">

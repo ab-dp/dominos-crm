@@ -12,6 +12,7 @@ export function SettingsPage() {
   return (
     <>
       <nav className="subnav" aria-label="הגדרות">
+        <span className="subnav__label" aria-hidden="true">הגדרות</span>
         <NavLink to="/settings/users" className={({ isActive }) => (isActive ? 'is-on' : '')}>משתמשים</NavLink>
         <NavLink to="/settings/lists" className={({ isActive }) => (isActive ? 'is-on' : '')}>רשימות</NavLink>
         <NavLink to="/settings/thresholds" className={({ isActive }) => (isActive ? 'is-on' : '')}>ספי התראות</NavLink>

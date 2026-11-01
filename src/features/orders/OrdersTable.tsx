@@ -84,10 +84,10 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
                 <td className="col-check" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" aria-label={`בחר הזמנה ${o.id}`} checked={selected.includes(o.id)} onChange={() => setSelected((s) => s.includes(o.id) ? s.filter((x) => x !== o.id) : [...s, o.id])} />
                 </td>
-                <td><HealthBadge health={o.health} issues={o.issues} /></td>
-                <td className="num strong"><Ltr>{o.time}</Ltr></td>
+                <td className="c-health"><HealthBadge health={o.health} issues={o.issues} /></td>
+                <td className="num strong c-time"><Ltr>{o.time}</Ltr></td>
                 {showDate && <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>}
-                <td>
+                <td className="c-cust">
                   <span className="orow__cust">{o.customerName}</span>
                   {top && o.health !== 'ok' && <span className={`orow__why orow__why--${o.health}`}>{top.label}</span>}
                 </td>
@@ -99,10 +99,10 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
                 <td onClick={(e) => e.stopPropagation()}>
                   <StatusMenu status={o.status} onChange={(s) => update(o.id, { status: s, ...(s === 'cancelled' ? { payment: 'cancelled' as const } : {}) }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <Ltr>{o.id}</Ltr></>)} />
                 </td>
-                <td className="orow__marks" onClick={(e) => e.stopPropagation()}><OrderMarks o={o} /></td>
-                <td>{METHOD_LABEL[o.method]}</td>
+                <td className="orow__marks c-marks" onClick={(e) => e.stopPropagation()}><OrderMarks o={o} /></td>
+                <td>{o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method}</td>
                 <td>{o.handler}</td>
-                <td onClick={(e) => e.stopPropagation()}>
+                <td className="c-act" onClick={(e) => e.stopPropagation()}>
                   {top && (o.health === 'critical' || o.health === 'urgent' || top.action === 'po') && <FixButton key={top.rule} o={o} issue={top} onOpen={() => panel.open(o.id)} />}
                 </td>
               </tr>

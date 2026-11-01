@@ -78,7 +78,7 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
             ) : (
               <>
                 <span className="litem__label">{it.label}</span>
-                {it.locked && <Tip label="פריט מערכת – לא ניתן להשבית"><span className="litem__lock" aria-label="פריט מערכת"><Lock size={13} /></span></Tip>}
+                {it.locked && <Tip label="פריט מערכת – לא ניתן להשבית"><span className="litem__lock" role="img" tabIndex={0} aria-label="פריט מערכת"><Lock size={13} /></span></Tip>}
                 {!it.active && <span className="tag-inactive">לא פעיל</span>}
                 <span className="litem__actions">
                   <button className="icon-btn icon-btn--sm" aria-label={`שנה שם: ${it.label}`} onClick={() => { setEditing(it.id); setDraft(it.label); }}><Pencil size={14} /></button>

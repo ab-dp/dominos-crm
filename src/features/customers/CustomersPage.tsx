@@ -116,7 +116,7 @@ function CustomerRow({ c, methodLabel, plName, shared, onOpen }: { c: Customer; 
       <td>{methodLabel(c.paymentMethod)}</td>
       <td className="num">{c.accountPhone ? <><Ltr>{fmtPhone(c.accountPhone)}</Ltr>{shared && <span className="shared-tag">כללי</span>}</> : <span className="muted">—</span>}</td>
       <td>{plName(c.priceListId) || <span className="muted">—</span>}</td>
-      <td>{c.poRequired && <Tip label="נדרשת תעודת רכש"><span className="po-tag" aria-label="נדרשת תעודת רכש"><FileCheck2 size={15} /></span></Tip>}</td>
+      <td>{c.poRequired && <Tip label="נדרשת תעודת רכש"><span className="po-tag" role="img" tabIndex={0} aria-label="נדרשת תעודת רכש"><FileCheck2 size={15} /></span></Tip>}</td>
     </tr>
   );
 }

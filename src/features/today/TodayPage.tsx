@@ -58,7 +58,7 @@ export function TodayPage() {
 
   return (
     <div className="page today">
-      <header className="page__head">
+      <header className="page__head today__hero">
         <div>
           <p className="today__date">יום {weekday(today)} · <Ltr>{fmtDate(today)}</Ltr></p>
           <h1 className="page__title">{greeting}{firstName && <>, {firstName}</>}</h1>

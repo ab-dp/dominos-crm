@@ -17,7 +17,7 @@ export function AuthScreens() {
 
   return (
     <div className="auth">
-      <section className="auth__brand" aria-hidden="true">
+      <section className="auth__brand" aria-hidden="true" style={{ ['--login-photo' as string]: `url(${BASE}brand/login.jpg)` }}>
         <DominoTile size={176} animate />
         <p className="auth__brand-title">מערכת CRM</p>
         <p className="auth__brand-sub">לקוחות עסקיים והזמנות</p>

@@ -1,67 +1,92 @@
-.otable-wrap { position: relative; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); overflow-x: auto; }
+/* הטבלה המרכזית: קווי הפרדה דקים, נתונים במונו, פס צבע דק בקצה השורה הדחופה – ושום צבע מעבר לזה. */
+.otable-wrap { position: relative; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); overflow-x: auto; }
 .otable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-table); }
 .otable thead th {
   position: sticky; top: 0; z-index: 2;
-  height: 40px; padding: 0 10px;
-  background: var(--gray-25);
+  height: 36px; padding: 0 10px;
+  background: var(--gray-50);
   border-bottom: 1px solid var(--gray-100);
-  font-size: var(--text-label); font-weight: 500; color: var(--gray-600);
+  font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); letter-spacing: 0.01em;
   text-align: start; white-space: nowrap;
 }
-.otable td { height: 52px; padding: 4px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; white-space: nowrap; }
+.otable td { height: 54px; padding: 4px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; white-space: nowrap; }
 .otable tbody tr:last-child td { border-bottom: 0; }
-.otable .num { font-variant-numeric: tabular-nums; }
-.otable .strong { font-weight: 600; }
+.otable .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.otable .strong { font-weight: 500; font-size: 15px; color: var(--gray-900); }
 .col-check { width: 36px; padding-inline-end: 0 !important; }
-.col-check input { width: 16px; height: 16px; accent-color: var(--brand-600); cursor: pointer; }
+.col-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }
 
 .orow { cursor: pointer; outline: none; transition: background var(--dur-instant) var(--ease); }
-.orow:hover td { background: var(--gray-25); }
+.orow:hover td { background: var(--gray-50); }
 .orow:focus-visible td { background: var(--brand-50); }
 .orow:focus-visible td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
 .orow.is-selected td { background: var(--brand-50); }
 .orow--critical td:first-child { box-shadow: inset -3px 0 0 var(--danger-fg); }
-.orow--urgent td:first-child { box-shadow: inset -3px 0 0 #E8892F; }
+.orow--urgent td:first-child { box-shadow: inset -3px 0 0 var(--urgent-edge); }
+.orow--missing td:first-child { box-shadow: inset -3px 0 0 var(--missing-edge); }
 .orow.is-flash td { animation: row-flash 1.2s var(--ease); }
-@keyframes row-flash { 0%, 30% { background: #D5EAF6; } 100% { background: transparent; } }
+@keyframes row-flash { 0%, 30% { background: var(--brand-100); } 100% { background: transparent; } }
 
-.orow__cust { display: block; font-weight: 500; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
-.orow__why { display: block; font-size: var(--text-label); font-weight: 600; }
+.orow__cust { display: block; font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.orow__why { display: block; font-size: var(--text-label); font-weight: 500; margin-top: 1px; }
 .orow__why--critical { color: var(--danger-fg); }
 .orow__why--urgent { color: var(--urgent-fg); }
 .orow__why--missing { color: var(--missing-fg); }
 .orow__branch { display: block; }
-.orow__sub { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-label); color: var(--gray-600); }
+.orow__sub { display: inline-flex; align-items: center; gap: 4px; font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); }
+.orow__sub svg { display: none; }
 .orow__marks { padding-inline: 2px !important; }
 
 .bulkbar {
   position: sticky; top: 0; z-index: 3;
   display: flex; align-items: center; gap: 6px;
   padding: 8px 12px;
-  background: var(--gray-900); color: var(--white);
-  font-size: var(--text-table);
+  background: var(--navy); color: var(--white);
+  font-size: var(--text-label);
   animation: pop-in var(--dur-quick) var(--ease);
 }
 .bulkbar span { margin-inline-end: 8px; font-weight: 600; }
-.bulkbar button { height: 32px; padding: 0 12px; border: 0; border-radius: var(--radius); background: rgba(255,255,255,0.12); color: var(--white); font: inherit; cursor: pointer; }
-.bulkbar button:hover:not(:disabled) { background: rgba(255,255,255,0.22); }
+.bulkbar button { height: 30px; padding: 0 12px; border: 0; border-radius: var(--radius); background: rgba(255,255,255,0.1); color: var(--white); font: inherit; font-weight: 500; cursor: pointer; }
+.bulkbar button:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
 .bulkbar button:disabled { opacity: 0.45; cursor: not-allowed; }
-.bulkbar__clear { margin-inline-start: auto; background: transparent !important; color: rgba(255,255,255,0.75) !important; }
+.bulkbar__clear { margin-inline-start: auto; background: transparent !important; color: var(--navy-text) !important; }
 
 @media (prefers-reduced-motion: reduce) { .orow.is-flash td, .bulkbar { animation: none; } }
 
 /* עמודת הפעולה נשארת גלויה גם כשהטבלה רחבה מהמסך */
-.otable th:last-child, .otable td:last-child { position: sticky; left: 0; z-index: 1; background: var(--white); box-shadow: 8px 0 12px -10px rgba(20,24,31,0.18) inset; }
-.otable thead th:last-child { background: var(--gray-25); z-index: 3; }
-.orow:hover td:last-child { background: var(--gray-25); }
-.otable td { padding: 4px 8px; }
-.otable thead th { padding: 0 8px; }
+.otable th:last-child, .otable td:last-child { position: sticky; left: 0; z-index: 1; background: var(--white); }
+.otable thead th:last-child { background: var(--gray-50); z-index: 3; }
+.orow:hover td:last-child { background: var(--gray-50); }
+.orow.is-selected td:last-child { background: var(--brand-50); }
 @media (max-width: 1500px) {
   .otable .mark__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .otable .mark-btn { padding: 0 4px; }
 }
 
-/* צפיפות: צפוף (ברירת מחדל, ~44px) או מרווח */
-.otable--dense td { height: 46px; }
+/* צפיפות: צפוף (ברירת מחדל) או מרווח */
+.otable--dense td { height: 50px; }
 .otable--dense .orow__sub { display: none; }
-.otable--comfy td { height: 60px; }
+.otable--comfy td { height: 62px; }
+
+/* ---------- טלפון: כל שורה הופכת לכרטיס ---------- */
+@media (max-width: 700px) {
+  .otable-wrap { background: transparent; box-shadow: none; overflow: visible; }
+  .otable, .otable tbody { display: block; }
+  .otable thead { display: none; }
+  .otable tbody { display: grid; gap: 8px; }
+  .orow {
+    display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "time cust health" "marks marks act";
+    gap: 6px 12px; padding: 12px 14px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card);
+  }
+  .orow--critical { box-shadow: var(--shadow-card), inset -3px 0 0 var(--danger-fg); }
+  .orow--urgent { box-shadow: var(--shadow-card), inset -3px 0 0 var(--urgent-edge); }
+  .orow--missing { box-shadow: var(--shadow-card), inset -3px 0 0 var(--missing-edge); }
+  .otable td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
+  .otable td.c-time { display: block; grid-area: time; font-size: 17px; }
+  .otable td.c-cust { display: block; grid-area: cust; min-width: 0; }
+  .otable td.c-health { display: block; grid-area: health; }
+  .otable td.c-marks { display: flex; grid-area: marks; align-items: center; }
+  .otable td.c-act { display: block; grid-area: act; justify-self: end; }
+  .orow__cust { max-width: none; }
+  .otable .mark__label { position: static; width: auto; height: auto; clip: auto; }
+}

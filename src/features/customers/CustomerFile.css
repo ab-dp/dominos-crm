@@ -20,8 +20,8 @@
 .ov__period { justify-self: start; }
 .ov__kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .kpi { padding: 14px 16px; display: grid; gap: 4px; }
-.kpi__label { font-size: var(--text-label); color: var(--gray-600); font-weight: 500; }
-.kpi__value { font-size: var(--text-kpi); font-weight: 600; color: var(--gray-300); }
+.kpi__label { font-size: var(--text-micro); color: var(--gray-600); font-weight: 600; letter-spacing: 0.02em; }
+.kpi__value { font: 500 26px var(--font-mono); letter-spacing: -0.02em; color: var(--gray-300); }
 .ov__note { margin: -4px 0 0; font-size: var(--text-label); }
 .ov__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .ov__card { padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
