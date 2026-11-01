@@ -3,7 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useToast } from '../design/Toast';
 import { healthOf, issuesFor, type Health, type Issue } from '../rules-engine/health';
-import { ConflictError, updateOrderSafe, updateOrders, useLiveOrders } from './orders';
+import { getDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
+import { ConflictError, fromDoc, updateOrderSafe, updateOrders, useLiveOrders } from './orders';
+import { LOCKED_FIELDS, monthOf, useLockedMonths } from './months';
 import { STATUS_LABEL } from './types';
 import { useThresholds, type Thresholds } from './thresholds';
 import { useOpenTasks, type Task } from './tasks';
@@ -20,6 +23,8 @@ export const isLocked = (o: Order) => o.status === 'approved' || o.status === 'd
 export type ConflictState = { error: ConflictError; patch: Partial<Order>; message: ReactNode };
 export type ClosingRequest = { order: Order; status: 'partial' | 'cancelled' };
 export type NewOrderRequest = { mode?: NewOrderMode; customerId?: string; date?: string; customerName?: string };
+/* שינוי בהזמנה של חודש נעול – ממתין לסיבה לפני השמירה */
+export type LockFixRequest = { ids: number[]; patch: Partial<Order>; message: ReactNode; months: string[] };
 
 type Store = {
   now: Date;
@@ -46,6 +51,10 @@ type Store = {
   /* משימות מעקב פתוחות, וכמה מהן להיום או באיחור – לתפריט, לפעמון ולמסך היום */
   tasks: Task[];
   dueTasks: Task[];
+  lockedMonths: string[];
+  lockFix: LockFixRequest | null;
+  confirmLockFix: (reason: string) => void;
+  endLockFix: () => void;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -65,6 +74,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [closing, setClosing] = useState<ClosingRequest | null>(null);
   const [conflict, setConflict] = useState<ConflictState | null>(null);
   const [changeReq, setChangeReq] = useState<ChangeRequest | null>(null);
+  const [lockFix, setLockFix] = useState<LockFixRequest | null>(null);
+  const lockedMonths = useLockedMonths();
+  const lockedRef = useRef(lockedMonths);
+  lockedRef.current = lockedMonths;
   const rawRef = useRef(raw);
   rawRef.current = raw;
 
@@ -82,12 +95,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [raw, now, thresholds],
   );
 
-  const updateMany = useCallback((ids: number[], patch: Partial<Order>, message: ReactNode) => {
-    const before = rawRef.current.filter((o) => ids.includes(o.id));
+  const updateMany = useCallback(async (ids: number[], patch: Partial<Order>, message: ReactNode, fixReason?: string) => {
+    // הזמנות ישנות (מחודשים קודמים, מדוח או מתיק לקוח) לא נמצאות ברשימה החיה – נטענות מהשרת לפני השמירה
+    let before = rawRef.current.filter((o) => ids.includes(o.id));
+    const missing = ids.filter((id) => !before.some((o) => o.id === id));
+    if (missing.length) {
+      try {
+        const snaps = await Promise.all(missing.map((id) => getDoc(doc(db, 'orders', String(id)))));
+        before = [...before, ...snaps.filter((s) => s.exists()).map((s) => fromDoc(s.id, s.data()!))];
+      } catch { toast({ message: 'השמירה נכשלה – בדוק חיבור ונסה שוב.' }); return; }
+    }
     if (!before.length) return;
+    // חודש נעול: שינוי סכום/תאריך/סטטוס/תשלום מחייב סיבה – קודם שואלים, ואז שומרים עם הסיבה
+    const touchesLocked = (Object.keys(patch) as (keyof Order)[]).some((k) => LOCKED_FIELDS.includes(k));
+    const months = touchesLocked ? [...new Set(before.flatMap((o) => [monthOf(o.date), ...(patch.date ? [monthOf(patch.date)] : [])]))].filter((m) => lockedRef.current.includes(m)) : [];
+    if (months.length && !fixReason) { setLockFix({ ids, patch, message, months }); return; }
+    if (fixReason) patch = { ...patch, postCloseFix: { reason: fixReason, by: auth.currentUser?.displayName ?? '', at: serverTimestamp() } };
     const source = ids.length > 1 ? 'bulk' : 'inline';
     // הזמנה אחת: שמירה בטוחה שלא דורסת שינוי של משתמש אחר. כמה הזמנות (סימון מרובה): כתיבה רגילה.
-    const write = ids.length === 1 ? updateOrderSafe(before[0], patch, 'inline') : updateOrders(before, patch, source);
+    const write = ids.length === 1 ? updateOrderSafe(before[0], patch, 'inline', fixReason ? `תיקון לאחר סגירה: ${fixReason}` : undefined) : updateOrders(before, patch, source, fixReason ? `תיקון לאחר סגירה: ${fixReason}` : undefined);
     write
       .then(() => toast({
         message,
@@ -98,6 +124,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             const cur = current.find((c) => c.id === b.id);
             if (!cur) return undefined;
             const back = Object.fromEntries(Object.keys(patch).map((k) => [k, b[k as keyof Order]])) as Partial<Order>;
+            // ביטול של תיקון בחודש נעול הוא גם תיקון – עם סיבה, אחרת השרת חוסם
+            if (fixReason) back.postCloseFix = { reason: `ביטול תיקון: ${fixReason}`, by: auth.currentUser?.displayName ?? '', at: serverTimestamp() };
             return updateOrders([cur], back, source, 'ביטול פעולה');
           })).catch(() => toast({ message: 'הביטול נכשל – בדוק חיבור' }));
         },
@@ -140,11 +168,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateMany([o.id], patch, <>שינוי נשמר: {what} · הזמנה <bdi dir="ltr">{o.id}</bdi></>);
   }, [updateMany]);
   const endChange = useCallback(() => setChangeReq(null), []);
+  const confirmLockFix = useCallback((reason: string) => {
+    setLockFix((r) => { if (r) updateMany(r.ids, r.patch, r.message, reason); return null; });
+  }, [updateMany]);
+  const endLockFix = useCallback(() => setLockFix(null), []);
   const today = toISODate(now);
   const dueTasks = useMemo(() => tasks.filter((t) => t.due <= today), [tasks, today]);
 
   return (
-    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, conflict, resolveConflict, requestChange, changeReq, endChange }}>
+    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }}>
       {children}
     </Ctx.Provider>
   );

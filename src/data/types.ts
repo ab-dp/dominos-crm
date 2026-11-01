@@ -79,5 +79,7 @@ export type Order = {
   /* שינוי אחרי אישור (אפיון 8): מה שונה, הערכים כפי שאושרו, ומה צריך לעדכן */
   changedAfterApproval?: { at: string; by: string; fields: string[]; before: Record<string, unknown> };
   qNeedsUpdate?: boolean; // השינוי עוד לא עודכן בקופה
+  /* תיקון בחודש נעול (אפיון 7): הסיבה של התיקון האחרון; מסומן בדוח החודש "תיקון לאחר סגירה" */
+  postCloseFix?: { reason: string; by: string; at?: unknown };
   cancelNote?: string;
 };

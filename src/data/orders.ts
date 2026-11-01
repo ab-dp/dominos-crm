@@ -124,6 +124,10 @@ export async function createOrder(input: NewOrderInput, newCustomer?: NewCustome
 
 /* ---------- עדכון: אותו שינוי על הזמנה אחת או כמה, עם ערך קודם ← ערך חדש ביומן ---------- */
 export async function updateOrders(orders: Order[], patch: Partial<Order>, source: 'form' | 'inline' | 'bulk' = 'inline', note?: string) {
+  // כללי השרת קוראים לכל הזמנה מסמכים נוספים (לקוח, סניף, חודש) ויש מגבלה לכל כתיבה – לכן מנות קטנות
+  for (let i = 0; i < orders.length; i += 5) await updateOrdersBatch(orders.slice(i, i + 5), patch, source, note);
+}
+async function updateOrdersBatch(orders: Order[], patch: Partial<Order>, source: 'form' | 'inline' | 'bulk', note?: string) {
   const u = me();
   const batch = writeBatch(db);
   const keys = Object.keys(patch) as (keyof Order)[];

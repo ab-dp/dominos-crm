@@ -85,3 +85,5 @@
   .report__sel, .report__cust { flex: 1; min-width: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .report__drill { animation: none; } }
+.rhub__card--feature { margin-bottom: 12px; box-shadow: 0 0 0 1px var(--brand-100), var(--shadow-card); }
+.rhub__card--feature .rhub__icon { background: var(--brand-50); border-color: var(--brand-100); color: var(--brand-700); }

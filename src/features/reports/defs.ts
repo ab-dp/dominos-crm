@@ -65,7 +65,7 @@ export const REPORTS: ReportDef[] = [
     id: 'branches', title: 'לפי סניף', desc: 'עומס והכנסה לכל סניף',
     compute: (all) => {
       const l = live(all);
-      const rows = [...groupBy(l, (o) => o.branchName).entries()].map(([name, list]) => ({
+      const rows = [...groupBy(l, (o) => o.branchName || 'ללא סניף').entries()].map(([name, list]) => ({
         id: name, orders: list, cells: { name, cluster: list[0]?.cluster ?? '', count: list.length, sum: sum(list), avg: avg(list) },
       })).sort((a, b) => (b.cells.sum as number) - (a.cells.sum as number));
       return {
@@ -79,7 +79,7 @@ export const REPORTS: ReportDef[] = [
     id: 'clusters', title: 'לפי אשכול', desc: 'הזמנות וסך לכל אשכול סניפים',
     compute: (all) => {
       const l = live(all); const total = sum(l);
-      const rows = [...groupBy(l, (o) => o.cluster).entries()].map(([name, list]) => ({
+      const rows = [...groupBy(l, (o) => o.cluster || 'ללא סניף').entries()].map(([name, list]) => ({
         id: name, orders: list, cells: { name, branches: new Set(list.map((o) => o.branchId)).size, count: list.length, sum: sum(list), share: pct(sum(list), total) },
       })).sort((a, b) => (b.cells.sum as number) - (a.cells.sum as number));
       return {

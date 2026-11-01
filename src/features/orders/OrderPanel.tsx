@@ -136,6 +136,13 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           <span>·</span>
           <span>{o.branchName || <Missing>ללא סניף</Missing>}</span>
         </div>
+        {o.postCloseFix && (
+          <div className="changed-note">
+            <span className="changed-tag">תיקון לאחר סגירה</span>
+            <span className="changed-note__item">{o.postCloseFix.reason}</span>
+            <span className="muted">· {o.postCloseFix.by}</span>
+          </div>
+        )}
         {o.changedAfterApproval && (
           <div className="changed-note">
             <span className="changed-tag">שונתה לאחר אישור</span>
@@ -265,7 +272,7 @@ export const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הנחיות', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
-  qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
+  qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
 };
 export function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';

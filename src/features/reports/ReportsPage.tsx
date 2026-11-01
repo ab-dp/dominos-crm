@@ -2,7 +2,7 @@
    טבלה עם שורת סיכום, לחיצה על שורה מציגה את ההזמנות שמרכיבות אותה, וייצוא לאקסל שנרשם ביומן. */
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowRight, ChartColumn, Download, RefreshCw, X } from 'lucide-react';
+import { ArrowRight, CalendarCheck, ChartColumn, Download, RefreshCw, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { logReportExport, useOrdersRange } from '../../data/orders';
 import { useStore } from '../../data/store';
@@ -25,6 +25,10 @@ export function ReportsHub() {
           <p className="page__sub">כל הדוחות לפי תאריך אספקה וסכום Q, בלי הזמנות שבוטלו (חוץ מדוח הביטולים).</p>
         </div>
       </header>
+      <Link to="/reports/close" className="rhub__card rhub__card--feature">
+        <span className="rhub__icon" aria-hidden="true"><CalendarCheck size={20} /></span>
+        <span className="rhub__text"><b>סגירת חודש</b><span>השלמת חוסרים · בדיקת הקפות · העברה להנהלת חשבונות · נעילה עם סיכומים קפואים</span></span>
+      </Link>
       <div className="rhub">
         {REPORTS.map((r) => (
           <Link key={r.id} to={r.link ?? `/reports/${r.id}`} className="rhub__card">

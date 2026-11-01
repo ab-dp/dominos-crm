@@ -12,6 +12,7 @@ import { DominoTile } from './components/DominoTile';
 import { TodayPage } from './features/today/TodayPage';
 import { OrdersPage } from './features/orders/OrdersPage';
 import { CreditReportPage } from './features/reports/CreditReportPage';
+import { MonthClosePage } from './features/reports/MonthClosePage';
 import { StyleGuidePage } from './features/styleguide/StyleGuidePage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { BranchesPage } from './features/branches/BranchesPage';
@@ -58,6 +59,7 @@ function Gate() {
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/reports" element={<ReportsHub />} />
               <Route path="/reports/credit" element={<CreditReportPage />} />
+              <Route path="/reports/close" element={<MonthClosePage />} />
               <Route path="/reports/:id" element={<ReportView />} />
               <Route path="/styleguide" element={<StyleGuidePage />} />
               <Route path="/settings/*" element={<SettingsPage />} />

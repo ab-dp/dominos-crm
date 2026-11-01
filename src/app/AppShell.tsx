@@ -23,6 +23,7 @@ import { NewOrderDialog } from '../features/orders/NewOrder';
 import { StatusDialogs } from '../features/orders/StatusDialogs';
 import { ConflictDialog } from '../features/orders/ConflictDialog';
 import { ChangeDialog } from '../features/orders/ChangeDialog';
+import { LockFixDialog } from '../features/orders/LockFixDialog';
 import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -235,6 +236,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <StatusDialogs />
       <ConflictDialog />
       <ChangeDialog />
+      <LockFixDialog />
     </div>
   );
 }

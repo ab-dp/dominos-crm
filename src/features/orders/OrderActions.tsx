@@ -22,6 +22,7 @@ function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
       </>
     );
   }
+  if (!o.branchId) return <p className="pop__text">קודם צריך לשבץ סניף להזמנה – בתיק ההזמנה, באזור "אספקה".</p>;
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setErr('חובה: שם המנהל שאישר בסניף'); return; }
