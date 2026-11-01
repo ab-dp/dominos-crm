@@ -85,3 +85,4 @@
   .toolbar .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
   .chip { flex: none; }
 }
+@media (max-width: 700px) { .tablebar .seg--sm { display: none; } }

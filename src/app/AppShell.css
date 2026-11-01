@@ -224,3 +224,11 @@
   .nav__count { top: 2px; inset-inline-end: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .cmd, .cmd-overlay { animation: none; } }
+@media (max-width: 1100px) {
+  .user .btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .user .btn { width: 36px; padding: 0; }
+  .search-trigger { min-width: 0; }
+}
+@media (max-width: 860px) {
+  .topbar__actions .btn--primary .btn__kbd { display: none; }
+}
