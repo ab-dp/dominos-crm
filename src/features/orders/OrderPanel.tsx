@@ -7,12 +7,14 @@ import { Maximize2, Minimize2, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { HealthBadge, StatusMenu, Tip } from '../../design/components';
-import { Ltr, Money, Phone, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
+import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 import { useOrderDoc, useOrderHistory, type OrderAuditRow } from '../../data/orders';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, OrderMarks, PoEdit } from './OrderActions';
 import { OrderDocsSection } from './OrderDocs';
+import { BranchEdit, DeliveryTypeEdit, EditKv, ItemsEditor, MethodEdit, NotesSection, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
+import { phoneError } from '../../lib/names';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import './OrderPanel.css';
 
@@ -65,7 +67,10 @@ export function OrderPanel() {
 }
 
 function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull: (f: boolean) => void }) {
-  const { update } = useStore();
+  const { requestStatus } = useStore();
+  const save = useOrderSave(o);
+  const [editItems, setEditItems] = useState(false);
+  useEffect(() => setEditItems(false), [o.id]);
   const panel = usePanel();
   const nav = useNavigate();
   const [tab, setTab] = useState<'file' | 'history'>('file');
@@ -106,7 +111,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           <span>{o.branchName}</span>
         </div>
         <div className="panel__row">
-          <StatusMenu status={o.status} onChange={(s) => update(o.id, { status: s, ...(s === 'cancelled' ? { payment: 'cancelled' as const } : {}) }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <Ltr>{o.id}</Ltr></>)} />
+          <StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />
           <span className="panel__marks"><OrderMarks o={o} /></span>
         </div>
         {o.issues.length > 0 && (
@@ -131,31 +136,43 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
       <div className="panel__body" ref={bodyRef} onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)} tabIndex={0} role="region" aria-label="תוכן תיק ההזמנה">
         {tab === 'history' ? <History o={o} /> : (
           <>
+            {(o.status === 'partial' || o.status === 'cancelled') && (
+              <div className={`closed-note closed-note--${o.status}`}>
+                <b>{o.status === 'partial' ? 'סופקה חלקית' : `בוטלה${o.cancelReason ? ` · ${o.cancelReason}` : ''}`}</b>
+                {(o.partialNote || o.cancelNote) && <span>{o.partialNote ?? o.cancelNote}</span>}
+              </div>
+            )}
             <Section id="details" title="פרטים">
               <Kv k="לקוח" v={o.customerName} />
-              <Kv k="ערוץ קבלה" v={o.channel || '—'} />
+              <EditKv k="ערוץ קבלה" value={o.channel} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ ההזמנה')} onSave={(v) => save({ channel: v }, 'ערוץ הקבלה')} />
               <Kv k="מטפל" v={o.handler} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
             </Section>
             <Section id="delivery" title="אספקה">
-              <Kv k="מועד" v={<><Ltr>{fmtDate(o.date)}</Ltr> · <Ltr>{o.time}</Ltr></>} />
-              <Kv k="סוג" v={o.delivery === 'delivery' ? 'משלוח' : 'איסוף עצמי'} />
-              <Kv k="סניף" v={<>{o.branchName} <span className="muted">· אשכול {o.cluster}</span></>} />
-              <Kv k="כתובת" v={o.delivery === 'pickup' ? '—' : (o.address || <span className="warn-text">חסרה</span>)} />
-              <Kv k="איש קשר לקבלה" v={o.contactName ? <>{o.contactName} · <Phone value={o.contactPhone ?? ''} /></> : <span className="warn-text">חסר</span>} />
-              {o.instructions && <Kv k="הנחיות" v={o.instructions} />}
+              <EditKv k="תאריך" kind="date" value={o.date} display={<>יום {weekday(o.date)} · {showDate(o.date)}</>} validate={validDate} onSave={(v) => save({ date: v }, 'תאריך האספקה')} />
+              <EditKv k="שעה" kind="time" value={o.time} display={<Ltr>{o.time}</Ltr>} validate={validTime} onSave={(v) => save({ time: v }, 'שעת האספקה')} />
+              <DeliveryTypeEdit o={o} />
+              <BranchEdit o={o} />
+              {o.delivery === 'delivery' && <EditKv k="כתובת" value={o.address ?? ''} display={o.address || <span className="warn-text">חסרה</span>} placeholder="רחוב, מספר, עיר" onSave={(v) => save({ address: v || undefined }, 'הכתובת')} />}
+              <EditKv k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <span className="warn-text">חסר</span>} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
+              <EditKv k="טלפון" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <span className="warn-text">חסר</span>} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />
+              <EditKv k="הנחיות" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההנחיות')} />
             </Section>
-            <Section id="items" title="פריטים ומחיר">
-              {o.contents && <p className="order-contents">{o.contents}</p>}
-              {o.items.length > 0 && <table className="items">
-                <thead><tr><th>פריט</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
-                <tbody>
-                  {o.items.map((it) => (
-                    <tr key={it.name}><td>{it.name}</td><td><Ltr>{it.qty}</Ltr></td><td><Money value={it.unitPrice} /></td><td><Money value={it.qty * it.unitPrice} /></td></tr>
-                  ))}
-                </tbody>
-              </table>}
-              {!o.contents && o.items.length === 0 && <p className="muted">לא נרשמה תכולה – רק סכום.</p>}
+            <Section id="items" title="פריטים ומחיר" action={!editItems && <button className="link" onClick={() => setEditItems(true)}>עריכה</button>}>
+              {editItems ? <ItemsEditor o={o} onDone={() => setEditItems(false)} /> : (
+                <>
+                  {o.contents && <p className="order-contents">{o.contents}</p>}
+                  {o.items.length > 0 && <table className="items">
+                    <thead><tr><th>פריט</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
+                    <tbody>
+                      {o.items.map((it, i) => (
+                        <tr key={i}><td>{it.name}</td><td><Ltr>{it.qty}</Ltr></td><td><Money value={it.unitPrice} /></td><td><Money value={it.qty * it.unitPrice} /></td></tr>
+                      ))}
+                    </tbody>
+                  </table>}
+                  {!o.contents && o.items.length === 0 && <p className="muted">לא נרשמה תכולה – רק סכום. <button className="link" onClick={() => setEditItems(true)}>הוסף פירוט</button></p>}
+                </>
+              )}
               <div className="sums">
                 {!!o.deliveryFee && <div><span>מתוכו דמי משלוח</span><b><Money value={o.deliveryFee} /></b></div>}
                 {o.calcAmount !== undefined && <div><span>מחושב מהפריטים</span><b className="muted"><Money value={o.calcAmount} /></b></div>}
@@ -173,8 +190,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <Kv k="הועברה ל-Q" v={o.qNumber ? <><Ltr>{o.qNumber}</Ltr> · <Money value={o.qAmount ?? o.amount} /></> : <span className="warn-text">לא הועברה</span>} />
             </Section>
             <Section id="payment" title="תשלום">
-              <Kv k="אמצעי תשלום" v={o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method} />
-              {o.accountPhone && <Kv k="טלפון הקפה" v={<Phone value={o.accountPhone} />} />}
+              <MethodEdit o={o} />
+              {o.method === 'account' && <EditKv k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <span className="warn-text">חסר</span>} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />}
               <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
               <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
               {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
@@ -183,26 +200,23 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <OrderDocsSection orderId={o.id} />
             </Section>
             <Section id="notes" title="הערות פנימיות">
-              {o.note && <p className="note"><b>{o.createdBy}</b> <span className="muted"><Ltr>{fmtDate(o.createdAt)}</Ltr></span><br />{o.note}</p>}
-              {o.notes.length === 0 && !o.note ? <p className="muted">אין הערות</p> : o.notes.map((n, i) => (
-                <p key={i} className="note"><b>{n.by}</b> <span className="muted"><Ltr>{fmtDate(n.at)}</Ltr></span><br />{n.text}</p>
-              ))}
+              <NotesSection o={o} />
             </Section>
           </>
         )}
       </div>
       <footer className="panel__foot">
-        <span className="muted">שינויים נשמרים אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>
+        <span className="muted">לחיצה על ערך פותחת עריכה · נשמר אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>
         <button className="link" onClick={panel.close}>חזרה לרשימה</button>
       </footer>
     </>
   );
 }
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+function Section({ id, title, children, action }: { id: string; title: string; children: ReactNode; action?: ReactNode }) {
   return (
     <section id={`sec-${id}`} className="sec" aria-labelledby={`h-${id}`}>
-      <h3 id={`h-${id}`} className="sec__title">{title}</h3>
+      <div className="sec__head"><h3 id={`h-${id}`} className="sec__title">{title}</h3>{action}</div>
       <div className="sec__body">{children}</div>
     </section>
   );
@@ -214,7 +228,9 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 /* יומן ההזמנה – נקרא מ-auditLog, שאי אפשר לערוך או למחוק (נאכף בשרת) */
 const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
-  date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
+  date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
+  delivery: 'סוג אספקה', instructions: 'הנחיות', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
+  items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
 };
 function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -223,6 +239,10 @@ function showVal(k: string, v: unknown): string {
   if (k === 'amount' || k === 'qAmount') return fmtMoney(Number(v));
   if (k === 'branchApproval') return `אושר ע"י ${(v as { manager?: string }).manager ?? ''}`;
   if (k === 'date') return fmtDate(String(v));
+  if (k === 'items') return Array.isArray(v) ? `${v.length} פריטים` : '—';
+  if (k === 'delivery') return v === 'pickup' ? 'איסוף עצמי' : 'משלוח';
+  if (k === 'deliveryFee') return fmtMoney(Number(v));
+  if (k === 'method') return METHOD_LABEL[String(v)] ?? String(v);
   return String(v);
 }
 const fmtAt = (d: Date) => `${fmtDate(toISODate(d))} | ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -237,7 +257,7 @@ function History({ o }: { o: OrderView }) {
         <li key={r.id}>
           <span className="timeline__at"><Ltr>{r.at ? fmtAt(r.at.toDate()) : '…'}</Ltr></span>
           <span>
-            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.action === 'doc' ? 'צירוף תעודת רכש' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
+            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.action === 'doc' ? 'צירוף תעודת רכש' : r.action === 'note' ? 'הערה פנימית' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
             {r.action !== 'create' && r.action !== 'doc' && r.after && Object.keys(r.after).filter((k) => FIELD[k]).map((k) => (
               <span key={k} className="hist__change">{FIELD[k]}: <span className="muted">{showVal(k, r.before?.[k])}</span> ← {showVal(k, r.after?.[k])}</span>
             ))}

@@ -160,3 +160,22 @@ export function useOrderDoc(id: number | null) {
   }, [id]);
   return o;
 }
+
+/* ---------- הערות פנימיות: orders/{מספר}/notes. אפשר רק להוסיף – לא לערוך ולא למחוק (נאכף בשרת) ---------- */
+export type OrderNote = { id: string; text: string; by: string; byName: string; at?: Timestamp };
+
+export function useOrderNotes(orderId: number) {
+  const [items, setItems] = useState<OrderNote[] | null>(null);
+  useEffect(() => onSnapshot(collection(db, 'orders', String(orderId), 'notes'),
+    (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as OrderNote).sort((a, b) => (a.at?.seconds ?? 9e9) - (b.at?.seconds ?? 9e9))),
+    () => setItems([])), [orderId]);
+  return items;
+}
+
+export async function addOrderNote(orderId: number, text: string) {
+  const u = me();
+  const batch = writeBatch(db);
+  batch.set(doc(collection(db, 'orders', String(orderId), 'notes')), { text: text.trim(), by: u.uid, byName: u.name, at: serverTimestamp() });
+  batch.set(doc(collection(db, 'auditLog')), auditDoc('order', String(orderId), 'note', null, { note: text.trim().slice(0, 200) }, 'form'));
+  await batch.commit();
+}

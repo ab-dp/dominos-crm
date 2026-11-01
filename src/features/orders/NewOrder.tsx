@@ -515,8 +515,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
           </header>
 
           <form ref={formRef} className="cform__body" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div key={mode === 'newCustomer' ? 'n' : 'e'} {...fade} exit={{ opacity: 0, transition: { duration: 0.08 } }} transition={{ duration: 0.18 }}>
+            {/* החלפת לקוח קיים / לקוח חדש: הופעה רכה בלבד – התוכן לא תלוי בסיום אנימציית יציאה */}
+            <motion.div key={mode === 'newCustomer' ? 'n' : 'e'} {...fade} transition={{ duration: 0.18 }}>
                 {isNew ? (
                   <Section title="לקוח חדש">
                     <Row>
@@ -560,7 +560,6 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                   </Section>
                 )}
               </motion.div>
-            </AnimatePresence>
 
             <Section title="מועד וסניף">
               {whenSection}

@@ -12,12 +12,11 @@ import { Button, HealthBadge, RollingNumber, StatusMenu } from '../../design/com
 import { HEALTH_RANK, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { FixButton, OrderMarks } from '../orders/OrderActions';
-import { STATUS_LABEL } from '../../data/types';
 import '../pages.css';
 import './TodayPage.css';
 
 export function TodayPage() {
-  const { orders, now, update } = useStore();
+  const { orders, now, requestStatus } = useStore();
   const panel = usePanel();
   const nav = useNavigate();
   const reduce = useReducedMotion();
@@ -181,7 +180,7 @@ export function TodayPage() {
             <ol className="tl">
               {todays.map((o, i) => (
                 <TimelineRow key={o.id} o={o} isNowBefore={i === nowIdx} isNext={o.id === nextUp?.id} now={now} onOpen={(el) => panel.open(o.id, el)}
-                  status={<StatusMenu status={o.status} onChange={(s) => update(o.id, { status: s }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <Ltr>{o.id}</Ltr></>)} />} />
+                  status={<StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />} />
               ))}
               {nowIdx === -1 && <NowLine now={now} />}
             </ol>

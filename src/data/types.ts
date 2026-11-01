@@ -67,4 +67,7 @@ export type Order = {
   createdByUid?: string;
   createdAt: string; // YYYY-MM-DD
   billingNote?: string;
+  partialNote?: string; // מה סופק בפועל, בסגירה "סופקה חלקית"
+  cancelReason?: string;
+  cancelNote?: string;
 };

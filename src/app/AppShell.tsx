@@ -17,6 +17,7 @@ import { usePanel } from './PanelContext';
 import { ScreenBoundary } from './ErrorBoundary';
 import { OrderPanel } from '../features/orders/OrderPanel';
 import { NewOrderDialog } from '../features/orders/NewOrder';
+import { StatusDialogs } from '../features/orders/StatusDialogs';
 import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -219,6 +220,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} onPick={(id) => { setSearchOpen(false); panel.open(id, null); }} />
       <OrderPanel />
       <NewOrderDialog />
+      <StatusDialogs />
     </div>
   );
 }

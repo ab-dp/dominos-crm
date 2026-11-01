@@ -182,6 +182,8 @@ service cloud.firestore {
         && d.notes is list && d.notes.size() <= 200
         && noCard(opt(d, 'instructions')) && noCard(opt(d, 'note')) && noCard(opt(d, 'billingNote'))
         && noCard(opt(d, 'address')) && noCard(opt(d, 'poNumber')) && noCard(opt(d, 'qNumber')) && noCard(opt(d, 'contents')) && noCard(opt(d, 'channel'))
+        && noCard(opt(d, 'partialNote')) && noCard(opt(d, 'cancelReason')) && noCard(opt(d, 'cancelNote'))
+        && noCard(opt(d, 'contactName')) && noCard(opt(d, 'instructions'))
         && (!('calcAmount' in d) || (d.calcAmount is number && d.calcAmount >= 0))
         && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee < 10000))
         && d.keys().size() <= 50;
@@ -203,6 +205,17 @@ service cloud.firestore {
         && request.resource.data.updatedBy == request.auth.uid
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['number', 'createdAt', 'createdBy', 'createdByUid']);
       allow delete: if false;
+
+      // הערות פנימיות: אפשר רק להוסיף. אף אחד, כולל מנהל, לא עורך ולא מוחק.
+      match /notes/{nid} {
+        allow read: if isActive();
+        allow create: if isActive()
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.keys().hasOnly(['text', 'by', 'byName', 'at'])
+          && request.resource.data.text is string && request.resource.data.text.size() > 0
+          && noCard(request.resource.data.text);
+        allow update, delete: if false;
+      }
     }
 
     match /counters/orders {

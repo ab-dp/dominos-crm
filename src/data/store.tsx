@@ -4,11 +4,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useToast } from '../design/Toast';
 import { healthOf, issuesFor, type Health, type Issue } from '../rules-engine/health';
 import { updateOrders, useLiveOrders } from './orders';
-import type { Order } from './types';
+import { STATUS_LABEL } from './types';
+import type { Order, OrderStatus } from './types';
 
 export type OrderView = Order & { issues: Issue[]; health: Health };
 
 export type NewOrderMode = 'quick' | 'full' | 'newCustomer';
+export type ClosingRequest = { order: Order; status: 'partial' | 'cancelled' };
 export type NewOrderRequest = { mode?: NewOrderMode; customerId?: string; date?: string; customerName?: string };
 
 type Store = {
@@ -21,6 +23,10 @@ type Store = {
   newOrder: NewOrderRequest | null;
   openNewOrder: (r?: NewOrderRequest) => void;
   closeNewOrder: () => void;
+  /* שינוי סטטוס מכל מקום: "סופקה חלקית" ו"בוטלה" פותחים חלון עם פרטים לפני השמירה */
+  requestStatus: (o: Order, s: OrderStatus) => void;
+  closing: ClosingRequest | null;
+  endClosing: () => void;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -35,6 +41,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const { orders: raw, loading, error } = useLiveOrders();
   const [now, setNow] = useState(() => new Date());
   const [newOrder, setNewOrder] = useState<NewOrderRequest | null>(null);
+  const [closing, setClosing] = useState<ClosingRequest | null>(null);
   const rawRef = useRef(raw);
   rawRef.current = raw;
 
@@ -76,9 +83,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const update = useCallback((id: number, patch: Partial<Order>, message: ReactNode) => updateMany([id], patch, message), [updateMany]);
   const openNewOrder = useCallback((r: NewOrderRequest = {}) => setNewOrder(r), []);
   const closeNewOrder = useCallback(() => setNewOrder(null), []);
+  const requestStatus = useCallback((o: Order, s: OrderStatus) => {
+    if (s === o.status) return;
+    if (s === 'partial' || s === 'cancelled') { setClosing({ order: o, status: s }); return; }
+    // יציאה מ"בוטלה" או מ"סופקה חלקית" מנקה את פרטי הסגירה (הם נשארים ביומן), והתשלום חוזר ל"ממתין"
+    updateMany([o.id], {
+      status: s,
+      ...(o.status === 'cancelled' ? { cancelReason: undefined, cancelNote: undefined, ...(o.payment === 'cancelled' ? { payment: 'pending' as const } : {}) } : {}),
+      ...(o.status === 'partial' ? { partialNote: undefined } : {}),
+    }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <bdi dir="ltr">{o.id}</bdi></>);
+  }, [updateMany]);
+  const endClosing = useCallback(() => setClosing(null), []);
 
   return (
-    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder }}>
+    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing }}>
       {children}
     </Ctx.Provider>
   );

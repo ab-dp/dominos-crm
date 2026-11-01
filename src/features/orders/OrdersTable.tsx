@@ -6,13 +6,13 @@ import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { EmptyState, HealthBadge, StatusMenu } from '../../design/components';
 import { Ltr, Money, fmtDate } from '../../lib/format';
-import { METHOD_LABEL, STATUS_LABEL } from '../../data/types';
+import { METHOD_LABEL } from '../../data/types';
 import { FixButton, OrderMarks } from './OrderActions';
 import './OrdersTable.css';
 
 export function OrdersTable({ rows, showDate = true, emptyText, caption, density = 'dense' }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string; density?: 'dense' | 'comfy' }) {
   const panel = usePanel();
-  const { update, updateMany } = useStore();
+  const { requestStatus, updateMany } = useStore();
   const [selected, setSelected] = useState<number[]>([]);
   const [flash, setFlash] = useState<number | null>(null);
   const body = useRef<HTMLTableSectionElement>(null);
@@ -97,7 +97,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
                 </td>
                 <td className="num"><Money value={o.amount} /></td>
                 <td onClick={(e) => e.stopPropagation()}>
-                  <StatusMenu status={o.status} onChange={(s) => update(o.id, { status: s, ...(s === 'cancelled' ? { payment: 'cancelled' as const } : {}) }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <Ltr>{o.id}</Ltr></>)} />
+                  <StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />
                 </td>
                 <td className="orow__marks c-marks" onClick={(e) => e.stopPropagation()}><OrderMarks o={o} /></td>
                 <td>{o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method}</td>
