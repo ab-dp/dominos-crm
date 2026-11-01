@@ -17,3 +17,8 @@ PLAN.md
 # סביבת בדיקה מקומית עם נתוני דמה
 .harness/
 vite.harness.config.ts
+
+# פלט של tsc -b בטעות
+src/**/*.js
+*.tsbuildinfo
+vite.config.js

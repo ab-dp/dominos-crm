@@ -10,7 +10,7 @@ import { Check, ChevronDown, CircleAlert, ClipboardList, Minus, Plus, Trash2, Us
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useBranches, useClusters } from '../../data/branches';
-import { EMPTY_CUSTOMER, newId, primaryContact, useCustomers, type Customer } from '../../data/customers';
+import { EMPTY_CUSTOMER, newId, primaryContact, updateCustomer, useCustomers, type Customer } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
 import { usePriceLists } from '../../data/priceLists';
@@ -92,6 +92,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const [ackDup, setAckDup] = useState(false);
   const [ackSimilar, setAckSimilar] = useState(false);
   const [ackMissing, setAckMissing] = useState(false);
+  const [saveContact, setSaveContact] = useState(false); // לשמור איש קשר חדש גם בתיק הלקוח
+  const [saveAddress, setSaveAddress] = useState(false);
   const [busy, setBusy] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -101,17 +103,19 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const branchObj = branches.find((b) => b.id === branch?.branchId);
   const clearErr = (...k: string[]) => setErrors((e) => { const n = { ...e }; k.forEach((x) => delete n[x]); return n; });
 
-  // בחירת לקוח טוענת את כל מה שקבוע אצלו: תשלום, טלפון הקפה, כתובת, איש קשר, הנחיות, סניף מועדף
+  /* בחירת לקוח טוענת את מה שקבוע אצלו: תשלום, טלפון הקפה, כתובת, הנחיות, סניף מועדף.
+     איש הקשר לא נטען לבד – הוא משתנה מהזמנה להזמנה, ולכן מוצע לבחירה ("האם זה איש הקשר?") כדי שלא תצא הזמנה עם איש קשר ישן. */
   useEffect(() => {
     if (!c) return;
     const addr = c.addresses[0];
-    const pc = primaryContact(c);
     setMethod(c.paymentMethod);
     setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : '');
     setAddressId(addr?.id ?? '');
     setAddress(addr?.address ?? c.businessAddress ?? '');
-    setContactId(pc?.id ?? '');
-    setContact({ name: pc?.name ?? '', phone: pc?.phone ? fmtPhone(pc.phone) : '' });
+    setContactId('');
+    setContact({ name: '', phone: '' });
+    setSaveContact(false);
+    setSaveAddress(false);
     setInstructions(c.instructions);
     if (addr?.preferredBranchId && branches.some((b) => b.id === addr.preferredBranchId)) {
       const b = branches.find((x) => x.id === addr.preferredBranchId)!;
@@ -159,6 +163,11 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   }, [isNew, customers, nc.name, ncPhone]);
 
   const pickExisting = (x: Customer) => { setCustomerId(x.id); setMode('full'); setErrors({}); setAckSimilar(false); };
+
+  /* איש קשר או כתובת שהוקלדו ואינם בתיק הלקוח – מציעים לשמור גם שם */
+  const contactPhoneClean = cleanPhone(contact.phone);
+  const newContact = !!c && !contactId && !!(contact.name.trim() || contactPhoneClean) && !c.contacts.some((p) => (contactPhoneClean && p.phone === contactPhoneClean) || (!contactPhoneClean && p.name === contact.name.trim()));
+  const newAddress = !!c && delivery === 'delivery' && !!address.trim() && !c.addresses.some((a) => a.address.trim() === address.trim());
 
   const methods = (lists?.paymentMethods ?? []).filter((m) => m.active || m.id === method || m.id === nc.paymentMethod);
   const effMethod = isNew ? nc.paymentMethod : method;
@@ -257,6 +266,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     setBusy(true);
     try {
       const n = await createOrder(input, draft);
+      if (c && ((saveContact && newContact) || (saveAddress && newAddress))) {
+        // ההזמנה כבר נשמרה; אם עדכון התיק נכשל – רק מודיעים
+        await updateCustomer(c, {
+          ...(saveContact && newContact ? { contacts: [...c.contacts, { id: newId(), name: contact.name.trim(), role: '', phone: contactPhoneClean, email: '', primary: c.contacts.length === 0 }] } : {}),
+          ...(saveAddress && newAddress ? { addresses: [...c.addresses, { id: newId(), label: '', address: address.trim(), directions: '', preferredBranchId: branchObj?.id ?? '' }] } : {}),
+        }, `נוסף מתוך הזמנה ${n}`).catch(() => toast({ message: 'ההזמנה נשמרה, אבל השמירה בתיק הלקוח נכשלה – אפשר להוסיף שם ידנית' }));
+      }
       if (poFile) {
         // הקובץ נשמר אחרי ההזמנה; אם נכשל – ההזמנה כבר שמורה ואפשר לצרף שוב מהתיק
         await uploadOrderDoc(n, poFile, input.customerId || '').catch(() => toast({ message: <>ההזמנה נשמרה, אבל צירוף תעודת הרכש נכשל – אפשר לצרף אותה מתיק ההזמנה <Ltr>{n}</Ltr></> }));
@@ -322,14 +338,22 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             <button type="button" role="radio" aria-checked={delivery === 'pickup'} className={delivery === 'pickup' ? 'is-on' : ''} onClick={() => setDelivery('pickup')}>איסוף עצמי</button>
           </div>
         </L>
-        {!isNew && c && c.contacts.length > 1 && (
-          <L label="מאנשי הקשר של הלקוח">
-            <select className="input" value={contactId} onChange={(e) => { const p = c.contacts.find((x) => x.id === e.target.value); setContactId(e.target.value); setContact({ name: p?.name ?? '', phone: p?.phone ? fmtPhone(p.phone) : '' }); clearErr('contactPhone'); }}>
-              {c.contacts.map((p) => <option key={p.id} value={p.id}>{p.name}{p.phone ? ` · ${fmtPhone(p.phone)}` : ''}</option>)}
-            </select>
-          </L>
-        )}
       </Row>
+      {!isNew && c && c.contacts.length > 0 && (
+        contactId ? (
+          <p className="no-suggest no-suggest--on"><Check size={14} aria-hidden="true" /> מאנשי הקשר השמורים של הלקוח
+            <button type="button" className="link" onClick={() => { setContactId(''); setContact({ name: '', phone: '' }); }}>מישהו אחר</button></p>
+        ) : (
+          <div className="no-suggest" role="group" aria-label="אנשי הקשר השמורים של הלקוח">
+            <span className="no-suggest__q">האם זה איש הקשר?</span>
+            {[...c.contacts].sort((a, b) => Number(b.primary) - Number(a.primary)).map((p) => (
+              <button type="button" key={p.id} className="chip" onClick={() => { setContactId(p.id); setContact({ name: p.name, phone: p.phone ? fmtPhone(p.phone) : '' }); setSaveContact(false); clearErr('contactName', 'contactPhone'); }}>
+                {p.name}{p.phone && <> · <Ltr>{fmtPhone(p.phone)}</Ltr></>}{p.role && <span className="muted"> · {p.role}</span>}
+              </button>
+            ))}
+          </div>
+        )
+      )}
       {!isNew && (
         <Row>
           <L label="איש קשר לקבלת ההזמנה" req>
@@ -341,6 +365,9 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             {err('contactPhone')}
           </L>
         </Row>
+      )}
+      {newContact && (
+        <label className="no-keep"><input type="checkbox" checked={saveContact} onChange={(e) => setSaveContact(e.target.checked)} /> לשמור את איש הקשר הזה גם בתיק הלקוח</label>
       )}
       {delivery === 'delivery' && (
         <Row>
@@ -356,6 +383,9 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             {err('address')}
           </L>
         </Row>
+      )}
+      {newAddress && (
+        <label className="no-keep"><input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} /> לשמור את הכתובת הזו גם בתיק הלקוח</label>
       )}
     </>
   );

@@ -2,14 +2,14 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet, ListChecks } from 'lucide-react';
+import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
 import { Button, HealthBadge, Missing, RollingNumber, StatusMenu, Skeleton } from '../../design/components';
-import { HEALTH_RANK, orderDateTime } from '../../rules-engine/health';
+import { HEALTH_RANK, missingOf, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { FixButton, OrderMarks } from '../orders/OrderActions';
 import '../pages.css';
@@ -36,6 +36,7 @@ export function TodayPage() {
     { key: 'branch', title: 'אישורי סניף חסרים', sub: 'היום ומחר', icon: <Store size={20} />, list: open.filter((o) => (o.date === today || o.date === tomorrow) && !o.branchApproval), to: '/orders?tab=today&filter=branch', doneText: 'כל הסניפים אישרו' },
     { key: 'q', title: 'להעביר ל-Q', icon: <Send size={20} />, list: open.filter((o) => o.date === today && !o.qNumber), to: '/orders?tab=today&filter=q', doneText: 'הכל הועבר' },
     { key: 'credit', title: 'אשראי לחייב', icon: <CreditCard size={20} />, list: open.filter((o) => o.date === today && o.method === 'credit' && (o.payment === 'pending' || o.payment === 'failed')), to: '/orders?tab=today&filter=credit', doneText: 'הכל חויב' },
+    { key: 'missing', title: 'פרטים חסרים', sub: 'להשלים בהזמנות', icon: <ClipboardX size={20} />, list: open.filter((o) => missingOf(o).length > 0), to: '/exceptions?rule=8', doneText: 'כל ההזמנות מלאות' },
   ];
   const allDone = !loading && tasks.every((t) => t.list.length === 0);
 
@@ -64,7 +65,7 @@ export function TodayPage() {
           <p className="today__summary" aria-live="polite">
             {urgent.length === 0
               ? <>אין כרגע שום דבר דחוף <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>
-              : <><b className={criticalNow.length ? 'is-critical' : 'is-urgent'}><Ltr>{urgent.length}</Ltr> דורשות טיפול</b> <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום <span aria-hidden="true">·</span> משימות הבוקר <Ltr>{`${tasksDone}/4`}</Ltr></>}
+              : <><b className={criticalNow.length ? 'is-critical' : 'is-urgent'}><Ltr>{urgent.length}</Ltr> דורשות טיפול</b> <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום <span aria-hidden="true">·</span> משימות הבוקר <Ltr>{`${tasksDone}/${tasks.length}`}</Ltr></>}
           </p>
         </div>
         <div className="page__head-end">
@@ -87,10 +88,10 @@ export function TodayPage() {
       <section aria-labelledby="h-morning" className="morning">
         <div className="morning__head">
           <h2 id="h-morning" className="section-title">משימות הבוקר</h2>
-          <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={4} aria-valuenow={tasksDone} aria-label={`${tasksDone} מתוך 4 הושלמו`}>
-            <motion.span className="progress__bar" animate={{ width: `${(tasksDone / 4) * 100}%` }} transition={{ type: 'spring', stiffness: 200, damping: 30 }} />
+          <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={tasks.length} aria-valuenow={tasksDone} aria-label={`${tasksDone} מתוך ${tasks.length} הושלמו`}>
+            <motion.span className="progress__bar" animate={{ width: `${(tasksDone / tasks.length) * 100}%` }} transition={{ type: 'spring', stiffness: 200, damping: 30 }} />
           </div>
-          <span className="morning__count"><Ltr>{tasksDone}</Ltr> מתוך <Ltr>4</Ltr></span>
+          <span className="morning__count"><Ltr>{tasksDone}</Ltr> מתוך <Ltr>{tasks.length}</Ltr></span>
         </div>
         <AnimatePresence mode="wait" initial={false}>
           {allDone ? (

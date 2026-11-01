@@ -64,3 +64,11 @@
 .no-missing span { color: var(--gray-800); }
 .cform__hint svg { vertical-align: -1px; }
 @media (prefers-reduced-motion: reduce) { .no-missing { animation: none; } }
+
+/* "האם זה איש הקשר?" – הצעות מאנשי הקשר השמורים, לא מילוי אוטומטי */
+.no-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; font-size: var(--text-table); }
+.no-suggest__q { font-weight: 600; color: var(--gray-700); margin-inline-end: 2px; }
+.no-suggest--on { color: var(--ok-fg); font-weight: 500; }
+.no-suggest--on .link { margin-inline-start: 8px; font-weight: 400; }
+.no-keep { display: inline-flex; align-items: center; gap: 8px; margin: -2px 0 10px; font-size: var(--text-table); color: var(--gray-700); cursor: pointer; }
+.no-keep input { width: 16px; height: 16px; accent-color: var(--brand-600); }
