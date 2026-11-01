@@ -2,7 +2,7 @@
 import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   ArrowRight, CalendarClock, Check, ClipboardList, FileCheck2, GitMerge, Mail, MapPin, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon,
   Plus, Star, Trash2, UserCheck, UserRound, UserX, Wallet,
@@ -20,6 +20,7 @@ import { CLOSED } from '../../data/types';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { usePanel } from '../../app/PanelContext';
 import { OrdersTable } from '../orders/OrdersTable';
+import { CustomerDocsSection } from '../orders/OrderDocs';
 import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
@@ -139,19 +140,18 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
         ))}
       </nav>
 
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div key={tab} role="tabpanel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.06 } }} transition={{ duration: 0.16 }}>
+      {/* החלפת טאב: הופעה רכה בלבד – התוכן לא תלוי בסיום אנימציית יציאה */}
+      <motion.div key={tab} role="tabpanel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.16 }}>
           {tab === 'overview' && <Overview c={c} onTab={setTab} orders={corders} loading={ordersLoading} />}
           {tab === 'orders' && <OrdersTab c={c} orders={corders} loading={ordersLoading} />}
           {tab === 'monthly' && <Later stage={8} icon={<CalendarClock size={24} />} title="סיכומים חודשיים">שורה לכל חודש: הזמנות · סך · ממוצע · ביטולים · פער Q · מצב תשלום · נעול.</Later>}
           {tab === 'prices' && <PricesTab c={c} />}
           {tab === 'payment' && <PaymentTab c={c} sharing={sharing} method={method} onEdit={() => setEditing(true)} />}
           {tab === 'contacts' && <ContactsTab c={c} />}
-          {tab === 'docs' && <Later stage={7} icon={<FileCheck2 size={24} />} title="מסמכים">מסמכי ההזמנות ומסמכי לקוח קבועים – העלאה בגרירה או "בחר קובץ", עד 2MB.</Later>}
+          {tab === 'docs' && <CustomerDocsSection customerId={c.id} />}
           {tab === 'activity' && <ActivityTab c={c} noteRef={noteRef} />}
           {tab === 'history' && <HistoryTab c={c} />}
-        </motion.div>
-      </AnimatePresence>
+      </motion.div>
 
       {editing && <CustomerForm open onClose={() => setEditing(false)} customers={all} editing={c} />}
       {merging && <MergeDialog source={c} all={all} onClose={() => setMerging(false)} onMerged={(t) => nav(`/customers/${t.id}`)} />}

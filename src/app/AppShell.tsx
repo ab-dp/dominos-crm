@@ -18,6 +18,8 @@ import { ScreenBoundary } from './ErrorBoundary';
 import { OrderPanel } from '../features/orders/OrderPanel';
 import { NewOrderDialog } from '../features/orders/NewOrder';
 import { StatusDialogs } from '../features/orders/StatusDialogs';
+import { ConflictDialog } from '../features/orders/ConflictDialog';
+import { ChangeDialog } from '../features/orders/ChangeDialog';
 import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -226,6 +228,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <OrderPanel />
       <NewOrderDialog />
       <StatusDialogs />
+      <ConflictDialog />
+      <ChangeDialog />
     </div>
   );
 }

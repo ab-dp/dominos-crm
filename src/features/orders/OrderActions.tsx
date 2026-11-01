@@ -202,6 +202,27 @@ function CancelAckForm({ o, done }: { o: OrderView; done: () => void }) {
   );
 }
 
+/* שינוי אחרי אישור שעוד לא עודכן בקופה: מסמנים שעודכן, ואם הסכום ב-Q השתנה – רושמים אותו */
+function QUpdateForm({ o, done }: { o: OrderView; done: () => void }) {
+  const { update } = useStore();
+  const [amt, setAmt] = useState(String(o.qAmount ?? o.amount));
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const qAmount = Number(amt.replace(/[^d.]/g, '')) || o.amount;
+    update(o.id, { qNeedsUpdate: undefined, qAmount }, <>השינוי עודכן ב-Q · הזמנה <Ltr>{o.id}</Ltr></>);
+    done();
+  };
+  return (
+    <form onSubmit={submit}>
+      <p className="pop__text">ההזמנה שונתה אחרי שהועברה לקופה (<Ltr>{o.qNumber}</Ltr>).</p>
+      <Field label="סכום ב-Q אחרי העדכון (₪)" hint={`לחיוב: ${fmtMoney(o.amount)}`}>
+        <input className="input input--ltr" inputMode="decimal" autoFocus value={amt} onChange={(e) => setAmt(e.target.value)} />
+      </Field>
+      <div className="pop__row"><Button variant="primary" size="sm" type="submit">עודכן ב-Q</Button></div>
+    </form>
+  );
+}
+
 export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; onOpen: () => void }) {
   const { update } = useStore();
   const [open, setOpen] = useState(false);
@@ -227,6 +248,7 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
     case 'po': return pop(<PoForm o={o} done={done} />, 'תעודת רכש');
     case 'ackGap': return pop(<GapForm o={o} done={done} />, 'פער מול Q');
     case 'ackCancel': return pop(<CancelAckForm o={o} done={done} />, 'בוטלה אחרי Q');
+    case 'ackQUpdate': return pop(<QUpdateForm o={o} done={done} />, 'עדכון ב-Q');
     case 'close':
       return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); update(o.id, { status: 'delivered' }, <>הזמנה <Ltr>{o.id}</Ltr> סומנה כסופקה ועברה לארכיון</>); }}>{issue.actionLabel}</Button>;
     case 'status':

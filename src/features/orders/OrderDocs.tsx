@@ -1,9 +1,11 @@
-/* צירוף תעודת רכש: גרירה או "בחר קובץ". בטופס ההזמנה הקובץ נשמר יחד עם ההזמנה; בתיק ההזמנה – מיד. */
+/* צירוף מסמכים: גרירה או "בחר קובץ", עם סוג מסמך מתוך הרשימות (תעודת רכש, הצעת מחיר, חשבונית…).
+   בטופס ההזמנה הקובץ נשמר יחד עם ההזמנה; בתיק ההזמנה ובתיק הלקוח – מיד. */
 import { useRef, useState, type DragEvent } from 'react';
 import { Download, ExternalLink, FileText, Paperclip, X } from 'lucide-react';
 import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { ACCEPT, MAX_FILE, fileError, openOrderDoc, uploadOrderDoc, useOrderDocs, type OrderDoc } from '../../data/orderDocs';
+import { useLists } from '../../data/lists';
+import { ACCEPT, MAX_FILE, fileError, isOlderVersion, openOrderDoc, uploadDoc, useCustomerDocs, useOrderDocs, type OrderDoc } from '../../data/orderDocs';
 import { Ltr, fmtDate, toISODate } from '../../lib/format';
 import './OrderDocs.css';
 
@@ -27,7 +29,7 @@ export function FileDrop({ file, onFile, label = 'צרף תעודת רכש', bus
         <FileText size={18} aria-hidden="true" />
         <span className="fdrop__name">{file.name}</span>
         <span className="muted"><Ltr>{kb(file.size)}</Ltr></span>
-        {!busy && <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר את ${file.name}`} onClick={() => onFile(null)}><X size={16} /></button>}
+        {busy ? <span className="muted">מעלה…</span> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר את ${file.name}`} onClick={() => onFile(null)}><X size={16} /></button>}
       </div>
     );
   }
@@ -45,20 +47,9 @@ export function FileDrop({ file, onFile, label = 'צרף תעודת רכש', bus
   );
 }
 
-/* בתיק ההזמנה: המסמכים שצורפו + העלאה מיידית */
-export function OrderDocsSection({ orderId }: { orderId: number }) {
-  const docs = useOrderDocs(orderId);
+/* רשימת מסמכים: חדש קודם, וגרסה קודמת מאותו סוג מסומנת */
+function DocList({ docs, showOrder }: { docs: OrderDoc[]; showOrder?: boolean }) {
   const toast = useToast();
-  const [busy, setBusy] = useState(false);
-  const [pending, setPending] = useState<File | null>(null);
-
-  const upload = async (f: File | null) => {
-    if (!f) return;
-    setPending(f); setBusy(true);
-    try { await uploadOrderDoc(orderId, f); toast({ message: <>תעודת הרכש צורפה להזמנה <Ltr>{orderId}</Ltr></> }); }
-    catch (e) { toast({ message: e instanceof Error && e.message ? e.message : 'הצירוף נכשל – בדוק חיבור' }); }
-    setBusy(false); setPending(null);
-  };
   const open = async (d: OrderDoc, download: boolean) => {
     try {
       const url = await openOrderDoc(d);
@@ -67,25 +58,97 @@ export function OrderDocsSection({ orderId }: { orderId: number }) {
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch { toast({ message: 'פתיחת הקובץ נכשלה' }); }
   };
+  if (!docs.length) return null;
+  return (
+    <ul className="odocs__list">
+      {docs.map((d) => {
+        const old = isOlderVersion(d, docs);
+        return (
+          <li key={d.id} className={old ? 'is-old' : ''}>
+            <FileText size={18} aria-hidden="true" />
+            <span className="odocs__main">
+              <b>{d.name}</b>
+              <span className="muted">
+                <span className="odocs__kind">{d.kindLabel ?? (d.kind === 'po' ? 'תעודת רכש' : d.kind)}</span>
+                {showOrder && (d.orderId ? <> · הזמנה <Ltr>{d.orderId}</Ltr></> : <> · מסמך לקוח</>)}
+                {' · '}<Ltr>{kb(d.size)}</Ltr> · {d.byName}{d.at && <> · <Ltr>{fmtDate(toISODate(d.at.toDate()))}</Ltr></>}{old && ' · גרסה קודמת'}
+              </span>
+            </span>
+            <button className="icon-btn icon-btn--sm" aria-label={`פתח את ${d.name}`} onClick={() => open(d, false)}><ExternalLink size={16} /></button>
+            <button className="icon-btn icon-btn--sm" aria-label={`הורד את ${d.name}`} onClick={() => open(d, true)}><Download size={16} /></button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
+/* העלאה עם בחירת סוג מסמך */
+function Uploader({ target, defaultKind }: { target: { orderId?: number; customerId: string }; defaultKind: string }) {
+  const toast = useToast();
+  const { lists } = useLists();
+  const kinds = (lists?.docTypes ?? []).filter((k) => k.active);
+  const [kind, setKind] = useState(defaultKind);
+  // סוג ברירת המחדל לא קיים ברשימה (למשל נמחק בהגדרות) – בוחרים את הראשון
+  const effKind = kinds.some((k) => k.id === kind) || !kinds.length ? kind : kinds[0].id;
+  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<File | null>(null);
+  const label = kinds.find((k) => k.id === effKind)?.label ?? 'מסמך';
+  const upload = async (f: File | null) => {
+    if (!f) return;
+    setPending(f); setBusy(true);
+    try {
+      await uploadDoc({ ...target, kind: effKind, kindLabel: label }, f);
+      toast({ message: <>{label} צורף{target.orderId != null ? <> להזמנה <Ltr>{target.orderId}</Ltr></> : ' לתיק הלקוח'}</> });
+    } catch (e) { toast({ message: e instanceof Error && e.message ? e.message : 'הצירוף נכשל – בדוק חיבור' }); }
+    setBusy(false); setPending(null);
+  };
+  return (
+    <div className="odocs__up">
+      {kinds.length > 0 && (
+        <label className="odocs__kindsel">
+          <span className="field__label">סוג מסמך</span>
+          <select className="input input--sm" value={effKind} onChange={(e) => setKind(e.target.value)}>
+            {kinds.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
+          </select>
+        </label>
+      )}
+      <FileDrop file={pending} busy={busy} onFile={upload} label={`צרף ${label}`} />
+    </div>
+  );
+}
+
+/* בתיק ההזמנה */
+export function OrderDocsSection({ orderId, customerId }: { orderId: number; customerId: string }) {
+  const docs = useOrderDocs(orderId);
   return (
     <div className="odocs">
-      {docs === null ? <p className="muted">טוען…</p> : docs.length > 0 && (
-        <ul className="odocs__list">
-          {docs.map((d, i) => (
-            <li key={d.id} className={i > 0 ? 'is-old' : ''}>
-              <FileText size={18} aria-hidden="true" />
-              <span className="odocs__main">
-                <b>{d.name}</b>
-                <span className="muted">תעודת רכש · <Ltr>{kb(d.size)}</Ltr> · {d.byName}{d.at && <> · <Ltr>{fmtDate(toISODate(d.at.toDate()))}</Ltr></>}{i > 0 && ' · גרסה קודמת'}</span>
-              </span>
-              <button className="icon-btn icon-btn--sm" aria-label={`פתח את ${d.name}`} onClick={() => open(d, false)}><ExternalLink size={16} /></button>
-              <button className="icon-btn icon-btn--sm" aria-label={`הורד את ${d.name}`} onClick={() => open(d, true)}><Download size={16} /></button>
-            </li>
+      {docs === null ? <p className="muted">טוען…</p> : <DocList docs={docs} />}
+      <Uploader target={{ orderId, customerId }} defaultKind="po" />
+    </div>
+  );
+}
+
+/* בתיק הלקוח: מסמכים קבועים של הלקוח וכל מסמכי ההזמנות שלו */
+export function CustomerDocsSection({ customerId }: { customerId: string }) {
+  const docs = useCustomerDocs(customerId);
+  const [view, setView] = useState<'all' | 'customer' | 'orders'>('all');
+  const list = (docs ?? []).filter((d) => view === 'all' || (view === 'customer' ? !d.orderId : !!d.orderId));
+  return (
+    <div className="card odocs odocs--card">
+      <div className="card__head">
+        <h2 className="card__title">מסמכים</h2>
+        <div className="seg seg--sm-text" role="group" aria-label="סינון מסמכים">
+          {([['all', 'הכל'], ['customer', 'של הלקוח'], ['orders', 'של הזמנות']] as const).map(([k, l]) => (
+            <button key={k} className={view === k ? 'is-on' : ''} aria-pressed={view === k} onClick={() => setView(k)}>{l}</button>
           ))}
-        </ul>
-      )}
-      <FileDrop file={pending} busy={busy} onFile={upload} label={docs?.length ? 'צרף תעודה חדשה' : 'צרף תעודת רכש'} />
+        </div>
+      </div>
+      <div className="odocs__body">
+        {docs === null ? <p className="muted">טוען…</p> : list.length ? <DocList docs={list} showOrder /> : <p className="muted odocs__empty">אין עדיין מסמכים{view === 'orders' ? ' בהזמנות' : view === 'customer' ? ' קבועים' : ''}.</p>}
+        <p className="odocs__hint">מסמך קבוע של הלקוח – למשל הסכם מחיר או טופס פתיחת הקפה:</p>
+        <Uploader target={{ customerId }} defaultKind="agreement" />
+      </div>
     </div>
   );
 }

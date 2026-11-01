@@ -3,7 +3,7 @@
    (נאכף גם בכללי האבטחה). כל שינוי נכתב יחד עם רשומת יומן; אין מחיקה. */
 import { useEffect, useState } from 'react';
 import {
-  collection, deleteField, doc, onSnapshot, query, runTransaction, serverTimestamp, where, writeBatch, type DocumentData, type Timestamp,
+  collection, deleteDoc, deleteField, doc, onSnapshot, query, runTransaction, serverTimestamp, setDoc, where, writeBatch, type DocumentData, type Timestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { toISODate } from '../lib/format';
@@ -111,7 +111,7 @@ export async function createOrder(input: NewOrderInput, newCustomer?: NewCustome
 
     const data = clean({
       ...input, customerId, number: n, notes: [],
-      createdAt: serverTimestamp(), createdBy: input.handler || u.name, createdByUid: u.uid, updatedAt: serverTimestamp(), updatedBy: u.uid,
+      createdAt: serverTimestamp(), createdBy: input.handler || u.name, createdByUid: u.uid, updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name,
     });
     tx.set(counterRef, { next: n + 1 });
     tx.set(doc(db, 'orders', String(n)), data);
@@ -131,7 +131,7 @@ export async function updateOrders(orders: Order[], patch: Partial<Order>, sourc
     const changed = keys.filter((k) => JSON.stringify(o[k]) !== JSON.stringify(patch[k]));
     if (!changed.length) continue;
     const sub = Object.fromEntries(changed.map((k) => [k, patch[k]])) as Partial<Order>;
-    batch.update(doc(db, 'orders', String(o.id)), { ...toPatch(sub), updatedAt: serverTimestamp(), updatedBy: u.uid });
+    batch.update(doc(db, 'orders', String(o.id)), { ...toPatch(sub), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
     const before = Object.fromEntries(changed.map((k) => [k, o[k] ?? null]));
     const after = Object.fromEntries(changed.map((k) => [k, sub[k] ?? null]));
     batch.set(doc(collection(db, 'auditLog')), auditDoc('order', String(o.id), 'status' in sub ? 'status' : 'update', before, after, source, note));
@@ -178,4 +178,52 @@ export async function addOrderNote(orderId: number, text: string) {
   batch.set(doc(collection(db, 'orders', String(orderId), 'notes')), { text: text.trim(), by: u.uid, byName: u.name, at: serverTimestamp() });
   batch.set(doc(collection(db, 'auditLog')), auditDoc('order', String(orderId), 'note', null, { note: text.trim().slice(0, 200) }, 'form'));
   await batch.commit();
+}
+
+/* ---------- שמירה בטוחה לעבודה מקבילה (אפיון 8) ----------
+   לפני כתיבה, בתוך טרנזקציה: בודקים שכל שדה שמשנים עדיין שווה למה שהמשתמש ראה.
+   אם מישהו אחר שינה אותו בינתיים – לא דורסים, אלא מחזירים התנגשות עם הערכים של שני הצדדים. */
+export type ConflictField = { key: keyof Order; base: unknown; mine: unknown; theirs: unknown };
+export class ConflictError extends Error {
+  constructor(public fields: ConflictField[], public byName: string, public current: Order) { super('conflict'); }
+}
+
+export async function updateOrderSafe(o: Order, patch: Partial<Order>, source: 'form' | 'inline' = 'inline', note?: string) {
+  const u = me();
+  const keys = (Object.keys(patch) as (keyof Order)[]).filter((k) => JSON.stringify(o[k]) !== JSON.stringify(patch[k]));
+  if (!keys.length) return;
+  await runTransaction(db, async (tx) => {
+    const ref = doc(db, 'orders', String(o.id));
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('missing');
+    const cur = fromDoc(snap.id, snap.data());
+    const clash = keys.filter((k) => JSON.stringify(cur[k]) !== JSON.stringify(o[k]) && JSON.stringify(cur[k]) !== JSON.stringify(patch[k]));
+    if (clash.length) {
+      throw new ConflictError(clash.map((k) => ({ key: k, base: o[k], mine: patch[k], theirs: cur[k] })), (snap.data().updatedByName as string) ?? '', cur);
+    }
+    const sub = Object.fromEntries(keys.map((k) => [k, patch[k]])) as Partial<Order>;
+    tx.update(ref, { ...toPatch(sub), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
+    tx.set(doc(collection(db, 'auditLog')), auditDoc('order', String(o.id), 'status' in sub ? 'status' : 'update',
+      Object.fromEntries(keys.map((k) => [k, cur[k] ?? null])), Object.fromEntries(keys.map((k) => [k, sub[k] ?? null])), source, note));
+  });
+}
+
+/* ---------- "פותח כרגע" (אפיון 8): מי עוד צופה בתיק ההזמנה ----------
+   מסמך לכל צופה: orders/{מספר}/viewers/{uid}, מתעדכן כל 40 שניות ונמחק בסגירה. צופה שלא עדכן 90 שניות נחשב כמי שעזב. */
+export function useOrderViewers(orderId: number) {
+  const [others, setOthers] = useState<{ uid: string; name: string }[]>([]);
+  useEffect(() => {
+    const u = auth.currentUser;
+    if (!u) return;
+    const mine = doc(db, 'orders', String(orderId), 'viewers', u.uid);
+    const beat = () => setDoc(mine, { name: u.displayName ?? u.email ?? '', at: serverTimestamp() }).catch(() => undefined);
+    beat();
+    const t = setInterval(beat, 40000);
+    const unsub = onSnapshot(collection(db, 'orders', String(orderId), 'viewers'), (s) => {
+      const now = Date.now() / 1000;
+      setOthers(s.docs.filter((d) => d.id !== u.uid && (d.data().at?.seconds ?? now) > now - 90).map((d) => ({ uid: d.id, name: d.data().name as string })));
+    }, () => setOthers([]));
+    return () => { clearInterval(t); unsub(); deleteDoc(mine).catch(() => undefined); };
+  }, [orderId]);
+  return others;
 }

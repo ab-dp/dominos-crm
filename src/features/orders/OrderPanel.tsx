@@ -3,13 +3,14 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Maximize2, Minimize2, X } from 'lucide-react';
+import { Maximize2, Minimize2, RefreshCw, X } from 'lucide-react';
+import { useAuth } from '../../auth/AuthContext';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { HealthBadge, StatusMenu, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
-import { useOrderDoc, useOrderHistory, type OrderAuditRow } from '../../data/orders';
+import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, OrderMarks, PoEdit } from './OrderActions';
 import { OrderDocsSection } from './OrderDocs';
@@ -70,6 +71,19 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   const { requestStatus } = useStore();
   const save = useOrderSave(o);
   const [editItems, setEditItems] = useState(false);
+  /* שינוי של משתמש אחר בזמן שהתיק פתוח: הודעה מה השתנה ועל ידי מי */
+  const { profile } = useAuth();
+  const prev = useRef(o);
+  const viewers = useOrderViewers(o.id);
+  const [remoteNote, setRemoteNote] = useState<{ by: string; fields: string[] } | null>(null);
+  useEffect(() => {
+    const p = prev.current;
+    prev.current = o;
+    if (p.id !== o.id) { setRemoteNote(null); return; }
+    if (o.updatedAt?.seconds === p.updatedAt?.seconds || !o.updatedBy || o.updatedBy === profile?.uid) return;
+    const fields = [...new Set(Object.keys(FIELD).filter((k) => JSON.stringify(p[k as keyof OrderView]) !== JSON.stringify(o[k as keyof OrderView])).map((k) => FIELD[k]))];
+    if (fields.length) setRemoteNote({ by: o.updatedByName || 'משתמש אחר', fields });
+  }, [o, profile?.uid]);
   useEffect(() => setEditItems(false), [o.id]);
   const panel = usePanel();
   const nav = useNavigate();
@@ -97,12 +111,24 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         <div className="panel__row">
           <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>הזמנה <Ltr>{o.id}</Ltr></Dialog.Title>
           <HealthBadge health={o.health} issues={o.issues} />
+          {viewers.length > 0 && (
+            <span className="viewers" role="status"><span className="viewers__dot" aria-hidden="true" />{viewers.map((v) => v.name.split(' ')[0]).join(', ')} {viewers.length === 1 ? 'פותח' : 'פותחים'} את ההזמנה כרגע</span>
+          )}
           <span className="panel__spacer" />
           <Tip label={full ? 'חזרה לפאנל' : 'מסך מלא'}>
             <button className="icon-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
           </Tip>
           <Dialog.Close asChild><button className="icon-btn" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
         </div>
+        <AnimatePresence initial={false}>
+          {remoteNote && (
+            <motion.div className="remote-note" role="status" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+              <RefreshCw size={15} aria-hidden="true" />
+              <span><b>{remoteNote.by}</b> עדכן עכשיו: {remoteNote.fields.join(', ')}. הערכים בתיק מעודכנים.</span>
+              <button className="icon-btn icon-btn--sm" aria-label="סגור הודעה" onClick={() => setRemoteNote(null)}><X size={14} /></button>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div className="panel__row panel__meta">
           <button className="link" onClick={() => { panel.close(); nav(`/customers/${o.customerId}`); }}>{o.customerName}</button>
           <span>·</span>
@@ -110,6 +136,15 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           <span>·</span>
           <span>{o.branchName}</span>
         </div>
+        {o.changedAfterApproval && (
+          <div className="changed-note">
+            <span className="changed-tag">שונתה לאחר אישור</span>
+            {o.changedAfterApproval.fields.map((k) => (
+              <span key={k} className="changed-note__item">{FIELD[k] ?? k}: אושר <s>{showVal(k, o.changedAfterApproval!.before[k])}</s> · כעת <b>{showVal(k, o[k as keyof OrderView])}</b></span>
+            ))}
+            <span className="muted">· {o.changedAfterApproval.by}</span>
+          </div>
+        )}
         <div className="panel__row">
           <StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />
           <span className="panel__marks"><OrderMarks o={o} /></span>
@@ -197,7 +232,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
             </Section>
             <Section id="docs" title="מסמכים">
-              <OrderDocsSection orderId={o.id} />
+              <OrderDocsSection orderId={o.id} customerId={o.customerId} />
             </Section>
             <Section id="notes" title="הערות פנימיות">
               <NotesSection o={o} />
@@ -226,13 +261,13 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 }
 
 /* יומן ההזמנה – נקרא מ-auditLog, שאי אפשר לערוך או למחוק (נאכף בשרת) */
-const FIELD: Record<string, string> = {
+export const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הנחיות', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
 };
-function showVal(k: string, v: unknown): string {
+export function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
   if (k === 'status') return STATUS_LABEL[v as keyof typeof STATUS_LABEL] ?? String(v);
   if (k === 'payment') return PAYMENT_LABEL[v as keyof typeof PAYMENT_LABEL] ?? String(v);

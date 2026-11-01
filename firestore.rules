@@ -186,7 +186,7 @@ service cloud.firestore {
         && noCard(opt(d, 'contactName')) && noCard(opt(d, 'instructions'))
         && (!('calcAmount' in d) || (d.calcAmount is number && d.calcAmount >= 0))
         && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee < 10000))
-        && d.keys().size() <= 50;
+        && d.keys().size() <= 70;
     }
 
     match /orders/{oid} {
@@ -216,6 +216,15 @@ service cloud.firestore {
           && noCard(request.resource.data.text);
         allow update, delete: if false;
       }
+
+      // "פותח כרגע": כל משתמש כותב ומוחק רק את הרשומה של עצמו
+      match /viewers/{vid} {
+        allow read: if isActive();
+        allow create, update: if isActive() && vid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['name', 'at'])
+          && request.resource.data.name is string && request.resource.data.name.size() <= 120;
+        allow delete: if isActive() && vid == request.auth.uid;
+      }
     }
 
     match /counters/orders {
@@ -236,8 +245,14 @@ service cloud.firestore {
       allow read: if isActive();
       allow create: if isActive()
         && request.resource.data.by == request.auth.uid
-        && request.resource.data.orderId is string
-        && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+        // מסמך של הזמנה (ההזמנה קיימת) או מסמך קבוע של לקוח (הלקוח קיים)
+        && (('orderId' in request.resource.data
+              && request.resource.data.orderId is string
+              && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId)))
+            || (!('orderId' in request.resource.data)
+              && request.resource.data.customerId is string
+              && exists(/databases/$(database)/documents/customers/$(request.resource.data.customerId))))
+        && request.resource.data.get('kindLabel', '') is string && request.resource.data.get('kindLabel', '').size() <= 60
         && request.resource.data.name is string && request.resource.data.name.size() <= 200
         && request.resource.data.type in ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
         && request.resource.data.size is int && request.resource.data.size <= 2097152

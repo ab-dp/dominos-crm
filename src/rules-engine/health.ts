@@ -5,7 +5,7 @@ import { CLOSED, type Order } from '../data/types';
 import { DEFAULT_THRESHOLDS, type Thresholds } from '../data/thresholds';
 
 export type Severity = 'red' | 'orange' | 'yellow' | 'info';
-export type FixAction = 'q' | 'branch' | 'pay' | 'status' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel';
+export type FixAction = 'q' | 'branch' | 'pay' | 'status' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel' | 'ackQUpdate';
 
 export type Issue = { rule: number; severity: Severity; label: string; action: FixAction; actionLabel: string };
 
@@ -16,7 +16,7 @@ const RANK: Record<Severity, number> = { red: 3, orange: 2, yellow: 1, info: 0 }
 /* כללי החריגים בשמם – למסננים במסך החריגים */
 export const RULE_LABEL: Record<number, string> = {
   1: 'לא הועברה ל-Q', 2: 'פער מול Q', 3: 'מועד עבר', 4: 'אין אישור סניף', 5: 'אשראי לא חויב', 6: 'אין אישור לקוח',
-  7: 'חיוב אשראי נכשל', 8: 'חסרים פרטי אספקה', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q', 0: 'חסר אישור סניף',
+  7: 'חיוב אשראי נכשל', 11: 'לעדכן שינוי ב-Q', 8: 'חסרים פרטי אספקה', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q', 0: 'חסר אישור סניף',
 };
 
 export function orderDateTime(o: Order): Date {
@@ -45,6 +45,10 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
   // חיוב אשראי שנכשל – אדום עד שמסמנים שטופל (שולם או בוטל)
   if (o.payment === 'failed' && o.status !== 'cancelled') {
     out.push({ rule: 7, severity: 'red', label: 'חיוב אשראי נכשל', action: 'pay', actionLabel: 'עדכן תשלום' });
+  }
+  // שונתה אחרי שהועברה לקופה – עד שמסמנים שעודכן גם ב-Q
+  if (o.qNeedsUpdate && o.status !== 'cancelled') {
+    out.push({ rule: 11, severity: 'orange', label: 'שונתה – לעדכן ב-Q', action: 'ackQUpdate', actionLabel: 'עודכן ב-Q' });
   }
   if (closed) {
     if (o.status === 'cancelled' && o.qNumber && !o.qCancelAck) out.push({ rule: 10, severity: 'orange', label: 'בוטלה אחרי Q', action: 'ackCancel', actionLabel: 'אשר שבוטלה ב-Q' });

@@ -67,11 +67,17 @@ export type Order = {
   createdBy: string;
   createdByUid?: string;
   createdAt: string; // YYYY-MM-DD
+  updatedBy?: string; // uid של מי ששינה אחרון – לזיהוי שינוי של משתמש אחר בזמן שהתיק פתוח
+  updatedByName?: string;
+  updatedAt?: { seconds: number };
   billingNote?: string;
   partialNote?: string; // מה סופק בפועל, בסגירה "סופקה חלקית"
   cancelReason?: string;
   /* אישורים שמנקים חריג (אפיון 9): פער מול Q שהוסבר, וביטול שבוצע גם בקופה */
   qGapAck?: { amount: number; qAmount: number; by: string; at: string; note?: string };
   qCancelAck?: { by: string; at: string };
+  /* שינוי אחרי אישור (אפיון 8): מה שונה, הערכים כפי שאושרו, ומה צריך לעדכן */
+  changedAfterApproval?: { at: string; by: string; fields: string[]; before: Record<string, unknown> };
+  qNeedsUpdate?: boolean; // השינוי עוד לא עודכן בקופה
   cancelNote?: string;
 };

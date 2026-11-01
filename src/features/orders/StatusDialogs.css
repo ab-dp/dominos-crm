@@ -16,3 +16,28 @@
 .sdialog__reason.is-on { border-color: var(--brand-600); background: var(--brand-50); box-shadow: inset 0 0 0 1px var(--brand-600); font-weight: 600; }
 .sdialog__reason input { accent-color: var(--brand-600); margin: 0; }
 @media (max-width: 480px) { .sdialog__grid { grid-template-columns: 1fr; } }
+/* חלון התנגשות */
+.cdialog { width: min(600px, calc(100vw - 32px)); }
+.cdialog__table { width: 100%; border-collapse: collapse; font-size: var(--text-table); margin-bottom: 4px; }
+.cdialog__table th, .cdialog__table td { padding: 9px 10px; border-bottom: 1px solid var(--gray-100); text-align: start; vertical-align: top; }
+.cdialog__table thead th { font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); background: var(--gray-50); }
+.cdialog__table tbody th { font-weight: 600; white-space: nowrap; }
+.cdialog__base { color: var(--gray-600); text-decoration: line-through; text-decoration-color: var(--gray-300); }
+.cdialog__theirs { font-weight: 600; color: var(--brand-800); background: var(--brand-50); }
+.cdialog__mine { font-weight: 600; }
+
+/* שינוי אחרי אישור */
+.chdialog { width: min(540px, calc(100vw - 32px)); }
+.chdialog__diff { list-style: none; margin: 0 0 14px; padding: 0; border: 1px solid var(--gray-100); border-radius: var(--radius); }
+.chdialog__diff li { display: flex; align-items: baseline; gap: 10px; padding: 9px 12px; font-size: var(--text-table); }
+.chdialog__diff li + li { border-top: 1px solid var(--gray-100); }
+.chdialog__diff li > span:first-child { min-width: 90px; color: var(--gray-600); font-size: var(--text-label); font-weight: 600; }
+.chdialog__from { color: var(--gray-600); text-decoration: line-through; text-decoration-color: var(--gray-300); }
+.chdialog__opts { margin: 0 0 12px; padding: 0; border: 0; display: grid; gap: 6px; }
+.chdialog__opts legend { margin-bottom: 6px; padding: 0; }
+.chdialog__opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: var(--radius); cursor: pointer; }
+.chdialog__opt:has(input:checked) { border-color: var(--brand-600); background: var(--brand-50); }
+.chdialog__opt input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--brand-600); flex: none; }
+.chdialog__opt span { display: grid; gap: 2px; }
+.chdialog__opt b { font-size: var(--text-table); font-weight: 600; }
+.chdialog__opt small { font-size: var(--text-label); color: var(--gray-600); }

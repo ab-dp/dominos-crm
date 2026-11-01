@@ -1,6 +1,6 @@
-/* מסמכי הזמנה (אפיון 6.3 "מסמכים") – כרגע תעודת רכש. בלי Storage בתשלום: הקובץ נשמר בתוך Firestore,
-   מחולק לחלקים של עד 700KB (מגבלת מסמך היא 1MB), עד 2MB לקובץ. תמונה גדולה מוקטנת לפני השמירה.
-   אין מחיקה – מסמך שגוי מוחלף בהעלאת מסמך חדש, והכל נרשם ביומן. */
+/* מסמכים (אפיון 6.3, 6.6): מסמכי הזמנה (תעודת רכש, הצעת מחיר, חשבונית…) ומסמכים קבועים של לקוח (הסכם, טופס הקפה…).
+   בלי Storage בתשלום: הקובץ נשמר בתוך Firestore, מחולק לחלקים של עד 700KB (מגבלת מסמך היא 1MB), עד 2MB לקובץ.
+   תמונה גדולה מוקטנת לפני השמירה. אין מחיקה – מסמך שגוי מוחלף בהעלאת מסמך חדש מאותו סוג, והכל נרשם ביומן. */
 import { useEffect, useState } from 'react';
 import { Bytes, collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch, type Timestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -10,14 +10,17 @@ const CHUNK = 700 * 1024;
 export const ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp';
 const TYPES = ACCEPT.split(',');
 
-export type OrderDoc = { id: string; orderId: string; kind: string; name: string; type: string; size: number; chunks: number; byName: string; at?: Timestamp };
+export type OrderDoc = {
+  id: string; orderId?: string; customerId?: string; kind: string; kindLabel?: string;
+  name: string; type: string; size: number; chunks: number; byName: string; at?: Timestamp;
+};
 
 export function fileError(f: File): string {
   if (!TYPES.includes(f.type)) return 'אפשר לצרף PDF או תמונה (JPG, PNG)';
   return '';
 }
 
-/* תמונה מעל 1MB מוקטנת ל-2000 פיקסלים לכל היותר, JPEG – תעודת רכש נשארת קריאה */
+/* תמונה מעל 1MB מוקטנת ל-2000 פיקסלים לכל היותר, JPEG – מסמך נשאר קריא */
 async function shrink(f: File): Promise<Blob> {
   if (!f.type.startsWith('image/') || f.size <= 1024 * 1024) return f;
   const bmp = await createImageBitmap(f);
@@ -29,7 +32,9 @@ async function shrink(f: File): Promise<Blob> {
   return new Promise((res) => canvas.toBlob((b) => res(b ?? f), 'image/jpeg', 0.85));
 }
 
-export async function uploadOrderDoc(orderId: number, f: File, kind = 'po') {
+export type DocTarget = { orderId?: number; customerId: string; kind: string; kindLabel: string };
+
+export async function uploadDoc(target: DocTarget, f: File) {
   const err = fileError(f);
   if (err) throw new Error(err);
   const blob = await shrink(f);
@@ -42,22 +47,40 @@ export async function uploadOrderDoc(orderId: number, f: File, kind = 'po') {
   const chunks = Math.max(1, Math.ceil(bytes.length / CHUNK));
   const type = blob === f ? f.type : 'image/jpeg';
   const name = blob === f ? f.name : f.name.replace(/\.\w+$/, '') + '.jpg';
-  batch.set(ref, { orderId: String(orderId), kind, name, type, size: bytes.length, chunks, by: u.uid, byName, at: serverTimestamp() });
+  batch.set(ref, {
+    ...(target.orderId != null ? { orderId: String(target.orderId) } : {}), customerId: target.customerId,
+    kind: target.kind, kindLabel: target.kindLabel, name, type, size: bytes.length, chunks, by: u.uid, byName, at: serverTimestamp(),
+  });
   for (let i = 0; i < chunks; i++) {
     batch.set(doc(db, 'orderDocs', ref.id, 'chunks', String(i)), { i, data: Bytes.fromUint8Array(bytes.slice(i * CHUNK, (i + 1) * CHUNK)) });
   }
   batch.set(doc(collection(db, 'auditLog')), {
-    entity: 'order', entityId: String(orderId), action: 'doc', before: null, after: { docName: name, kind }, source: 'form',
+    entity: target.orderId != null ? 'order' : 'customer', entityId: target.orderId != null ? String(target.orderId) : target.customerId,
+    action: 'doc', before: null, after: { docName: name, kind: target.kindLabel }, source: 'form',
     by: u.uid, byName, at: serverTimestamp(), ok: true,
   });
   await batch.commit();
 }
 
+/* תאימות לקריאות קיימות: צירוף תעודת רכש להזמנה */
+export const uploadOrderDoc = (orderId: number, f: File, customerId = '') => uploadDoc({ orderId, customerId, kind: 'po', kindLabel: 'תעודת רכש' }, f);
+
+const sortNewest = (a: OrderDoc, b: OrderDoc) => (b.at?.seconds ?? 9e9) - (a.at?.seconds ?? 9e9);
+
 export function useOrderDocs(orderId: number) {
   const [items, setItems] = useState<OrderDoc[] | null>(null);
   useEffect(() => onSnapshot(query(collection(db, 'orderDocs'), where('orderId', '==', String(orderId))),
-    (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as OrderDoc).sort((a, b) => (b.at?.seconds ?? 0) - (a.at?.seconds ?? 0))),
+    (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as OrderDoc).sort(sortNewest)),
     () => setItems([])), [orderId]);
+  return items;
+}
+
+/* כל המסמכים של לקוח: הקבועים שלו ומסמכי ההזמנות שלו */
+export function useCustomerDocs(customerId: string) {
+  const [items, setItems] = useState<OrderDoc[] | null>(null);
+  useEffect(() => onSnapshot(query(collection(db, 'orderDocs'), where('customerId', '==', customerId)),
+    (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as OrderDoc).sort(sortNewest)),
+    () => setItems([])), [customerId]);
   return items;
 }
 
@@ -66,4 +89,9 @@ export async function openOrderDoc(d: OrderDoc): Promise<string> {
   const s = await getDocs(query(collection(db, 'orderDocs', d.id, 'chunks'), orderBy('i')));
   const parts = s.docs.map((x) => new Uint8Array((x.data().data as Bytes).toUint8Array()) as Uint8Array<ArrayBuffer>);
   return URL.createObjectURL(new Blob(parts, { type: d.type }));
+}
+
+/* גרסה קודמת: מסמך שיש אחריו מסמך חדש יותר מאותו סוג, באותה הזמנה או באותו תיק לקוח */
+export function isOlderVersion(d: OrderDoc, all: OrderDoc[]) {
+  return all.some((x) => x.id !== d.id && x.kind === d.kind && (x.orderId ?? '') === (d.orderId ?? '') && (x.at?.seconds ?? 9e9) > (d.at?.seconds ?? 9e9));
 }

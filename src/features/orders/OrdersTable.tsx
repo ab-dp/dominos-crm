@@ -88,7 +88,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
                 <td className="num strong c-time"><Ltr>{o.time}</Ltr></td>
                 {showDate && <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>}
                 <td className="c-cust">
-                  <span className="orow__cust">{o.customerName}</span>
+                  <span className="orow__cust">{o.customerName}{o.changedAfterApproval && <span className="changed-tag changed-tag--sm" title="שונתה לאחר אישור">שונתה</span>}</span>
                   {top && o.health !== 'ok' && <span className={`orow__why orow__why--${o.health}`}>{top.label}</span>}
                 </td>
                 <td>

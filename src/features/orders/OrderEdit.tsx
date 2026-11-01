@@ -29,11 +29,13 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [err, setErr] = useState('');
+  const [remote, setRemote] = useState<string | null>(null); // ערך שמשתמש אחר שמר בזמן שערכתי
+  const start = useRef(value);
   const ref = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { if (!editing) setDraft(value); }, [value, editing]);
-  useEffect(() => { if (editing) { ref.current?.focus(); ref.current?.select?.(); } }, [editing]);
+  useEffect(() => { if (editing) { start.current = value; setRemote(null); ref.current?.focus(); ref.current?.select?.(); } }, [editing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const commit = () => {
     const v = kind === 'phone' ? cleanPhone(draft) : draft.trim();
@@ -41,11 +43,13 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
     if (v === before) { setEditing(false); setErr(''); return; }
     const e = (CARD_RE.test(v) && kind !== 'phone' ? 'אסור לרשום כאן מספר כרטיס אשראי' : '') || validate?.(v) || '';
     if (e) { setErr(e); ref.current?.focus(); return; }
+    // מישהו אחר שינה את השדה בזמן שערכתי – לא דורסים בלי לשאול
+    if (value !== start.current && remote === null) { setRemote(value); return; }
     onSave(v);
     setEditing(false); setErr('');
     requestAnimationFrame(() => btn.current?.focus());
   };
-  const cancel = () => { setDraft(value); setErr(''); setEditing(false); requestAnimationFrame(() => btn.current?.focus()); };
+  const cancel = () => { setDraft(value); setErr(''); setRemote(null); setEditing(false); requestAnimationFrame(() => btn.current?.focus()); };
 
   if (readOnly) return <div className="kv"><span className="kv__k">{k}</span><span className="kv__v">{display ?? (value || '—')}</span></div>;
 
@@ -65,6 +69,15 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
               onChange={(e) => { setDraft(e.target.value); setErr(''); }} onBlur={commit}
               onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); cancel(); } if (e.key === 'Enter') { e.preventDefault(); commit(); } }} />
           )}
+          {remote !== null && (
+            <span className="kv__remote" role="alert">
+              משתמש אחר שינה בינתיים ל: <b>{remote || 'ריק'}</b>
+              <span className="kv__remote-actions">
+                <button type="button" className="link" onMouseDown={(e) => e.preventDefault()} onClick={() => { onSave(kind === 'phone' ? cleanPhone(draft) : draft.trim()); setRemote(null); setEditing(false); }}>שמור את שלי</button>
+                <button type="button" className="link" onMouseDown={(e) => e.preventDefault()} onClick={cancel}>השאר את שלו</button>
+              </span>
+            </span>
+          )}
           {err ? <span className="cform__err" role="alert">{err}</span> : <span className="kv__hint">{kind === 'textarea' ? 'Ctrl+Enter לשמירה' : 'Enter לשמירה'} · Esc לביטול</span>}
         </span>
       ) : (
@@ -79,8 +92,8 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
 
 /* ---------- שדות של תיק ההזמנה ---------- */
 export function useOrderSave(o: OrderView) {
-  const { update } = useStore();
-  return (patch: Partial<Order>, what: string) => update(o.id, patch, <>שינוי נשמר: {what} · הזמנה <Ltr>{o.id}</Ltr></>);
+  const { requestChange } = useStore();
+  return (patch: Partial<Order>, what: string) => requestChange(o, patch, what);
 }
 
 export function BranchEdit({ o }: { o: OrderView }) {
@@ -106,8 +119,8 @@ export function BranchEdit({ o }: { o: OrderView }) {
         <BranchPicker label="בחר סניף" value={{ branchId: o.branchId, clusterId: '' }} onChange={(v) => {
           const b = branches.find((x) => x.id === v.branchId);
           if (b && b.id !== o.branchId) {
-            // סניף חדש: השם, הטלפון והאשכול נשמרים מחדש בהזמנה. אישור הסניף הקודם לא תקף יותר.
-            save({ branchId: b.id, branchName: b.name, branchPhone: b.phone, cluster: clusters.find((c) => c.id === b.clusterId)?.name ?? '', branchApproval: undefined }, 'הסניף');
+            // סניף חדש: השם, הטלפון והאשכול נשמרים מחדש בהזמנה. אם הייתה מאושרת – חלון "שינוי אחרי אישור" שואל מה לבטל.
+            save({ branchId: b.id, branchName: b.name, branchPhone: b.phone, cluster: clusters.find((c) => c.id === b.clusterId)?.name ?? '' }, 'הסניף');
           }
           setOpen(false);
         }} />
