@@ -1,5 +1,4 @@
 .norder { width: min(820px, calc(100vw - 24px)); }
-.norder--quick { width: min(640px, calc(100vw - 24px)); }
 .norder__head { gap: 12px; flex-wrap: wrap; }
 .norder__modes { margin-inline-start: auto; }
 .norder__modes button { display: inline-flex; align-items: center; gap: 6px; }
@@ -18,16 +17,6 @@
 .no-total { font-size: var(--text-table); font-weight: 400; color: var(--gray-600); }
 .no-total b { color: var(--gray-900); font-size: var(--text-card-title); }
 
-/* מה נטען אוטומטית מהלקוח בהזמנה מהירה */
-.no-auto {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
-  margin-top: 10px; padding: 10px 14px;
-  border-radius: var(--radius); background: var(--brand-50); color: var(--brand-800);
-  font-size: var(--text-table);
-}
-.no-auto__title { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; flex-basis: 100%; }
-.no-auto__instr { color: var(--gray-600); font-style: italic; }
-.no-auto .link { margin-inline-start: auto; }
 
 .no-items { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: var(--text-table); }
 .no-items th { text-align: start; font-weight: 500; color: var(--gray-600); font-size: var(--text-label); padding: 0 6px 6px; }
@@ -63,3 +52,15 @@
 .no-final__note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0; font-size: var(--text-label); }
 .no-final__tag { padding: 1px 8px; border-radius: 10px; background: var(--white); font-weight: 600; color: var(--missing-fg); }
 .norder .fdrop { margin-bottom: 10px; }
+
+/* פרטים חסרים לפני שמירה – מעל כפתור השמירה, תמיד גלוי */
+.no-missing {
+  display: flex; gap: 10px; padding: 10px 20px;
+  background: var(--danger-bg); color: var(--danger-fg); border-top: 1px solid var(--gray-100);
+  font-size: var(--text-table); animation: pop-in var(--dur-quick) var(--ease);
+}
+.no-missing svg { flex: none; margin-top: 2px; }
+.no-missing div { display: grid; gap: 2px; }
+.no-missing span { color: var(--gray-800); }
+.cform__hint svg { vertical-align: -1px; }
+@media (prefers-reduced-motion: reduce) { .no-missing { animation: none; } }

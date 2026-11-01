@@ -90,7 +90,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
             </p>
           </div>
           <div className="cfile__actions">
-            <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'quick', customerId: c.id })} disabled={c.status !== 'active'}>הזמנה</Button>
+            <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })} disabled={c.status !== 'active'}>הזמנה</Button>
             <Button icon={<MessageSquarePlus size={16} />} onClick={openNote}>הערה</Button>
             <Button icon={<Pencil size={16} />} onClick={() => setEditing(true)}>עריכה</Button>
             <Dropdown.Root dir="rtl">
@@ -315,7 +315,7 @@ function OrdersTab({ c, orders, loading }: { c: Customer; orders: OrderView[]; l
     return (
       <div className="card">
         <EmptyState icon={<ClipboardList size={24} />} title="אין עדיין הזמנות ללקוח"
-          action={c.status === 'active' && <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'quick', customerId: c.id })}>הזמנה ראשונה</Button>}>
+          action={c.status === 'active' && <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })}>הזמנה ראשונה</Button>}>
           הפרטים הקבועים של {c.name} ימולאו בהזמנה אוטומטית.
         </EmptyState>
       </div>

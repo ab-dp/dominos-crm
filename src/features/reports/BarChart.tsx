@@ -34,7 +34,7 @@ export function BarChart({ data, kind, money, onPick }: { data: Datum[]; kind: '
   const step = Math.ceil(data.length / 10); // תוויות ציר לא צפופות
   const top = niceMax(max);
   return (
-    <div className="cols" role="img" aria-label="גרף עמודות לפי זמן – הנתונים מופיעים גם בטבלה">
+    <div className="cols" role="group" aria-label="גרף עמודות לפי זמן – הנתונים מופיעים גם בטבלה">
       <div className="cols__grid" aria-hidden="true">
         {[1, 0.5, 0].map((f) => <span key={f} style={{ bottom: `${f * 100}%` }}><Ltr>{fmt(Math.round(top * f))}</Ltr></span>)}
       </div>

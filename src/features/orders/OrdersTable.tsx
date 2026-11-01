@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { ClipboardList, Phone as PhoneIcon } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
-import { EmptyState, HealthBadge, StatusMenu } from '../../design/components';
+import { EmptyState, HealthBadge, Missing, StatusMenu } from '../../design/components';
 import { Ltr, Money, fmtDate } from '../../lib/format';
 import { METHOD_LABEL } from '../../data/types';
 import { FixButton, OrderMarks } from './OrderActions';
@@ -85,17 +85,17 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
                   <input type="checkbox" aria-label={`בחר הזמנה ${o.id}`} checked={selected.includes(o.id)} onChange={() => setSelected((s) => s.includes(o.id) ? s.filter((x) => x !== o.id) : [...s, o.id])} />
                 </td>
                 <td className="c-health"><HealthBadge health={o.health} issues={o.issues} /></td>
-                <td className="num strong c-time"><Ltr>{o.time}</Ltr></td>
+                <td className="num strong c-time">{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</td>
                 {showDate && <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>}
                 <td className="c-cust">
                   <span className="orow__cust">{o.customerName}{o.changedAfterApproval && <span className="changed-tag changed-tag--sm" title="שונתה לאחר אישור">שונתה</span>}</span>
                   {top && o.health !== 'ok' && <span className={`orow__why orow__why--${o.health}`}>{top.label}</span>}
                 </td>
                 <td>
-                  <span className="orow__branch">{o.branchName}</span>
-                  <span className="orow__sub"><PhoneIcon size={12} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>
+                  <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}</span>
+                  {o.branchPhone && <span className="orow__sub"><PhoneIcon size={12} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>}
                 </td>
-                <td className="num"><Money value={o.amount} /></td>
+                <td className="num">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</td>
                 <td onClick={(e) => e.stopPropagation()}>
                   <StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />
                 </td>

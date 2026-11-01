@@ -8,7 +8,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
-import { Button, HealthBadge, RollingNumber, StatusMenu, Skeleton } from '../../design/components';
+import { Button, HealthBadge, Missing, RollingNumber, StatusMenu, Skeleton } from '../../design/components';
 import { HEALTH_RANK, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { FixButton, OrderMarks } from '../orders/OrderActions';
@@ -210,13 +210,13 @@ function TimelineRow({ o, isNowBefore, isNext, now, onOpen, status }: { o: Order
     <>
       {isNowBefore && <NowLine now={now} />}
       <li className={`tl__row ${past ? 'is-past' : ''} ${isNext ? 'is-next' : ''} ${CLOSED.includes(o.status) ? 'is-closed' : ''}`}>
-        <span className="tl__time"><Ltr>{o.time}</Ltr></span>
+        <span className="tl__time">{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</span>
         <button className="tl__main" onClick={(e) => onOpen(e.currentTarget)}>
           <span className="tl__cust" title={o.customerName}>
             {o.customerName}
             {isNext && <span className="tl__next">הבאה בתור · בעוד <Ltr>{minutes >= 60 ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}` : `${minutes}`}</Ltr> {minutes >= 60 ? 'שעות' : 'דק\''}</span>}
           </span>
-          <span className="tl__meta">{o.branchName} · <Money value={o.amount} /></span>
+          <span className="tl__meta">{o.branchName || <Missing>ללא סניף</Missing>} · <Money value={o.amount} /></span>
         </button>
         <HealthBadge health={o.health} issues={o.issues} compact />
         {status}

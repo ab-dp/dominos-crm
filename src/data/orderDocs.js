@@ -1,0 +1,80 @@
+/* מסמכים (אפיון 6.3, 6.6): מסמכי הזמנה (תעודת רכש, הצעת מחיר, חשבונית…) ומסמכים קבועים של לקוח (הסכם, טופס הקפה…).
+   בלי Storage בתשלום: הקובץ נשמר בתוך Firestore, מחולק לחלקים של עד 700KB (מגבלת מסמך היא 1MB), עד 2MB לקובץ.
+   תמונה גדולה מוקטנת לפני השמירה. אין מחיקה – מסמך שגוי מוחלף בהעלאת מסמך חדש מאותו סוג, והכל נרשם ביומן. */
+import { useEffect, useState } from 'react';
+import { Bytes, collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
+export const MAX_FILE = 2 * 1024 * 1024;
+const CHUNK = 700 * 1024;
+export const ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp';
+const TYPES = ACCEPT.split(',');
+export function fileError(f) {
+    if (!TYPES.includes(f.type))
+        return 'אפשר לצרף PDF או תמונה (JPG, PNG)';
+    return '';
+}
+/* תמונה מעל 1MB מוקטנת ל-2000 פיקסלים לכל היותר, JPEG – מסמך נשאר קריא */
+async function shrink(f) {
+    if (!f.type.startsWith('image/') || f.size <= 1024 * 1024)
+        return f;
+    const bmp = await createImageBitmap(f);
+    const scale = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    return new Promise((res) => canvas.toBlob((b) => res(b ?? f), 'image/jpeg', 0.85));
+}
+export async function uploadDoc(target, f) {
+    const err = fileError(f);
+    if (err)
+        throw new Error(err);
+    const blob = await shrink(f);
+    if (blob.size > MAX_FILE)
+        throw new Error('הקובץ גדול מ-2MB. אפשר לסרוק ברזולוציה נמוכה יותר או לצלם מחדש.');
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const u = auth.currentUser;
+    const byName = u.displayName ?? u.email ?? '';
+    const batch = writeBatch(db);
+    const ref = doc(collection(db, 'orderDocs'));
+    const chunks = Math.max(1, Math.ceil(bytes.length / CHUNK));
+    const type = blob === f ? f.type : 'image/jpeg';
+    const name = blob === f ? f.name : f.name.replace(/\.\w+$/, '') + '.jpg';
+    batch.set(ref, {
+        ...(target.orderId != null ? { orderId: String(target.orderId) } : {}), customerId: target.customerId,
+        kind: target.kind, kindLabel: target.kindLabel, name, type, size: bytes.length, chunks, by: u.uid, byName, at: serverTimestamp(),
+    });
+    for (let i = 0; i < chunks; i++) {
+        batch.set(doc(db, 'orderDocs', ref.id, 'chunks', String(i)), { i, data: Bytes.fromUint8Array(bytes.slice(i * CHUNK, (i + 1) * CHUNK)) });
+    }
+    batch.set(doc(collection(db, 'auditLog')), {
+        entity: target.orderId != null ? 'order' : 'customer', entityId: target.orderId != null ? String(target.orderId) : target.customerId,
+        action: 'doc', before: null, after: { docName: name, kind: target.kindLabel }, source: 'form',
+        by: u.uid, byName, at: serverTimestamp(), ok: true,
+    });
+    await batch.commit();
+}
+/* תאימות לקריאות קיימות: צירוף תעודת רכש להזמנה */
+export const uploadOrderDoc = (orderId, f, customerId = '') => uploadDoc({ orderId, customerId, kind: 'po', kindLabel: 'תעודת רכש' }, f);
+const sortNewest = (a, b) => (b.at?.seconds ?? 9e9) - (a.at?.seconds ?? 9e9);
+export function useOrderDocs(orderId) {
+    const [items, setItems] = useState(null);
+    useEffect(() => onSnapshot(query(collection(db, 'orderDocs'), where('orderId', '==', String(orderId))), (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort(sortNewest)), () => setItems([])), [orderId]);
+    return items;
+}
+/* כל המסמכים של לקוח: הקבועים שלו ומסמכי ההזמנות שלו */
+export function useCustomerDocs(customerId) {
+    const [items, setItems] = useState(null);
+    useEffect(() => onSnapshot(query(collection(db, 'orderDocs'), where('customerId', '==', customerId)), (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort(sortNewest)), () => setItems([])), [customerId]);
+    return items;
+}
+/* מרכיב את הקובץ מהחלקים ומחזיר כתובת זמנית לפתיחה או הורדה */
+export async function openOrderDoc(d) {
+    const s = await getDocs(query(collection(db, 'orderDocs', d.id, 'chunks'), orderBy('i')));
+    const parts = s.docs.map((x) => new Uint8Array(x.data().data.toUint8Array()));
+    return URL.createObjectURL(new Blob(parts, { type: d.type }));
+}
+/* גרסה קודמת: מסמך שיש אחריו מסמך חדש יותר מאותו סוג, באותה הזמנה או באותו תיק לקוח */
+export function isOlderVersion(d, all) {
+    return all.some((x) => x.id !== d.id && x.kind === d.kind && (x.orderId ?? '') === (d.orderId ?? '') && (x.at?.seconds ?? 9e9) > (d.at?.seconds ?? 9e9));
+}

@@ -12,7 +12,7 @@ import type { Order, OrderStatus } from './types';
 
 export type OrderView = Order & { issues: Issue[]; health: Health };
 
-export type NewOrderMode = 'quick' | 'full' | 'newCustomer';
+export type NewOrderMode = 'full' | 'newCustomer';
 export type ChangeRequest = { order: Order; patch: Partial<Order>; what: string };
 /* שדות שמשנים את מה שהסניף, הקופה או הלקוח אישרו */
 export const SENSITIVE: (keyof Order)[] = ['date', 'time', 'branchId', 'delivery', 'address', 'amount', 'items'];

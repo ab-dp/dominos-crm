@@ -16,11 +16,25 @@ const RANK: Record<Severity, number> = { red: 3, orange: 2, yellow: 1, info: 0 }
 /* כללי החריגים בשמם – למסננים במסך החריגים */
 export const RULE_LABEL: Record<number, string> = {
   1: 'לא הועברה ל-Q', 2: 'פער מול Q', 3: 'מועד עבר', 4: 'אין אישור סניף', 5: 'אשראי לא חויב', 6: 'אין אישור לקוח',
-  7: 'חיוב אשראי נכשל', 11: 'לעדכן שינוי ב-Q', 8: 'חסרים פרטי אספקה', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q', 0: 'חסר אישור סניף',
+  7: 'חיוב אשראי נכשל', 11: 'לעדכן שינוי ב-Q', 8: 'חסרים פרטים', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q', 0: 'חסר אישור סניף',
 };
 
 export function orderDateTime(o: Order): Date {
-  return new Date(`${o.date}T${o.time}:00`);
+  return new Date(`${o.date}T${o.time || '23:59'}:00`); // בלי שעה – נחשב כסוף היום
+}
+
+/* פרטי חובה שחסרים בהזמנה. ההזמנה נשמרת גם בלעדיהם (עדיף מאשר לא לרשום אותה), ומסומנת באדום עד שמשלימים. */
+export function missingOf(o: Order): string[] {
+  const m: string[] = [];
+  if (!o.time) m.push('שעה');
+  if (!o.branchId) m.push('סניף');
+  if (!o.channel?.trim()) m.push('ערוץ');
+  if (!(o.amount > 0)) m.push('סכום');
+  if (!o.contactName) m.push('איש קשר');
+  if (!o.contactPhone) m.push('טלפון');
+  if (o.delivery === 'delivery' && !o.address) m.push('כתובת');
+  if (o.method === 'account' && !o.accountPhone) m.push('טלפון הקפה');
+  return m;
 }
 
 function dayDiff(iso: string, now: Date): number {
@@ -71,8 +85,9 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
   if (soon && (o.status === 'new' || o.status === 'pending_customer')) {
     out.push({ rule: 6, severity: 'orange', label: 'אין אישור לקוח', action: 'status', actionLabel: 'שנה סטטוס' });
   }
-  if (soon && o.delivery === 'delivery' && (!o.address || !o.contactName || !o.contactPhone)) {
-    out.push({ rule: 8, severity: 'orange', label: 'חסרים פרטי אספקה', action: 'open', actionLabel: 'פתח תיק' });
+  const miss = missingOf(o);
+  if (miss.length) {
+    out.push({ rule: 8, severity: 'red', label: `חסר: ${miss.join(', ')}`, action: 'open', actionLabel: 'השלם פרטים' });
   }
   if (o.poRequired && o.status === 'approved' && !o.poNumber) {
     out.push({ rule: 9, severity: 'yellow', label: 'תעודת רכש חסרה', action: 'po', actionLabel: 'הוסף מס\'' });

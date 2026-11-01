@@ -169,8 +169,8 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/customers/$(d.customerId))
         && d.customerName is string && d.customerName.size() > 0 && d.customerName.size() <= 120
         && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-        && d.time is string && d.time.matches('^[0-9]{2}:[0-9]{2}$')
-        && d.branchId is string && exists(/databases/$(database)/documents/branches/$(d.branchId))
+        && d.time is string && (d.time == '' || d.time.matches('^[0-9]{2}:[0-9]{2}$'))
+        && d.branchId is string && (d.branchId == '' || exists(/databases/$(database)/documents/branches/$(d.branchId)))
         && d.branchName is string && d.branchName.size() <= 60
         && d.amount is number && d.amount >= 0 && d.amount < 1000000
         && d.status in ['new', 'pending_customer', 'approved', 'delivered', 'partial', 'cancelled']

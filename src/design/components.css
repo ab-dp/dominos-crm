@@ -237,3 +237,6 @@
 .gap-sum__diff b { color: var(--danger-fg); }
 .gap-fix { width: 100%; }
 .gap-or { margin: 12px 0 6px !important; }
+
+/* פרט חובה חסר (נשמר בלעדיו, משלימים אחר כך) */
+.miss-text { color: var(--danger-fg); font-weight: 600; }

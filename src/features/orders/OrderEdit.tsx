@@ -10,7 +10,7 @@ import { addOrderNote, useOrderNotes } from '../../data/orders';
 import { usePriceLists } from '../../data/priceLists';
 import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, type Order, type OrderItem } from '../../data/types';
-import { Button } from '../../design/components';
+import { Button, Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
 import { cleanPhone, phoneError } from '../../lib/names';
@@ -105,8 +105,8 @@ export function BranchEdit({ o }: { o: OrderView }) {
     return (
       <div className="kv kv--edit">
         <span className="kv__k">סניף</span>
-        <button type="button" className="kv__v kv__btn" onClick={() => setOpen(true)} aria-label={`סניף: ${o.branchName}. לחץ לשינוי`}>
-          <span className="kv__val">{o.branchName} <span className="muted">· אשכול {o.cluster}</span></span>
+        <button type="button" className="kv__v kv__btn" onClick={() => setOpen(true)} aria-label={`סניף: ${o.branchName || "חסר"}. לחץ לשינוי`}>
+          <span className="kv__val">{o.branchId ? <>{o.branchName} <span className="muted">· אשכול {o.cluster}</span></> : <Missing />}</span>
           <Pencil size={13} className="kv__pen" aria-hidden="true" />
         </button>
       </div>

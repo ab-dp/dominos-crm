@@ -7,7 +7,7 @@ import { Maximize2, Minimize2, RefreshCw, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
-import { HealthBadge, StatusMenu, Tip } from '../../design/components';
+import { HealthBadge, Missing, StatusMenu, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
@@ -132,9 +132,9 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         <div className="panel__row panel__meta">
           <button className="link" onClick={() => { panel.close(); nav(`/customers/${o.customerId}`); }}>{o.customerName}</button>
           <span>·</span>
-          <span>יום {weekday(o.date)} <Ltr>{fmtDate(o.date)}</Ltr> · <Ltr>{o.time}</Ltr></span>
+          <span>יום {weekday(o.date)} <Ltr>{fmtDate(o.date)}</Ltr> · {o.time ? <Ltr>{o.time}</Ltr> : <Missing>ללא שעה</Missing>}</span>
           <span>·</span>
-          <span>{o.branchName}</span>
+          <span>{o.branchName || <Missing>ללא סניף</Missing>}</span>
         </div>
         {o.changedAfterApproval && (
           <div className="changed-note">
@@ -179,18 +179,18 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             )}
             <Section id="details" title="פרטים">
               <Kv k="לקוח" v={o.customerName} />
-              <EditKv k="ערוץ קבלה" value={o.channel} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ ההזמנה')} onSave={(v) => save({ channel: v }, 'ערוץ הקבלה')} />
+              <EditKv k="ערוץ קבלה" value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ ההזמנה')} onSave={(v) => save({ channel: v }, 'ערוץ הקבלה')} />
               <Kv k="מטפל" v={o.handler} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
             </Section>
             <Section id="delivery" title="אספקה">
               <EditKv k="תאריך" kind="date" value={o.date} display={<>יום {weekday(o.date)} · {showDate(o.date)}</>} validate={validDate} onSave={(v) => save({ date: v }, 'תאריך האספקה')} />
-              <EditKv k="שעה" kind="time" value={o.time} display={<Ltr>{o.time}</Ltr>} validate={validTime} onSave={(v) => save({ time: v }, 'שעת האספקה')} />
+              <EditKv k="שעה" kind="time" value={o.time} display={o.time ? <Ltr>{o.time}</Ltr> : <Missing />} validate={validTime} onSave={(v) => save({ time: v }, 'שעת האספקה')} />
               <DeliveryTypeEdit o={o} />
               <BranchEdit o={o} />
-              {o.delivery === 'delivery' && <EditKv k="כתובת" value={o.address ?? ''} display={o.address || <span className="warn-text">חסרה</span>} placeholder="רחוב, מספר, עיר" onSave={(v) => save({ address: v || undefined }, 'הכתובת')} />}
-              <EditKv k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <span className="warn-text">חסר</span>} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
-              <EditKv k="טלפון" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <span className="warn-text">חסר</span>} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />
+              {o.delivery === 'delivery' && <EditKv k="כתובת" value={o.address ?? ''} display={o.address || <Missing>חסרה</Missing>} placeholder="רחוב, מספר, עיר" onSave={(v) => save({ address: v || undefined }, 'הכתובת')} />}
+              <EditKv k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <Missing />} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
+              <EditKv k="טלפון" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />
               <EditKv k="הנחיות" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההנחיות')} />
             </Section>
             <Section id="items" title="פריטים ומחיר" action={!editItems && <button className="link" onClick={() => setEditItems(true)}>עריכה</button>}>
@@ -211,7 +211,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <div className="sums">
                 {!!o.deliveryFee && <div><span>מתוכו דמי משלוח</span><b><Money value={o.deliveryFee} /></b></div>}
                 {o.calcAmount !== undefined && <div><span>מחושב מהפריטים</span><b className="muted"><Money value={o.calcAmount} /></b></div>}
-                <div><span>סכום לחיוב{o.calcAmount !== undefined && <span className="no-final__tag"> שונה ידנית</span>}</span><b><Money value={o.amount} /></b></div>
+                <div><span>סכום לחיוב{o.calcAmount !== undefined && <span className="no-final__tag"> שונה ידנית</span>}</span><b>{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</b></div>
                 <div className={gap ? 'is-gap' : ''}>
                   <span>סכום Q</span>
                   <b>{o.qAmount !== undefined ? <Money value={o.qAmount} /> : '—'}</b>
@@ -226,7 +226,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             </Section>
             <Section id="payment" title="תשלום">
               <MethodEdit o={o} />
-              {o.method === 'account' && <EditKv k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <span className="warn-text">חסר</span>} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />}
+              {o.method === 'account' && <EditKv k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />}
               <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
               <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
               {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}

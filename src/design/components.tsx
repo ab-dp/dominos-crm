@@ -231,3 +231,8 @@ export function useToggle(initial = false) {
   const [v, set] = useState(initial);
   return [v, set] as const;
 }
+
+/* פרט חובה שחסר בהזמנה – אדום עד שמשלימים */
+export function Missing({ children = 'חסר' }: { children?: ReactNode }) {
+  return <span className="miss-text">{children}</span>;
+}
