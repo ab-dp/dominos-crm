@@ -82,7 +82,19 @@
 }
 .subnav__label { align-self: center; margin-inline-end: 4px; padding-inline-end: 20px; border-inline-end: 1px solid var(--gray-100); font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
 @media (max-width: 700px) {
-  .toolbar .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
-  .chip { flex: none; }
+  .chips { flex-wrap: wrap; }
 }
 @media (max-width: 700px) { .tablebar .seg--sm { display: none; } }
+
+/* טלפון: בלי גלילה הצידה בשום מקום – טאבים נשברים לשורות, טבלאות רשימה הופכות לשורות מוערמות */
+@media (max-width: 700px) {
+  .tabs { flex-wrap: wrap; overflow: visible; gap: 0 18px; }
+  .otable:not(.otable--orders) { display: block; }
+  .otable:not(.otable--orders) thead { display: none; }
+  .otable:not(.otable--orders) tbody { display: grid; gap: 8px; }
+  .otable:not(.otable--orders) tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 14px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); }
+  .otable:not(.otable--orders) td { display: block; height: auto !important; padding: 0 !important; border: 0 !important; white-space: normal; position: static !important; background: none !important; box-shadow: none !important; }
+  .otable:not(.otable--orders) td:empty { display: none; }
+  .otable:not(.otable--orders) td:first-child { flex-basis: 100%; font-weight: 600; }
+  .otable-wrap:has(.otable:not(.otable--orders)), .card:has(> .otable), .card:has(> div > .otable) { background: transparent; box-shadow: none; overflow: visible; }
+}

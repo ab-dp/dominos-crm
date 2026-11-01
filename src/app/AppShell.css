@@ -214,10 +214,12 @@
     box-shadow: 0 -8px 24px rgba(11, 35, 64, 0.18);
   }
   .sidebar__logo, .sidebar__foot { display: none; }
-  .sidebar__groups { display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .sidebar__groups { display: flex; gap: 0; overflow: visible; width: 100%; }
   .navgroup, .navgroup + .navgroup { display: contents; border: 0; padding: 0; }
   .sidebar ul { display: contents; }
-  .sidebar li { flex: 1 0 64px; }
+  .sidebar li { flex: 1 1 0; min-width: 0; }
+  .sidebar li.nav-li--more { display: none; }
+  .sidebar .nav-more { display: flex; flex: 1 1 0; min-width: 0; }
   .nav { flex-direction: column; gap: 2px; height: 52px; font-size: 10.5px; }
   .nav__label { display: block; flex: none; max-width: 72px; }
   .nav.is-active::before { inset: auto 18px -6px 18px; width: auto; height: 3px; top: auto; border-radius: 3px 3px 0 0; }
@@ -232,3 +234,14 @@
 @media (max-width: 860px) {
   .topbar__actions .btn--primary .btn__kbd { display: none; }
 }
+
+/* "עוד" – רק בתפריט התחתון של הטלפון */
+.nav-more { display: none; }
+.nav__count--dot { min-width: 8px !important; width: 8px; height: 8px !important; padding: 0 !important; }
+.more-menu { min-width: 220px; padding: 6px; }
+.more-menu .menu__item { height: 44px; color: var(--gray-900); text-decoration: none; }
+.more-menu .nav__icon { color: var(--gray-600); opacity: 1; }
+.more-menu__label { flex: 1; }
+.more-menu .nav__count { background: var(--gray-100); color: var(--gray-900); }
+.more-menu .nav__count--alert { background: var(--brand-red); color: var(--white); }
+.more-menu .nav__count { position: static !important; min-width: 20px; height: 18px; line-height: 18px; font-size: 11px; padding: 0 6px; }

@@ -71,22 +71,22 @@
 /* ---------- טלפון: כל שורה הופכת לכרטיס ---------- */
 @media (max-width: 700px) {
   .otable-wrap { background: transparent; box-shadow: none; overflow: visible; }
-  .otable, .otable tbody { display: block; }
-  .otable thead { display: none; }
-  .otable tbody { display: grid; gap: 8px; }
-  .orow {
+  .otable--orders, .otable--orders tbody { display: block; }
+  .otable--orders thead { display: none; }
+  .otable--orders tbody { display: grid; gap: 8px; }
+  .otable--orders .orow {
     display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "time cust health" "marks marks act";
     gap: 6px 12px; padding: 12px 14px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card);
   }
   .orow--critical { box-shadow: var(--shadow-card), inset -3px 0 0 var(--danger-fg); }
   .orow--urgent { box-shadow: var(--shadow-card), inset -3px 0 0 var(--urgent-edge); }
   .orow--missing { box-shadow: var(--shadow-card), inset -3px 0 0 var(--missing-edge); }
-  .otable td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
-  .otable td.c-time { display: block; grid-area: time; font-size: 17px; }
-  .otable td.c-cust { display: block; grid-area: cust; min-width: 0; }
-  .otable td.c-health { display: block; grid-area: health; }
-  .otable td.c-marks { display: flex; grid-area: marks; align-items: center; }
-  .otable td.c-act { display: block; grid-area: act; justify-self: end; }
+  .otable--orders td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
+  .otable--orders td.c-time { display: block; grid-area: time; font-size: 17px; }
+  .otable--orders td.c-cust { display: block; grid-area: cust; min-width: 0; }
+  .otable--orders td.c-health { display: block; grid-area: health; }
+  .otable--orders td.c-marks { display: flex; grid-area: marks; align-items: center; }
+  .otable--orders td.c-act { display: block; grid-area: act; justify-self: end; }
   .orow__cust { max-width: none; }
-  .otable .mark__label { position: static; width: auto; height: auto; clip: auto; }
+  .otable--orders .mark__label { position: static; width: auto; height: auto; clip: auto; }
 }

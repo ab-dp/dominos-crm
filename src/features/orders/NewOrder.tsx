@@ -107,7 +107,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     setAddressId(addr?.id ?? '');
     setAddress(addr?.address ?? c.businessAddress ?? '');
     setContactId(pc?.id ?? '');
-    setContact({ name: pc?.name ?? '', phone: pc?.phone ?? '' });
+    setContact({ name: pc?.name ?? '', phone: pc?.phone ? fmtPhone(pc.phone) : '' });
     setInstructions(c.instructions);
     if (addr?.preferredBranchId && branches.some((b) => b.id === addr.preferredBranchId)) {
       const b = branches.find((x) => x.id === addr.preferredBranchId)!;
@@ -311,7 +311,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         </L>
         {!isNew && c && c.contacts.length > 1 && (
           <L label="מאנשי הקשר של הלקוח">
-            <select className="input" value={contactId} onChange={(e) => { const p = c.contacts.find((x) => x.id === e.target.value); setContactId(e.target.value); setContact({ name: p?.name ?? '', phone: p?.phone ?? '' }); clearErr('contactPhone'); }}>
+            <select className="input" value={contactId} onChange={(e) => { const p = c.contacts.find((x) => x.id === e.target.value); setContactId(e.target.value); setContact({ name: p?.name ?? '', phone: p?.phone ? fmtPhone(p.phone) : '' }); clearErr('contactPhone'); }}>
               {c.contacts.map((p) => <option key={p.id} value={p.id}>{p.name}{p.phone ? ` · ${fmtPhone(p.phone)}` : ''}</option>)}
             </select>
           </L>

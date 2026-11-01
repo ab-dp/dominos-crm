@@ -51,7 +51,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
           <button className="bulkbar__clear" onClick={() => setSelected([])}>ניקוי בחירה</button>
         </div>
       )}
-      <table className={`otable otable--${density}`}>
+      <table className={`otable otable--orders otable--${density}`}>
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr>

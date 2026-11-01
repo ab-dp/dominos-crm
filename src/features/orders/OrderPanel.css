@@ -82,3 +82,4 @@
 .kv__edit { display: inline-flex; align-items: center; gap: 10px; }
 .sums .no-final__tag { margin-inline-start: 6px; padding: 1px 8px; border-radius: 10px; background: var(--missing-bg); color: #6B4B00; font-size: 11px; font-weight: 600; }
 @media (max-width: 760px), (pointer: coarse) { .panel__foot .muted { display: none; } }
+@media (max-width: 700px) { .panel__tabs { flex-wrap: wrap; overflow: visible; gap: 0 14px; } .panel__tab-history { margin-inline-start: 0; } }

@@ -1,9 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
-  Bell, ChartColumn, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
+  Bell, ChartColumn, Ellipsis, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
 } from 'lucide-react';
 import { Button, Tip, useHotkey } from '../design/components';
 import { useStore } from '../data/store';
@@ -21,15 +21,18 @@ import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
 
+const MOBILE_MAIN = ['/today', '/orders', '/exceptions', '/customers'];
+
 type NavDef = { to: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { orders, openNewOrder } = useStore();
+  const { orders, openNewOrder, closeNewOrder } = useStore();
   const panel = usePanel();
   const location = useLocation();
   const reduce = useReducedMotion();
   const [collapsed, setCollapsed] = usePref('sidebarCollapsed', false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const { profile, isAdmin, logout } = useAuth();
   const pendingUsers = usePendingRequests();
   const nav = useNavigate();
@@ -70,6 +73,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       ],
     },
   ];
+
+  // מעבר מסך (גם בכפתור "חזרה" של הדפדפן) סוגר תיק הזמנה, טופס הזמנה ותפריט "עוד" פתוחים
+  const firstPath = useRef(true);
+  useEffect(() => {
+    if (firstPath.current) { firstPath.current = false; return; }
+    if (panel.openId != null) panel.close();
+    closeNewOrder();
+    setMoreOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  const moreItems = groups.flatMap((g) => g.items).filter((it) => !MOBILE_MAIN.includes(it.to));
 
   return (
     <div className={`shell ${collapsed ? 'shell--collapsed' : ''}`}>
@@ -141,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="navgroup__title" aria-hidden={collapsed}>{g.title}</p>
               <ul>
                 {g.items.map((it) => (
-                  <li key={it.to}>
+                  <li key={it.to} className={MOBILE_MAIN.includes(it.to) ? '' : 'nav-li--more'}>
                     <NavItem to={it.to} label={it.label} collapsed={collapsed}>
                       <span className="nav__icon" aria-hidden="true">{it.icon}</span>
                       <span className="nav__label">{it.label}</span>
@@ -152,6 +167,27 @@ export function AppShell({ children }: { children: ReactNode }) {
               </ul>
             </div>
           ))}
+          {/* בטלפון: ארבעה יעדים עיקריים בתפריט התחתון, וכל השאר תחת "עוד" – בלי גלילה הצידה */}
+          <Popover.Root open={moreOpen} onOpenChange={setMoreOpen}>
+            <Popover.Trigger asChild>
+              <button className={`nav nav-more ${moreItems.some((it) => location.pathname.startsWith(it.to)) ? 'is-active' : ''}`} aria-label="עוד">
+                <span className="nav__icon" aria-hidden="true"><Ellipsis size={20} /></span>
+                <span className="nav__label">עוד</span>
+                {moreItems.some((it) => it.alert) && <span className="nav__count nav__count--alert nav__count--dot" aria-hidden="true" />}
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content className="menu more-menu" side="top" align="end" sideOffset={10} dir="rtl">
+                {moreItems.map((it) => (
+                  <Link key={it.to} to={it.to} className="menu__item" onClick={() => setMoreOpen(false)}>
+                    <span className="nav__icon" aria-hidden="true">{it.icon}</span>
+                    <span className="more-menu__label">{it.label}</span>
+                    {!!it.count && <span className={`nav__count ${it.alert ? 'nav__count--alert' : ''}`}><Ltr>{it.count}</Ltr></span>}
+                  </Link>
+                ))}
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
         </div>
         <div className="sidebar__foot">
           <NavItem to="/styleguide" label="מדריך סגנון" collapsed={collapsed} quiet>
