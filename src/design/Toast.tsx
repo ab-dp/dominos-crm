@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Check, X } from 'lucide-react';
 import './Toast.css';
 
-type ToastInput = { message: ReactNode; onUndo?: () => void };
+type ToastInput = { message: ReactNode; onUndo?: () => void; action?: { label: string; run: () => void } };
 type ToastItem = ToastInput & { id: number };
 
 const ToastCtx = createContext<(t: ToastInput) => void>(() => {});
@@ -84,6 +84,7 @@ function ToastView({ item, onDone }: { item: ToastItem; onDone: () => void }) {
           בטל
         </button>
       )}
+      {item.action && <button className="toast__action" onClick={() => { item.action!.run(); onDone(); }}>{item.action.label}</button>}
       <button className="toast__close" onClick={onDone} aria-label="סגור הודעה"><X size={16} /></button>
     </motion.div>
   );

@@ -69,3 +69,4 @@
 .panel__head.is-scrolled { box-shadow: 0 6px 16px -10px rgba(20,24,31,0.25); }
 .panel__tabs a.is-on { color: var(--brand-800); border-bottom-color: var(--brand-600); font-weight: 600; }
 .panel__tabs a { transition: color var(--dur-quick) var(--ease), border-color var(--dur-quick) var(--ease); }
+.hist__change { display: block; font-size: var(--text-label); margin-top: 2px; }

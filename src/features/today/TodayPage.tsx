@@ -7,7 +7,6 @@ import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
-import { ME } from '../../data/mock';
 import { CLOSED } from '../../data/types';
 import { Button, HealthBadge, RollingNumber, StatusMenu } from '../../design/components';
 import { HEALTH_RANK, orderDateTime } from '../../rules-engine/health';
@@ -30,7 +29,7 @@ export function TodayPage() {
   const today = toISODate(now);
   const tomorrow = toISODate(new Date(now.getTime() + 86400000));
   const week = toISODate(new Date(now.getTime() + 7 * 86400000));
-  const scope = mine ? orders.filter((o) => o.handler === ME) : orders;
+  const scope = mine ? orders.filter((o) => (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name)) : orders;
   const open = scope.filter((o) => !CLOSED.includes(o.status));
 
   const tasks = [

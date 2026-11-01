@@ -52,7 +52,7 @@ export function BranchPicker({ value, onChange, preferredId, label = 'סניף' 
       <span className="field__label" id={`${listId}-label`}>{label}</span>
       <Popover.Root open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQ(''); }}>
         <Popover.Trigger asChild>
-          <button className="bpick__trigger" aria-labelledby={`${listId}-label`} aria-haspopup="listbox" aria-expanded={open}>
+          <button type="button" className="bpick__trigger" aria-labelledby={`${listId}-label`} aria-haspopup="listbox" aria-expanded={open}>
             {selected ? (
               <span className="bpick__value"><b>{selected.name}</b><span className="bpick__cluster">{clusterName(selected.clusterId)}</span></span>
             ) : <span className="bpick__placeholder">בחר סניף…</span>}
@@ -151,7 +151,7 @@ function QuickAddBranch({ initialName, branches, onClose, onAdded }: {
         <Dialog.Content className="udialog" dir="rtl" aria-describedby="qab-desc">
           <Dialog.Title className="udialog__title">סניף חדש</Dialog.Title>
           <p id="qab-desc" className="muted">הסניף נוסף לרשימה הקבועה ונבחר בהזמנה מיד.</p>
-          <form onSubmit={(e) => { e.preventDefault(); save(); }}>
+          <form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); save(); }}>
             <Field label="שם הסניף (חובה)">
               <input className="input" autoFocus value={name} onChange={(e) => { setName(e.target.value); setErr(''); setDupe(null); }} placeholder="עיר – רחוב" />
             </Field>

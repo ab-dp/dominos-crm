@@ -1,5 +1,5 @@
 /* תיק לקוח במסך מלא (אפיון 6.6) – המקום לראות את כל התמונה על הלקוח. */
-import { useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -14,9 +14,15 @@ import {
 import { useBranches, useClusters } from '../../data/branches';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
+import { useCustomerOrders } from '../../data/orders';
+import { useStore, type OrderView } from '../../data/store';
+import { CLOSED } from '../../data/types';
+import { healthOf, issuesFor } from '../../rules-engine/health';
+import { usePanel } from '../../app/PanelContext';
+import { OrdersTable } from '../orders/OrdersTable';
 import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtMoney, fmtPhone } from '../../lib/format';
+import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
 import { cleanPhone, phoneError } from '../../lib/names';
 import { CustomerForm } from './CustomerForm';
 import { MergeDialog } from './MergeDialog';
@@ -57,6 +63,10 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
   const pl = priceLists.find((p) => p.id === c.priceListId);
   const sharing = c.accountPhone ? all.filter((x) => x.id !== c.id && x.status !== 'merged' && x.accountPhone === c.accountPhone) : [];
 
+  const { now, openNewOrder } = useStore();
+  const { orders: raw, loading: ordersLoading } = useCustomerOrders(c.id);
+  const corders = useMemo<OrderView[]>(() => raw.map((o) => { const issues = issuesFor(o, now); return { ...o, issues, health: healthOf(issues) }; }), [raw, now]);
+
   const openNote = () => { setTab('activity'); setTimeout(() => noteRef.current?.focus(), 50); };
 
   return (
@@ -77,7 +87,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
             </p>
           </div>
           <div className="cfile__actions">
-            <Button variant="primary" icon={<Plus size={18} />} onClick={() => toast({ message: 'הזמנה חדשה ממולאת בפרטי הלקוח – שלב 5' })}>הזמנה</Button>
+            <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'quick', customerId: c.id })} disabled={c.status !== 'active'}>הזמנה</Button>
             <Button icon={<MessageSquarePlus size={16} />} onClick={openNote}>הערה</Button>
             <Button icon={<Pencil size={16} />} onClick={() => setEditing(true)}>עריכה</Button>
             <Dropdown.Root dir="rtl">
@@ -131,8 +141,8 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={tab} role="tabpanel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.06 } }} transition={{ duration: 0.16 }}>
-          {tab === 'overview' && <Overview c={c} onTab={setTab} />}
-          {tab === 'orders' && <Later stage={5} icon={<ClipboardList size={24} />} title="הזמנות הלקוח">עתידיות · עבר · בוטלו – אותה טבלה של מרכז ההזמנות, מסוננת ללקוח.</Later>}
+          {tab === 'overview' && <Overview c={c} onTab={setTab} orders={corders} loading={ordersLoading} />}
+          {tab === 'orders' && <OrdersTab c={c} orders={corders} loading={ordersLoading} />}
           {tab === 'monthly' && <Later stage={8} icon={<CalendarClock size={24} />} title="סיכומים חודשיים">שורה לכל חודש: הזמנות · סך · ממוצע · ביטולים · פער Q · מצב תשלום · נעול.</Later>}
           {tab === 'prices' && <PricesTab c={c} />}
           {tab === 'payment' && <PaymentTab c={c} sharing={sharing} method={method} onEdit={() => setEditing(true)} />}
@@ -150,22 +160,55 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
 }
 
 /* ---------- סקירה ---------- */
-function Overview({ c, onTab }: { c: Customer; onTab: (t: Tab) => void }) {
-  const kpis = ['הזמנות בתקופה', 'סך (לפי סכום Q)', 'ממוצע הזמנה', 'ימים מאז הזמנה אחרונה', 'פתוח לתשלום'];
+const PERIODS: [number, string][] = [[1, 'החודש'], [3, '3 חודשים'], [12, '12 חודשים']];
+const qSum = (list: OrderView[]) => list.reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+
+function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) => void; orders: OrderView[]; loading: boolean }) {
+  const { now } = useStore();
+  const panel = usePanel();
+  const [months, setMonths] = useState(1);
+  const today = toISODate(now);
+  const since = toISODate(new Date(now.getFullYear(), now.getMonth() - (months - 1), 1));
+  const live = orders.filter((o) => o.status !== 'cancelled');
+  const inPeriod = live.filter((o) => o.date >= since && o.date <= today);
+  const total = qSum(inPeriod);
+  const last = live.filter((o) => o.date <= today).sort((x, y) => (y.date + y.time).localeCompare(x.date + x.time))[0];
+  const next = orders.filter((o) => !CLOSED.includes(o.status) && o.date >= today).sort((x, y) => (x.date + x.time).localeCompare(y.date + y.time))[0];
+  const days = last ? Math.round((new Date(today + 'T12:00').getTime() - new Date(last.date + 'T12:00').getTime()) / 86400000) : null;
+  const unpaid = qSum(live.filter((o) => o.payment === 'pending' && o.date <= today));
+  const kpis: [string, ReactNode][] = [
+    ['הזמנות בתקופה', <Ltr key="a">{inPeriod.length}</Ltr>],
+    ['סך (לפי סכום Q)', <Ltr key="b">{fmtMoney(total)}</Ltr>],
+    ['ממוצע הזמנה', inPeriod.length ? <Ltr key="c">{fmtMoney(Math.round(total / inPeriod.length))}</Ltr> : '—'],
+    ['ימים מאז הזמנה אחרונה', days === null ? '—' : <Ltr key="d">{days}</Ltr>],
+    ['פתוח לתשלום', <Ltr key="e">{fmtMoney(unpaid)}</Ltr>],
+  ];
+  const card = (title: string, o: OrderView | undefined, empty: string) => (
+    <div className="card ov__card">
+      <span className="kpi__label">{title}</span>
+      {o ? (
+        <button className="ov__order" onClick={(e) => panel.open(o.id, e.currentTarget)}>
+          <b>הזמנה <Ltr>{o.id}</Ltr></b>
+          <span><Ltr>{fmtDate(o.date)}</Ltr> · <Ltr>{o.time}</Ltr> · {o.branchName}</span>
+          <span><Ltr>{fmtMoney(o.qAmount ?? o.amount)}</Ltr></span>
+        </button>
+      ) : <span className="muted">{empty}</span>}
+    </div>
+  );
   return (
     <div className="ov">
       <div className="ov__period seg" role="group" aria-label="תקופה">
-        {['החודש', '3 חודשים', '12 חודשים'].map((p, i) => <button key={p} className={i === 0 ? 'is-on' : ''} aria-pressed={i === 0} disabled>{p}</button>)}
+        {PERIODS.map(([m, label]) => <button key={m} className={months === m ? 'is-on' : ''} aria-pressed={months === m} onClick={() => setMonths(m)}>{label}</button>)}
       </div>
       <div className="ov__kpis">
-        {kpis.map((k) => (
-          <div key={k} className="kpi card"><span className="kpi__label">{k}</span><span className="kpi__value">—</span></div>
+        {kpis.map(([k, v]) => (
+          <div key={k} className="kpi card"><span className="kpi__label">{k}</span><span className={`kpi__value ${loading ? '' : 'is-live'}`}>{loading ? <Skeleton w={60} h={22} /> : v}</span></div>
         ))}
       </div>
-      <p className="ov__note muted">המדדים, ההזמנה האחרונה וההזמנה הבאה יתמלאו אוטומטית כשההזמנות יישמרו במערכת (שלב 5), והגרף ל-12 חודשים בשלב 8.</p>
+      <p className="ov__note muted">לפי תאריך אספקה, בלי הזמנות שבוטלו. הגרף ל-12 חודשים ייבנה בשלב 8.</p>
       <div className="ov__cards">
-        <div className="card ov__card"><span className="kpi__label">הזמנה אחרונה</span><span className="muted">אין עדיין הזמנות</span></div>
-        <div className="card ov__card"><span className="kpi__label">הזמנה הבאה</span><span className="muted">אין עדיין הזמנות</span></div>
+        {card('הזמנה אחרונה', last, 'אין עדיין הזמנות')}
+        {card('הזמנה הבאה', next, 'אין הזמנה פתוחה')}
         <div className="card ov__card">
           <span className="kpi__label">פרטים חסרים</span>
           {missingOf(c).length === 0 ? <span className="ok-text"><Check size={14} aria-hidden="true" /> התיק מלא</span> : (
@@ -173,6 +216,41 @@ function Overview({ c, onTab }: { c: Customer; onTab: (t: Tab) => void }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ---------- הזמנות הלקוח: אותה טבלה של מרכז ההזמנות, מסוננת ללקוח ---------- */
+function OrdersTab({ c, orders, loading }: { c: Customer; orders: OrderView[]; loading: boolean }) {
+  const { now, openNewOrder } = useStore();
+  const [view, setView] = useState<'open' | 'past' | 'cancelled'>('open');
+  const today = toISODate(now);
+  const byTime = (a: OrderView, b: OrderView) => (a.date + a.time).localeCompare(b.date + b.time);
+  const lists = {
+    open: orders.filter((o) => !CLOSED.includes(o.status)).sort(byTime),
+    past: orders.filter((o) => o.status === 'delivered' || o.status === 'partial').sort((a, b) => byTime(b, a)),
+    cancelled: orders.filter((o) => o.status === 'cancelled').sort((a, b) => byTime(b, a)),
+  };
+  const V: [typeof view, string][] = [['open', 'פתוחות'], ['past', 'סופקו'], ['cancelled', 'בוטלו']];
+  if (loading) return <div className="card cfile__loading"><Skeleton h={18} /><Skeleton h={18} /></div>;
+  if (!orders.length) {
+    return (
+      <div className="card">
+        <EmptyState icon={<ClipboardList size={24} />} title="אין עדיין הזמנות ללקוח"
+          action={c.status === 'active' && <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'quick', customerId: c.id })}>הזמנה ראשונה</Button>}>
+          הפרטים הקבועים של {c.name} ימולאו בהזמנה אוטומטית.
+        </EmptyState>
+      </div>
+    );
+  }
+  return (
+    <div className="cfile__orders">
+      <div className="seg" role="group" aria-label="סינון הזמנות הלקוח">
+        {V.map(([k, label]) => <button key={k} className={view === k ? 'is-on' : ''} aria-pressed={view === k} onClick={() => setView(k)}>{label} <Ltr>{lists[k].length}</Ltr></button>)}
+      </div>
+      <OrdersTable rows={lists[view]} showDate caption={`הזמנות ${c.name}`}
+        emptyText={view === 'open' ? 'אין הזמנות פתוחות' : view === 'past' ? 'אין הזמנות שסופקו' : 'אין הזמנות שבוטלו'} />
+      {view === 'open' && lists.open.some((o) => o.date < today) && <p className="muted ov__note">יש הזמנות שמועדן עבר ועדיין פתוחות – כדאי לסגור אותן.</p>}
     </div>
   );
 }

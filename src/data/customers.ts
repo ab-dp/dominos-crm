@@ -2,7 +2,7 @@
    ח.פ ייחודי נאכף בשרת דרך אוסף taxIds/{ח.פ} שנוצר יחד עם הלקוח (batch). */
 import { useEffect, useState } from 'react';
 import {
-  collection, doc, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch, type Timestamp, type WriteBatch,
+  collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch, type Timestamp, type WriteBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { cleanTaxId } from '../lib/taxid';
@@ -127,7 +127,7 @@ export async function addActivity(customerId: string, a: Pick<Activity, 'kind' |
 }
 
 /* מיזוג (אפיון 6.5): הלקוח הכפול מסומן "מוזג" ומצביע על הלקוח שנשאר; אנשי קשר וכתובות חסרים עוברים אליו.
-   ההזמנות יעברו אוטומטית מרגע שהן נשמרות במערכת (שלב 5). */
+   כל ההזמנות של הכפול עוברות ללקוח שנשאר באותה פעולה, עם רשומת יומן לכל הזמנה. */
 export async function mergeCustomers(source: Customer, target: Customer, note: string) {
   const u = auth.currentUser!;
   const batch = writeBatch(db);
@@ -135,7 +135,15 @@ export async function mergeCustomers(source: Customer, target: Customer, note: s
   const addresses = [...target.addresses, ...source.addresses.filter((a) => !target.addresses.some((t) => t.address === a.address))];
   batch.update(doc(db, 'customers', target.id), { contacts, addresses, updatedAt: serverTimestamp(), updatedBy: u.uid });
   batch.update(doc(db, 'customers', source.id), { status: 'merged', mergedInto: target.id, updatedAt: serverTimestamp(), updatedBy: u.uid });
-  audit(batch, source.id, 'merge', { status: source.status }, { status: 'merged', mergedInto: target.id, targetName: target.name }, note);
+  const moved = await getDocs(query(collection(db, 'orders'), where('customerId', '==', source.id)));
+  moved.docs.forEach((d) => {
+    batch.update(d.ref, { customerId: target.id, customerName: target.name, updatedAt: serverTimestamp(), updatedBy: u.uid });
+    batch.set(doc(collection(db, 'auditLog')), {
+      entity: 'order', entityId: d.id, action: 'update', before: { customerName: source.name }, after: { customerName: target.name }, source: 'form', note: 'מיזוג לקוחות',
+      by: u.uid, byName: u.displayName ?? u.email ?? '', at: serverTimestamp(), ok: true,
+    });
+  });
+  audit(batch, source.id, 'merge', { status: source.status }, { status: 'merged', mergedInto: target.id, targetName: target.name, orders: moved.size }, note);
   audit(batch, target.id, 'merge', null, { mergedFrom: source.id, sourceName: source.name }, note);
   await batch.commit();
 }

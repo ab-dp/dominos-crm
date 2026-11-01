@@ -158,6 +158,64 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------- הזמנות (אפיון 6.1–6.4, 12) ----------
+    // מספר הזמנה רץ: counters/orders.next. יצירת הזמנה N מותרת רק אם המונה עמד על N ועולה ל-N+1
+    // באותה פעולה – כך אין שני מספרים זהים גם כששני משתמשים שומרים באותה שנייה.
+    function counterPath() { return /databases/$(database)/documents/counters/orders; }
+    function orderPath(n) { return /databases/$(database)/documents/orders/$(string(n)); }
+    function opt(d, k) { return d.get(k, ''); }
+    function validOrder(d) {
+      return d.customerId is string && d.customerId.size() > 0
+        && existsAfter(/databases/$(database)/documents/customers/$(d.customerId))
+        && d.customerName is string && d.customerName.size() > 0 && d.customerName.size() <= 120
+        && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.time is string && d.time.matches('^[0-9]{2}:[0-9]{2}$')
+        && d.branchId is string && exists(/databases/$(database)/documents/branches/$(d.branchId))
+        && d.branchName is string && d.branchName.size() <= 60
+        && d.amount is number && d.amount >= 0 && d.amount < 1000000
+        && d.status in ['new', 'pending_customer', 'approved', 'delivered', 'partial', 'cancelled']
+        && d.payment in ['pending', 'paid', 'cancelled']
+        && d.method is string && d.method.size() <= 40
+        && d.delivery in ['delivery', 'pickup']
+        && d.poRequired is bool
+        && d.items is list && d.items.size() <= 200
+        && d.notes is list && d.notes.size() <= 200
+        && noCard(opt(d, 'instructions')) && noCard(opt(d, 'note')) && noCard(opt(d, 'billingNote'))
+        && noCard(opt(d, 'address')) && noCard(opt(d, 'poNumber')) && noCard(opt(d, 'qNumber'))
+        && d.keys().size() <= 50;
+    }
+
+    match /orders/{oid} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && validOrder(request.resource.data)
+        && request.resource.data.number == int(oid)
+        && (exists(counterPath())
+              ? get(counterPath()).data.next == request.resource.data.number
+              : request.resource.data.number == 1001)
+        && getAfter(counterPath()).data.next == request.resource.data.number + 1
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow update: if isActive()
+        && validOrder(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['number', 'createdAt', 'createdBy', 'createdByUid']);
+      allow delete: if false;
+    }
+
+    match /counters/orders {
+      allow read: if isActive();
+      allow create: if isActive()
+        && request.resource.data.keys().hasOnly(['next'])
+        && request.resource.data.next == 1002
+        && existsAfter(orderPath(1001));
+      allow update: if isActive()
+        && request.resource.data.keys().hasOnly(['next'])
+        && request.resource.data.next == resource.data.next + 1
+        && existsAfter(orderPath(resource.data.next));
+      allow delete: if false;
+    }
+
     // ---------- הגדרות: רשימות וספים. כולם קוראים, רק מנהל משנה. ----------
     match /settings/{key} {
       allow read: if isActive();

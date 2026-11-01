@@ -3,13 +3,11 @@ import { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { CornerDownLeft, FileText, Search, UserPlus } from 'lucide-react';
 import { useStore } from '../data/store';
-import { useToast } from '../design/Toast';
 import { Ltr, fmtDate } from '../lib/format';
 import { STATUS_LABEL } from '../data/types';
 
 export function CommandSearch({ open, onOpenChange, onPick }: { open: boolean; onOpenChange: (o: boolean) => void; onPick: (id: number) => void }) {
-  const { orders } = useStore();
-  const toast = useToast();
+  const { orders, openNewOrder } = useStore();
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
 
@@ -28,7 +26,7 @@ export function CommandSearch({ open, onOpenChange, onPick }: { open: boolean; o
   const total = results.length + 1; // + "הזמנה ללקוח חדש"
   const pick = (i: number) => {
     if (i < results.length) onPick(results[i].id);
-    else { onOpenChange(false); toast({ message: 'הזמנה ללקוח חדש תיבנה בשלב 5' }); }
+    else { onOpenChange(false); openNewOrder({ mode: 'newCustomer', customerName: /d{3}/.test(q) ? '' : q.trim() }); }
   };
 
   return (

@@ -31,7 +31,7 @@
   background: #2E9E62;
 }
 .toast__msg { flex: 1; }
-.toast__undo {
+.toast__undo, .toast__action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -45,7 +45,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.toast__undo:hover { background: rgba(255, 255, 255, 0.2); }
+.toast__undo:hover, .toast__action:hover { background: rgba(255, 255, 255, 0.2); }
 .toast__ring { transform: rotate(-90deg); }
 .toast__ring-track { fill: none; stroke: rgba(255, 255, 255, 0.18); stroke-width: 2.5; }
 .toast__ring-bar {
@@ -69,3 +69,4 @@
 }
 .toast__close:hover { background: rgba(255, 255, 255, 0.12); color: var(--white); }
 @media (prefers-reduced-motion: reduce) { .toast__ring-bar { animation: none; } }
+.toast__action { padding: 0 12px; }

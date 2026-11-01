@@ -6,7 +6,6 @@ import {
   Bell, ChartColumn, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
 } from 'lucide-react';
 import { Button, Tip, useHotkey } from '../design/components';
-import { useToast } from '../design/Toast';
 import { useStore } from '../data/store';
 import { useAuth } from '../auth/AuthContext';
 import { usePendingRequests } from '../auth/usePendingRequests';
@@ -16,6 +15,7 @@ import { usePref } from '../lib/prefs';
 import { CommandSearch } from './CommandSearch';
 import { usePanel } from './PanelContext';
 import { OrderPanel } from '../features/orders/OrderPanel';
+import { NewOrderDialog } from '../features/orders/NewOrder';
 import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -23,8 +23,7 @@ const BASE = import.meta.env.BASE_URL;
 type NavDef = { to: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { orders } = useStore();
-  const toast = useToast();
+  const { orders, openNewOrder } = useStore();
   const panel = usePanel();
   const location = useLocation();
   const reduce = useReducedMotion();
@@ -42,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const urgentCount = orders.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
 
   function newOrder() {
-    toast({ message: 'יצירת הזמנה (מהירה · מלאה · לקוח חדש) תיבנה בשלב 5' });
+    openNewOrder();
   }
 
   const groups: { title: string; items: NavDef[] }[] = [
@@ -163,7 +162,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <main id="main" className="content" tabIndex={-1}>
-        <div className="proto-banner" role="note">ההזמנות עדיין נתוני דמה (שלב 5) · שעון הדגמה מתחיל ב-<Ltr>10:30</Ltr> · שינויים לא נשמרים ומתאפסים ברענון</div>
         {/* מעבר רך בין מסכים: הופעה הדרגתית ותזוזה קטנה, בלי לעכב את העבודה */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -180,6 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} onPick={(id) => { setSearchOpen(false); panel.open(id, null); }} />
       <OrderPanel />
+      <NewOrderDialog />
     </div>
   );
 }

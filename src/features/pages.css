@@ -65,3 +65,4 @@
   border: 1px solid #BBDDF0; border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-800);
 }
 .admin-banner span { flex: 1; font-weight: 500; }
+.orders-loading { display: grid; gap: 14px; padding: 18px; }

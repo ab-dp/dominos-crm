@@ -1,14 +1,16 @@
 /* תיק הזמנה בפאנל צדדי (אפיון 6.3): כותרת קבועה, "מה חסר" לחיץ, גלילה אחת עם עוגנים, טאב היסטוריה. */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Maximize2, Minimize2, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { HealthBadge, StatusMenu, Tip } from '../../design/components';
-import { useToast } from '../../design/Toast';
-import { Ltr, Money, Phone, fmtDate, fmtMoney, weekday } from '../../lib/format';
+import { Ltr, Money, Phone, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
+import { useOrderDoc, useOrderHistory, type OrderAuditRow } from '../../data/orders';
+import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, OrderMarks } from './OrderActions';
 import './OrderPanel.css';
 
@@ -19,10 +21,18 @@ const ANCHORS = [
 
 export function OrderPanel() {
   const panel = usePanel();
-  const { orders } = useStore();
+  const { orders, now } = useStore();
   const reduce = useReducedMotion();
   const [full, setFull] = useState(false);
-  const o = orders.find((x) => x.id === panel.openId);
+  const listed = orders.find((x) => x.id === panel.openId);
+  // הזמנה ישנה שלא ברשימה החיה – נטענת ישירות
+  const single = useOrderDoc(listed || panel.openId == null ? null : panel.openId);
+  const o = useMemo(() => {
+    if (listed) return listed;
+    if (!single) return undefined;
+    const issues = issuesFor(single, now);
+    return { ...single, issues, health: healthOf(issues) };
+  }, [listed, single, now]);
 
   return (
     <Dialog.Root open={!!o} onOpenChange={(v) => !v && panel.close()}>
@@ -55,7 +65,7 @@ export function OrderPanel() {
 function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull: (f: boolean) => void }) {
   const { update } = useStore();
   const panel = usePanel();
-  const toast = useToast();
+  const nav = useNavigate();
   const [tab, setTab] = useState<'file' | 'history'>('file');
   const [activeSec, setActiveSec] = useState<string>('details');
   const [scrolled, setScrolled] = useState(false);
@@ -87,7 +97,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           <Dialog.Close asChild><button className="icon-btn" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
         </div>
         <div className="panel__row panel__meta">
-          <button className="link" onClick={() => toast({ message: 'תיק לקוח ייבנה בשלב 4' })}>{o.customerName}</button>
+          <button className="link" onClick={() => { panel.close(); nav(`/customers/${o.customerId}`); }}>{o.customerName}</button>
           <span>·</span>
           <span>יום {weekday(o.date)} <Ltr>{fmtDate(o.date)}</Ltr> · <Ltr>{o.time}</Ltr></span>
           <span>·</span>
@@ -121,7 +131,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           <>
             <Section id="details" title="פרטים">
               <Kv k="לקוח" v={o.customerName} />
-              <Kv k="ערוץ קבלה" v={o.channel} />
+              <Kv k="ערוץ קבלה" v={o.channel || '—'} />
               <Kv k="מטפל" v={o.handler} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
             </Section>
@@ -157,7 +167,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <Kv k="הועברה ל-Q" v={o.qNumber ? <><Ltr>{o.qNumber}</Ltr> · <Money value={o.qAmount ?? o.amount} /></> : <span className="warn-text">לא הועברה</span>} />
             </Section>
             <Section id="payment" title="תשלום">
-              <Kv k="אמצעי תשלום" v={METHOD_LABEL[o.method]} />
+              <Kv k="אמצעי תשלום" v={o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method} />
               {o.accountPhone && <Kv k="טלפון הקפה" v={<Phone value={o.accountPhone} />} />}
               <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
               <Kv k="תעודת רכש" v={o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <span className="warn-text">נדרשת – חסרה</span> : '—'} />
@@ -167,7 +177,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <p className="muted">העלאה בגרירה או בכפתור "בחר קובץ" – תיבנה בשלב 7.</p>
             </Section>
             <Section id="notes" title="הערות פנימיות">
-              {o.notes.length === 0 ? <p className="muted">אין הערות</p> : o.notes.map((n, i) => (
+              {o.note && <p className="note"><b>{o.createdBy}</b> <span className="muted"><Ltr>{fmtDate(o.createdAt)}</Ltr></span><br />{o.note}</p>}
+              {o.notes.length === 0 && !o.note ? <p className="muted">אין הערות</p> : o.notes.map((n, i) => (
                 <p key={i} className="note"><b>{n.by}</b> <span className="muted"><Ltr>{fmtDate(n.at)}</Ltr></span><br />{n.text}</p>
               ))}
             </Section>
@@ -194,18 +205,40 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
   return <div className="kv"><span className="kv__k">{k}</span><span className="kv__v">{v}</span></div>;
 }
 
+/* יומן ההזמנה – נקרא מ-auditLog, שאי אפשר לערוך או למחוק (נאכף בשרת) */
+const FIELD: Record<string, string> = {
+  status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
+  date: 'תאריך', time: 'שעה', amount: 'סכום', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח',
+};
+function showVal(k: string, v: unknown): string {
+  if (v === null || v === undefined || v === '') return '—';
+  if (k === 'status') return STATUS_LABEL[v as keyof typeof STATUS_LABEL] ?? String(v);
+  if (k === 'payment') return PAYMENT_LABEL[v as keyof typeof PAYMENT_LABEL] ?? String(v);
+  if (k === 'amount' || k === 'qAmount') return fmtMoney(Number(v));
+  if (k === 'branchApproval') return `אושר ע"י ${(v as { manager?: string }).manager ?? ''}`;
+  if (k === 'date') return fmtDate(String(v));
+  return String(v);
+}
+const fmtAt = (d: Date) => `${fmtDate(toISODate(d))} | ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
 function History({ o }: { o: OrderView }) {
-  const rows = [
-    { at: `${fmtDate(o.createdAt)} | 09:12`, who: o.createdBy, what: 'ההזמנה נוצרה' },
-    ...(o.branchApproval ? [{ at: `${fmtDate(o.date)} | 08:40`, who: o.handler, what: `אישור סניף: ${o.branchApproval.manager}` }] : []),
-    ...(o.qNumber ? [{ at: `${fmtDate(o.date)} | 09:05`, who: o.handler, what: `הועברה ל-Q: ${o.qNumber}` }] : []),
-  ].reverse();
+  const rows = useOrderHistory(o.id);
+  if (rows === null) return <p className="muted">טוען…</p>;
   return (
     <ol className="timeline">
-      {rows.map((r, i) => (
-        <li key={i}><span className="timeline__at"><Ltr>{r.at}</Ltr></span><span><b>{r.who}</b> · {r.what}</span></li>
+      {rows.length === 0 && <li className="muted">אין עדיין רשומות ביומן.</li>}
+      {rows.map((r: OrderAuditRow) => (
+        <li key={r.id}>
+          <span className="timeline__at"><Ltr>{r.at ? fmtAt(r.at.toDate()) : '…'}</Ltr></span>
+          <span>
+            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
+            {r.action !== 'create' && r.after && Object.keys(r.after).filter((k) => FIELD[k]).map((k) => (
+              <span key={k} className="hist__change">{FIELD[k]}: <span className="muted">{showVal(k, r.before?.[k])}</span> ← {showVal(k, r.after?.[k])}</span>
+            ))}
+            {r.note && r.note !== 'ביטול פעולה' && <span className="hist__change muted">הערה: {r.note}</span>}
+          </span>
+        </li>
       ))}
-      <li className="muted">יומן מלא שאי אפשר לערוך – שלב 5</li>
     </ol>
   );
 }

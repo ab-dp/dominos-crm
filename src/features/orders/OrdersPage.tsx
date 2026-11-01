@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Rows3, Rows4, Search, X } from 'lucide-react';
+import { Plus, Rows3, Rows4, Search, X } from 'lucide-react';
+import { Button, Skeleton } from '../../design/components';
 import { usePref } from '../../lib/prefs';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
@@ -24,7 +25,7 @@ const byTime = (a: OrderView, b: OrderView) => (a.date + a.time).localeCompare(b
 const urgentFirst = (a: OrderView, b: OrderView) => HEALTH_RANK[b.health] - HEALTH_RANK[a.health] || byTime(a, b);
 
 export function OrdersPage() {
-  const { orders, now } = useStore();
+  const { orders, now, loading, error, openNewOrder } = useStore();
   const [params, setParams] = useSearchParams();
   const tab = (params.get('tab') as Tab) || 'today';
   const range = Number(params.get('range') ?? 7);
@@ -64,7 +65,9 @@ export function OrdersPage() {
     <div className="page">
       <header className="page__head">
         <h1 className="page__title">הזמנות</h1>
+        <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ date: tab === 'tomorrow' ? tomorrow : undefined })}>הזמנה חדשה</Button></div>
       </header>
+      {error && <p className="cform__formerr" role="alert">{error} – ההזמנות לא נטענו. רענן את הדף.</p>}
 
       <div className="tabs" role="tablist" aria-label="תצוגת הזמנות">
         {TABS.map(([k, label]) => (
@@ -109,13 +112,15 @@ export function OrdersPage() {
         </div>
       </div>
 
-      <OrdersTable
+      {loading ? (
+        <div className="card orders-loading" aria-busy="true" aria-label="טוען הזמנות">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} h={20} />)}</div>
+      ) : <OrdersTable
         density={density}
         rows={rows}
         showDate={tab !== 'today' && tab !== 'tomorrow'}
         caption={`הזמנות – ${TABS.find((t) => t[0] === tab)![1]}${filter ? ` – ${filter.label}` : ''}`}
         emptyText={filter ? `אין הזמנות: ${filter.label}` : tab === 'tomorrow' ? 'אין הזמנות למחר' : tab === 'overdue' ? 'אין הזמנות פתוחות שעבר מועדן ✓' : 'אין הזמנות בתצוגה הזו'}
-      />
+      />}
     </div>
   );
 }
