@@ -401,6 +401,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
   const itemsSection = (
     <Section title="פריטים ומחיר" aside={<span className="no-total">{isManual ? 'לחיוב' : 'סה״כ'} <b><Ltr>{fmtMoney(finalAmount)}</Ltr></b></span>}>
+      {c?.priceNote && <p className="no-pricenote" role="note"><b>הערת מחיר:</b> {c.priceNote}</p>}
       {lines.length > 0 && (
         <table className="no-items">
           <thead><tr><th>פריט</th><th>כמות</th><th>מחיר ליח׳</th><th className="num">סה״כ</th><th><span className="sr-only">הסר</span></th></tr></thead>

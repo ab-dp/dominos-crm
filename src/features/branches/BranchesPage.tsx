@@ -6,8 +6,8 @@ import { Check, Layers, Pencil, Plus, Search, Store, X } from 'lucide-react';
 import { addBranch, addCluster, updateBranch, updateCluster, useBranches, useClusters, type Branch, type Cluster } from '../../data/branches';
 import { Button, EmptyState, Skeleton, Tip } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtPhone } from '../../lib/format';
-import { cleanPhone, findSimilar, phoneError } from '../../lib/names';
+import { Ltr } from '../../lib/format';
+import { findSimilar } from '../../lib/names';
 import '../pages.css';
 import './BranchesPage.css';
 
@@ -27,7 +27,7 @@ export function BranchesPage() {
   const visibleBranches = branches.items
     .filter((b) => showInactive || b.active)
     .filter((b) => !selected || b.clusterId === selected)
-    .filter((b) => !query.trim() || b.name.includes(query.trim()) || b.phone.includes(cleanPhone(query)));
+    .filter((b) => !query.trim() || b.name.includes(query.trim()) || (!!query.trim() && (b.number ?? '').includes(query.trim())));
 
   const error = clusters.error || branches.error;
 
@@ -179,7 +179,7 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
         )}
         <label className="tablebar__search br-search">
           <Search size={16} aria-hidden="true" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="חיפוש סניף או טלפון" aria-label="חיפוש סניף" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="חיפוש לפי שם או מספר סניף" aria-label="חיפוש סניף" />
         </label>
         <label className="check-inline">
           <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> הצג לא פעילים
@@ -195,7 +195,7 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
         <table className="otable otable--dense br-table">
           <caption className="sr-only">סניפים{selected ? ` באשכול ${selectedName}` : ''}</caption>
           <thead>
-            <tr><th>שם הסניף</th><th>אשכול</th><th>טלפון</th><th>מצב</th><th><span className="sr-only">פעולות</span></th></tr>
+            <tr><th>שם הסניף</th><th>מספר סניף</th><th>אשכול</th><th>מצב</th><th><span className="sr-only">פעולות</span></th></tr>
           </thead>
           <tbody>
             {adding && (
@@ -203,7 +203,7 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
                 key="new"
                 clusters={activeClusters}
                 allBranches={allBranches}
-                initial={{ name: query.trim(), clusterId: selected ?? activeClusters[0]?.id ?? '', phone: '' }}
+                initial={{ name: query.trim(), clusterId: selected ?? activeClusters[0]?.id ?? '', number: '' }}
                 onSave={async (v) => { await addBranch(v); setAdding(false); toast({ message: <>סניף "{v.name}" נוסף לאשכול {clusterName(v.clusterId)}</> }); }}
                 onCancel={() => setAdding(false)}
               />
@@ -215,12 +215,12 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
                   clusters={clusters.filter((c) => c.active || c.id === b.clusterId)}
                   allBranches={allBranches}
                   excludeId={b.id}
-                  initial={{ name: b.name, clusterId: b.clusterId, phone: b.phone }}
+                  initial={{ name: b.name, clusterId: b.clusterId, number: b.number ?? '' }}
                   onSave={async (v) => {
                     const patch: Partial<Branch> = {};
                     if (v.name !== b.name) patch.name = v.name;
                     if (v.clusterId !== b.clusterId) patch.clusterId = v.clusterId;
-                    if (v.phone !== b.phone) patch.phone = v.phone;
+                    if (v.number !== (b.number ?? '')) patch.number = v.number;
                     if (Object.keys(patch).length) {
                       await updateBranch(b, patch);
                       toast({ message: patch.clusterId ? <>"{v.name}" הועבר לאשכול {clusterName(v.clusterId)} · משפיע רק על הזמנות חדשות</> : 'הסניף עודכן' });
@@ -239,8 +239,8 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
                   }}
                   aria-label={`${b.name}, אשכול ${clusterName(b.clusterId)}${b.active ? '' : ', לא פעיל'}. Enter לעריכה`}>
                   <td className="strong">{b.name}</td>
+                  <td className="num">{b.number ? <Ltr>{b.number}</Ltr> : <span className="muted">—</span>}</td>
                   <td><span className="cluster-tag">{clusterName(b.clusterId)}</span></td>
-                  <td className="num">{b.phone ? <Ltr>{fmtPhone(b.phone)}</Ltr> : <span className="muted">—</span>}</td>
                   <td>
                     <ActiveSwitch active={b.active} label={`סניף ${b.name}`} onChange={async (active) => {
                       await updateBranch(b, { active });
@@ -258,7 +258,7 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
         {!loading && branches.length === 0 && !adding && (
           <EmptyState icon={<Store size={24} />} title={query ? 'לא נמצא סניף מתאים' : selected ? `אין עדיין סניפים באשכול ${selectedName}` : 'עוד אין סניפים'}
             action={activeClusters.length > 0 ? <Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>הוסף סניף</Button> : undefined}>
-            {activeClusters.length === 0 ? 'מתחילים מהוספת אשכול ברשימה מימין, ואז מוסיפים לו סניפים.' : 'סניף חדש דורש שם ואשכול; טלפון – לא חובה.'}
+            {activeClusters.length === 0 ? 'מתחילים מהוספת אשכול ברשימה מימין, ואז מוסיפים לו סניפים.' : 'סניף חדש דורש שם ואשכול; מספר סניף – לא חובה.'}
           </EmptyState>
         )}
       </div>
@@ -269,12 +269,12 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
 /* שורת עריכה של סניף: Enter שומר, Esc מבטל, בדיקת כפילות לפני שמירה */
 function BranchEditRow({ clusters, allBranches, excludeId, initial, onSave, onCancel }: {
   clusters: Cluster[]; allBranches: Branch[]; excludeId?: string;
-  initial: { name: string; clusterId: string; phone: string };
-  onSave: (v: { name: string; clusterId: string; phone: string }) => Promise<void>; onCancel: () => void;
+  initial: { name: string; clusterId: string; number: string };
+  onSave: (v: { name: string; clusterId: string; number: string }) => Promise<void>; onCancel: () => void;
 }) {
   const [name, setName] = useState(initial.name);
   const [clusterId, setClusterId] = useState(initial.clusterId);
-  const [phone, setPhone] = useState(initial.phone ? fmtPhone(initial.phone) : '');
+  const [number, setNumber] = useState(initial.number);
   const [err, setErr] = useState('');
   const [dupe, setDupe] = useState<Branch | null>(null);
   const [busy, setBusy] = useState(false);
@@ -283,12 +283,14 @@ function BranchEditRow({ clusters, allBranches, excludeId, initial, onSave, onCa
   const submit = async (force = false) => {
     if (!name.trim()) { setErr('חובה: שם הסניף'); firstRef.current?.focus(); return; }
     if (!clusterId) { setErr('חובה: אשכול'); return; }
-    const pErr = phoneError(phone);
-    if (pErr) { setErr(pErr); return; }
+    const num = number.trim();
+    if (num && !/^\d{1,10}$/.test(num)) { setErr('מספר סניף – ספרות בלבד'); return; }
+    const sameNum = num ? allBranches.find((b) => b.id !== excludeId && (b.number ?? '') === num) : undefined;
+    if (sameNum) { setErr(`מספר סניף ${num} כבר שייך ל"${sameNum.name}"`); return; }
     const similar = findSimilar(name, allBranches, excludeId);
     if (similar && !force) { setDupe(similar); return; }
     setBusy(true);
-    try { await onSave({ name: name.trim(), clusterId, phone: cleanPhone(phone) }); }
+    try { await onSave({ name: name.trim(), clusterId, number: num }); }
     catch { setErr('השמירה נכשלה – אין הרשאה או אין חיבור'); setBusy(false); }
   };
   const onKey = (e: KeyboardEvent) => {
@@ -300,12 +302,12 @@ function BranchEditRow({ clusters, allBranches, excludeId, initial, onSave, onCa
     <>
       <tr className="brow brow--edit" onKeyDown={onKey}>
         <td><input ref={firstRef} autoFocus className="input input--sm" value={name} onChange={(e) => { setName(e.target.value); setErr(''); setDupe(null); }} aria-label="שם הסניף (חובה)" placeholder="עיר – רחוב" /></td>
+        <td><input className="input input--sm input--ltr br-num" inputMode="numeric" value={number} onChange={(e) => { setNumber(e.target.value); setErr(''); }} aria-label="מספר סניף (לא חובה)" placeholder="123" /></td>
         <td>
           <select className="input input--sm" value={clusterId} onChange={(e) => { setClusterId(e.target.value); setErr(''); }} aria-label="אשכול (חובה)">
             {clusters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </td>
-        <td><input className="input input--sm input--ltr" inputMode="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setErr(''); }} aria-label="טלפון (לא חובה)" placeholder="03-1234567" /></td>
         <td colSpan={2} className="br-actions">
           <Button size="sm" variant="primary" icon={<Check size={15} />} loading={busy} onClick={() => submit()}>שמור</Button>
           <Button size="sm" variant="ghost" onClick={onCancel}>ביטול</Button>

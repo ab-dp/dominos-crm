@@ -8,7 +8,7 @@ import { auth, db } from '../lib/firebase';
 import { cleanTaxId } from '../lib/taxid';
 import { addTaskTo } from './tasks';
 
-export type Contact = { id: string; name: string; role: string; phone: string; email: string; primary: boolean };
+export type Contact = { id: string; name: string; role: string; phone: string; email: string; emails?: string[]; primary: boolean }; // emails – מיילים נוספים
 export type Address = { id: string; label: string; address: string; directions: string; preferredBranchId: string };
 export type CustomPrice = { itemId: string; price: number };
 
@@ -24,6 +24,7 @@ export type Customer = {
   instructions: string;
   billingInstructions: string;
   priceListId: string;
+  priceNote?: string; // הערת מחיר ידנית, למשל "מחיר לפי ממשק WellBe"
   status: 'active' | 'inactive' | 'merged';
   mergedInto?: string;
   leadId?: string; // נוצר מליד (אפיון 19.1) – למדידת המרה
@@ -160,7 +161,7 @@ export function customerGaps(c: Customer): CustomerGap[] {
   else if (!c.contacts.some((x) => x.phone)) g.push({ label: 'טלפון איש קשר', tab: 'contacts' });
   if (!c.addresses.length) g.push({ label: 'כתובת אספקה', tab: 'contacts' });
   if (c.type === 'regular' && !c.taxId) g.push({ label: 'ח.פ', tab: 'overview' });
-  if (c.type === 'regular' && !c.priceListId) g.push({ label: 'מחירון', tab: 'prices' });
+  if (c.type === 'regular' && !c.priceListId && !c.priceNote?.trim()) g.push({ label: 'מחירון', tab: 'prices' });
   if (c.paymentMethod === 'account' && !c.accountPhone) g.push({ label: 'טלפון הקפה', tab: 'payment' });
   if (c.paymentMethod === 'account' && !c.billingInstructions) g.push({ label: 'הנחיות חיוב', tab: 'payment' });
   return g;

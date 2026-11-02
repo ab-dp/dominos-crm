@@ -38,3 +38,13 @@
 /* כותרת החלק צפה לרוחב מלא – כל מה שאחריה מתחיל בשורה חדשה, גם שדה רחב שלא בתוך שורה */
 .cform__sec > :not(legend) { clear: both; }
 .cform__field.is-wide { grid-column: 1 / -1; }
+
+/* מייל נוסף ואיש קשר נוסף */
+.cform__adds { display: flex; gap: 16px; margin: -2px 0 8px; clear: both; }
+.cform__adds .link { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-label); }
+.cform__extra { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 10px; clear: both; }
+.cform__extra .cform__field { flex: 1; max-width: calc(50% - 6px); }
+.cform__extra .icon-btn { margin-bottom: 4px; }
+.cform__more { clear: both; margin-bottom: 10px; padding: 8px 12px 2px; border-radius: var(--radius); background: var(--gray-50); }
+.cform__more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+@media (max-width: 640px) { .cform__extra .cform__field { max-width: none; } }

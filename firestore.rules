@@ -57,6 +57,7 @@ service cloud.firestore {
     function stampedByMe(d) { return d.updatedBy == request.auth.uid; }
     function clusterExists(id) { return id is string && exists(/databases/$(database)/documents/clusters/$(id)); }
     function validPhone(p) { return p is string && p.size() <= 10 && (p.size() == 0 || p.matches('^0[0-9]{8,9}$')); }
+    function validBranchNo(n) { return n is string && n.size() <= 10 && (n.size() == 0 || n.matches('^[0-9]+$')); }
 
     match /clusters/{id} {
       allow read: if isActive();
@@ -79,16 +80,18 @@ service cloud.firestore {
         && validName(request.resource.data)
         && clusterExists(request.resource.data.clusterId)
         && validPhone(request.resource.data.phone)
+        && validBranchNo(request.resource.data.get('number', ''))
         && request.resource.data.active == true
         && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.keys().hasOnly(['name', 'clusterId', 'phone', 'active', 'createdAt', 'createdBy']);
+        && request.resource.data.keys().hasOnly(['name', 'clusterId', 'number', 'phone', 'active', 'createdAt', 'createdBy']);
       allow update: if isActive()
         && validName(request.resource.data)
         && clusterExists(request.resource.data.clusterId)
         && validPhone(request.resource.data.phone)
+        && validBranchNo(request.resource.data.get('number', ''))
         && request.resource.data.active is bool
         && stampedByMe(request.resource.data)
-        && onlyChanges(['name', 'clusterId', 'phone', 'active', 'updatedAt', 'updatedBy']);
+        && onlyChanges(['name', 'clusterId', 'number', 'phone', 'active', 'updatedAt', 'updatedBy']);
       allow delete: if false;
     }
 
@@ -105,7 +108,7 @@ service cloud.firestore {
         && d.paymentMethod is string
         && d.accountPhone is string && d.accountPhone.size() <= 10
         && d.poRequired is bool
-        && noCard(d.instructions) && noCard(d.billingInstructions)
+        && noCard(d.instructions) && noCard(d.billingInstructions) && noCard(d.get('priceNote', ''))
         && d.contacts is list && d.contacts.size() <= 30
         && d.addresses is list && d.addresses.size() <= 30
         && d.customPrices is list && d.customPrices.size() <= 500;

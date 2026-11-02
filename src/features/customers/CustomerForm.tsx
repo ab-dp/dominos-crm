@@ -3,8 +3,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
-import { CircleAlert, OctagonAlert, X } from 'lucide-react';
-import { createCustomer, newId, primaryContact, updateCustomer, type Customer, type CustomerInput, EMPTY_CUSTOMER } from '../../data/customers';
+import { CircleAlert, OctagonAlert, Plus, X } from 'lucide-react';
+import { createCustomer, newId, primaryContact, updateCustomer, type Contact, type Customer, type CustomerInput, EMPTY_CUSTOMER } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
 import { Button } from '../../design/components';
@@ -27,6 +27,8 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
 
   const [f, setF] = useState<CustomerInput>(() => editing ? { ...EMPTY_CUSTOMER, ...editing } : { ...EMPTY_CUSTOMER, name: initialName });
   const [contact, setContact] = useState({ name: pc?.name ?? '', phone: pc ? fmtPhone(pc.phone) : '', email: pc?.email ?? '', role: pc?.role ?? '' });
+  const [emails, setEmails] = useState<string[]>(pc?.emails ?? []); // מיילים נוספים של איש הקשר הראשי
+  const [more, setMore] = useState<Contact[]>([]); // אנשי קשר נוספים שנוספים כאן
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [ackWarn, setAckWarn] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -58,6 +60,9 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
       else { const ae = phoneError(f.accountPhone); if (ae) e.accountPhone = ae; }
     }
     if (contact.email && !/^\S+@\S+\.\S+$/.test(contact.email)) e.contactEmail = 'כתובת מייל לא תקינה';
+    emails.forEach((m, i) => { if (m.trim() && !/^\S+@\S+\.\S+$/.test(m.trim())) e[`email${i}`] = 'כתובת מייל לא תקינה'; });
+    more.forEach((m, i) => { const me = phoneError(m.phone); if (me) e[`morePhone${i}`] = me; if (m.email && !/^\S+@\S+\.\S+$/.test(m.email)) e[`moreEmail${i}`] = 'כתובת מייל לא תקינה'; });
+    if (CARD_RE.test(f.priceNote ?? '')) e.priceNote = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(f.instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(f.billingInstructions)) e.billingInstructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     setErrors(e);
@@ -72,11 +77,14 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
   const submit = async () => {
     if (!validate()) return;
     if (warnings.length && !ackWarn) { setAckWarn(true); return; }
-    const contacts = editing ? editing.contacts.map((c) => (c.id === pc?.id ? { ...c, name: contact.name.trim(), phone, email: contact.email.trim(), role: contact.role.trim() } : c)) : [];
+    const extra = emails.map((m) => m.trim()).filter(Boolean);
+    const contacts = editing ? editing.contacts.map((c) => (c.id === pc?.id ? { ...c, name: contact.name.trim(), phone, email: contact.email.trim(), emails: extra, role: contact.role.trim() } : c)) : [];
     if (!editing || !pc) {
-      if (contact.name.trim() || phone) contacts.push({ id: newId(), name: contact.name.trim(), phone, email: contact.email.trim(), role: contact.role.trim(), primary: true });
+      if (contact.name.trim() || phone || contact.email.trim()) contacts.push({ id: newId(), name: contact.name.trim(), phone, email: contact.email.trim(), emails: extra, role: contact.role.trim(), primary: true });
     }
-    const data: CustomerInput = { ...f, accountPhone: f.paymentMethod === 'account' ? f.accountPhone : '', contacts };
+    more.filter((m) => m.name.trim() || cleanPhone(m.phone) || m.email.trim())
+      .forEach((m) => contacts.push({ ...m, name: m.name.trim(), phone: cleanPhone(m.phone), email: m.email.trim(), role: m.role.trim(), primary: contacts.length === 0 }));
+    const data: CustomerInput = { ...f, priceNote: (f.priceNote ?? '').trim(), accountPhone: f.paymentMethod === 'account' ? f.accountPhone : '', contacts };
     setBusy(true);
     try {
       if (editing) {
@@ -141,6 +149,33 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                 <L label="טלפון"><input className="input input--ltr" inputMode="tel" value={contact.phone} onChange={(e) => { setContact({ ...contact, phone: e.target.value }); setErrors((x) => ({ ...x, contactPhone: '' })); setAckWarn(false); }} placeholder="05X-XXXXXXX" {...inv('contactPhone')} />{err('contactPhone')}</L>
                 <L label="מייל"><input className="input input--ltr" type="email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} {...inv('contactEmail')} />{err('contactEmail')}</L>
               </Row>
+              {emails.map((m, i) => (
+                <div key={i} className="cform__extra">
+                  <L label={`מייל נוסף ${emails.length > 1 ? i + 1 : ''}`}>
+                    <input className="input input--ltr" type="email" value={m} onChange={(e) => { setEmails((xs) => xs.map((x, j) => (j === i ? e.target.value : x))); setErrors((x) => ({ ...x, [`email${i}`]: '' })); }} {...inv(`email${i}`)} />
+                    {err(`email${i}`)}
+                  </L>
+                  <button type="button" className="icon-btn icon-btn--sm" aria-label="הסר מייל נוסף" onClick={() => setEmails((xs) => xs.filter((_, j) => j !== i))}><X size={15} /></button>
+                </div>
+              ))}
+              {more.map((m, i) => (
+                <div key={m.id} className="cform__more">
+                  <div className="cform__more-head"><span className="field__label">איש קשר נוסף</span>
+                    <button type="button" className="icon-btn icon-btn--sm" aria-label="הסר איש קשר נוסף" onClick={() => setMore((xs) => xs.filter((x) => x.id !== m.id))}><X size={15} /></button></div>
+                  <Row>
+                    <L label="שם"><input className="input" value={m.name} onChange={(e) => setMore((xs) => xs.map((x) => (x.id === m.id ? { ...x, name: e.target.value } : x)))} /></L>
+                    <L label="תפקיד"><input className="input" value={m.role} onChange={(e) => setMore((xs) => xs.map((x) => (x.id === m.id ? { ...x, role: e.target.value } : x)))} /></L>
+                  </Row>
+                  <Row>
+                    <L label="טלפון"><input className="input input--ltr" inputMode="tel" value={m.phone} placeholder="05X-XXXXXXX" onChange={(e) => { setMore((xs) => xs.map((x) => (x.id === m.id ? { ...x, phone: e.target.value } : x))); setErrors((x) => ({ ...x, [`morePhone${i}`]: '' })); }} {...inv(`morePhone${i}`)} />{err(`morePhone${i}`)}</L>
+                    <L label="מייל"><input className="input input--ltr" type="email" value={m.email} onChange={(e) => { setMore((xs) => xs.map((x) => (x.id === m.id ? { ...x, email: e.target.value } : x))); setErrors((x) => ({ ...x, [`moreEmail${i}`]: '' })); }} {...inv(`moreEmail${i}`)} />{err(`moreEmail${i}`)}</L>
+                  </Row>
+                </div>
+              ))}
+              <div className="cform__adds">
+                <button type="button" className="link" onClick={() => setMore((xs) => [...xs, { id: newId(), name: '', role: '', phone: '', email: '', primary: false }])}><Plus size={14} aria-hidden="true" /> איש קשר נוסף</button>
+                <button type="button" className="link" onClick={() => setEmails((xs) => [...xs, ''])}><Plus size={14} aria-hidden="true" /> מייל נוסף</button>
+              </div>
             </Section>
 
             <Section title="תשלום ומחירון">
@@ -175,6 +210,10 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                   </label>
                 </L>
               </Row>
+              <L label="הערת מחיר (לא חובה)" wide>
+                <input className="input" value={f.priceNote ?? ''} onChange={(e) => set('priceNote', e.target.value)} placeholder='למשל: מחיר לפי המחיר בממשק WellBe' {...inv('priceNote')} />
+                {err('priceNote')}
+              </L>
               <L label="הנחיות חיוב קבועות" wide>
                 <textarea className="input cform__ta" rows={2} value={f.billingInstructions} onChange={(e) => set('billingInstructions', e.target.value)} placeholder="למשל: חשבונית למחלקת כספים, לציין מס' תעודת רכש" {...inv('billingInstructions')} />
                 {err('billingInstructions')}

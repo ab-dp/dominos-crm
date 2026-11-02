@@ -87,3 +87,5 @@
 .monthly__warn bdi { color: var(--urgent-fg); font-weight: 600; }
 .monthly__orders { border-top: 1px solid var(--gray-100); }
 .monthly__none { padding: 10px; }
+
+.cfile__pricenote { padding: 14px 16px 4px; max-width: 560px; }

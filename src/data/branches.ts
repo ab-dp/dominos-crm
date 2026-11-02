@@ -5,7 +5,7 @@ import { collection, doc, onSnapshot, serverTimestamp, writeBatch, type Timestam
 import { auth, db } from '../lib/firebase';
 
 export type Cluster = { id: string; name: string; active: boolean; createdAt?: Timestamp; createdBy?: string };
-export type Branch = { id: string; name: string; clusterId: string; phone: string; active: boolean; createdAt?: Timestamp; createdBy?: string };
+export type Branch = { id: string; name: string; clusterId: string; number?: string; phone: string; active: boolean; createdAt?: Timestamp; createdBy?: string };
 
 type Live<T> = { items: T[]; loading: boolean; error: string };
 
@@ -47,17 +47,18 @@ export async function updateCluster(c: Cluster, patch: Partial<Pick<Cluster, 'na
   await batch.commit();
 }
 
-export async function addBranch(b: { name: string; clusterId: string; phone: string }, source: 'form' | 'inline' = 'inline'): Promise<string> {
+/* מספר סניף (ספרות בלבד) במקום טלפון. שדה הטלפון נשאר ריק בסניפים חדשים – הזמנות ישנות שומרות את הטלפון שנרשם בהן */
+export async function addBranch(b: { name: string; clusterId: string; number: string }, source: 'form' | 'inline' = 'inline'): Promise<string> {
   const batch = writeBatch(db);
   const ref = doc(collection(db, 'branches'));
-  const data = { name: b.name.trim(), clusterId: b.clusterId, phone: b.phone, active: true, createdAt: serverTimestamp(), createdBy: auth.currentUser!.uid };
+  const data = { name: b.name.trim(), clusterId: b.clusterId, number: b.number, phone: '', active: true, createdAt: serverTimestamp(), createdBy: auth.currentUser!.uid };
   batch.set(ref, data);
-  audit(batch, 'branch', ref.id, 'create', null, { name: data.name, clusterId: data.clusterId, phone: data.phone }, source);
+  audit(batch, 'branch', ref.id, 'create', null, { name: data.name, clusterId: data.clusterId, number: data.number }, source);
   await batch.commit();
   return ref.id;
 }
 
-export async function updateBranch(b: Branch, patch: Partial<Pick<Branch, 'name' | 'clusterId' | 'phone' | 'active'>>) {
+export async function updateBranch(b: Branch, patch: Partial<Pick<Branch, 'name' | 'clusterId' | 'number' | 'active'>>) {
   const batch = writeBatch(db);
   batch.update(doc(db, 'branches', b.id), { ...patch, updatedAt: serverTimestamp(), updatedBy: auth.currentUser!.uid });
   const before = Object.fromEntries(Object.keys(patch).map((k) => [k, b[k as keyof Branch]]));

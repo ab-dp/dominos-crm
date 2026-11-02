@@ -7,7 +7,7 @@ import { Check, ChevronDown, Plus, Star } from 'lucide-react';
 import { addBranch, addCluster, useBranches, useClusters, type Branch } from '../../data/branches';
 import { Button, Field } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { cleanPhone, findSimilar, phoneError } from '../../lib/names';
+import { findSimilar } from '../../lib/names';
 import { DupePrompt } from './BranchesPage';
 import './BranchPicker.css';
 
@@ -119,7 +119,7 @@ function QuickAddBranch({ initialName, branches, onClose, onAdded }: {
   const [name, setName] = useState(initialName);
   const [clusterId, setClusterId] = useState(active[0]?.id ?? '__new');
   const [newCluster, setNewCluster] = useState('');
-  const [phone, setPhone] = useState('');
+  const [number, setNumber] = useState('');
   const [err, setErr] = useState('');
   const [dupe, setDupe] = useState<Branch | null>(null);
   const [clusterDupe, setClusterDupe] = useState<{ id: string; name: string } | null>(null);
@@ -129,7 +129,7 @@ function QuickAddBranch({ initialName, branches, onClose, onAdded }: {
   const save = async (force = false) => {
     if (!name.trim()) return setErr('חובה: שם הסניף');
     if (isNewCluster && !newCluster.trim()) return setErr('חובה: שם האשכול החדש');
-    const pErr = phoneError(phone); if (pErr) return setErr(pErr);
+    if (number.trim() && !/^\d{1,10}$/.test(number.trim())) return setErr('מספר סניף – ספרות בלבד');
     if (!force) {
       const sb = findSimilar(name, branches);
       if (sb) return setDupe(sb);
@@ -138,7 +138,7 @@ function QuickAddBranch({ initialName, branches, onClose, onAdded }: {
     setBusy(true);
     try {
       const cid = isNewCluster ? await addCluster(newCluster) : clusterId;
-      const id = await addBranch({ name, clusterId: cid, phone: cleanPhone(phone) }, 'form');
+      const id = await addBranch({ name, clusterId: cid, number: number.trim() }, 'form');
       toast({ message: <>סניף "{name.trim()}" נוסף ונבחר בהזמנה</> });
       onAdded({ branchId: id, clusterId: cid });
     } catch { setErr('השמירה נכשלה – אין הרשאה או אין חיבור'); setBusy(false); }
@@ -172,8 +172,8 @@ function QuickAddBranch({ initialName, branches, onClose, onAdded }: {
             {clusterDupe && (
               <DupePrompt existing={clusterDupe.name} kind="אשכול" onUseExisting={() => { setClusterId(clusterDupe.id); setClusterDupe(null); setNewCluster(''); }} onCreateAnyway={() => { setClusterDupe(null); save(true); }} />
             )}
-            <Field label="טלפון (לא חובה)">
-              <input className="input input--ltr" inputMode="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setErr(''); }} placeholder="03-1234567" />
+            <Field label="מספר סניף (לא חובה)">
+              <input className="input input--ltr" inputMode="numeric" value={number} onChange={(e) => { setNumber(e.target.value); setErr(''); }} placeholder="123" />
             </Field>
             {err && <p className="pop__err" role="alert">{err}</p>}
             <div className="udialog__actions">

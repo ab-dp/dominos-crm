@@ -348,6 +348,7 @@ function PricesTab({ c }: { c: Customer }) {
   if (!pl) {
     return (
       <div className="card">
+        <PriceNote c={c} />
         <EmptyState icon={<Wallet size={24} />} title="אין מחירון משויך" action={
           <select className="input cfile__plsel" value="" onChange={async (e) => { await updateCustomer(c, { priceListId: e.target.value }); toast({ message: 'המחירון שויך ללקוח' }); }} aria-label="שייך מחירון">
             <option value="">בחר מחירון…</option>
@@ -376,6 +377,7 @@ function PricesTab({ c }: { c: Customer }) {
         <span className="muted">{pl.kind === 'shared' ? 'מחירון משותף' : 'מחירון ייחודי'} · כל המחירים כוללים מע"מ</span>
         <Link className="link card__head-end" to={`/pricelists?id=${pl.id}`}>פתח מחירון</Link>
       </div>
+      <PriceNote c={c} />
       <p className="muted cfile__plhint">מחיר ייחודי ללקוח לא משנה את המחירון המשותף. Enter שומר, שדה ריק מחזיר למחיר המחירון.</p>
       <table className="items cfile__prices">
         <thead><tr><th>פריט</th><th>מחיר מחירון</th><th>מחיר ללקוח</th></tr></thead>
@@ -448,6 +450,7 @@ function ContactsTab({ c }: { c: Customer }) {
                 <span className="pitem__meta">
                   {x.phone && <a href={`tel:${x.phone}`}><Ltr>{fmtPhone(x.phone)}</Ltr></a>}
                   {x.email && <a href={`mailto:${x.email}`}><bdi dir="ltr">{x.email}</bdi></a>}
+                  {x.emails?.map((m) => <a key={m} href={`mailto:${m}`}><bdi dir="ltr">{m}</bdi></a>)}
                 </span>
               </div>
               {!x.primary && <Button size="sm" variant="ghost" onClick={() => saveContacts(c.contacts.map((y) => ({ ...y, primary: y.id === x.id })), `${x.name} הוא עכשיו איש הקשר הראשי`)}>הפוך לראשי</Button>}
@@ -579,10 +582,33 @@ function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextA
   );
 }
 
+/* הערת מחיר ידנית – למשל "מחיר לפי ממשק WellBe". מוצגת בטופס ההזמנה מעל הפריטים */
+function PriceNote({ c }: { c: Customer }) {
+  const toast = useToast();
+  const [v, setV] = useState(c.priceNote ?? '');
+  const [err, setErr] = useState('');
+  const save = async () => {
+    if (v.trim() === (c.priceNote ?? '')) return;
+    if (/\d{13,}/.test(v)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
+    setErr('');
+    await updateCustomer(c, { priceNote: v.trim() });
+    toast({ message: v.trim() ? 'הערת המחיר נשמרה' : 'הערת המחיר הוסרה' });
+  };
+  return (
+    <div className="cfile__pricenote">
+      <label className="field"><span className="field__label">הערת מחיר</span>
+        <input className="input" value={v} onChange={(e) => setV(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } }}
+          placeholder="למשל: מחיר לפי המחיר בממשק WellBe" aria-invalid={!!err || undefined} />
+      </label>
+      {err && <span className="cform__err" role="alert">{err}</span>}
+    </div>
+  );
+}
+
 /* ---------- היסטוריה: שינויים בפרטי הלקוח, מהיומן שאי אפשר לערוך ---------- */
 const FIELD_LABEL: Record<string, string> = {
   name: 'שם', type: 'סוג', taxId: 'ח.פ', businessAddress: 'כתובת עסק', paymentMethod: 'אמצעי תשלום', accountPhone: 'טלפון הקפה', poRequired: 'תעודת רכש',
-  instructions: 'הנחיות קבועות', billingInstructions: 'הנחיות חיוב', priceListId: 'מחירון', status: 'מצב', contacts: 'אנשי קשר', addresses: 'כתובות', customPrices: 'מחירים ייחודיים',
+  instructions: 'הנחיות קבועות', priceNote: 'הערת מחיר', billingInstructions: 'הנחיות חיוב', priceListId: 'מחירון', status: 'מצב', contacts: 'אנשי קשר', addresses: 'כתובות', customPrices: 'מחירים ייחודיים',
 };
 function HistoryTab({ c }: { c: Customer }) {
   const rows = useCustomerHistory(c.id);
