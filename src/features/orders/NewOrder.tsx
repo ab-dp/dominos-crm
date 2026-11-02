@@ -61,6 +61,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const { items: priceLists } = usePriceLists();
   const { lists } = useLists();
 
+  // בסגירה הפוקוס חוזר לכפתור שפתח את הטופס (אלא אם נפתח חלון אחר, למשל תיק ההזמנה שנשמרה)
+  const opener = useRef(document.activeElement as HTMLElement | null);
+  useEffect(() => () => {
+    const el = opener.current;
+    setTimeout(() => { if (el?.isConnected && !document.querySelector('[role="dialog"]')) el.focus(); }, 30);
+  }, []);
+
   const today = toISODate(now);
   const tomorrow = toISODate(new Date(now.getTime() + 86400000));
 
@@ -539,7 +546,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         <Dialog.Overlay className="cmd-overlay" />
         <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
-          <header className="cform__head norder__head">
+          <div className="cform__head norder__head">
             <Dialog.Title className="udialog__title">הזמנה חדשה</Dialog.Title>
             <div className="seg norder__modes" role="tablist" aria-label="סוג ההזמנה">
               {MODES.map(([m, label, icon]) => (
@@ -549,7 +556,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
               ))}
             </div>
             <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
-          </header>
+          </div>
 
           <form ref={formRef} className="cform__body" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
             {/* החלפת לקוח קיים / לקוח חדש: הופעה רכה בלבד – התוכן לא תלוי בסיום אנימציית יציאה */}
@@ -648,13 +655,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
               </div>
             </div>
           )}
-          <footer className="cform__foot">
+          <div className="cform__foot">
             <Button variant="primary" loading={busy} onClick={submit} kbd="Ctrl+Enter">{dup && ackDup ? 'צור בכל זאת' : ackMissing && missNow.length ? 'שמור עם פרטים חסרים' : isNew ? 'שמור לקוח והזמנה' : 'שמור הזמנה'}</Button>
             <Button variant="ghost" onClick={onClose}>ביטול</Button>
             <span className="norder__sum" aria-live="polite">
               {finalAmount > 0 && <><Ltr>{fmtMoney(finalAmount)}</Ltr>{time && <> · <Ltr>{time}</Ltr></>}{branchObj && <> · {branchObj.name}</>}</>}
             </span>
-          </footer>
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -705,7 +712,7 @@ function CustomerPicker({ customers, value, onChange, onNew, invalid }: {
           </button>
         </Popover.Trigger>
         <Popover.Portal>
-          <Popover.Content className="pop bpick__pop" align="start" sideOffset={4} dir="rtl" onOpenAutoFocus={(e) => { e.preventDefault(); inputRef.current?.focus(); }}>
+          <Popover.Content className="pop bpick__pop" aria-labelledby={`${listId}-label`} align="start" sideOffset={4} dir="rtl" onOpenAutoFocus={(e) => { e.preventDefault(); inputRef.current?.focus(); }}>
             <input
               ref={inputRef}
               className="input input--sm"

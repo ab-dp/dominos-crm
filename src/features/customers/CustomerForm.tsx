@@ -105,10 +105,10 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
         <Dialog.Content className="cform" dir="rtl" aria-describedby={undefined}>
-          <header className="cform__head">
+          <div className="cform__head">
             <Dialog.Title className="udialog__title">{editing ? `עריכת ${editing.name}` : 'לקוח חדש'}</Dialog.Title>
             <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
-          </header>
+          </div>
 
           <form className="cform__body" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
             <Section title="פרטי הלקוח">
@@ -210,11 +210,11 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
             {errors.form && <p className="cform__formerr" role="alert"><OctagonAlert size={16} aria-hidden="true" /> {errors.form}</p>}
           </form>
 
-          <footer className="cform__foot">
+          <div className="cform__foot">
             <Button variant="primary" loading={busy} onClick={submit}>{editing ? 'שמור' : ackWarn && warnings.length ? 'זה לקוח אחר – הוסף' : 'הוסף לקוח'}</Button>
             <Dialog.Close asChild><Button variant="ghost">ביטול</Button></Dialog.Close>
             {!editing && warnings.length > 0 && !ackWarn && <span className="cform__live"><CircleAlert size={14} aria-hidden="true" /> נמצא לקוח דומה – נבדוק לפני השמירה</span>}
-          </footer>
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

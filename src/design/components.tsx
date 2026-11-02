@@ -100,15 +100,24 @@ export function StatusMenu({ status, onChange }: { status: OrderStatus; onChange
 /* ---------- Mark: סניף · Q · תשלום. בוצע = ✓ בעיגול, חסר = עיגול מקווקו ---------- */
 export function MarkGlyph({ done, label, drawKey }: { done: boolean; label: string; drawKey?: string | number }) {
   const reduce = useReducedMotion();
+  // מצייר את ה-✓ רק כשהסימון משתנה – לא בהופעה הראשונה של השורה (טבלה גדולה = אלפי אנימציות)
+  const mounted = useRef(false);
+  useEffect(() => { mounted.current = true; }, []);
+  const animate = !reduce && mounted.current;
   return (
     <span className={`mark ${done ? 'mark--done' : 'mark--missing'}`}>
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-        {done ? (
+        {done && !animate ? (
+          <>
+            <circle cx="11" cy="11" r="9.5" className="mark__fill" />
+            <path d="M6.6 11.4l3 3 5.8-6.2" className="mark__tick" />
+          </>
+        ) : done ? (
           <>
             <motion.circle
               key={`c${drawKey}`}
               cx="11" cy="11" r="9.5" className="mark__fill"
-              initial={reduce ? false : { scale: 0.4, opacity: 0 }}
+              initial={{ scale: 0.4, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 500, damping: 28 }}
               style={{ originX: '50%', originY: '50%' }}
@@ -116,7 +125,7 @@ export function MarkGlyph({ done, label, drawKey }: { done: boolean; label: stri
             <motion.path
               key={`p${drawKey}`}
               d="M6.6 11.4l3 3 5.8-6.2" className="mark__tick"
-              initial={reduce ? false : { pathLength: 0 }}
+              initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 0.24, delay: 0.08, ease: [0.2, 0, 0, 1] }}
             />
@@ -145,7 +154,7 @@ export function MarkAction({
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="pop" sideOffset={6} align="start" dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        <Popover.Content className="pop" aria-label={title} sideOffset={6} align="start" dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <p className="pop__title">{title}</p>
           {children}
           <Popover.Arrow className="pop__arrow" />

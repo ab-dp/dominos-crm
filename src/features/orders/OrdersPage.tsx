@@ -50,9 +50,10 @@ export function OrdersPage() {
   const [query, setQuery] = useState('');
   const [density, setDensity] = usePref<'dense' | 'comfy'>('tableDensity', 'dense');
   const q = query.trim().toLowerCase();
-  const rows = lists[tab]
+  const rows = useMemo(() => lists[tab]
     .filter((o) => !filter || filter.test(o))
-    .filter((o) => !q || o.customerName.toLowerCase().includes(q) || String(o.id).includes(q) || (o.qNumber ?? '').toLowerCase().includes(q) || o.branchName.includes(q));
+    .filter((o) => !q || o.customerName.toLowerCase().includes(q) || String(o.id).includes(q) || (o.qNumber ?? '').toLowerCase().includes(q) || o.branchName.includes(q)),
+  [lists, tab, filter, q]);
   const total = rows.filter((o) => o.status !== 'cancelled').reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
   const needs = rows.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
   const set = (k: string, v: string | null) => {

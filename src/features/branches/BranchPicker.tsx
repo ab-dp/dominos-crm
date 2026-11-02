@@ -60,7 +60,7 @@ export function BranchPicker({ value, onChange, preferredId, label = 'סניף' 
           </button>
         </Popover.Trigger>
         <Popover.Portal>
-          <Popover.Content className="pop bpick__pop" align="start" sideOffset={4} dir="rtl" onOpenAutoFocus={(e) => { e.preventDefault(); inputRef.current?.focus(); }}>
+          <Popover.Content className="pop bpick__pop" aria-labelledby={`${listId}-label`} align="start" sideOffset={4} dir="rtl" onOpenAutoFocus={(e) => { e.preventDefault(); inputRef.current?.focus(); }}>
             <input
               ref={inputRef}
               className="input input--sm"

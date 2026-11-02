@@ -38,6 +38,15 @@ export function OrderPanel() {
     const issues = issuesFor(single, now, thresholds);
     return { ...single, issues, health: healthOf(issues) };
   }, [listed, single, now, thresholds]);
+  // השורה או הכפתור שפתחו את התיק – הפוקוס חוזר אליהם בסגירה
+  const opener = useRef<HTMLElement | null>(null);
+  if (o && !opener.current) opener.current = document.activeElement as HTMLElement | null;
+  const restoreFocus = (e: Event) => {
+    e.preventDefault();
+    const el = opener.current;
+    opener.current = null;
+    if (el?.isConnected && el !== document.body) el.focus();
+  };
 
   return (
     <Dialog.Root open={!!o} onOpenChange={(v) => !v && panel.close()}>
@@ -47,10 +56,10 @@ export function OrderPanel() {
             <Dialog.Overlay asChild forceMount>
               <motion.div className="panel-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
             </Dialog.Overlay>
-            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
+            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} aria-labelledby="panel-title" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
               onOpenAutoFocus={(e) => { e.preventDefault(); document.getElementById('panel-title')?.focus(); }}
-              onCloseAutoFocus={(e) => e.preventDefault()}>
-              <motion.aside
+              onCloseAutoFocus={restoreFocus}>
+              <motion.div
                 className={`panel ${full ? 'panel--full' : ''}`}
                 initial={reduce ? { opacity: 0 } : { x: '-100%' }}
                 animate={reduce ? { opacity: 1 } : { x: 0 }}
@@ -58,7 +67,7 @@ export function OrderPanel() {
                 transition={{ type: 'tween', duration: 0.24, ease: [0.2, 0, 0, 1] }}
               >
                 <PanelBody o={o} full={full} setFull={setFull} />
-              </motion.aside>
+              </motion.div>
             </Dialog.Content>
           </Dialog.Portal>
         )}
@@ -107,7 +116,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
 
   return (
     <>
-      <header className={`panel__head ${scrolled ? 'is-scrolled' : ''}`}>
+      <div className={`panel__head ${scrolled ? 'is-scrolled' : ''}`}>
         <div className="panel__row">
           <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>הזמנה <Ltr>{o.id}</Ltr></Dialog.Title>
           <HealthBadge health={o.health} issues={o.issues} />
@@ -173,7 +182,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           ))}
           <button className={`panel__tab-history ${tab === 'history' ? 'is-on' : ''}`} onClick={() => setTab('history')}>היסטוריה</button>
         </nav>
-      </header>
+      </div>
 
       <div className="panel__body" ref={bodyRef} onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)} tabIndex={0} role="region" aria-label="תוכן תיק ההזמנה">
         {tab === 'history' ? <History o={o} /> : (
@@ -247,10 +256,10 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           </>
         )}
       </div>
-      <footer className="panel__foot">
+      <div className="panel__foot">
         <span className="muted">לחיצה על ערך פותחת עריכה · נשמר אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>
         <button className="link" onClick={panel.close}>חזרה לרשימה</button>
-      </footer>
+      </div>
     </>
   );
 }

@@ -120,7 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </Popover.Trigger>
             <Popover.Portal>
-              <Popover.Content className="pop bell-pop" align="end" sideOffset={8} dir="rtl">
+              <Popover.Content className="pop bell-pop" aria-label="התראות" align="end" sideOffset={8} dir="rtl">
                 {pendingUsers > 0 && (
                   <button className="bell-join" onClick={() => nav('/settings/users')}>
                     <UserPlus size={18} aria-hidden="true" /> <span><b><Ltr>{pendingUsers}</Ltr></b> בקשות הצטרפות ממתינות</span>
@@ -191,7 +191,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </Popover.Trigger>
             <Popover.Portal>
-              <Popover.Content className="menu more-menu" side="top" align="end" sideOffset={10} dir="rtl">
+              <Popover.Content className="menu more-menu" aria-label="עוד" side="top" align="end" sideOffset={10} dir="rtl">
                 {moreItems.map((it) => (
                   <Link key={it.to} to={it.to} className="menu__item" onClick={() => setMoreOpen(false)}>
                     <span className="nav__icon" aria-hidden="true">{it.icon}</span>
