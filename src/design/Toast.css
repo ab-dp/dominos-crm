@@ -70,3 +70,13 @@
 .toast__close:hover { background: rgba(255, 255, 255, 0.12); color: var(--white); }
 @media (prefers-reduced-motion: reduce) { .toast__ring-bar { animation: none; } }
 .toast__action { padding: 0 12px; }
+
+/* במחשב: בפינה, לא במרכז – כדי שהודעה לא תסתיר את כפתורי השמירה של חלון פתוח */
+@media (min-width: 701px) {
+  .toasts { inset-inline-start: auto; inset-inline-end: 24px; transform: none; justify-items: end; }
+}
+/* בטלפון: מעל התפריט התחתון, לא עליו */
+@media (max-width: 700px) {
+  .toasts { inset-inline: 16px; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); transform: none; }
+  .toast { min-width: 0; max-width: none; }
+}

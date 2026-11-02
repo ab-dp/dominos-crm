@@ -209,7 +209,9 @@
   .topbar { gap: 8px; padding: 0 12px; }
   .topbar__logo { display: block; }
   .search-trigger { max-width: none; }
-  .search-trigger span, .search-trigger .kbd, .topbar__actions .btn__label, .topbar__actions .btn__kbd, .user__avatar { display: none; }
+  .search-trigger span, .search-trigger .kbd, .topbar__actions .btn__kbd, .user__avatar { display: none; }
+  /* בטלפון הכפתורים למעלה הם אייקון בלבד – השם נשאר לקורא מסך */
+  .topbar__actions .btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .user { padding-inline-start: 4px; margin: 0; border: 0; }
   .content { padding: 18px 16px calc(88px + env(safe-area-inset-bottom, 0px)); }
   .sidebar {
@@ -249,3 +251,7 @@
 .more-menu .nav__count { background: var(--gray-100); color: var(--gray-900); }
 .more-menu .nav__count--alert { background: var(--brand-red); color: var(--white); }
 .more-menu .nav__count { position: static !important; min-width: 20px; height: 18px; line-height: 18px; font-size: 11px; padding: 0 6px; }
+.cmd__list .cmd__group { margin: 10px 10px 4px; }
+/* שדה החיפוש: קו מודגש בתחתית במקום מסגרת הפוקוס הכללית, שנחתכה בפינות החלון */
+.cmd__input input:focus-visible { box-shadow: none; }
+.cmd__input:focus-within { box-shadow: inset 0 -2px 0 var(--brand-600); }
