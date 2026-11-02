@@ -31,6 +31,8 @@ const SettingsPage = named(() => import('./features/settings/SettingsPage'), 'Se
 const BranchesPage = named(() => import('./features/branches/BranchesPage'), 'BranchesPage');
 const CustomersPage = named(() => import('./features/customers/CustomersPage'), 'CustomersPage');
 const CustomerFile = named(() => import('./features/customers/CustomerFile'), 'CustomerFile');
+const LeadsPage = named(() => import('./features/leads/LeadsPage'), 'LeadsPage');
+const LeadFile = named(() => import('./features/leads/LeadFile'), 'LeadFile');
 const PriceListsPage = named(() => import('./features/pricelists/PriceListsPage'), 'PriceListsPage');
 const ExceptionsPage = named(() => import('./features/exceptions/ExceptionsPage'), 'ExceptionsPage');
 const ReportsHub = named(() => import('./features/reports/ReportsPage'), 'ReportsHub');
@@ -80,6 +82,8 @@ function Gate() {
               <Route path="/settings/*" element={<SettingsPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/customers/:id" element={<CustomerFile />} />
+              <Route path="/leads" element={<LeadsPage />} />
+              <Route path="/leads/:id" element={<LeadFile />} />
               <Route path="/pricelists" element={<PriceListsPage />} />
               <Route path="/exceptions" element={<ExceptionsPage />} />
               <Route path="/branches" element={<BranchesPage />} />

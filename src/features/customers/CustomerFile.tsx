@@ -87,6 +87,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
               {c.taxId && <span>ח.פ <Ltr>{c.taxId}</Ltr></span>}
               {c.status === 'inactive' && <span className="tag-inactive">לא פעיל</span>}
               {c.businessAddress && <span><MapPin size={13} aria-hidden="true" /> {c.businessAddress}</span>}
+              {c.leadId && <Link to={`/leads/${c.leadId}`}>הגיע מליד</Link>}
             </p>
           </div>
           <div className="cfile__actions">

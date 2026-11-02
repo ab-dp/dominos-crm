@@ -113,7 +113,7 @@ export function ExceptionsPage() {
         <section className="card" aria-labelledby="h-tasks">
           <div className="card__head"><h2 id="h-tasks" className="card__title">משימות מעקב</h2><span className="muted exc__n"><Ltr>{tasks.length}</Ltr> פתוחות</span></div>
           {tasks.length === 0 ? (
-            <p className="exc__empty"><CalendarClock size={18} aria-hidden="true" /> אין משימות פתוחות. משימה נוצרת מ"משימת חזרה" בתיק לקוח.</p>
+            <p className="exc__empty"><CalendarClock size={18} aria-hidden="true" /> אין משימות פתוחות. משימה נוצרת מ"משימת חזרה" בתיק לקוח, או מהצעד הבא של ליד.</p>
           ) : (
             <>
               <TaskGroup title="באיחור" tone="red" list={overdue} when={when} />
@@ -144,7 +144,7 @@ function TaskGroup({ title, tone, list, when }: { title: string; tone: 'red' | '
             </label>
             <span className="task-row__main">
               <span className="task-row__text">{t.text}</span>
-              <span className="task-row__meta"><Link to={`/customers/${t.customerId}`}>{t.customerName || 'לקוח'}</Link> · {when(t.due)} · {t.byName}</span>
+              <span className="task-row__meta"><Link to={t.leadId ? `/leads/${t.leadId}` : `/customers/${t.customerId}`}>{t.customerName || 'לקוח'}</Link>{t.leadId && <span className="muted"> (ליד)</span>} · {when(t.due)} · {t.byName}</span>
             </span>
           </li>
         ))}

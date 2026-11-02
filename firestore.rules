@@ -294,14 +294,81 @@ service cloud.firestore {
       }
     }
 
-    // ---------- משימות מעקב: נוצרות מתיק לקוח. אין מחיקה – רק סימון בוצע (והחזרה), עם שם המסמן. ----------
+    // ---------- לקוחות פוטנציאליים (אפיון 19.1, 19.5): כל משתמש פעיל רואה ועורך. אין מחיקה. ----------
+    // ליד פתוח חייב צעד הבא עם תאריך; "לא רלוונטי" חייב סיבה; "לקוח פעיל" חייב קישור ללקוח קיים, ולא חוזר אחורה.
+    function validStep(s) { return s is map && s.text is string && s.text.size() > 0 && noCard(s.text) && s.due is string && s.due.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}        && request.resource.data.text is string && request.resource.data.text.size() > 0 && noCard(request.resource.data.text)
+        && request.resource.data.due is string && request.resource.data.due.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+      allow update: if isActive()
+        && onlyChanges(['done', 'doneBy', 'doneByName', 'doneAt'])
+        && request.resource.data.done is bool
+        && (request.resource.data.done == false || request.resource.data.doneBy == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // ---------- הגדרות: רשימות וספים. כולם קוראים, רק מנהל משנה. ----------
+    match /settings/{key} {
+      allow read: if isActive();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // כל השאר חסום עד שייבנה
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+); }
+    function validLead(d) {
+      return d.name is string && d.name.size() > 0 && d.name.size() <= 120
+        && d.stage in ['new', 'contacted', 'proposal', 'trial', 'won', 'lost']
+        && d.taxId is string && d.taxId.size() <= 9
+        && d.contacts is list && d.contacts.size() <= 20
+        && d.tags is list && d.tags.size() <= 20
+        && noCard(d.get('notes', '')) && noCard(d.get('area', '')) && noCard(d.get('lostNote', ''))
+        && d.potentialOrders is number && d.potentialAmount is number && d.size is number
+        && d.ownerUid is string
+        && (d.stage in ['won', 'lost'] || validStep(d.nextStep))
+        && (d.stage != 'lost' || (d.lostReason is string && d.lostReason.size() > 0))
+        && (d.stage != 'won' || (d.customerId is string && existsAfter(/databases/$(database)/documents/customers/$(d.customerId))))
+        && d.keys().size() <= 40;
+    }
+    match /leads/{lid} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && validLead(request.resource.data)
+        && request.resource.data.stage in ['new', 'contacted', 'proposal', 'trial']
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow update: if isActive()
+        && validLead(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'createdAt'])
+        && (resource.data.stage != 'won' || (request.resource.data.stage == 'won' && request.resource.data.customerId == resource.data.customerId));
+      allow delete: if false;
+
+      // תיעוד פעילות: אפשר רק להוסיף
+      match /activity/{aid} {
+        allow read: if isActive();
+        allow create: if isActive()
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.kind in ['call', 'whatsapp', 'email', 'meeting', 'sample', 'note', 'stage']
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && noCard(request.resource.data.text)
+          && noCard(request.resource.data.get('asked', '')) && noCard(request.resource.data.get('objections', '')) && noCard(request.resource.data.get('outcome', ''));
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------- משימות מעקב: נוצרות מתיק לקוח או מצעד הבא של ליד. אין מחיקה – רק סימון בוצע (והחזרה), עם שם המסמן. ----------
     match /tasks/{tid} {
       allow read: if isActive();
       allow create: if isActive()
         && request.resource.data.by == request.auth.uid
         && request.resource.data.done == false
         && request.resource.data.customerId is string
-        && exists(/databases/$(database)/documents/customers/$(request.resource.data.customerId))
+        && ((request.resource.data.get('leadId', null) is string
+              && existsAfter(/databases/$(database)/documents/leads/$(request.resource.data.leadId)))
+            || exists(/databases/$(database)/documents/customers/$(request.resource.data.customerId)))
         && request.resource.data.text is string && request.resource.data.text.size() > 0 && noCard(request.resource.data.text)
         && request.resource.data.due is string && request.resource.data.due.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
       allow update: if isActive()

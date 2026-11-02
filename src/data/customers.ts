@@ -26,6 +26,7 @@ export type Customer = {
   priceListId: string;
   status: 'active' | 'inactive' | 'merged';
   mergedInto?: string;
+  leadId?: string; // נוצר מליד (אפיון 19.1) – למדידת המרה
   contacts: Contact[];
   addresses: Address[];
   customPrices: CustomPrice[];

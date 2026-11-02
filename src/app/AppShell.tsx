@@ -3,7 +3,7 @@ import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
-  Bell, CalendarClock, ChartColumn, Ellipsis, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
+  Bell, CalendarClock, Target, ChartColumn, Ellipsis, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
 } from 'lucide-react';
 import { Button, Tip, useHotkey } from '../design/components';
 import { useStore } from '../data/store';
@@ -51,6 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // בפעמון: רק חריגות שדורשות טיפול עכשיו (פרט חסר בהזמנה רחוקה אדום, אבל לא קופץ עד שמתקרב)
   const critical = orders.filter((o) => o.issues.some(isAlert));
   useApproachingAlert(orders);
+  const dueLeadSteps = dueTasks.filter((t) => t.leadId).length;
   const urgentCount = orders.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
 
   function newOrder() {
@@ -70,6 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       title: 'מאגרים',
       items: [
         { to: '/customers', label: 'לקוחות', icon: <Users size={20} /> },
+        { to: '/leads', label: 'לקוחות פוטנציאליים', icon: <Target size={20} />, count: dueLeadSteps },
         { to: '/pricelists', label: 'מחירונים', icon: <Tags size={20} /> },
         { to: '/branches', label: 'סניפים ואשכולות', icon: <Store size={20} /> },
       ],
