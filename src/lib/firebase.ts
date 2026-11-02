@@ -2,7 +2,7 @@
    הפרטים האלה ציבוריים מטבעם (הם נשלחים לכל דפדפן); מה שמגן על הנתונים הם כללי האבטחה ב-firestore.rules. */
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 
 export const app = initializeApp({
   apiKey: 'AIzaSyBzkqC_BXbWpLJGV70S4Y-s9d2Pfa3My0Q',
@@ -16,4 +16,5 @@ export const app = initializeApp({
 export const auth = getAuth(app);
 auth.languageCode = 'he';
 
-export const db = getFirestore(app);
+/* שדה שערכו undefined (למשל ערך קודם של שדה שלא היה קיים) לא מכשיל את השמירה – פשוט לא נכתב */
+export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });

@@ -37,7 +37,7 @@ export async function updatePriceList(pl: PriceList, patch: Partial<Pick<PriceLi
   const u = auth.currentUser!;
   const batch = writeBatch(db);
   batch.update(doc(db, 'priceLists', pl.id), { ...patch, updatedAt: serverTimestamp(), updatedBy: u.uid });
-  const before = Object.fromEntries(Object.keys(patch).filter((k) => k !== 'items').map((k) => [k, pl[k as keyof PriceList]]));
+  const before = Object.fromEntries(Object.keys(patch).filter((k) => k !== 'items').map((k) => [k, pl[k as keyof PriceList] ?? null]));
   audit(batch, pl.id, 'update', detail ? (detail as { before?: unknown }).before ?? before : before, detail ? (detail as { after?: unknown }).after ?? patch : patch);
   await batch.commit();
 }

@@ -61,7 +61,7 @@ export async function addBranch(b: { name: string; clusterId: string; number: st
 export async function updateBranch(b: Branch, patch: Partial<Pick<Branch, 'name' | 'clusterId' | 'number' | 'active'>>) {
   const batch = writeBatch(db);
   batch.update(doc(db, 'branches', b.id), { ...patch, updatedAt: serverTimestamp(), updatedBy: auth.currentUser!.uid });
-  const before = Object.fromEntries(Object.keys(patch).map((k) => [k, b[k as keyof Branch]]));
+  const before = Object.fromEntries(Object.keys(patch).map((k) => [k, b[k as keyof Branch] ?? null]));
   audit(batch, 'branch', b.id, 'update', before, patch);
   await batch.commit();
 }
