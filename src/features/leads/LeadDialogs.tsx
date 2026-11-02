@@ -239,7 +239,7 @@ export function ConvertDialog({ lead, activity, onClose }: { lead: Lead; activit
   const [name, setName] = useState(lead.name);
   const [type, setType] = useState<'regular' | 'occasional'>('regular');
   const [taxId, setTaxId] = useState(lead.taxId);
-  const [address, setAddress] = useState(lead.area);
+  const address = '';
   const [method, setMethod] = useState('account');
   const [accountPhone, setAccountPhone] = useState(() => fmtPhone(lead.contacts.find((c) => c.decider)?.phone ?? lead.contacts[0]?.phone ?? ''));
   const [order, setOrder] = useState(true);
@@ -280,7 +280,6 @@ export function ConvertDialog({ lead, activity, onClose }: { lead: Lead; activit
             </div>
           </div>
           <label className="field"><span className="field__label">ח.פ / ע.מ</span><input className="input input--ltr" inputMode="numeric" value={taxId} onChange={(e) => setTaxId(e.target.value)} aria-invalid={!!errs.taxId || undefined} />{err('taxId')}</label>
-          <label className="field"><span className="field__label">כתובת עסק</span><input className="input" value={address} onChange={(e) => setAddress(e.target.value)} /></label>
           <div className="field"><span className="field__label">אמצעי תשלום</span>
             <div className="seg" role="radiogroup" aria-label="אמצעי תשלום">
               {methods.map((m) => <button type="button" key={m.id} role="radio" aria-checked={method === m.id} className={method === m.id ? 'is-on' : ''} onClick={() => setMethod(m.id)}>{m.label}</button>)}

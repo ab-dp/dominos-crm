@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { motion, useReducedMotion } from 'motion/react';
 import {
-  ArrowRight, Check, ClipboardList, FileCheck2, GitMerge, Mail, MapPin, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon,
+  ArrowRight, Check, ClipboardList, FileCheck2, GitMerge, Mail, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon,
   Plus, Star, Trash2, UserCheck, UserRound, UserX, Wallet,
 } from 'lucide-react';
 import {
@@ -86,7 +86,6 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
               <span className={`ctype ctype--${c.type}`}>{c.type === 'regular' ? 'קבוע' : 'מזדמן'}</span>
               {c.taxId && <span>ח.פ <Ltr>{c.taxId}</Ltr></span>}
               {c.status === 'inactive' && <span className="tag-inactive">לא פעיל</span>}
-              {c.businessAddress && <span><MapPin size={13} aria-hidden="true" /> {c.businessAddress}</span>}
               {c.leadId && <Link to={`/leads/${c.leadId}`}>הגיע מליד</Link>}
             </p>
           </div>

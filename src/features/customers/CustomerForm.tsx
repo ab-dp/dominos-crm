@@ -52,8 +52,6 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
     if (!f.name.trim()) e.name = 'חובה: שם הלקוח (חברה או אדם פרטי)';
     const te = taxIdError(f.taxId); if (te) e.taxId = te;
     if (taxTwin) e.taxId = `ח.פ הזה כבר שייך ללקוח "${taxTwin.name}"`;
-    if (!editing && !contact.name.trim()) e.contactName = 'חובה: איש קשר';
-    if (!editing && !phone) e.contactPhone = 'חובה: טלפון של איש הקשר';
     const pe = phoneError(contact.phone); if (pe) e.contactPhone = pe;
     if (f.paymentMethod === 'account') {
       if (!cleanPhone(f.accountPhone)) e.accountPhone = 'חובה ללקוח הקפה: טלפון ההקפה';
@@ -131,19 +129,16 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                   {err('taxId')}
                   {taxTwin && <button type="button" className="link cform__twin" onClick={() => { onClose(); nav(`/customers/${taxTwin.id}`); }}>פתח את "{taxTwin.name}"</button>}
                 </L>
-                <L label="כתובת עסק" wide>
-                  <input className="input" value={f.businessAddress} onChange={(e) => set('businessAddress', e.target.value)} />
-                </L>
               </Row>
             </Section>
 
-            <Section title="איש קשר ראשי">
+            <Section title="איש קשר ראשי (לא חובה)">
               <Row>
-                <L label="שם" req={!editing}><input className="input" value={contact.name} onChange={(e) => { setContact({ ...contact, name: e.target.value }); setErrors((x) => ({ ...x, contactName: '' })); }} {...inv('contactName')} />{err('contactName')}</L>
+                <L label="שם"><input className="input" value={contact.name} onChange={(e) => { setContact({ ...contact, name: e.target.value }); setErrors((x) => ({ ...x, contactName: '' })); }} {...inv('contactName')} />{err('contactName')}</L>
                 <L label="תפקיד"><input className="input" value={contact.role} onChange={(e) => setContact({ ...contact, role: e.target.value })} placeholder="מנהלת משרד" /></L>
               </Row>
               <Row>
-                <L label="טלפון" req={!editing}><input className="input input--ltr" inputMode="tel" value={contact.phone} onChange={(e) => { setContact({ ...contact, phone: e.target.value }); setErrors((x) => ({ ...x, contactPhone: '' })); setAckWarn(false); }} placeholder="05X-XXXXXXX" {...inv('contactPhone')} />{err('contactPhone')}</L>
+                <L label="טלפון"><input className="input input--ltr" inputMode="tel" value={contact.phone} onChange={(e) => { setContact({ ...contact, phone: e.target.value }); setErrors((x) => ({ ...x, contactPhone: '' })); setAckWarn(false); }} placeholder="05X-XXXXXXX" {...inv('contactPhone')} />{err('contactPhone')}</L>
                 <L label="מייל"><input className="input input--ltr" type="email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} {...inv('contactEmail')} />{err('contactEmail')}</L>
               </Row>
             </Section>
