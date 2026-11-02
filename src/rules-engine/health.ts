@@ -31,7 +31,6 @@ export function missingOf(o: Order): string[] {
   if (!o.branchId) m.push('סניף');
   if (!o.channel?.trim()) m.push('ערוץ');
   if (!(o.amount > 0)) m.push('סכום');
-  if (!o.contactName) m.push('איש קשר');
   if (!o.contactPhone) m.push('טלפון');
   if (o.delivery === 'delivery' && !o.address) m.push('כתובת');
   if (o.method === 'account' && !o.accountPhone) m.push('טלפון הקפה');
@@ -86,7 +85,7 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
   if (soon && !o.branchApproval) {
     out.push({ rule: 4, severity: 'red', label: 'אין אישור סניף', action: 'branch', actionLabel: 'סמן אישור' });
   }
-  if (diff === 0 && o.method === 'credit' && o.payment === 'pending') {
+  if (diff === 0 && o.method === 'credit' && o.payment === 'pending' && !o.qNumber) {
     const late = minutesOfDay(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`) >= minutesOfDay(th.creditDeadline);
     out.push({ rule: 5, severity: late ? 'red' : 'orange', label: late ? 'אשראי לא חויב – עבר המועד' : 'אשראי לא חויב', action: 'pay', actionLabel: 'סמן שולם' });
   }

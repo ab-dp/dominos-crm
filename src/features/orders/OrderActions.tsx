@@ -52,9 +52,11 @@ function QForm({ o, done }: { o: OrderView; done: () => void }) {
     e.preventDefault();
     if (!num.trim()) { setErr('חובה: מספר ההזמנה ב-Q, למשל cs669'); return; }
     const qAmount = Number(amt.replace(/[^\d.]/g, ''));
-    update(o.id, { qNumber: num.trim(), qAmount }, qAmount !== o.amount
+    // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
+    const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
+    update(o.id, { qNumber: num.trim(), qAmount, ...paid }, qAmount !== o.amount
       ? <>הועברה ל-Q · <b>פער מול Q</b>: <Ltr>{fmtMoney(qAmount)}</Ltr> מול <Ltr>{fmtMoney(o.amount)}</Ltr></>
-      : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr></>);
+      : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם</>);
     done();
   };
   return (

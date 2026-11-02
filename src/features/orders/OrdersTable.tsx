@@ -137,7 +137,15 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       <td>{o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method}</td>
       <td>{o.handler}</td>
       <td className="c-act" onClick={(e) => e.stopPropagation()}>
-        {top && (o.health === 'critical' || o.health === 'urgent' || top.action === 'po') && <FixButton key={top.rule} o={o} issue={top} onOpen={() => panel.open(o.id)} />}
+        <span className="c-act__in">
+          {top && (o.health === 'critical' || o.health === 'urgent' || top.action === 'po') && <FixButton key={top.rule} o={o} issue={top} onOpen={() => panel.open(o.id)} />}
+          {o.status !== 'cancelled' && o.status !== 'partial' && (
+            <span className="row-acts">
+              <button className="row-act" onClick={() => requestStatus(o, 'partial')} aria-label={`סופקה חלקית – הזמנה ${o.id}`}>סופקה חלקית</button>
+              <button className="row-act row-act--danger" onClick={() => requestStatus(o, 'cancelled')} aria-label={`ביטול הזמנה ${o.id}`}>ביטול</button>
+            </span>
+          )}
+        </span>
       </td>
     </tr>
   );

@@ -190,12 +190,10 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       if (!nc.name.trim()) e.ncName = 'חובה: שם הלקוח';
       const te = taxIdError(nc.taxId); if (te) e.ncTax = te;
       if (taxTwin) e.ncTax = `ח.פ הזה כבר שייך ל"${taxTwin.name}"`;
-      if (!nc.contactName.trim()) m.ncContact = MISS;
       if (!ncPhone) m.ncPhone = MISS;
       else { const pe = phoneError(nc.contactPhone); if (pe) e.ncPhone = pe; }
     } else {
       if (!c) e.customer = 'חובה: בחר לקוח';
-      if (!contact.name.trim()) m.contactName = MISS;
       if (!contact.phone.trim()) m.contactPhone = MISS;
       else { const pe = phoneError(contact.phone); if (pe) e.contactPhone = pe; }
     }
@@ -365,7 +363,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       )}
       {!isNew && (
         <Row>
-          <L label="איש קשר לקבלת ההזמנה" req>
+          <L label="איש קשר לקבלת ההזמנה">
             <input className="input" value={contact.name} onChange={(e) => { setContact({ ...contact, name: e.target.value }); setContactId(''); clearErr('contactName'); }} placeholder="מי מקבל את ההזמנה" {...inv('contactName')} />
             {err('contactName')}
           </L>
@@ -576,7 +574,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                       </L>
                     </Row>
                     <Row>
-                      <L label="איש קשר" req><input className="input" value={nc.contactName} onChange={(e) => { setNc({ ...nc, contactName: e.target.value }); clearErr('ncContact'); }} {...inv('ncContact')} />{err('ncContact')}</L>
+                      <L label="איש קשר"><input className="input" value={nc.contactName} onChange={(e) => { setNc({ ...nc, contactName: e.target.value }); clearErr('ncContact'); }} {...inv('ncContact')} />{err('ncContact')}</L>
                       <L label="טלפון" req><input className="input input--ltr" inputMode="tel" value={nc.contactPhone} onChange={(e) => { setNc({ ...nc, contactPhone: e.target.value }); clearErr('ncPhone'); setAckSimilar(false); }} placeholder="05X-XXXXXXX" {...inv('ncPhone')} />{err('ncPhone')}</L>
                     </Row>
                     <Row>

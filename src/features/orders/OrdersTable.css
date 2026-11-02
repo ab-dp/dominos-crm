@@ -92,3 +92,17 @@
 }
 
 .otable-more { display: flex; justify-content: center; padding: 16px; }
+
+/* ביטול / סופקה חלקית – ישירות בשורה */
+.c-act__in { display: inline-flex; align-items: center; gap: 8px; }
+.row-acts { display: inline-flex; gap: 4px; }
+.row-act { height: 28px; padding: 0 9px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: 12px; font-weight: 500; color: var(--gray-600); cursor: pointer; white-space: nowrap; transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
+.row-act:hover { border-color: var(--gray-300); color: var(--gray-900); }
+.row-act--danger { color: var(--danger-fg); border-color: #F3C9D0; }
+.row-act--danger:hover { border-color: var(--danger-fg); color: var(--danger-fg); background: var(--danger-bg); }
+@media (max-width: 700px) {
+  /* בטלפון: שורת פעולות משלה מתחת לסימונים, כדי לא לדחוק את שם הלקוח */
+  .otable--orders tr.orow { grid-template-areas: "time cust health" "marks marks marks" "act act act" !important; }
+  .otable--orders td.c-act { justify-self: stretch; }
+  .c-act__in { display: flex; justify-content: flex-end; flex-wrap: wrap; }
+}
