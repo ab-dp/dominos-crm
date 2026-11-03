@@ -10,7 +10,8 @@ import { addTaskTo } from './tasks';
 
 export type Contact = { id: string; name: string; role: string; phone: string; email: string; emails?: string[]; primary: boolean }; // emails – מיילים נוספים
 export type Address = { id: string; label: string; address: string; directions: string; preferredBranchId: string };
-export type CustomPrice = { itemId: string; price: number };
+/* מחיר מיוחד ללקוח לבסיס מחיר: למשלוח (price), ולאיסוף (pickupPrice – אם חסר, כמו המשלוח) */
+export type CustomPrice = { itemId: string; price: number; pickupPrice?: number };
 
 export type Customer = {
   id: string;

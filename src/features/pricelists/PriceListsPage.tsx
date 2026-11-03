@@ -41,7 +41,7 @@ export function PriceListsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">מחירונים</h1>
-          <p className="page__sub">כל המחירים כוללים מע"מ. המחיר נשמר בתוך כל הזמנה, כך ששינוי מחירון לא משנה הזמנות קיימות.</p>
+          <p className="page__sub">מחירון הוא בסיסי מחיר, לא תפריט: לכל בסיס מחיר למשלוח ולאיסוף עצמי. בהזמנה בוחרים בסיס ומוסיפים תיאור מדויק. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות קיימות.</p>
         </div>
         <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
       </header>
@@ -95,7 +95,7 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(pl.name);
   const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ name: '', price: '' });
+  const [draft, setDraft] = useState({ name: '', price: '', pickup: '' });
   const [adding, setAdding] = useState(false);
   const [err, setErr] = useState('');
   const [showInactive, setShowInactive] = useState(false);
@@ -108,26 +108,29 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
   const commitItem = async (id: string | null) => {
     const n = draft.name.trim();
     const price = Number(draft.price.replace(/[^\d.]/g, ''));
-    if (!n) return setErr('חובה: שם הפריט');
-    if (!draft.price.trim() || !(price > 0)) return setErr('חובה: מחיר חיובי (כולל מע"מ)');
+    const pickupPrice = draft.pickup.trim() ? Number(draft.pickup.replace(/[^\d.]/g, '')) : price;
+    if (!n) return setErr('חובה: שם בסיס המחיר');
+    if (!draft.price.trim() || !(price > 0)) return setErr('חובה: מחיר למשלוח (כולל מע"מ)');
+    if (!(pickupPrice > 0)) return setErr('מחיר לאיסוף עצמי לא תקין');
     const dupe = findSimilar(n, pl.items.map((i) => ({ id: i.id, name: i.name })), id ?? undefined);
     if (dupe) return setErr(`כבר יש פריט בשם דומה: "${dupe.name}"`);
     if (id) {
       const old = pl.items.find((i) => i.id === id)!;
-      await saveItems(pl.items.map((i) => (i.id === id ? { ...i, name: n, price } : i)), old.price !== price ? `${n}: ${fmtMoney(old.price)} ← ${fmtMoney(price)}` : 'הפריט עודכן', { item: old.name, price: old.price }, { item: n, price });
+      await saveItems(pl.items.map((i) => (i.id === id ? { ...i, name: n, price, pickupPrice } : i)), old.price !== price || (old.pickupPrice ?? old.price) !== pickupPrice ? `${n}: משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}` : 'בסיס המחיר עודכן', { item: old.name, price: old.price, pickupPrice: old.pickupPrice ?? old.price }, { item: n, price, pickupPrice });
       setEditing(null);
     } else {
-      await saveItems([...pl.items, { id: newId(), name: n, price, active: true }], `${n} נוסף · ${fmtMoney(price)}`, null, { item: n, price });
+      await saveItems([...pl.items, { id: newId(), name: n, price, pickupPrice, active: true }], `${n} נוסף · משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}`, null, { item: n, price, pickupPrice });
       setAdding(false);
     }
-    setDraft({ name: '', price: '' }); setErr('');
+    setDraft({ name: '', price: '', pickup: '' }); setErr('');
   };
 
   const rows = pl.items.filter((i) => showInactive || i.active);
   const row = (id: string | null) => (
     <tr className="brow brow--edit" key={id ?? 'new'} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitItem(id); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); setAdding(false); setErr(''); } }}>
-      <td><input className="input input--sm" autoFocus value={draft.name} onChange={(e) => { setDraft({ ...draft, name: e.target.value }); setErr(''); }} aria-label="שם הפריט" placeholder="פיצה משפחתית" /></td>
-      <td><input className="input input--sm input--ltr pl-price" inputMode="decimal" value={draft.price} onChange={(e) => { setDraft({ ...draft, price: e.target.value }); setErr(''); }} aria-label="מחיר כולל מע״מ" placeholder="₪" /></td>
+      <td><input className="input input--sm" autoFocus value={draft.name} onChange={(e) => { setDraft({ ...draft, name: e.target.value }); setErr(''); }} aria-label="שם בסיס המחיר" placeholder="למשל: משפחתית רגילה" /></td>
+      <td><input className="input input--sm input--ltr pl-price" inputMode="decimal" value={draft.price} onChange={(e) => { setDraft({ ...draft, price: e.target.value }); setErr(''); }} aria-label="מחיר למשלוח כולל מע״מ" placeholder="₪" /></td>
+      <td><input className="input input--sm input--ltr pl-price" inputMode="decimal" value={draft.pickup} onChange={(e) => { setDraft({ ...draft, pickup: e.target.value }); setErr(''); }} aria-label="מחיר לאיסוף עצמי כולל מע״מ" placeholder={draft.price ? `כמו משלוח` : '₪'} /></td>
       <td colSpan={2} className="br-actions">
         <Button size="sm" variant="primary" icon={<Check size={15} />} onClick={() => commitItem(id)}>שמור</Button>
         <Button size="sm" variant="ghost" onClick={() => { setEditing(null); setAdding(false); setErr(''); }}>ביטול</Button>
@@ -163,29 +166,30 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
 
       <div className="otable-wrap br-table-wrap">
         <table className="otable otable--dense br-table pl-table">
-          <caption className="sr-only">פריטים במחירון {pl.name}</caption>
-          <thead><tr><th>פריט</th><th>מחיר (כולל מע"מ)</th><th>מצב</th><th><span className="sr-only">פעולות</span></th></tr></thead>
+          <caption className="sr-only">בסיסי מחיר במחירון {pl.name}</caption>
+          <thead><tr><th>בסיס מחיר</th><th>משלוח</th><th>איסוף עצמי</th><th>מצב</th><th><span className="sr-only">פעולות</span></th></tr></thead>
           <tbody>
             {adding && row(null)}
             {rows.map((it) => editing === it.id ? row(it.id) : (
               <tr key={it.id} className={`brow ${it.active ? '' : 'is-inactive'}`} tabIndex={0}
-                onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === 'Enter') { e.preventDefault(); setEditing(it.id); setDraft({ name: it.name, price: String(it.price) }); } }}>
+                onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === 'Enter') { e.preventDefault(); setEditing(it.id); setDraft({ name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); } }}>
                 <td className="strong">{it.name}</td>
                 <td className="num"><Ltr>{fmtMoney(it.price)}</Ltr></td>
+                <td className="num"><Ltr>{fmtMoney(it.pickupPrice ?? it.price)}</Ltr></td>
                 <td>
                   <button className={`switch ${it.active ? 'is-on' : ''}`} role="switch" aria-checked={it.active} aria-label={`${it.name}: ${it.active ? 'פעיל' : 'לא פעיל'}`}
                     onClick={() => saveItems(pl.items.map((i) => (i.id === it.id ? { ...i, active: !i.active } : i)), `${it.name} ${it.active ? 'הושבת' : 'הופעל'}`, { item: it.name, active: it.active }, { item: it.name, active: !it.active })}>
                     <span className="switch__track"><span className="switch__thumb" /></span><span className="switch__label">{it.active ? 'פעיל' : 'לא פעיל'}</span>
                   </button>
                 </td>
-                <td className="br-actions"><Button size="sm" variant="ghost" icon={<Pencil size={15} />} onClick={() => { setEditing(it.id); setAdding(false); setDraft({ name: it.name, price: String(it.price) }); setErr(''); }}>ערוך</Button></td>
+                <td className="br-actions"><Button size="sm" variant="ghost" icon={<Pencil size={15} />} onClick={() => { setEditing(it.id); setAdding(false); setDraft({ name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); setErr(''); }}>ערוך</Button></td>
               </tr>
             ))}
-            {err && <tr className="brow-msg"><td colSpan={4}><p className="pop__err" role="alert">{err}</p></td></tr>}
+            {err && <tr className="brow-msg"><td colSpan={5}><p className="pop__err" role="alert">{err}</p></td></tr>}
           </tbody>
         </table>
         {!adding && (
-          <button className="pl-add" onClick={() => { setAdding(true); setEditing(null); setDraft({ name: '', price: '' }); setErr(''); }}><Plus size={16} aria-hidden="true" /> הוסף פריט</button>
+          <button className="pl-add" onClick={() => { setAdding(true); setEditing(null); setDraft({ name: '', price: '', pickup: '' }); setErr(''); }}><Plus size={16} aria-hidden="true" /> הוסף בסיס מחיר</button>
         )}
       </div>
 

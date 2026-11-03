@@ -7,7 +7,7 @@ import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
-import { CLOSED } from '../../data/types';
+import { CLOSED, itemsText } from '../../data/types';
 import { Button, HealthBadge, Missing, RollingNumber, Skeleton } from '../../design/components';
 import { HEALTH_RANK, missingOf, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
@@ -71,7 +71,7 @@ export function TodayPage() {
       ...list.map((o) => [fmtDate(o.date), o.time, o.id, o.customerName, o.branchName, o.branchPhone ? fmtPhone(o.branchPhone) : '', STATUS_LABEL[o.status],
         o.branchApproval?.manager ?? '', o.qNumber ?? '', o.qAmount ?? o.amount, o.methodLabel ?? o.method, o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment],
         o.delivery === 'delivery' ? 'משלוח' : 'איסוף', o.address ?? '', o.contactName ?? '', o.contactPhone ? fmtPhone(o.contactPhone) : '',
-        o.items.length ? o.items.map((i) => `${i.qty}× ${i.name}`).join(', ') + (o.contents ? ` · ${o.contents}` : '') : o.contents ?? '', o.instructions ?? '']),
+        o.items.length ? itemsText(o.items) + (o.contents ? ` · ${o.contents}` : '') : o.contents ?? '', o.instructions ?? '']),
     ]);
   };
 

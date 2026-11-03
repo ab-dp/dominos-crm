@@ -365,14 +365,39 @@ function PricesTab({ c }: { c: Customer }) {
   }
 
   const custom = (itemId: string) => c.customPrices.find((x) => x.itemId === itemId);
-  const save = async (itemId: string) => {
+  // editing = "<itemId>:d" (משלוח) או "<itemId>:p" (איסוף עצמי)
+  const save = async (key: string) => {
+    const [itemId, mode] = key.split(':');
     const v = Number(draft.replace(/[^\d.]/g, ''));
     setEditing(null);
-    const rest = c.customPrices.filter((x) => x.itemId !== itemId);
     const item = pl.items.find((i) => i.id === itemId);
-    const next = !draft.trim() || v === item?.price ? rest : [...rest, { itemId, price: v }];
+    if (!item) return;
+    const base = mode === 'p' ? item.pickupPrice ?? item.price : item.price;
+    const cur = custom(itemId);
+    const d = mode === 'd' ? (!draft.trim() || v === base ? undefined : v) : cur?.price !== item.price ? cur?.price : undefined;
+    const pk = mode === 'p' ? (!draft.trim() || v === base ? undefined : v) : cur?.pickupPrice;
+    const rest = c.customPrices.filter((x) => x.itemId !== itemId);
+    // שורה נשמרת רק אם יש בה מחיר מיוחד למשלוח או לאיסוף
+    const next = d === undefined && pk === undefined ? rest : [...rest, { itemId, price: d ?? item.price, ...(pk !== undefined ? { pickupPrice: pk } : {}) }];
     await updateCustomer(c, { customPrices: next });
-    toast({ message: !draft.trim() || v === item?.price ? 'המחיר חזר למחיר המחירון' : `מחיר ייחודי ל${c.name}: ${fmtMoney(v)}` });
+    toast({ message: !draft.trim() || v === base ? 'המחיר חזר למחיר המחירון' : `מחיר ייחודי ל${c.name} (${mode === 'p' ? 'איסוף עצמי' : 'משלוח'}): ${fmtMoney(v)}` });
+  };
+  const cell = (it: (typeof pl.items)[number], mode: 'd' | 'p') => {
+    const cp = custom(it.id);
+    const base = mode === 'p' ? it.pickupPrice ?? it.price : it.price;
+    const special = mode === 'p' ? cp?.pickupPrice : cp && cp.price !== it.price ? cp.price : undefined;
+    const key = `${it.id}:${mode}`;
+    const label = mode === 'p' ? 'איסוף עצמי' : 'משלוח';
+    return editing === key ? (
+      <input className="input input--sm input--ltr cfile__priceinput" autoFocus inputMode="decimal" value={draft} aria-label={`מחיר ללקוח ב${label}: ${it.name}`}
+        onChange={(e) => setDraft(e.target.value)} onBlur={() => save(key)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(key); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); } }} />
+    ) : (
+      <button className={`pricecell ${special !== undefined ? 'is-custom' : ''}`} onClick={() => { setEditing(key); setDraft(special !== undefined ? String(special) : ''); }} aria-label={`${it.name}, ${label}: ${special !== undefined ? `מחיר ייחודי ${fmtMoney(special)}` : `מחיר מחירון ${fmtMoney(base)}`}. לחץ לשינוי`}>
+        {special !== undefined ? <><Ltr>{fmtMoney(special)}</Ltr><span className="pricecell__tag">ייחודי</span></> : <span className="muted"><Ltr>{fmtMoney(base)}</Ltr></span>}
+        <Pencil size={13} aria-hidden="true" />
+      </button>
+    );
   };
 
   return (
@@ -383,31 +408,17 @@ function PricesTab({ c }: { c: Customer }) {
         <Link className="link card__head-end" to={`/pricelists?id=${pl.id}`}>פתח מחירון</Link>
       </div>
       <PriceNote c={c} />
-      <p className="muted cfile__plhint">מחיר ייחודי ללקוח לא משנה את המחירון המשותף. Enter שומר, שדה ריק מחזיר למחיר המחירון.</p>
+      <p className="muted cfile__plhint">מחיר ייחודי ללקוח לא משנה את המחירון המשותף. לחיצה על מחיר – שינוי; Enter שומר, שדה ריק מחזיר למחיר המחירון.</p>
       <table className="items cfile__prices">
-        <thead><tr><th>פריט</th><th>מחיר מחירון</th><th>מחיר ללקוח</th></tr></thead>
+        <thead><tr><th>בסיס מחיר</th><th>ללקוח – משלוח</th><th>ללקוח – איסוף עצמי</th></tr></thead>
         <tbody>
-          {pl.items.filter((i) => i.active).map((it) => {
-            const cp = custom(it.id);
-            return (
-              <tr key={it.id}>
-                <td>{it.name}</td>
-                <td><Ltr>{fmtMoney(it.price)}</Ltr></td>
-                <td>
-                  {editing === it.id ? (
-                    <input className="input input--sm input--ltr cfile__priceinput" autoFocus inputMode="decimal" value={draft} aria-label={`מחיר ללקוח: ${it.name}`}
-                      onChange={(e) => setDraft(e.target.value)} onBlur={() => save(it.id)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(it.id); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); } }} />
-                  ) : (
-                    <button className={`pricecell ${cp ? 'is-custom' : ''}`} onClick={() => { setEditing(it.id); setDraft(cp ? String(cp.price) : ''); }} aria-label={`${it.name}: ${cp ? `מחיר ייחודי ${fmtMoney(cp.price)}` : 'מחיר מחירון'}. לחץ לשינוי`}>
-                      {cp ? <><Ltr>{fmtMoney(cp.price)}</Ltr><span className="pricecell__tag">ייחודי</span></> : <span className="muted">כמו המחירון</span>}
-                      <Pencil size={13} aria-hidden="true" />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
+          {pl.items.filter((i) => i.active).map((it) => (
+            <tr key={it.id}>
+              <td>{it.name}</td>
+              <td>{cell(it, 'd')}</td>
+              <td>{cell(it, 'p')}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

@@ -9,7 +9,7 @@ import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { HealthBadge, Missing, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
-import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
+import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL, itemLabel } from '../../data/types';
 import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, PoEdit } from './OrderActions';
@@ -219,7 +219,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
                     <thead><tr><th>פריט</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
                     <tbody>
                       {o.items.map((it, i) => (
-                        <tr key={i}><td>{it.name}</td><td><Ltr>{it.qty}</Ltr></td><td><Money value={it.unitPrice} /></td><td><Money value={it.qty * it.unitPrice} /></td></tr>
+                        <tr key={i}><td>{itemLabel(it)}</td><td><Ltr>{it.qty}</Ltr></td><td><Money value={it.unitPrice} /></td><td><Money value={it.qty * it.unitPrice} /></td></tr>
                       ))}
                     </tbody>
                   </table>}

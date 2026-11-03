@@ -59,7 +59,11 @@ export const METHOD_LABEL: Record<string, string> = {
 
 export type Branch = { id: string; name: string; cluster: string; phone: string };
 
-export type OrderItem = { itemId?: string; name: string; qty: number; unitPrice: number };
+/* שורה בהזמנה: לפי בסיס מחיר מהמחירון (itemId, name = שם הבסיס, detail = תיאור המוצר) או במחיר ידני (בלי itemId, name = התיאור).
+   manualPrice – המחיר שונה ידנית בשורה ולא מתעדכן במעבר משלוח/איסוף */
+export type OrderItem = { itemId?: string; name: string; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
+export const itemLabel = (i: Pick<OrderItem, 'name' | 'detail'>) => (i.detail ? `${i.name} · ${i.detail}` : i.name);
+export const itemsText = (items: Pick<OrderItem, 'name' | 'detail' | 'qty'>[]) => items.map((i) => `${i.qty}× ${itemLabel(i)}`).join(', ');
 
 export type Order = {
   id: number;

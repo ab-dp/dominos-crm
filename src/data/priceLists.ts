@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { collection, doc, onSnapshot, serverTimestamp, writeBatch, type Timestamp, type WriteBatch } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
-export type PriceItem = { id: string; name: string; price: number; active: boolean };
+/* בסיס מחיר: מחיר למשלוח (price) ומחיר לאיסוף עצמי (pickupPrice). בלי מחיר איסוף – כמו המשלוח */
+export type PriceItem = { id: string; name: string; price: number; pickupPrice?: number; active: boolean };
+export const priceOf = (i: Pick<PriceItem, 'price' | 'pickupPrice'>, delivery: 'delivery' | 'pickup') => (delivery === 'pickup' ? i.pickupPrice ?? i.price : i.price);
 export type PriceList = { id: string; name: string; kind: 'shared' | 'unique'; active: boolean; items: PriceItem[]; createdAt?: Timestamp };
 
 export function usePriceLists() {

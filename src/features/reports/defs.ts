@@ -1,6 +1,6 @@
 /* הגדרות הדוחות (אפיון 10). כל דוח: פונקציה טהורה מהזמנות לשורות וסיכום – קל לבדוק מול חישוב ידני.
    כלל אחיד: לפי תאריך אספקה וסכום Q (ואם לא הועברה – סכום לחיוב). סכומים בלי הזמנות שבוטלו; הביטולים נספרים בנפרד. */
-import { METHOD_LABEL, OUTCOME_LABEL, PAYMENT_LABEL, outcomeOf, type Order, type Outcome } from '../../data/types';
+import { METHOD_LABEL, OUTCOME_LABEL, PAYMENT_LABEL, itemsText, outcomeOf, type Order, type Outcome } from '../../data/types';
 
 export const qVal = (o: Order) => o.qAmount ?? o.amount;
 export const live = (list: Order[]) => list.filter((o) => o.status !== 'cancelled');
@@ -30,7 +30,7 @@ const lastDate = (list: Order[]) => list.reduce((m, o) => (o.date > m ? o.date :
 
 const fmtD = (iso: string) => iso.split('-').reverse().join('.');
 const outcomeCount = (list: Order[], k: Outcome) => list.filter((o) => outcomeOf(o) === k);
-const itemsText = (o: Order) => (o.items.length ? o.items.map((i) => `${i.qty}× ${i.name}`).join(', ') : o.contents ?? '');
+const orderItemsText = (o: Order) => (o.items.length ? itemsText(o.items) : o.contents ?? '');
 const avgLate = (list: Order[]) => { const l = list.filter((o) => o.late?.minutes); return l.length ? Math.round(l.reduce((t, o) => t + (o.late?.minutes ?? 0), 0) / l.length) : 0; };
 
 export const REPORTS: ReportDef[] = [
@@ -45,7 +45,7 @@ export const REPORTS: ReportDef[] = [
         id: String(o.id), orders: [o],
         cells: {
           date: fmtD(o.date), time: o.time, id: o.id, customer: o.customerName, branch: o.branchName, cluster: o.cluster, channel: o.channel,
-          handler: o.handler || o.createdBy, items: itemsText(o), amount: o.amount, q: o.qNumber ?? '', qAmount: o.qAmount ?? '',
+          handler: o.handler || o.createdBy, items: orderItemsText(o), amount: o.amount, q: o.qNumber ?? '', qAmount: o.qAmount ?? '',
           method: o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method, payment: PAYMENT_LABEL[o.payment], outcome: OUTCOME_LABEL[outcomeOf(o)],
           lateMin: o.late?.minutes || '', reason: o.status === 'cancelled' ? [o.cancelReason, o.cancelNote].filter(Boolean).join(' · ') : o.status === 'partial' ? o.partialNote ?? '' : '',
           po: o.poNumber ?? '', notes: [o.instructions, o.note].filter(Boolean).join(' · '),
