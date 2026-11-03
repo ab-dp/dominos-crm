@@ -59,11 +59,15 @@ export const METHOD_LABEL: Record<string, string> = {
 
 export type Branch = { id: string; name: string; cluster: string; phone: string };
 
-/* שורה בהזמנה: לפי בסיס מחיר מהמחירון (itemId, name = שם הבסיס, detail = תיאור המוצר) או במחיר ידני (בלי itemId, name = התיאור).
-   manualPrice – המחיר שונה ידנית בשורה ולא מתעדכן במעבר משלוח/איסוף */
-export type OrderItem = { itemId?: string; name: string; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
-export const itemLabel = (i: Pick<OrderItem, 'name' | 'detail'>) => (i.detail ? `${i.name} · ${i.detail}` : i.name);
-export const itemsText = (items: Pick<OrderItem, 'name' | 'detail' | 'qty'>[]) => items.map((i) => `${i.qty}× ${itemLabel(i)}`).join(', ');
+/* שורה בהזמנה: מוצר מהמחירון (itemId, group = קבוצה, name = רמת המחיר) או פריט ידני (בלי itemId, name = שם המוצר).
+   toppings – התוספות; detail – הערה לשורה ("חצי-חצי, בלי בצל"). manualPrice – המחיר שונה ידנית ולא מתעדכן במעבר משלוח/איסוף */
+export type OrderItem = { itemId?: string; group?: string; name: string; toppings?: string[]; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
+export const itemLabel = (i: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'detail'>) => {
+  const head = i.group && i.group !== 'כללי' ? `${i.group} · ${i.name}` : i.name;
+  const tops = i.toppings?.length ? ` — ${i.toppings.join(', ')}` : '';
+  return `${head}${tops}${i.detail ? ` · ${i.detail}` : ''}`;
+};
+export const itemsText = (items: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'detail' | 'qty'>[]) => items.map((i) => `${i.qty}× ${itemLabel(i)}`).join(', ');
 
 export type Order = {
   id: number;

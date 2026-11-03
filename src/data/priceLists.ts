@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import { collection, doc, onSnapshot, serverTimestamp, writeBatch, type Timestamp, type WriteBatch } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
-/* בסיס מחיר: מחיר למשלוח (price) ומחיר לאיסוף עצמי (pickupPrice). בלי מחיר איסוף – כמו המשלוח */
-export type PriceItem = { id: string; name: string; price: number; pickupPrice?: number; active: boolean };
+/* רמת מחיר בתוך קבוצת מוצרים (group, למשל "משפחתיות"; name = הרמה, למשל "עם תוספת").
+   מחיר למשלוח (price) ומחיר לאיסוף עצמי (pickupPrice – אם חסר, כמו המשלוח). בלי קבוצה – "כללי" */
+export type PriceItem = { id: string; group?: string; name: string; price: number; pickupPrice?: number; active: boolean };
+export const GENERAL_GROUP = 'כללי';
+export const groupOf = (i: Pick<PriceItem, 'group'>) => i.group?.trim() || GENERAL_GROUP;
 export const priceOf = (i: Pick<PriceItem, 'price' | 'pickupPrice'>, delivery: 'delivery' | 'pickup') => (delivery === 'pickup' ? i.pickupPrice ?? i.price : i.price);
 export type PriceList = { id: string; name: string; kind: 'shared' | 'unique'; active: boolean; items: PriceItem[]; createdAt?: Timestamp };
 

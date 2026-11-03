@@ -1,15 +1,15 @@
 /* עריכה בתוך תיק ההזמנה (אפיון 6.3): לוחצים על ערך, משנים, Enter או יציאה מהשדה – נשמר.
    Esc מבטל. כל שמירה נרשמת ביומן עם הערך הקודם, ומוצגת הודעה עם "בטל". */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Check, Minus, Pencil, Plus, Send, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Check, Pencil, Send } from 'lucide-react';
 import { useBranches, useClusters } from '../../data/branches';
 import { newId, useCustomers } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { addOrderNote, useOrderNotes } from '../../data/orders';
-import { priceOf, usePriceLists } from '../../data/priceLists';
+import { usePriceLists } from '../../data/priceLists';
+import { ItemsBuilder, PriceSource, toSaved, useCatalog, type Line } from './ItemsBuilder';
 import { useStore, type OrderView } from '../../data/store';
-import { METHOD_LABEL, type Order, type OrderItem } from '../../data/types';
+import { METHOD_LABEL, type Order } from '../../data/types';
 import { Button, Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
@@ -173,30 +173,17 @@ export const validPhone = (v: string) => (v ? phoneError(v) : '');
 export const showDate = (iso: string) => <Ltr>{fmtDate(iso)}</Ltr>;
 export const showPhone = (p?: string) => (p ? <Ltr>{fmtPhone(p)}</Ltr> : undefined);
 
-/* ---------- פריטים, תכולה וסכום לחיוב ---------- */
-type Line = OrderItem & { key: string };
-
+/* ---------- פריטים, תכולה וסכום לחיוב – אותו בונה פריטים של קליטת ההזמנה ---------- */
 export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void }) {
   const save = useOrderSave(o);
-  const reduce = useReducedMotion();
   const { items: customers } = useCustomers();
   const { items: priceLists } = usePriceLists();
   const c = customers.find((x) => x.id === o.customerId);
-  const pl = priceLists.find((p) => p.id === c?.priceListId);
-  // בסיסי המחיר של הלקוח, לפי משלוח/איסוף של ההזמנה ומחיר מיוחד ללקוח
-  const catalog = useMemo(() => (pl?.items ?? []).filter((i) => i.active).map((i) => {
-    const cp = c?.customPrices.find((p) => p.itemId === i.id);
-    return { ...i, unit: o.delivery === 'pickup' ? cp?.pickupPrice ?? priceOf(i, 'pickup') : cp && cp.price !== i.price ? cp.price : i.price };
-  }), [pl, c, o.delivery]);
+  const [plSel, setPlSel] = useState<string | null>(null);
+  const plId = plSel ?? c?.priceListId ?? '';
+  const catalog = useCatalog(priceLists.find((p) => p.id === plId), c, o.delivery);
 
   const [lines, setLines] = useState<Line[]>(() => o.items.map((it) => ({ ...it, key: newId() })));
-  const { orders } = useStore();
-  /* השלמה אוטומטית בתיאור – מתיאורים שכבר נכתבו בהזמנות */
-  const descHints = useMemo(() => {
-    const m = new Map<string, number>();
-    orders.forEach((x) => x.items.forEach((i) => { const d = (i.itemId ? i.detail : i.name)?.trim(); if (d) m.set(d, (m.get(d) ?? 0) + 1); }));
-    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 200).map(([d]) => d);
-  }, [orders]);
   const [contents, setContents] = useState(o.contents ?? '');
   const [fee, setFee] = useState(o.deliveryFee ? String(o.deliveryFee) : '');
   const calc = lines.reduce((t, l) => t + l.qty * l.unitPrice, 0) + (o.delivery === 'delivery' ? money(fee) : 0);
@@ -210,24 +197,12 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
 
   useEffect(() => { if (!manual) setAmount(String(calc)); }, [calc, manual]);
 
-  const add = (id?: string) => {
-    const it = catalog.find((x) => x.id === id);
-    const key = newId();
-    setLines((ls) => [...ls, { key, itemId: it?.id, name: it?.name ?? '', detail: '', qty: 1, unitPrice: it?.unit ?? 0 }]);
-    setTimeout(() => (document.querySelector(`[data-line="${key}"] .no-items__desc`) as HTMLInputElement | null)?.focus(), 30);
-    if (!hasLines && !o.calcAmount) setManual(false);
-  };
-  const set = (key: string, p: Partial<Line>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...p } : l)));
-
   const submit = () => {
-    if (lines.some((l) => !l.name.trim() || l.qty <= 0)) return setErr('לכל פריט במחיר ידני צריך תיאור, ולכל פריט – כמות');
-    if (lines.some((l) => CARD_RE.test(`${l.name} ${l.detail ?? ''}`))) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     if (final <= 0) return setErr('הסכום לחיוב חייב להיות גדול מ-0');
     if (CARD_RE.test(contents)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
-    const items = lines.map(({ key: _k, itemId, detail, manualPrice, ...l }) => ({ ...(itemId ? { itemId } : {}), ...l, name: l.name.trim(), ...(detail?.trim() ? { detail: detail.trim() } : {}), ...(manualPrice ? { manualPrice: true } : {}) }));
     const feeV = o.delivery === 'delivery' ? money(fee) : 0;
     save({
-      items, contents: contents.trim() || undefined, deliveryFee: feeV || undefined,
+      items: toSaved(lines), contents: contents.trim() || undefined, deliveryFee: feeV || undefined,
       amount: final, calcAmount: hasLines && final !== calc ? calc : undefined,
     }, 'פירוט ההזמנה והסכום');
     onDone();
@@ -235,36 +210,8 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
 
   return (
     <div className="iedit">
-      {hasLines && (
-        <table className="items iedit__table">
-          <thead><tr><th>מחיר לפי</th><th>תיאור המוצר</th><th>כמות</th><th>מחיר ליח׳</th><th>סה״כ</th><th><span className="sr-only">הסר</span></th></tr></thead>
-          <tbody>
-            <AnimatePresence initial={false}>
-              {lines.map((l) => (
-                <motion.tr key={l.key} data-line={l.key} layout={!reduce} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                  <td><span className={`no-base ${l.itemId ? '' : 'is-manual'}`}>{l.itemId ? l.name : 'מחיר ידני'}</span></td>
-                  <td><input className="input input--sm no-items__desc" list="iedit-desc" value={l.itemId ? l.detail ?? '' : l.name} onChange={(e) => set(l.key, l.itemId ? { detail: e.target.value } : { name: e.target.value })} placeholder={l.itemId ? 'למשל: פטריות' : 'מה הפריט'} aria-label={l.itemId ? `תיאור המוצר – ${l.name}` : 'תיאור המוצר'} /></td>
-                  <td>
-                    <div className="stepper">
-                      <button type="button" aria-label="הפחת" onClick={() => set(l.key, { qty: Math.max(1, l.qty - 1) })}><Minus size={14} /></button>
-                      <input className="input input--sm input--ltr" inputMode="numeric" value={l.qty} onChange={(e) => set(l.key, { qty: Number(e.target.value.replace(/\D/g, '')) || 0 })} aria-label={`כמות ${l.name}`} />
-                      <button type="button" aria-label="הוסף" onClick={() => set(l.key, { qty: l.qty + 1 })}><Plus size={14} /></button>
-                    </div>
-                  </td>
-                  <td><input className="input input--sm input--ltr iedit__price" inputMode="decimal" value={l.unitPrice} onChange={(e) => set(l.key, { unitPrice: money(e.target.value), manualPrice: true })} aria-label={`מחיר ליחידה ${l.detail || l.name}`} /></td>
-                  <td><Ltr>{fmtMoney(l.qty * l.unitPrice)}</Ltr></td>
-                  <td><button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר ${l.name || 'פריט'}`} onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}><Trash2 size={15} /></button></td>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
-          </tbody>
-        </table>
-      )}
-      <div className="no-add">
-        {catalog.map((i) => <button key={i.id} type="button" className="chip" onClick={() => add(i.id)}><Plus size={13} aria-hidden="true" /> {i.name} <span className="muted"><Ltr>{fmtMoney(i.unit)}</Ltr></span></button>)}
-        <button type="button" className="chip chip--manual" onClick={() => add()}><Plus size={13} aria-hidden="true" /> פריט במחיר ידני</button>
-        <datalist id="iedit-desc">{descHints.map((h) => <option key={h} value={h} />)}</datalist>
-      </div>
+      <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={o.delivery} />
+      <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => { setErr(''); if (!hasLines && !o.calcAmount) setManual(false); }} />
       <div className="iedit__grid">
         {/* פירוט במילים – רק בהזמנות ישנות שנרשם בהן; הזמנות חדשות נרשמות לפי פריטים */}
         {o.contents && (

@@ -22,3 +22,6 @@
 .pl-customers__list a:hover { background: var(--brand-50); color: var(--brand-800); }
 .pl-customers .muted { margin: 0; font-size: var(--text-label); }
 .pl-delete { color: var(--danger-fg); }
+/* קבוצת מוצרים – שם הקבוצה בשורה הראשונה שלה, וקו מפריד בין קבוצות */
+.pl-group b { color: var(--brand-800); }
+.pl-table tr[data-group-start] td { border-top: 2px solid var(--gray-100); }

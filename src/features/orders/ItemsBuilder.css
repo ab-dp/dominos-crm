@@ -1,0 +1,70 @@
+/* בונה הפריטים: מקור מחיר, כפתורי קבוצות, חלון הרכבה ושורות כמו קבלה */
+.ib-source { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--gray-50); box-shadow: inset 0 0 0 1px var(--gray-100); }
+.ib-source__pick { display: inline-flex; align-items: center; gap: 8px; }
+.ib-source__label { font-size: var(--text-label); font-weight: 600; color: var(--gray-600); }
+.ib-source__pick select { width: auto; min-width: 220px; }
+.ib-source__note { font-size: var(--text-label); color: var(--urgent-fg); }
+
+.ib-add { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.ib-add__btn { display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 14px; border: 1px solid var(--gray-200); border-radius: 17px; background: var(--white); font: inherit; font-size: var(--text-table); font-weight: 600; color: var(--gray-900); cursor: pointer; }
+.ib-add__btn:hover { border-color: var(--brand-600); color: var(--brand-800); }
+.ib-add__btn.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); box-shadow: inset 0 0 0 1px var(--brand-600); }
+.ib-add__btn--manual { border-style: dashed; color: var(--brand-700); font-weight: 500; }
+
+.ib-box { display: grid; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border: 1px solid var(--brand-100); border-radius: var(--radius-panel); background: var(--white); box-shadow: var(--shadow-float); animation: pop-in var(--dur-quick) var(--ease); }
+.ib-box__head { display: flex; align-items: center; justify-content: space-between; font-size: var(--text-body); }
+.ib-row { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 10px; }
+.ib-row__label { font-size: var(--text-label); font-weight: 600; color: var(--gray-600); }
+.ib-row > .stepper { justify-self: start; }
+.ib-levels { display: flex; gap: 6px; flex-wrap: wrap; }
+.ib-level { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-table); cursor: pointer; }
+.ib-level.is-on { border-color: var(--brand-600); background: var(--brand-50); color: var(--brand-800); font-weight: 600; box-shadow: inset 0 0 0 1px var(--brand-600); }
+.ib-level__price { font-family: var(--font-mono); font-size: var(--text-label); color: var(--gray-600); }
+.ib-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 10px; }
+.ib-grid .field + .field { margin-top: 0; }
+.ib-tokens { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; min-height: 38px; padding: 3px 8px; border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white); cursor: text; }
+.ib-tokens:focus-within { border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0, 100, 145, 0.16); }
+.ib-token { display: inline-flex; align-items: center; gap: 3px; height: 26px; padding: 0 4px 0 10px; border-radius: 13px; background: var(--brand-50); color: var(--brand-800); font-size: var(--text-label); font-weight: 600; }
+.ib-token button { display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+.ib-token button:hover { background: var(--brand-100); }
+.ib-tokens__input { flex: 1; min-width: 140px; height: 30px; border: 0; outline: none; background: transparent; font: inherit; font-size: var(--text-table); }
+.ib-tokens__input:focus-visible { box-shadow: none; }
+.ib-hint { margin: -4px 0 0; padding-inline-start: 94px; font-size: var(--text-label); color: var(--urgent-fg); }
+.ib-box__foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--gray-100); }
+.ib-box__sum { margin-inline-end: auto; font-size: var(--text-table); color: var(--gray-600); }
+.ib-box__sum b { color: var(--gray-900); font-family: var(--font-mono); }
+
+.ib-lines { list-style: none; margin: 0 0 10px; padding: 0; border: 1px solid var(--gray-100); border-radius: var(--radius); }
+.ib-line { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+.ib-line + .ib-line { border-top: 1px solid var(--gray-100); }
+.ib-line__text { flex: 1; min-width: 0; font-size: var(--text-table); line-height: 1.45; }
+.ib-line__tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: 8px; background: var(--gray-100); color: var(--gray-600); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.ib-line__price { display: grid; justify-items: end; gap: 1px; }
+.ib-line__unit { padding: 2px 6px; border: 1px dashed transparent; border-radius: 6px; background: none; font: inherit; font-size: var(--text-label); color: var(--gray-600); cursor: pointer; white-space: nowrap; }
+.ib-line__unit:hover { border-color: var(--gray-300); }
+.ib-line__priceinput { width: 90px; }
+.ib-line__reset { font-size: 11px; }
+.ib-line__total { min-width: 72px; text-align: end; font-family: var(--font-mono); font-size: var(--text-table); }
+.stepper--sm button { width: 26px; height: 28px; }
+.stepper--sm input { width: 38px; height: 28px; }
+
+@media (max-width: 640px) {
+  .ib-row { grid-template-columns: 1fr; gap: 4px; }
+  .ib-hint { padding-inline-start: 0; }
+  .ib-grid { grid-template-columns: 1fr; }
+  .ib-line { flex-wrap: wrap; }
+  .ib-line__text { flex-basis: calc(100% - 140px); order: -1; }
+  .ib-source__pick select { min-width: 0; max-width: 220px; }
+}
+@media (prefers-reduced-motion: reduce) { .ib-box { animation: none; } }
+
+/* שורת הסיכום */
+.ib-sum { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-50); font-size: var(--text-table); }
+.ib-sum b { font-family: var(--font-mono); }
+.ib-sum__fee { display: inline-flex; align-items: center; gap: 6px; color: var(--gray-600); }
+.ib-sum__fee input { width: 80px; }
+.ib-sum__total { margin-inline-start: auto; font-weight: 600; }
+.ib-sum__total b { font-size: var(--text-body); }
+.ib-sum__override { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ib-sum__override input { width: 100px; }
+.ib-sum.is-manual { box-shadow: inset 0 0 0 1px var(--urgent-edge); }

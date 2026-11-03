@@ -6,22 +6,23 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Popover from '@radix-ui/react-popover';
 import { motion, useReducedMotion } from 'motion/react';
-import { Check, ChevronDown, CircleAlert, ClipboardList, Minus, Plus, Trash2, UserPlus, X } from 'lucide-react';
+import { Check, ChevronDown, CircleAlert, ClipboardList, UserPlus, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useBranches, useClusters } from '../../data/branches';
 import { EMPTY_CUSTOMER, newId, primaryContact, updateCustomer, useCustomers, type Customer } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
-import { priceOf, usePriceLists } from '../../data/priceLists';
+import { usePriceLists } from '../../data/priceLists';
 import { useStore, type NewOrderMode } from '../../data/store';
-import { METHOD_LABEL, type OrderItem, type OrderStatus } from '../../data/types';
+import { METHOD_LABEL, type OrderStatus } from '../../data/types';
 import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
+import { ItemsBuilder, PriceSource, toSaved, useCatalog, useRepriceOnDelivery, type Line } from './ItemsBuilder';
 import { uploadOrderDoc } from '../../data/orderDocs';
 import { FileDrop } from './OrderDocs';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
@@ -40,7 +41,6 @@ const MISS_LABEL: Record<string, string> = {
   channel: 'ערוץ', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש',
 };
 
-type Line = OrderItem & { key: string };
 const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
 
 export function NewOrderDialog() {
@@ -108,9 +108,9 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
   const isNew = mode === 'newCustomer';
   const c = isNew ? undefined : customers.find((x) => x.id === customerId);
-  const [plPick, setPlPick] = useState(''); // מחירון לחישוב כשללקוח אין מחירון
-  const activeLists = priceLists.filter((p) => p.active);
-  const priceList = priceLists.find((p) => p.id === (c?.priceListId || plPick));
+  const [plSel, setPlSel] = useState<string | null>(null); // מחירון שנבחר בהזמנה; ברירת מחדל – של הלקוח
+  const plId = plSel ?? c?.priceListId ?? '';
+  const priceList = priceLists.find((p) => p.id === plId);
   const branchObj = branches.find((b) => b.id === branch?.branchId);
   const clearErr = (...k: string[]) => setErrors((e) => { const n = { ...e }; k.forEach((x) => delete n[x]); return n; });
 
@@ -132,6 +132,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       setBranch((cur) => cur ?? { branchId: b.id, clusterId: b.clusterId });
     }
     setLines([]);
+    setPlSel(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c?.id]);
 
@@ -139,33 +140,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const channelHints = useMemo(() => [...new Set([...(lists?.channels ?? []).filter((x) => x.active).map((x) => x.label), ...orders.map((o) => o.channel).filter(Boolean)])].slice(0, 30), [lists, orders]);
 
   /* ---------- פריטים ומחיר ---------- */
-  const catalog = useMemo(() => (priceList?.items ?? []).filter((i) => i.active).map((i) => {
-    const cp = c?.priceListId === priceList?.id ? c?.customPrices.find((p) => p.itemId === i.id) : undefined;
-    const unit = delivery === 'pickup' ? cp?.pickupPrice ?? priceOf(i, 'pickup') : cp && cp.price !== i.price ? cp.price : i.price;
-    return { ...i, unit, custom: !!cp && (delivery === 'pickup' ? cp.pickupPrice !== undefined : cp.price !== i.price) };
-  }), [priceList, c, delivery]);
-  const unitOf = (itemId: string) => catalog.find((x) => x.id === itemId)?.unit ?? 0;
-  /* השלמה אוטומטית בתיאור: מתיאורים שכבר נכתבו בהזמנות (לא רשימה קבועה) – הנפוצים קודם */
-  const descHints = useMemo(() => {
-    const m = new Map<string, number>();
-    orders.forEach((o) => o.items.forEach((i) => { const d = (i.itemId ? i.detail : i.name)?.trim(); if (d) m.set(d, (m.get(d) ?? 0) + 1); }));
-    return [...m.entries()].sort((x, y) => y[1] - x[1]).slice(0, 200).map(([d]) => d);
-  }, [orders]);
-  /* מעבר משלוח ⇄ איסוף: שורות לפי מחירון מתעדכנות למחיר החדש (חוץ ממחיר ששונה ידנית) */
-  const prevDelivery = useRef(delivery);
-  useEffect(() => {
-    if (prevDelivery.current === delivery) return;
-    prevDelivery.current = delivery;
-    let changed = 0;
-    setLines((ls) => ls.map((l) => {
-      if (!l.itemId || l.manualPrice) return l;
-      const u = unitOf(l.itemId);
-      if (u !== l.unitPrice) changed++;
-      return { ...l, unitPrice: u };
-    }));
-    setTimeout(() => { if (changed) toast({ message: <>המחירים עודכנו ל{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</> }); }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [delivery, catalog]);
+  const catalog = useCatalog(priceList, c, delivery);
+  useRepriceOnDelivery(delivery, catalog, setLines, (n) => { if (n) toast({ message: <>המחירים עודכנו ל{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</> }); });
   const past = !!date && date < today; // תאריך שעבר – הזמנה לתיעוד בלבד
   const linesTotal = lines.reduce((t, l) => t + l.qty * l.unitPrice, 0);
   const useLines = lines.length > 0;
@@ -175,15 +151,6 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const canOverride = lines.length > 0 || feeValue > 0;
   const finalAmount = canOverride && override !== null ? money(override) : total;
   const isManual = canOverride && override !== null && finalAmount !== total;
-  /* שורה חדשה: לפי בסיס מחיר (המחיר מתמלא) או במחיר ידני. הסמן עובר ישר לתיאור */
-  const addLine = (itemId?: string) => {
-    const it = catalog.find((x) => x.id === itemId);
-    const key = newId();
-    setLines((ls) => [...ls, { key, itemId: it?.id, name: it?.name ?? '', detail: '', qty: 1, unitPrice: it?.unit ?? 0 }]);
-    clearErr('amount', 'contents');
-    setTimeout(() => (document.querySelector(`[data-line="${key}"] .no-items__desc`) as HTMLInputElement | null)?.focus(), 30);
-  };
-  const setLine = (key: string, p: Partial<Line>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...p } : l)));
 
   /* ---------- כפילויות ---------- */
   const dup = isNew ? undefined : findDuplicate(orders, { customerId, date, time, branchId: branch?.branchId ?? '' }, thresholds.nearMinutes);
@@ -238,7 +205,6 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     if (isManual && finalAmount <= 0) m.final = MISS;
     if (total - feeValue <= 0) m.amount = lines.length ? 'סכום הפריטים הוא 0' : MISS;
     if (useLines && lines.some((l) => !l.name.trim() || l.qty <= 0)) e.amount = 'לכל פריט במחיר ידני צריך תיאור, ולכל פריט – כמות';
-    if (lines.some((l) => l.itemId && !l.detail?.trim())) m.detail = MISS;
     if (lines.some((l) => CARD_RE.test(`${l.name} ${l.detail ?? ''}`))) e.amount = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (!lines.length) m.contents = MISS;
     if (past && !outcome) e.outcome = 'בהזמנה בתאריך שעבר – בחרו מה קרה בה';
@@ -296,7 +262,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       contactPhone: cleanPhone(isNew ? nc.contactPhone : contact.phone) || undefined,
       poRequired: !!c?.poRequired,
       poNumber: poNumber.trim() || undefined,
-      items: useLines ? lines.map(({ key: _k, itemId, detail, manualPrice, ...l }) => ({ ...(itemId ? { itemId } : {}), ...l, name: l.name.trim(), ...(detail?.trim() ? { detail: detail.trim() } : {}), ...(manualPrice ? { manualPrice: true } : {}) })) : [],
+      items: useLines ? toSaved(lines) : [],
       deliveryFee: feeValue || undefined,
       instructions: instructions.trim() || undefined,
       billingNote: c?.billingInstructions || undefined,
@@ -439,85 +405,35 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const itemsSection = (
     <Section title="פריטים ומחיר" aside={<span className="no-total">{isManual ? 'לחיוב' : 'סה״כ'} <b><Ltr>{fmtMoney(finalAmount)}</Ltr></b></span>}>
       {c?.priceNote && <p className="no-pricenote" role="note"><b>הערת מחיר:</b> {c.priceNote}</p>}
-      {/* מחשבון מחיר: בסיסי המחיר של הלקוח (או מחירון שבוחרים), לפי משלוח/איסוף. לחיצה מוסיפה שורה – ובה כותבים את התיאור המדויק */}
-      <div className="no-calc">
-        <div className="no-calc__head">
-          <b>מחשבון מחיר</b>
-          {priceList && <span className="muted">{priceList.name} · מחירי {delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</span>}
-          {!c?.priceListId && (
-            <select className="input input--sm no-calc__pick" value={plPick} onChange={(e) => setPlPick(e.target.value)} aria-label="לפי מחירון">
-              <option value="">{activeLists.length ? (c || isNew ? 'ללקוח אין מחירון – לפי מחירון…' : 'לפי מחירון…') : 'אין מחירונים'}</option>
-              {activeLists.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          )}
-        </div>
-        <div className="no-quick" role="group" aria-label="בסיסי מחיר – לחיצה מוסיפה שורה">
-          {catalog.map((i) => (
-            <button type="button" key={i.id} className="chip" onClick={() => addLine(i.id)}>
-              <Plus size={14} aria-hidden="true" /> {i.name} <span className="muted"><Ltr>{fmtMoney(i.unit)}</Ltr></span>{i.custom && <span className="pricecell__tag">ללקוח</span>}
-            </button>
-          ))}
-          <button type="button" className="chip chip--manual" onClick={() => addLine()}><Plus size={14} aria-hidden="true" /> פריט במחיר ידני</button>
-        </div>
-      </div>
-      {lines.length > 0 && (
-        <table className="no-items">
-          <thead><tr><th>מחיר לפי</th><th>תיאור המוצר</th><th>כמות</th><th>מחיר ליח׳</th><th className="num">סה״כ</th><th><span className="sr-only">הסר</span></th></tr></thead>
-          <tbody>
-            {lines.map((l) => (
-              <tr key={l.key} data-line={l.key}>
-                <td><span className={`no-base ${l.itemId ? '' : 'is-manual'}`}>{l.itemId ? l.name : 'מחיר ידני'}</span></td>
-                <td>
-                  <input className="input input--sm no-items__desc" list="no-desc" value={l.itemId ? l.detail ?? '' : l.name}
-                    onChange={(e) => { setLine(l.key, l.itemId ? { detail: e.target.value } : { name: e.target.value }); clearErr('amount'); }}
-                    placeholder={l.itemId ? 'למשל: פטריות' : 'מה הפריט'} aria-label={l.itemId ? `תיאור המוצר – ${l.name}` : 'תיאור המוצר'} />
-                </td>
-                <td>
-                  <div className="stepper">
-                    <button type="button" aria-label="הפחת" onClick={() => setLine(l.key, { qty: Math.max(1, l.qty - 1) })}><Minus size={14} /></button>
-                    <input className="input input--sm input--ltr" inputMode="numeric" value={l.qty} onChange={(e) => setLine(l.key, { qty: Number(e.target.value.replace(/\D/g, '')) || 0 })} aria-label={`כמות ${l.detail || l.name}`} />
-                    <button type="button" aria-label="הוסף" onClick={() => setLine(l.key, { qty: l.qty + 1 })}><Plus size={14} /></button>
-                  </div>
-                </td>
-                <td>
-                  <input className="input input--sm input--ltr no-items__price" inputMode="decimal" value={l.unitPrice} onChange={(e) => setLine(l.key, { unitPrice: money(e.target.value), manualPrice: true })} aria-label={`מחיר ליחידה ${l.detail || l.name}`} />
-                  {l.itemId && l.manualPrice && <button type="button" className="link no-items__reset" onClick={() => setLine(l.key, { unitPrice: unitOf(l.itemId!), manualPrice: false })}>חזור למחירון</button>}
-                </td>
-                <td className="num"><Ltr>{fmtMoney(l.qty * l.unitPrice)}</Ltr></td>
-                <td><button type="button" className="icon-btn" aria-label={`הסר ${l.detail || l.name || 'פריט'}`} onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}><Trash2 size={16} /></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <datalist id="no-desc">{descHints.map((h) => <option key={h} value={h} />)}</datalist>
+      {/* מקור המחיר: מחירון (של הלקוח, כללי, או בלי) ומשלוח/איסוף – באותה שורה */}
+      <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={delivery} onDelivery={setDelivery} />
+      <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => clearErr('amount', 'contents')} />
       {lines.length === 0 && (
         <p className={`no-items-empty ${errors.contents ? 'is-err' : ''}`}>
-          לחצו על בסיס מחיר במחשבון{catalog.length ? '' : ' (או בחרו מחירון)'}, או על "פריט במחיר ידני", וכתבו את התיאור המדויק – למשל פטריות, זיתים, לחם שום.
+          בחרו קבוצת מוצרים{catalog.length ? '' : ' (או מחירון)'} או "פריט ידני": רמת מחיר, כמות, תוספות והערה – והפריט נכנס להזמנה.
         </p>
       )}
       {err('amount')}
-      {delivery === 'delivery' && (
-        <Row>
-          <L label="דמי משלוח (₪)">
-            <input className="input input--ltr" inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" />
-          </L>
-        </Row>
-      )}
-      {canOverride && (
-        <div className={`no-final ${isManual ? 'is-manual' : ''}`}>
-          <L label="סכום לחיוב (לפי הסגירה מול הלקוח)">
-            <input className="input input--ltr" inputMode="decimal" value={override ?? String(total)} onChange={(e) => { setOverride(e.target.value); clearErr('final'); }} {...inv('final')} />
-            {err('final')}
-          </L>
-          {isManual ? (
-            <p className="no-final__note">
-              <span className="no-final__tag">שונה ידנית</span> מחושב: <Ltr>{fmtMoney(total)}</Ltr>
+      {/* סיכום בשורה אחת: פריטים · דמי משלוח · סה"כ. שינוי הסכום הסופי – רק כשצריך */}
+      <div className={`ib-sum ${isManual ? 'is-manual' : ''}`}>
+        <span>פריטים <b><Ltr>{fmtMoney(linesTotal)}</Ltr></b></span>
+        {delivery === 'delivery' && (
+          <label className="ib-sum__fee">דמי משלוח
+            <input className="input input--sm input--ltr" inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" aria-label="דמי משלוח (₪)" />
+          </label>
+        )}
+        <span className="ib-sum__total">סה"כ לחיוב <b><Ltr>{fmtMoney(finalAmount)}</Ltr></b></span>
+        {canOverride && (override === null
+          ? <button type="button" className="link" onClick={() => setOverride(String(total))}>שנה סכום</button>
+          : (
+            <span className="ib-sum__override">
+              <input className="input input--sm input--ltr" inputMode="decimal" autoFocus value={override} onChange={(e) => { setOverride(e.target.value); clearErr('final'); }} aria-label="סכום לחיוב (לפי הסגירה מול הלקוח)" {...inv('final')} />
+              {isManual && <span className="no-final__tag">שונה ידנית · מחושב <Ltr>{fmtMoney(total)}</Ltr></span>}
               <button type="button" className="link" onClick={() => setOverride(null)}>חזור לחישוב</button>
-            </p>
-          ) : <p className="muted no-hint">מתעדכן לבד מהפריטים{feeValue ? ' ודמי המשלוח' : ''}. אפשר להקליד סכום אחר.</p>}
-        </div>
-      )}
+            </span>
+          ))}
+      </div>
+      {err('final')}
       <p className="muted no-hint">המחיר נשמר בתוך ההזמנה. שינוי מחירון בעתיד לא ישנה אותה.</p>
     </Section>
   );

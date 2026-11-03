@@ -5,7 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Check, Copy, Pencil, Plus, Tags, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Shell } from '../leads/LeadDialogs';
-import { createPriceList, deletePriceList, updatePriceList, usePriceLists, type PriceItem, type PriceList } from '../../data/priceLists';
+import { GENERAL_GROUP, createPriceList, deletePriceList, groupOf, updatePriceList, usePriceLists, type PriceItem, type PriceList } from '../../data/priceLists';
 import { newId, useCustomers } from '../../data/customers';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -43,7 +43,7 @@ export function PriceListsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">מחירונים</h1>
-          <p className="page__sub">מחירון הוא בסיסי מחיר, לא תפריט: לכל בסיס מחיר למשלוח ולאיסוף עצמי. בהזמנה בוחרים בסיס ומוסיפים תיאור מדויק. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות קיימות.</p>
+          <p className="page__sub">מחירון הוא קבוצות מוצרים ורמות מחיר, לא תפריט: לכל רמה מחיר למשלוח ולאיסוף עצמי. בהזמנה בוחרים מוצר, מסמנים תוספות ופירוט. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות קיימות.</p>
         </div>
         <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
       </header>
@@ -97,7 +97,7 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(pl.name);
   const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ name: '', price: '', pickup: '' });
+  const [draft, setDraft] = useState({ group: '', name: '', price: '', pickup: '' });
   const [adding, setAdding] = useState(false);
   const [err, setErr] = useState('');
   const [showInactive, setShowInactive] = useState(false);
@@ -109,28 +109,32 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
 
   const commitItem = async (id: string | null) => {
     const n = draft.name.trim();
+    const g = draft.group.trim() || GENERAL_GROUP;
     const price = Number(draft.price.replace(/[^\d.]/g, ''));
     const pickupPrice = draft.pickup.trim() ? Number(draft.pickup.replace(/[^\d.]/g, '')) : price;
     if (!n) return setErr('חובה: שם בסיס המחיר');
     if (!draft.price.trim() || !(price > 0)) return setErr('חובה: מחיר למשלוח (כולל מע"מ)');
     if (!(pickupPrice > 0)) return setErr('מחיר לאיסוף עצמי לא תקין');
-    const dupe = findSimilar(n, pl.items.map((i) => ({ id: i.id, name: i.name })), id ?? undefined);
-    if (dupe) return setErr(`כבר יש פריט בשם דומה: "${dupe.name}"`);
+    // כפילות: אותה רמה באותה קבוצה
+    const dupe = findSimilar(n, pl.items.filter((i) => groupOf(i) === g).map((i) => ({ id: i.id, name: i.name })), id ?? undefined);
+    if (dupe) return setErr(`בקבוצה "${g}" כבר יש רמת מחיר בשם דומה: "${dupe.name}"`);
     if (id) {
       const old = pl.items.find((i) => i.id === id)!;
-      await saveItems(pl.items.map((i) => (i.id === id ? { ...i, name: n, price, pickupPrice } : i)), old.price !== price || (old.pickupPrice ?? old.price) !== pickupPrice ? `${n}: משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}` : 'בסיס המחיר עודכן', { item: old.name, price: old.price, pickupPrice: old.pickupPrice ?? old.price }, { item: n, price, pickupPrice });
+      await saveItems(pl.items.map((i) => (i.id === id ? { ...i, group: g, name: n, price, pickupPrice } : i)), old.price !== price || (old.pickupPrice ?? old.price) !== pickupPrice ? `${n}: משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}` : 'בסיס המחיר עודכן', { item: old.name, price: old.price, pickupPrice: old.pickupPrice ?? old.price }, { item: n, price, pickupPrice });
       setEditing(null);
     } else {
-      await saveItems([...pl.items, { id: newId(), name: n, price, pickupPrice, active: true }], `${n} נוסף · משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}`, null, { item: n, price, pickupPrice });
+      await saveItems([...pl.items, { id: newId(), group: g, name: n, price, pickupPrice, active: true }], `${g} · ${n} נוסף · משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}`, null, { item: n, price, pickupPrice });
       setAdding(false);
     }
-    setDraft({ name: '', price: '', pickup: '' }); setErr('');
+    setDraft({ group: g, name: '', price: '', pickup: '' }); setErr('');
   };
 
-  const rows = pl.items.filter((i) => showInactive || i.active);
+  const groups = [...new Set(pl.items.map(groupOf))];
+  const rows = pl.items.filter((i) => showInactive || i.active).sort((a, b) => groups.indexOf(groupOf(a)) - groups.indexOf(groupOf(b)));
   const row = (id: string | null) => (
     <tr className="brow brow--edit" key={id ?? 'new'} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitItem(id); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); setAdding(false); setErr(''); } }}>
-      <td><input className="input input--sm" autoFocus value={draft.name} onChange={(e) => { setDraft({ ...draft, name: e.target.value }); setErr(''); }} aria-label="שם בסיס המחיר" placeholder="למשל: משפחתית רגילה" /></td>
+      <td><input className="input input--sm" list="pl-groups" value={draft.group} onChange={(e) => { setDraft({ ...draft, group: e.target.value }); setErr(''); }} aria-label="קבוצת מוצרים" placeholder="למשל: משפחתיות" /></td>
+      <td><input className="input input--sm" autoFocus value={draft.name} onChange={(e) => { setDraft({ ...draft, name: e.target.value }); setErr(''); }} aria-label="שם רמת המחיר" placeholder="למשל: רגילה / עם תוספת" /></td>
       <td><input className="input input--sm input--ltr pl-price" inputMode="decimal" value={draft.price} onChange={(e) => { setDraft({ ...draft, price: e.target.value }); setErr(''); }} aria-label="מחיר למשלוח כולל מע״מ" placeholder="₪" /></td>
       <td><input className="input input--sm input--ltr pl-price" inputMode="decimal" value={draft.pickup} onChange={(e) => { setDraft({ ...draft, pickup: e.target.value }); setErr(''); }} aria-label="מחיר לאיסוף עצמי כולל מע״מ" placeholder={draft.price ? `כמו משלוח` : '₪'} /></td>
       <td colSpan={2} className="br-actions">
@@ -169,13 +173,14 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
 
       <div className="otable-wrap br-table-wrap">
         <table className="otable otable--dense br-table pl-table">
-          <caption className="sr-only">בסיסי מחיר במחירון {pl.name}</caption>
-          <thead><tr><th>בסיס מחיר</th><th>משלוח</th><th>איסוף עצמי</th><th>מצב</th><th><span className="sr-only">פעולות</span></th></tr></thead>
+          <caption className="sr-only">קבוצות ורמות מחיר במחירון {pl.name}</caption>
+          <thead><tr><th>קבוצת מוצרים</th><th>רמת מחיר</th><th>משלוח</th><th>איסוף עצמי</th><th>מצב</th><th><span className="sr-only">פעולות</span></th></tr></thead>
           <tbody>
             {adding && row(null)}
-            {rows.map((it) => editing === it.id ? row(it.id) : (
-              <tr key={it.id} className={`brow ${it.active ? '' : 'is-inactive'}`} tabIndex={0}
-                onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === 'Enter') { e.preventDefault(); setEditing(it.id); setDraft({ name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); } }}>
+            {rows.map((it, idx) => editing === it.id ? row(it.id) : (
+              <tr key={it.id} data-group-start={idx === 0 || groupOf(rows[idx - 1]) !== groupOf(it) || undefined} className={`brow ${it.active ? '' : 'is-inactive'}`} tabIndex={0}
+                onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === 'Enter') { e.preventDefault(); setEditing(it.id); setDraft({ group: groupOf(it), name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); } }}>
+                <td className="pl-group">{idx === 0 || groupOf(rows[idx - 1]) !== groupOf(it) ? <b>{groupOf(it)}</b> : ''}</td>
                 <td className="strong">{it.name}</td>
                 <td className="num"><Ltr>{fmtMoney(it.price)}</Ltr></td>
                 <td className="num"><Ltr>{fmtMoney(it.pickupPrice ?? it.price)}</Ltr></td>
@@ -185,15 +190,16 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
                     <span className="switch__track"><span className="switch__thumb" /></span><span className="switch__label">{it.active ? 'פעיל' : 'לא פעיל'}</span>
                   </button>
                 </td>
-                <td className="br-actions"><Button size="sm" variant="ghost" icon={<Pencil size={15} />} onClick={() => { setEditing(it.id); setAdding(false); setDraft({ name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); setErr(''); }}>ערוך</Button></td>
+                <td className="br-actions"><Button size="sm" variant="ghost" icon={<Pencil size={15} />} onClick={() => { setEditing(it.id); setAdding(false); setDraft({ group: groupOf(it), name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); setErr(''); }}>ערוך</Button></td>
               </tr>
             ))}
-            {err && <tr className="brow-msg"><td colSpan={5}><p className="pop__err" role="alert">{err}</p></td></tr>}
+            {err && <tr className="brow-msg"><td colSpan={6}><p className="pop__err" role="alert">{err}</p></td></tr>}
           </tbody>
         </table>
         {!adding && (
-          <button className="pl-add" onClick={() => { setAdding(true); setEditing(null); setDraft({ name: '', price: '', pickup: '' }); setErr(''); }}><Plus size={16} aria-hidden="true" /> הוסף בסיס מחיר</button>
+          <button className="pl-add" onClick={() => { setAdding(true); setEditing(null); setDraft({ group: groups[groups.length - 1] ?? '', name: '', price: '', pickup: '' }); setErr(''); }}><Plus size={16} aria-hidden="true" /> הוסף רמת מחיר</button>
         )}
+        <datalist id="pl-groups">{groups.map((g) => <option key={g} value={g} />)}</datalist>
       </div>
 
       <div className="pl-customers">
