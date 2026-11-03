@@ -60,14 +60,17 @@ export const METHOD_LABEL: Record<string, string> = {
 export type Branch = { id: string; name: string; cluster: string; phone: string };
 
 /* שורה בהזמנה: מוצר מהמחירון (itemId, group = קבוצה, name = רמת המחיר) או פריט ידני (בלי itemId, name = שם המוצר).
-   toppings – התוספות; detail – הערה לשורה ("חצי-חצי, בלי בצל"). manualPrice – המחיר שונה ידנית ולא מתעדכן במעבר משלוח/איסוף */
-export type OrderItem = { itemId?: string; group?: string; name: string; toppings?: string[]; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
-export const itemLabel = (i: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'detail'>) => {
+   toppings – הפירוט (בפיצה: תוספות; בנלווים: שם המוצר). parts – חלוקה לחצי-חצי או רבעים, פירוט לכל חלק (אז toppings ריק).
+   detail – הערה לשורה. manualPrice – המחיר שונה ידנית ולא מתעדכן במעבר משלוח/איסוף */
+export type OrderItem = { itemId?: string; group?: string; name: string; toppings?: string[]; parts?: string[][]; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
+const FRACTION: Record<number, string> = { 2: '½', 4: '¼' };
+export const partsText = (parts: string[][]) => parts.map((p) => `${FRACTION[parts.length] ?? ''} ${p.length ? p.join(', ') : 'רגילה'}`.trim()).join(' | ');
+export const itemLabel = (i: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'parts' | 'detail'>) => {
   const head = i.group && i.group !== 'כללי' ? `${i.group} · ${i.name}` : i.name;
-  const tops = i.toppings?.length ? ` — ${i.toppings.join(', ')}` : '';
+  const tops = i.parts?.length ? ` — ${partsText(i.parts)}` : i.toppings?.length ? ` — ${i.toppings.join(', ')}` : '';
   return `${head}${tops}${i.detail ? ` · ${i.detail}` : ''}`;
 };
-export const itemsText = (items: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'detail' | 'qty'>[]) => items.map((i) => `${i.qty}× ${itemLabel(i)}`).join(', ');
+export const itemsText = (items: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'parts' | 'detail' | 'qty'>[]) => items.map((i) => `${i.qty}× ${itemLabel(i)}`).join(', ');
 
 export type Order = {
   id: number;

@@ -14,8 +14,6 @@
 .no-date .input { flex: 1; min-width: 150px; }
 .no-time { max-width: 160px; }
 .no-hint { margin: 4px 0 0; font-size: var(--text-label); }
-.no-total { font-size: var(--text-table); font-weight: 400; color: var(--gray-600); }
-.no-total b { color: var(--gray-900); font-size: var(--text-card-title); }
 
 
 .no-items { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: var(--text-table); }
@@ -54,16 +52,11 @@
 .norder .fdrop { margin-bottom: 10px; }
 
 /* פרטים חסרים לפני שמירה – מעל כפתור השמירה, תמיד גלוי */
-.no-missing {
-  display: flex; gap: 10px; padding: 10px 20px;
-  background: var(--danger-bg); color: var(--danger-fg); border-top: 1px solid var(--gray-100);
-  font-size: var(--text-table); animation: pop-in var(--dur-quick) var(--ease);
-}
-.no-missing svg { flex: none; margin-top: 2px; }
-.no-missing div { display: grid; gap: 2px; }
-.no-missing span { color: var(--gray-800); }
-.cform__hint svg { vertical-align: -1px; }
-@media (prefers-reduced-motion: reduce) { .no-missing { animation: none; } }
+.no-missing { display: grid; gap: 4px; margin: 0; padding: 8px 20px; list-style: none; border-top: 1px solid var(--urgent-edge); background: var(--urgent-bg); font-size: var(--text-label); }
+.no-missing li { display: flex; align-items: flex-start; gap: 8px; color: var(--gray-800); }
+.no-missing svg { flex: none; margin-top: 2px; color: var(--urgent-fg); }
+.no-missing b { color: var(--urgent-fg); }
+
 
 /* "האם זה איש הקשר?" – הצעות מאנשי הקשר השמורים, לא מילוי אוטומטי */
 .no-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; font-size: var(--text-table); }
@@ -97,3 +90,4 @@
 .no-base.is-manual { background: var(--gray-100); color: var(--gray-600); }
 .no-items__desc { min-width: 160px; }
 .no-items__reset { display: block; margin-top: 2px; font-size: 11px; }
+.cform__hint svg { vertical-align: -1px; }

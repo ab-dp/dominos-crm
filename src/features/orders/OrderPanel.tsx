@@ -61,7 +61,7 @@ export function OrderPanel() {
             <Dialog.Overlay asChild forceMount>
               <motion.div className="panel-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
             </Dialog.Overlay>
-            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} aria-labelledby="panel-title" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
+            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} aria-labelledby="panel-title" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-box, .ib-line__priceinput')) e.preventDefault(); }}
               onOpenAutoFocus={(e) => { e.preventDefault(); document.getElementById('panel-title')?.focus(); }}
               onCloseAutoFocus={restoreFocus}>
               <motion.div

@@ -2,7 +2,7 @@
    כל מחיר ניתן לעריכה ידנית בכל רגע וכל עריכה נרשמת ביומן. שינוי מחירון לא משנה הזמנות קיימות. */
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, Copy, Pencil, Plus, Tags, Trash2, Users, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Copy, Pencil, Plus, Tags, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Shell } from '../leads/LeadDialogs';
 import { GENERAL_GROUP, createPriceList, deletePriceList, groupOf, updatePriceList, usePriceLists, type PriceItem, type PriceList } from '../../data/priceLists';
@@ -10,7 +10,7 @@ import { newId, useCustomers } from '../../data/customers';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtMoney } from '../../lib/format';
-import { findSimilar } from '../../lib/names';
+import { findSimilar, isSimilar } from '../../lib/names';
 import '../pages.css';
 import '../branches/BranchesPage.css';
 import './PriceListsPage.css';
@@ -43,7 +43,7 @@ export function PriceListsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">מחירונים</h1>
-          <p className="page__sub">מחירון הוא קבוצות מוצרים ורמות מחיר, לא תפריט: לכל רמה מחיר למשלוח ולאיסוף עצמי. בהזמנה בוחרים מוצר, מסמנים תוספות ופירוט. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות קיימות.</p>
+          <p className="page__sub">מחירון הוא קבוצות מוצרים ורמות מחיר, לא תפריט: לכל רמה מחיר למשלוח ולאיסוף עצמי. סדר הקבוצות כאן הוא סדר הכפתורים בהזמנה. בהזמנה בוחרים מוצר, רמה ופירוט. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות קיימות.</p>
         </div>
         <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
       </header>
@@ -101,6 +101,7 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
   const [adding, setAdding] = useState(false);
   const [err, setErr] = useState('');
   const [showInactive, setShowInactive] = useState(false);
+  const [groupEdit, setGroupEdit] = useState<{ from: string; to: string } | null>(null);
 
   const saveItems = async (items: PriceItem[], msg: string, before?: unknown, after?: unknown) => {
     try { await updatePriceList(pl, { items }, { before, after }); toast({ message: msg }); }
@@ -131,6 +132,31 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
 
   const groups = [...new Set(pl.items.map(groupOf))];
   const rows = pl.items.filter((i) => showInactive || i.active).sort((a, b) => groups.indexOf(groupOf(a)) - groups.indexOf(groupOf(b)));
+  // קבוצה בשם דומה (לא זהה) לקבוצה קיימת – כנראה אותה קבוצה בכתיב אחר
+  const similarGroup = (g: string, except?: string) => groups.find((x) => x !== except && x !== g.trim() && isSimilar(x, g));
+
+  /* סדר הקבוצות = סדר הכפתורים בהזמנה. נשמר כסדר הפריטים במחירון */
+  const moveGroup = (g: string, dir: -1 | 1) => {
+    const i = groups.indexOf(g), j = i + dir;
+    if (j < 0 || j >= groups.length) return;
+    const order = [...groups]; [order[i], order[j]] = [order[j], order[i]];
+    saveItems(order.flatMap((x) => pl.items.filter((it) => groupOf(it) === x)), `הקבוצה "${g}" הוזזה ${dir < 0 ? 'למעלה' : 'למטה'}`, { groups }, { groups: order });
+  };
+  /* שינוי שם קבוצה – לכל הרמות שבה. שם של קבוצה קיימת מאחד את שתיהן */
+  const renameGroup = async () => {
+    if (!groupEdit) return;
+    const to = groupEdit.to.trim();
+    if (!to) return setErr('חובה: שם הקבוצה');
+    if (to === groupEdit.from) return setGroupEdit(null);
+    const merge = groups.includes(to);
+    if (merge) {
+      const clash = pl.items.filter((i) => groupOf(i) === groupEdit.from).find((i) => pl.items.some((x) => groupOf(x) === to && isSimilar(x.name, i.name)));
+      if (clash) return setErr(`בקבוצה "${to}" כבר יש רמה בשם "${clash.name}" – שנו קודם את שם הרמה`);
+    }
+    await saveItems(pl.items.map((i) => (groupOf(i) === groupEdit.from ? { ...i, group: to } : i)), merge ? `הקבוצה "${groupEdit.from}" אוחדה עם "${to}"` : `שם הקבוצה עודכן: "${to}"`, { group: groupEdit.from }, { group: to });
+    setGroupEdit(null); setErr('');
+  };
+  const draftSimilar = (adding || editing) && draft.group.trim() ? similarGroup(draft.group) : undefined;
   const row = (id: string | null) => (
     <tr className="brow brow--edit" key={id ?? 'new'} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitItem(id); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); setAdding(false); setErr(''); } }}>
       <td><input className="input input--sm" list="pl-groups" value={draft.group} onChange={(e) => { setDraft({ ...draft, group: e.target.value }); setErr(''); }} aria-label="קבוצת מוצרים" placeholder="למשל: משפחתיות" /></td>
@@ -180,7 +206,32 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
             {rows.map((it, idx) => editing === it.id ? row(it.id) : (
               <tr key={it.id} data-group-start={idx === 0 || groupOf(rows[idx - 1]) !== groupOf(it) || undefined} className={`brow ${it.active ? '' : 'is-inactive'}`} tabIndex={0}
                 onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === 'Enter') { e.preventDefault(); setEditing(it.id); setDraft({ group: groupOf(it), name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); } }}>
-                <td className="pl-group">{idx === 0 || groupOf(rows[idx - 1]) !== groupOf(it) ? <b>{groupOf(it)}</b> : ''}</td>
+                <td className="pl-group">{(idx === 0 || groupOf(rows[idx - 1]) !== groupOf(it)) && (() => {
+                  const g = groupOf(it), gi = groups.indexOf(g);
+                  if (groupEdit?.from === g) {
+                    const near = similarGroup(groupEdit.to, g);
+                    return (
+                      <span className="pl-group__edit">
+                        <input className="input input--sm" autoFocus value={groupEdit.to} aria-label={`שם חדש לקבוצה ${g}`}
+                          onChange={(e) => { setGroupEdit({ ...groupEdit, to: e.target.value }); setErr(''); }}
+                          onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); renameGroup(); } if (e.key === 'Escape') { setGroupEdit(null); setErr(''); } }} />
+                        <button type="button" className="icon-btn icon-btn--sm" aria-label="שמור שם קבוצה" onClick={renameGroup}><Check size={15} /></button>
+                        <button type="button" className="icon-btn icon-btn--sm" aria-label="ביטול" onClick={() => { setGroupEdit(null); setErr(''); }}><X size={15} /></button>
+                        {near && <span className="pl-group__warn">דומה לקבוצה "{near}" – <button type="button" className="link" onClick={() => setGroupEdit({ ...groupEdit, to: near })}>לאחד איתה</button></span>}
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="pl-group__head">
+                      <b>{g}</b>
+                      <span className="pl-group__tools">
+                        <button type="button" className="icon-btn icon-btn--sm" aria-label={`שנה שם לקבוצה ${g}`} onClick={(e) => { e.stopPropagation(); setGroupEdit({ from: g, to: g }); setErr(''); }}><Pencil size={14} /></button>
+                        <button type="button" className="icon-btn icon-btn--sm" aria-label={`הזז את ${g} למעלה`} disabled={gi === 0} onClick={(e) => { e.stopPropagation(); moveGroup(g, -1); }}><ArrowUp size={14} /></button>
+                        <button type="button" className="icon-btn icon-btn--sm" aria-label={`הזז את ${g} למטה`} disabled={gi === groups.length - 1} onClick={(e) => { e.stopPropagation(); moveGroup(g, 1); }}><ArrowDown size={14} /></button>
+                      </span>
+                    </span>
+                  );
+                })()}</td>
                 <td className="strong">{it.name}</td>
                 <td className="num"><Ltr>{fmtMoney(it.price)}</Ltr></td>
                 <td className="num"><Ltr>{fmtMoney(it.pickupPrice ?? it.price)}</Ltr></td>
@@ -193,6 +244,7 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
                 <td className="br-actions"><Button size="sm" variant="ghost" icon={<Pencil size={15} />} onClick={() => { setEditing(it.id); setAdding(false); setDraft({ group: groupOf(it), name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); setErr(''); }}>ערוך</Button></td>
               </tr>
             ))}
+            {draftSimilar && <tr className="brow-msg"><td colSpan={6}><p className="pl-group__warn">יש כבר קבוצה בשם דומה: "{draftSimilar}" – <button type="button" className="link" onClick={() => setDraft({ ...draft, group: draftSimilar })}>להשתמש בה</button></p></td></tr>}
             {err && <tr className="brow-msg"><td colSpan={6}><p className="pop__err" role="alert">{err}</p></td></tr>}
           </tbody>
         </table>

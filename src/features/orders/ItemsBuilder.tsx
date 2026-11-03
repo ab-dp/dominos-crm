@@ -1,12 +1,13 @@
 /* בונה הפריטים של ההזמנה – משותף לקליטת הזמנה ולעריכה בתיק ההזמנה.
    מקור המחיר (מחירון + משלוח/איסוף) גלוי בשורה אחת; כפתור לכל קבוצת מוצרים פותח חלון הרכבה:
-   רמת מחיר, כמות, תוספות (הצעות נלמדות מהזמנות קודמות) והערה. השורות נקראות כמו קבלה. */
+   רמת מחיר, כמות, פירוט (בפיצה – תוספות, אפשר חצי-חצי או רבעים; בנלווים – שם המוצר) והערה.
+   הצעות לפירוט נלמדות מהזמנות קודמות באותה קבוצה. השורות נקראות כמו קבלה. */
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Minus, Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { Customer } from '../../data/customers';
 import { GENERAL_GROUP, groupOf, priceOf, type PriceItem, type PriceList } from '../../data/priceLists';
 import { useStore } from '../../data/store';
-import { itemLabel, type OrderItem } from '../../data/types';
+import { itemLabel, partsText, type OrderItem } from '../../data/types';
 import { Button } from '../../design/components';
 import { Ltr, fmtMoney } from '../../lib/format';
 import { newId } from '../../data/customers';
@@ -16,6 +17,7 @@ export type Line = OrderItem & { key: string };
 export type CatalogItem = PriceItem & { unit: number; custom: boolean };
 type Delivery = 'delivery' | 'pickup';
 const NO_LIST = '__none';
+const MANUAL = '__manual';
 const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
 
 /* רמות המחיר של המחירון שנבחר, במחיר המתאים: משלוח/איסוף, ומחיר מיוחד ללקוח – רק במחירון של הלקוח */
@@ -27,16 +29,27 @@ export function useCatalog(priceList: PriceList | undefined, customer: Customer 
   }), [priceList, customer, delivery]);
 }
 
-/* הצעות לתוספות ולשמות פריטים ידניים – רק ממה שכבר נכתב בהזמנות, הנפוצים קודם */
+/* הצעות – רק ממה שכבר נכתב בהזמנות: פירוט לפי קבוצה (הנפוצים קודם), שמות פריטים ידניים, והמחיר האחרון של כל פריט ידני */
 function useHints() {
   const { orders } = useStore();
   return useMemo(() => {
-    const tops = new Map<string, number>();
+    const byGroup = new Map<string, Map<string, number>>();
     const names = new Map<string, number>();
+    const lastPrice = new Map<string, { price: number; date: string }>();
     const bump = (m: Map<string, number>, v?: string) => { const t = v?.trim(); if (t) m.set(t, (m.get(t) ?? 0) + 1); };
-    orders.forEach((o) => o.items.forEach((i) => { i.toppings?.forEach((t) => bump(tops, t)); if (!i.itemId) bump(names, i.name); }));
-    const sorted = (m: Map<string, number>) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 200).map(([v]) => v);
-    return { toppings: sorted(tops), names: sorted(names) };
+    orders.forEach((o) => o.items.forEach((i) => {
+      const g = i.itemId ? i.group || GENERAL_GROUP : MANUAL;
+      const m = byGroup.get(g) ?? new Map<string, number>();
+      byGroup.set(g, m);
+      [...(i.toppings ?? []), ...(i.parts ?? []).flat()].forEach((t) => bump(m, t));
+      if (!i.itemId) {
+        bump(names, i.name);
+        const prev = lastPrice.get(i.name.trim());
+        if (!prev || o.date >= prev.date) lastPrice.set(i.name.trim(), { price: i.unitPrice, date: o.date });
+      }
+    }));
+    const sorted = (m?: Map<string, number>) => [...(m ?? new Map()).entries()].sort((a, b) => b[1] - a[1]).slice(0, 200).map(([v]) => v as string);
+    return { forGroup: (g: string) => sorted(byGroup.get(g)), names: sorted(names), lastPrice: (n: string) => lastPrice.get(n.trim())?.price };
   }, [orders]);
 }
 
@@ -59,14 +72,14 @@ export function useRepriceOnDelivery(delivery: Delivery, catalog: CatalogItem[],
 }
 
 /* שמירה: בלי שדות ריקים */
-export const toSaved = (lines: Line[]): OrderItem[] => lines.map(({ key: _k, itemId, group, toppings, detail, manualPrice, ...l }) => ({
+export const toSaved = (lines: Line[]): OrderItem[] => lines.map(({ key: _k, itemId, group, toppings, parts, detail, manualPrice, ...l }) => ({
   ...(itemId ? { itemId } : {}), ...(group ? { group } : {}), ...l, name: l.name.trim(),
-  ...(toppings?.length ? { toppings } : {}), ...(detail?.trim() ? { detail: detail.trim() } : {}), ...(manualPrice ? { manualPrice: true } : {}),
+  ...(parts?.length ? { parts } : toppings?.length ? { toppings } : {}), ...(detail?.trim() ? { detail: detail.trim() } : {}), ...(manualPrice ? { manualPrice: true } : {}),
 }));
 
-/* ---------- שורת מקור המחיר: מחירון + משלוח/איסוף ---------- */
-export function PriceSource({ lists, customer, value, onChange, delivery, onDelivery }: {
-  lists: PriceList[]; customer?: Customer; value: string; onChange: (id: string) => void; delivery: Delivery; onDelivery?: (d: Delivery) => void;
+/* ---------- שורת מקור המחיר: מחירון (משלוח/איסוף נבחר בחלק "אספקה" – כאן רק מוצג) ---------- */
+export function PriceSource({ lists, customer, value, onChange, delivery }: {
+  lists: PriceList[]; customer?: Customer; value: string; onChange: (id: string) => void; delivery: Delivery;
 }) {
   const own = customer?.priceListId;
   const options = lists.filter((p) => p.active || p.id === value || p.id === own);
@@ -79,20 +92,40 @@ export function PriceSource({ lists, customer, value, onChange, delivery, onDeli
           <option value={NO_LIST}>ללא מחירון – תמחור ידני</option>
         </select>
       </label>
-      {onDelivery && (
-        <div className="seg" role="radiogroup" aria-label="מחירי משלוח או איסוף">
-          {(['delivery', 'pickup'] as const).map((d) => (
-            <button type="button" key={d} role="radio" aria-checked={delivery === d} className={delivery === d ? 'is-on' : ''} onClick={() => onDelivery(d)}>{d === 'delivery' ? 'משלוח' : 'איסוף עצמי'}</button>
-          ))}
-        </div>
-      )}
+      {value && <span className="ib-source__mode">מחירי <b>{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</b></span>}
       {customer && own && value !== own && <span className="ib-source__note">לא המחירון של הלקוח – מחירים מיוחדים שלו לא חלים</span>}
     </div>
   );
 }
 
+/* ---------- שדה פירוט: צ'יפים + הקלדה, הצעות מהזמנות קודמות ---------- */
+function TokenField({ values, onChange, hints, label, first }: { values: string[]; onChange: (v: string[]) => void; hints: string[]; label: string; first?: boolean }) {
+  const [text, setText] = useState('');
+  const listId = useMemo(() => `ib-h-${newId()}`, []);
+  const add = (v: string) => { const t = v.trim().replace(/,$/, ''); if (t && !values.includes(t)) onChange([...values, t]); setText(''); };
+  const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === 'Enter' || e.key === ',') && text.trim()) { e.preventDefault(); add(text); }
+    else if (e.key === 'Backspace' && !text && values.length) onChange(values.slice(0, -1));
+  };
+  return (
+    <div className="ib-tokens" onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement | null)?.focus()}>
+      {values.map((t) => (
+        <span key={t} className="ib-token">{t}<button type="button" aria-label={`הסר ${t}`} onClick={() => onChange(values.filter((x) => x !== t))}><X size={12} /></button></span>
+      ))}
+      <input className="ib-tokens__input" list={listId} value={text} data-first={first || undefined} data-pending={text.trim() || undefined}
+        onChange={(e) => { const v = e.target.value; if (hints.includes(v)) add(v); else setText(v); }}
+        onBlur={() => { if (text.trim()) add(text); }} onKeyDown={onKey} placeholder={values.length ? '' : 'הקלידו ו-Enter'} aria-label={label} />
+      <datalist id={listId}>{hints.filter((h) => !values.includes(h)).map((h) => <option key={h} value={h} />)}</datalist>
+    </div>
+  );
+}
+
 /* ---------- בונה הפריטים ---------- */
-type Draft = { key?: string; manual: boolean; group: string; itemId: string; name: string; price: string; qty: number; toppings: string[]; top: string; note: string };
+type Split = 1 | 2 | 4;
+type Draft = { key?: string; manual: boolean; group: string; itemId: string; name: string; price: string; qty: number; split: Split; parts: string[][]; note: string };
+const SPLIT_LABEL: Record<Split, string> = { 1: 'שלמה', 2: 'חצי-חצי', 4: 'רבעים' };
+const PART_LABEL: Record<Split, string[]> = { 1: ['פירוט'], 2: ['חצי 1', 'חצי 2'], 4: ['רבע 1', 'רבע 2', 'רבע 3', 'רבע 4'] };
+const resize = (parts: string[][], n: Split) => (n === 1 ? [parts.flat().filter((x, i, a) => a.indexOf(x) === i)] : Array.from({ length: n }, (_, i) => parts[i] ?? []));
 
 export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[]; onTouched?: () => void }) {
   const hints = useHints();
@@ -103,49 +136,46 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
   const groups = useMemo(() => [...new Set(catalog.map(groupOf))], [catalog]);
   const levels = (g: string) => catalog.filter((i) => groupOf(i) === g);
 
-  const openGroup = (g: string) => { const first = levels(g)[0]; setErr(''); setD({ manual: false, group: g, itemId: first?.id ?? '', name: '', price: '', qty: 1, toppings: [], top: '', note: '' }); };
-  const openManual = () => { setErr(''); setD({ manual: true, group: '', itemId: '', name: '', price: '', qty: 1, toppings: [], top: '', note: '' }); };
+  const blank = { name: '', price: '', qty: 1, split: 1 as Split, parts: [[]] as string[][], note: '' };
+  const openGroup = (g: string) => { const first = levels(g)[0]; setErr(''); setD({ ...blank, manual: false, group: g, itemId: first?.id ?? '' }); };
+  const openManual = () => { setErr(''); setD({ ...blank, manual: true, group: '', itemId: '' }); };
   const openEdit = (l: Line) => {
     setErr('');
     const inCatalog = !!l.itemId && catalog.some((x) => x.id === l.itemId);
-    setD({ key: l.key, manual: !inCatalog, group: l.group ?? GENERAL_GROUP, itemId: inCatalog ? l.itemId! : '', name: inCatalog ? '' : itemTitle(l), price: String(l.unitPrice), qty: l.qty, toppings: l.toppings ?? [], top: '', note: l.detail ?? '' });
+    const parts = l.parts?.length ? l.parts : [l.toppings ?? []];
+    setD({ key: l.key, manual: !inCatalog, group: l.group ?? GENERAL_GROUP, itemId: inCatalog ? l.itemId! : '', name: inCatalog ? '' : itemTitle(l), price: String(l.unitPrice),
+      qty: l.qty, split: (parts.length === 2 || parts.length === 4 ? parts.length : 1) as Split, parts, note: l.detail ?? '' });
   };
   useEffect(() => { if (d) setTimeout(() => (boxRef.current?.querySelector('[data-first]') as HTMLElement | null)?.focus(), 20); }, [d?.group, d?.manual, d?.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const level = d && !d.manual ? catalog.find((x) => x.id === d.itemId) : undefined;
   const unit = d ? (d.manual ? money(d.price) : level?.unit ?? 0) : 0;
-  // יש תוספות ברמה "רגילה" – להציע רמה עם תוספת באותה קבוצה
-  const withTopping = d && !d.manual && d.toppings.length > 0 && level && !/תוספת/.test(level.name) ? levels(d.group).find((x) => /תוספת/.test(x.name)) : undefined;
-
-  const addTopping = (v: string) => {
-    const t = v.trim().replace(/,$/, '');
-    if (!d || !t) return;
-    if (!d.toppings.includes(t)) setD({ ...d, toppings: [...d.toppings, t], top: '' }); else setD({ ...d, top: '' });
-  };
-  const onTopKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!d) return;
-    if ((e.key === 'Enter' || e.key === ',') && d.top.trim()) { e.preventDefault(); addTopping(d.top); }
-    else if (e.key === 'Backspace' && !d.top && d.toppings.length) setD({ ...d, toppings: d.toppings.slice(0, -1) });
-  };
+  const hasDetail = !!d && d.parts.some((p) => p.length > 0);
+  // יש פירוט ברמה "רגילה" בקבוצה שיש בה רמה "עם תוספת" – להציע לעבור
+  const withTopping = d && !d.manual && hasDetail && level && !/תוספת/.test(level.name) ? levels(d.group).find((x) => /תוספת/.test(x.name)) : undefined;
+  const groupHints = d ? hints.forGroup(d.manual ? MANUAL : d.group) : [];
+  const lastPrice = d?.manual && d.name.trim() ? hints.lastPrice(d.name) : undefined;
 
   const commit = (again: boolean) => {
     if (!d) return;
-    const top = d.top.trim() ? [...d.toppings, d.top.trim()].filter((x, i, a) => a.indexOf(x) === i) : d.toppings;
+    // טקסט שהוקלד ועוד לא אושר ב-Enter נכנס לפירוט
+    const pending = [...(boxRef.current?.querySelectorAll<HTMLInputElement>('.ib-tokens__input[data-pending]') ?? [])];
+    const parts = d.parts.map((p, i) => { const t = pending.find((x) => x.closest('[data-part]')?.getAttribute('data-part') === String(i))?.value.trim(); return t && !p.includes(t) ? [...p, t] : p; });
     if (d.manual && !d.name.trim()) return setErr('חובה: מה הפריט');
     if (!d.manual && !level) return setErr('בחרו רמת מחיר');
     if (d.qty <= 0) return setErr('חובה: כמות');
-    if (d.manual && !(money(d.price) >= 0)) return setErr('מחיר לא תקין');
-    if (/\d{13,}/.test(`${d.name} ${d.note} ${top.join(' ')}`)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
+    if (/\d{13,}/.test(`${d.name} ${d.note} ${parts.flat().join(' ')}`)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
+    const split = d.split > 1 ? { parts, toppings: [] } : { toppings: parts[0] ?? [], parts: undefined };
     const old = d.key ? lines.find((x) => x.key === d.key) : undefined;
     const keepManualPrice = old && !d.manual && old.itemId === level?.id && old.manualPrice;
     const line: Line = d.manual
-      ? { key: d.key ?? newId(), name: d.name.trim(), qty: d.qty, unitPrice: money(d.price), toppings: top, detail: d.note.trim(), manualPrice: true }
-      : { key: d.key ?? newId(), itemId: level!.id, group: groupOf(level!), name: level!.name, qty: d.qty, unitPrice: keepManualPrice ? old!.unitPrice : level!.unit, toppings: top, detail: d.note.trim(), ...(keepManualPrice ? { manualPrice: true } : {}) };
+      ? { key: d.key ?? newId(), name: d.name.trim(), qty: d.qty, unitPrice: money(d.price), ...split, detail: d.note.trim(), manualPrice: true }
+      : { key: d.key ?? newId(), itemId: level!.id, group: groupOf(level!), name: level!.name, qty: d.qty, unitPrice: keepManualPrice ? old!.unitPrice : level!.unit, ...split, detail: d.note.trim(), ...(keepManualPrice ? { manualPrice: true } : {}) };
     setLines((ls) => (d.key ? ls.map((x) => (x.key === d.key ? line : x)) : [...ls, line]));
     onTouched?.();
     setErr('');
-    // "הוסף ועוד אחד מאותו סוג": החלון נשאר פתוח עם אותה רמה, בלי התוספות וההערה
-    if (again) setD({ ...d, key: undefined, toppings: [], top: '', note: '', name: d.manual ? '' : d.name });
+    // "הוסף ועוד אחד מאותו סוג": החלון נשאר פתוח עם אותה רמה, כמות וחלוקה – בלי הפירוט וההערה
+    if (again) setD({ ...d, key: undefined, parts: resize([], d.split), note: '', name: d.manual ? '' : d.name });
     else setD(null);
   };
 
@@ -183,14 +213,20 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
               </div>
             </div>
           ) : (
-            <div className="ib-grid">
-              <label className="field"><span className="field__label">מה הפריט <span className="req">חובה</span></span>
-                <input className="input" data-first list="ib-names" value={d.name} onChange={(e) => { setD({ ...d, name: e.target.value }); setErr(''); }} placeholder="למשל: מגש פירות" />
-              </label>
-              <label className="field"><span className="field__label">מחיר ליחידה (₪)</span>
-                <input className="input input--ltr" inputMode="decimal" value={d.price} onChange={(e) => setD({ ...d, price: e.target.value })} placeholder="0" />
-              </label>
-            </div>
+            <>
+              <div className="ib-grid">
+                <label className="field"><span className="field__label">מה הפריט <span className="req">חובה</span></span>
+                  <input className="input" data-first list="ib-names" value={d.name} onChange={(e) => { setD({ ...d, name: e.target.value }); setErr(''); }} placeholder="למשל: מגש פירות" />
+                </label>
+                <label className="field"><span className="field__label">מחיר ליחידה (₪)</span>
+                  <input className="input input--ltr" inputMode="decimal" value={d.price} onChange={(e) => setD({ ...d, price: e.target.value })} placeholder="0" />
+                </label>
+              </div>
+              {/* מחיר אחרון של פריט ידני באותו שם – הצעה בלבד, לא ממלא לבד */}
+              {lastPrice !== undefined && money(d.price) !== lastPrice && (
+                <p className="ib-hint ib-hint--plain">בפעם האחרונה: <Ltr>{fmtMoney(lastPrice)}</Ltr> <button type="button" className="link" onClick={() => { setD({ ...d, price: String(lastPrice) }); boxRef.current?.querySelector<HTMLInputElement>('input[inputmode="decimal"]')?.focus(); }}>השתמש במחיר הזה</button></p>
+              )}
+            </>
           )}
 
           <div className="ib-row">
@@ -203,22 +239,26 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
           </div>
 
           <div className="ib-row">
-            <span className="ib-row__label">תוספות</span>
-            <div className="ib-tokens" onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement | null)?.focus()}>
-              {d.toppings.map((t) => (
-                <span key={t} className="ib-token">{t}<button type="button" aria-label={`הסר ${t}`} onClick={() => setD({ ...d, toppings: d.toppings.filter((x) => x !== t) })}><X size={12} /></button></span>
+            <span className="ib-row__label">חלוקה</span>
+            <div className="seg seg--inline" role="radiogroup" aria-label="חלוקה">
+              {([1, 2, 4] as Split[]).map((n) => (
+                <button type="button" key={n} role="radio" aria-checked={d.split === n} className={d.split === n ? 'is-on' : ''} onClick={() => setD({ ...d, split: n, parts: resize(d.parts, n) })}>{SPLIT_LABEL[n]}</button>
               ))}
-              <input className="ib-tokens__input" list="ib-tops" value={d.top} onChange={(e) => { const v = e.target.value; if (hints.toppings.includes(v)) addTopping(v); else setD({ ...d, top: v }); }}
-                onKeyDown={onTopKey} placeholder={d.toppings.length ? '' : 'הקלידו תוספת ו-Enter'} aria-label="הוספת תוספת" />
             </div>
           </div>
+          {d.parts.map((p, i) => (
+            <div className="ib-row" key={`${d.split}-${i}`} data-part={i}>
+              <span className="ib-row__label">{PART_LABEL[d.split][i]}</span>
+              <TokenField values={p} onChange={(v) => setD({ ...d, parts: d.parts.map((x, j) => (j === i ? v : x)) })} hints={groupHints} label={PART_LABEL[d.split][i]} />
+            </div>
+          ))}
           {withTopping && (
-            <p className="ib-hint">יש תוספות – לעבור ל"{withTopping.name}" (<Ltr>{fmtMoney(withTopping.unit)}</Ltr>)? <button type="button" className="link" onClick={() => setD({ ...d, itemId: withTopping.id })}>כן, לעבור</button></p>
+            <p className="ib-hint">יש פירוט – לעבור ל"{withTopping.name}" (<Ltr>{fmtMoney(withTopping.unit)}</Ltr>)? <button type="button" className="link" onClick={() => setD({ ...d, itemId: withTopping.id })}>כן, לעבור</button></p>
           )}
 
           <label className="ib-row">
             <span className="ib-row__label">הערה</span>
-            <input className="input" value={d.note} onChange={(e) => setD({ ...d, note: e.target.value })} placeholder="למשל: חצי-חצי, בלי בצל"
+            <input className="input" value={d.note} onChange={(e) => setD({ ...d, note: e.target.value })} placeholder="למשל: בלי בצל, חתוך ל-12"
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit(false); } }} />
           </label>
 
@@ -242,7 +282,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
               </div>
               <span className="ib-line__text">
                 <b>{itemTitle(l)}</b>
-                {l.toppings && l.toppings.length > 0 && <> — {l.toppings.join(', ')}</>}
+                {l.parts?.length ? <> — {partsText(l.parts)}</> : l.toppings && l.toppings.length > 0 && <> — {l.toppings.join(', ')}</>}
                 {l.detail && <span className="muted"> · {l.detail}</span>}
                 {(!l.itemId || l.manualPrice) && <span className="ib-line__tag">מחיר ידני</span>}
               </span>
@@ -265,7 +305,6 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
           ))}
         </ol>
       )}
-      <datalist id="ib-tops">{hints.toppings.map((h) => <option key={h} value={h} />)}</datalist>
       <datalist id="ib-names">{hints.names.map((h) => <option key={h} value={h} />)}</datalist>
     </div>
   );

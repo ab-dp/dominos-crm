@@ -68,3 +68,5 @@
 .ib-sum__override { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ib-sum__override input { width: 100px; }
 .ib-sum.is-manual { box-shadow: inset 0 0 0 1px var(--urgent-edge); }
+.ib-source__mode { font-size: var(--text-label); color: var(--gray-600); }
+.ib-hint--plain { color: var(--gray-600); padding-inline-start: 0; margin: -2px 0 0; }

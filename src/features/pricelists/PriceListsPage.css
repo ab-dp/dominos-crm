@@ -25,3 +25,11 @@
 /* קבוצת מוצרים – שם הקבוצה בשורה הראשונה שלה, וקו מפריד בין קבוצות */
 .pl-group b { color: var(--brand-800); }
 .pl-table tr[data-group-start] td { border-top: 2px solid var(--gray-100); }
+
+.pl-group__head { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.pl-group__tools { display: inline-flex; gap: 0; opacity: .55; }
+.brow:hover .pl-group__tools, .pl-group__tools:focus-within { opacity: 1; }
+.pl-group__tools .icon-btn:disabled { opacity: .3; cursor: default; }
+.pl-group__edit { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.pl-group__edit .input { width: 140px; }
+.pl-group__warn { flex-basis: 100%; margin: 0; font-size: var(--text-label); font-weight: 400; color: var(--urgent-fg); }

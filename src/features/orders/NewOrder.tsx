@@ -98,9 +98,6 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const [poNumber, setPoNumber] = useState('');
   const [instructions, setInstructions] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [ackDup, setAckDup] = useState(false);
-  const [ackSimilar, setAckSimilar] = useState(false);
-  const [ackMissing, setAckMissing] = useState(false);
   const [saveContact, setSaveContact] = useState(false); // לשמור איש קשר חדש גם בתיק הלקוח
   const [saveAddress, setSaveAddress] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -167,7 +164,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     return out.slice(0, 3);
   }, [isNew, customers, nc.name, ncPhone]);
 
-  const pickExisting = (x: Customer) => { setCustomerId(x.id); setMode('full'); setErrors({}); setAckSimilar(false); };
+  const pickExisting = (x: Customer) => { setCustomerId(x.id); setMode('full'); setErrors({}); };
 
   /* איש קשר או כתובת שהוקלדו ואינם בתיק הלקוח – מציעים לשמור גם שם */
   const contactPhoneClean = cleanPhone(contact.phone);
@@ -181,7 +178,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
   /* ---------- בדיקה ושמירה ---------- */
   /* שני סוגי בעיות: שגיאה (חוסמת – למשל ח.פ שגוי או מספר כרטיס) ופרט חסר (לא חוסם – אחרי אישור נשמר ומסומן באדום). */
-  const validate = () => {
+  const check = () => {
     const e: Record<string, string> = {};
     const m: Record<string, string> = {};
     if (isNew) {
@@ -219,18 +216,20 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     if (CARD_RE.test(poNumber)) e.po = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(address)) e.address = 'אסור לרשום כאן מספר כרטיס אשראי';
+    return { e, m };
+  };
+  const live = check();
+  // פרטים חסרים לא חוסמים: מוצגים מראש מעל כפתור השמירה, וההזמנה נשמרת בלחיצה אחת ומסומנת באדום
+  const missLive = past ? [] : [...new Set(Object.keys(live.m).map((k) => MISS_LABEL[k]).filter(Boolean))];
+  const validate = () => {
+    const { e, m } = check();
     setErrors({ ...m, ...e });
-    const focusFirst = () => requestAnimationFrame(() => (formRef.current?.querySelector('[aria-invalid="true"]') as HTMLElement | null)?.focus());
-    if (Object.keys(e).length) { focusFirst(); return false; }
-    const missList = Object.keys(m).map((k) => MISS_LABEL[k]).filter((x, i, a) => x && a.indexOf(x) === i);
-    if (missList.length && !ackMissing && !past) { setAckMissing(true); focusFirst(); return false; }
+    if (Object.keys(e).length) { requestAnimationFrame(() => (formRef.current?.querySelector('[aria-invalid="true"]') as HTMLElement | null)?.focus()); return false; }
     return true;
   };
 
   const submit = async () => {
     if (busy || !validate()) return;
-    if (dup && !ackDup) { setAckDup(true); return; }
-    if (similar.length && !ackSimilar) { setAckSimilar(true); return; }
     const b = branchObj; // אפשר לשמור בלי סניף – ההזמנה תסומן באדום עד שישובץ
     const customerName = isNew ? nc.name.trim() : c!.name;
     const input: NewOrderInput = {
@@ -290,7 +289,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         await uploadOrderDoc(n, poFile, input.customerId || '').catch(() => toast({ message: <>ההזמנה נשמרה, אבל צירוף תעודת הרכש נכשל – אפשר לצרף אותה מתיק ההזמנה <Ltr>{n}</Ltr></> }));
       }
       toast({
-        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{ackMissing && missNow.length > 0 && <> · <b>חסרים פרטים – מסומנת באדום</b></>}</>,
+        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת באדום</b></>}</>,
         action: { label: 'פתח תיק', run: () => panel.open(n) },
       });
       onClose();
@@ -302,7 +301,9 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
   const err = (k: string) => errors[k] ? <span className="cform__err" id={`no-${k}`} role="alert">{errors[k]}</span> : null;
   const inv = (k: string) => ({ 'aria-invalid': !!errors[k] || undefined, 'aria-describedby': errors[k] ? `no-${k}` : undefined });
-  const missNow = [...new Set(Object.entries(errors).filter(([k, v]) => v === MISS || (k === 'amount' && v === 'סכום הפריטים הוא 0')).map(([k]) => MISS_LABEL[k]))];
+  const customerChosen = isNew ? nc.name.trim().length > 0 : !!c;
+  const saveLabel = `${dup ? 'שמור כהזמנה נוספת' : isNew ? (similar.length ? 'שמור כלקוח חדש והזמנה' : 'שמור לקוח והזמנה') : 'שמור הזמנה'}${
+    missLive.length && customerChosen ? ` עם ${missLive.length === 1 ? 'פרט חסר' : `${missLive.length} פרטים חסרים`}` : ''}`;
   const fade = reduce ? { initial: { opacity: 0 }, animate: { opacity: 1 } } : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 } };
 
   /* ---------- חלקי הטופס ---------- */
@@ -310,7 +311,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     <Row>
       <L label="תאריך אספקה" req>
         <div className="no-date">
-          <input type="date" className="input input--ltr" value={date} onChange={(e) => { setDate(e.target.value); clearErr('date'); setAckDup(false); }} {...inv('date')} />
+          <input type="date" className="input input--ltr" value={date} onChange={(e) => { setDate(e.target.value); clearErr('date'); }} {...inv('date')} />
           <div className="seg" role="group" aria-label="קיצור תאריך">
             <button type="button" className={date === today ? 'is-on' : ''} aria-pressed={date === today} onClick={() => { setDate(today); clearErr('date'); }}>היום</button>
             <button type="button" className={date === tomorrow ? 'is-on' : ''} aria-pressed={date === tomorrow} onClick={() => { setDate(tomorrow); clearErr('date'); }}>מחר</button>
@@ -320,7 +321,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         {err('date')}
       </L>
       <L label="שעה" req>
-        <input type="time" step={900} className="input input--ltr no-time" value={time} onChange={(e) => { setTime(e.target.value); clearErr('time'); setAckDup(false); }} {...inv('time')} />
+        <input type="time" step={900} className="input input--ltr no-time" value={time} onChange={(e) => { setTime(e.target.value); clearErr('time'); }} {...inv('time')} />
         {err('time')}
       </L>
     </Row>
@@ -328,7 +329,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
   const branchField = (
     <div className="cform__field" {...(errors.branch ? { 'data-invalid': true } : {})}>
-      <BranchPicker label="סניף (חובה)" value={branch} onChange={(v) => { setBranch(v); clearErr('branch'); setAckDup(false); }} preferredId={c?.addresses.find((a) => a.id === addressId)?.preferredBranchId} />
+      <BranchPicker label="סניף (חובה)" value={branch} onChange={(v) => { setBranch(v); clearErr('branch'); }} preferredId={c?.addresses.find((a) => a.id === addressId)?.preferredBranchId} />
       {err('branch')}
     </div>
   );
@@ -403,14 +404,14 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   );
 
   const itemsSection = (
-    <Section title="פריטים ומחיר" aside={<span className="no-total">{isManual ? 'לחיוב' : 'סה״כ'} <b><Ltr>{fmtMoney(finalAmount)}</Ltr></b></span>}>
+    <Section title="פריטים ומחיר">
       {c?.priceNote && <p className="no-pricenote" role="note"><b>הערת מחיר:</b> {c.priceNote}</p>}
-      {/* מקור המחיר: מחירון (של הלקוח, כללי, או בלי) ומשלוח/איסוף – באותה שורה */}
-      <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={delivery} onDelivery={setDelivery} />
+      {/* מקור המחיר: מחירון (של הלקוח, כללי, או בלי); משלוח/איסוף נקבע בחלק "אספקה" */}
+      <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={delivery} />
       <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => clearErr('amount', 'contents')} />
       {lines.length === 0 && (
         <p className={`no-items-empty ${errors.contents ? 'is-err' : ''}`}>
-          בחרו קבוצת מוצרים{catalog.length ? '' : ' (או מחירון)'} או "פריט ידני": רמת מחיר, כמות, תוספות והערה – והפריט נכנס להזמנה.
+          בחרו קבוצת מוצרים{catalog.length ? '' : ' (או מחירון)'} או "פריט ידני": רמת מחיר, כמות, פירוט והערה – והפריט נכנס להזמנה.
         </p>
       )}
       {err('amount')}
@@ -489,7 +490,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
-        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
+        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-box, .ib-line__priceinput')) e.preventDefault(); }}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
           <div className="cform__head norder__head">
             <Dialog.Title className="udialog__title">הזמנה חדשה</Dialog.Title>
@@ -510,7 +511,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                   <Section title="לקוח חדש">
                     <Row>
                       <L label="שם הלקוח" req wide>
-                        <input className="input" autoFocus value={nc.name} onChange={(e) => { setNc({ ...nc, name: e.target.value }); clearErr('ncName'); setAckSimilar(false); }} placeholder="חברה או אדם פרטי" {...inv('ncName')} />
+                        <input className="input" autoFocus value={nc.name} onChange={(e) => { setNc({ ...nc, name: e.target.value }); clearErr('ncName'); }} placeholder="חברה או אדם פרטי" {...inv('ncName')} />
                         {err('ncName')}
                       </L>
                       <L label="סוג לקוח" group>
@@ -521,7 +522,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                     </Row>
                     <Row>
                       <L label="איש קשר"><input className="input" value={nc.contactName} onChange={(e) => { setNc({ ...nc, contactName: e.target.value }); clearErr('ncContact'); }} {...inv('ncContact')} />{err('ncContact')}</L>
-                      <L label="טלפון" req><input className="input input--ltr" inputMode="tel" value={nc.contactPhone} onChange={(e) => { setNc({ ...nc, contactPhone: e.target.value }); clearErr('ncPhone'); setAckSimilar(false); }} placeholder="05X-XXXXXXX" {...inv('ncPhone')} />{err('ncPhone')}</L>
+                      <L label="טלפון" req><input className="input input--ltr" inputMode="tel" value={nc.contactPhone} onChange={(e) => { setNc({ ...nc, contactPhone: e.target.value }); clearErr('ncPhone'); }} placeholder="05X-XXXXXXX" {...inv('ncPhone')} />{err('ncPhone')}</L>
                     </Row>
                     <Row>
                       <L label="ח.פ / ע.מ (לא חובה)"><input className="input input--ltr" inputMode="numeric" value={nc.taxId} onChange={(e) => { setNc({ ...nc, taxId: e.target.value }); clearErr('ncTax'); }} {...inv('ncTax')} />{err('ncTax')}
@@ -529,12 +530,11 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                       </L>
                     </Row>
                     {similar.length > 0 && (
-                      <div className={`cform__warn no-similar ${ackSimilar ? 'is-ack' : ''}`} role={ackSimilar ? 'alert' : undefined}>
+                      <div className="cform__warn no-similar">
                         <CircleAlert size={18} aria-hidden="true" />
                         <div>
                           <b>אולי הלקוח כבר קיים?</b>
                           <ul>{similar.map(({ c: x, why }) => <li key={x.id}>{x.name} <span className="muted">({why})</span> · <button type="button" className="link" onClick={() => pickExisting(x)}>הזמנה ללקוח הזה</button></li>)}</ul>
-                          {ackSimilar && <span>אם זה לקוח אחר – לחץ שוב "שמור הזמנה".</span>}
                         </div>
                       </div>
                     )}
@@ -542,7 +542,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
                 ) : (
                   <Section title="לקוח">
                     <CustomerPicker customers={customers} value={customerId} invalid={!!errors.customer}
-                      onChange={(id) => { setCustomerId(id); clearErr('customer'); setAckDup(false); }}
+                      onChange={(id) => { setCustomerId(id); clearErr('customer'); }}
                       onNew={(name) => { setNc((x) => ({ ...x, name })); setMode('newCustomer'); setErrors({}); }} />
                     {err('customer')}
                     {c && c.type === 'occasional' && orders.some((o) => o.customerId === c.id && o.status !== 'cancelled') && (
@@ -589,13 +589,12 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             </Section>
 
             {dup && (
-              <div className={`cform__warn no-dup ${ackDup ? 'is-ack' : ''}`} role={ackDup ? 'alert' : 'status'}>
+              <div className="cform__warn no-dup" role="status">
                 <CircleAlert size={18} aria-hidden="true" />
                 <div>
                   <b>יש כבר הזמנה דומה:</b> הזמנה <Ltr>{dup.id}</Ltr> · {dup.customerName} · <Ltr>{fmtDate(dup.date)}</Ltr> <Ltr>{dup.time}</Ltr> · {dup.branchName} · <Ltr>{fmtMoney(dup.amount)}</Ltr>
                   <div className="no-dup__actions">
                     <button type="button" className="link" onClick={() => { onClose(); panel.open(dup.id); }}>פתח אותה</button>
-                    {ackDup && <span>אם זו הזמנה נוספת – לחץ "צור בכל זאת".</span>}
                   </div>
                 </div>
               </div>
@@ -610,17 +609,15 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             {errors.form && <p className="cform__formerr" role="alert"><CircleAlert size={16} aria-hidden="true" /> {errors.form}</p>}
           </form>
 
-          {ackMissing && missNow.length > 0 && (
-            <div className="no-missing" role="alert">
-              <CircleAlert size={18} aria-hidden="true" />
-              <div>
-                <b>חסרים פרטים: {missNow.join(', ')}</b>
-                <span>מומלץ להשלים עכשיו. אם אין ברירה – אפשר לשמור, וההזמנה תסומן באדום עד שישלימו אותם.</span>
-              </div>
-            </div>
+          {(missLive.length > 0 || dup || similar.length > 0) && (customerChosen || dup) && (
+            <ul className="no-missing" aria-live="polite" aria-label="לפני השמירה">
+              {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים: {missLive.join(', ')}</b> – אפשר לשמור עכשיו, וההזמנה תסומן באדום עד שישלימו.</span></li>}
+              {dup && <li><CircleAlert size={16} aria-hidden="true" /><span><b>יש הזמנה דומה</b> (<Ltr>{dup.id}</Ltr> · <Ltr>{dup.time}</Ltr>) – השמירה תיצור הזמנה נוספת.</span></li>}
+              {similar.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>לקוח דומה כבר קיים</b> ({similar[0].c.name}) – השמירה תפתח לקוח חדש.</span></li>}
+            </ul>
           )}
           <div className="cform__foot">
-            <Button variant="primary" loading={busy} onClick={submit} kbd="Ctrl+Enter">{dup && ackDup ? 'צור בכל זאת' : ackMissing && missNow.length ? 'שמור עם פרטים חסרים' : isNew ? 'שמור לקוח והזמנה' : 'שמור הזמנה'}</Button>
+            <Button variant="primary" loading={busy} onClick={submit} kbd="Ctrl+Enter">{saveLabel}</Button>
             <Button variant="ghost" onClick={onClose}>ביטול</Button>
             <span className="norder__sum" aria-live="polite">
               {finalAmount > 0 && <><Ltr>{fmtMoney(finalAmount)}</Ltr>{time && <> · <Ltr>{time}</Ltr></>}{branchObj && <> · {branchObj.name}</>}</>}
