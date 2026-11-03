@@ -4,13 +4,16 @@ import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } fr
 import { ClipboardList, Phone as PhoneIcon } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
-import { EmptyState, HealthBadge, Missing, StatusMenu } from '../../design/components';
+import { EmptyState, HealthBadge, Missing } from '../../design/components';
 import { Ltr, Money, fmtDate } from '../../lib/format';
 import { METHOD_LABEL } from '../../data/types';
-import { FixButton, OrderMarks } from './OrderActions';
+import { FixButton } from './OrderActions';
+import { NextStep, StageTrack } from './OrderTimeline';
 import './OrdersTable.css';
 
 const PAGE = 150;
+// פעולות שהן חלק מהציר – מופיעות ככפתור "הצעד הבא", לא ככפתור תיקון נוסף
+const STEP_ACTIONS = ['q', 'branch', 'status', 'close'];
 
 export function OrdersTable({ rows, showDate = true, emptyText, caption, density = 'dense' }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string; density?: 'dense' | 'comfy' }) {
   const panel = usePanel();
@@ -73,8 +76,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
             <th>לקוח</th>
             <th>סניף</th>
             <th className="num">סכום</th>
-            <th>סטטוס</th>
-            <th>סניף · Q · תשלום</th>
+            <th>שלב</th>
             <th>אמצעי</th>
             <th>מטפל</th>
             <th><span className="sr-only">פעולה</span></th>
@@ -130,20 +132,16 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
         {o.branchPhone && <span className="orow__sub"><PhoneIcon size={12} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>}
       </td>
       <td className="num">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</td>
-      <td onClick={(e) => e.stopPropagation()}>
-        <StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />
-      </td>
-      <td className="orow__marks c-marks" onClick={(e) => e.stopPropagation()}><OrderMarks o={o} /></td>
+      <td className="orow__marks c-marks"><StageTrack o={o} /></td>
       <td>{o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method}</td>
       <td>{o.handler}</td>
       <td className="c-act" onClick={(e) => e.stopPropagation()}>
         <span className="c-act__in">
-          {top && (o.health === 'critical' || o.health === 'urgent' || top.action === 'po') && <FixButton key={top.rule} o={o} issue={top} onOpen={() => panel.open(o.id)} />}
-          {o.status !== 'cancelled' && o.status !== 'partial' && (
-            <span className="row-acts">
-              <button className="row-act" onClick={() => requestStatus(o, 'partial')} aria-label={`סופקה חלקית – הזמנה ${o.id}`}>סופקה חלקית</button>
-              <button className="row-act row-act--danger" onClick={() => requestStatus(o, 'cancelled')} aria-label={`ביטול הזמנה ${o.id}`}>ביטול</button>
-            </span>
+          {/* בעיה שהפתרון שלה הוא לא הצעד הבא בציר – כפתור משלה */}
+          {top && !STEP_ACTIONS.includes(top.action) && (o.health === 'critical' || o.health === 'urgent' || top.action === 'po') && <FixButton key={top.rule} o={o} issue={top} onOpen={() => panel.open(o.id)} />}
+          <NextStep o={o} />
+          {o.status !== 'cancelled' && o.status !== 'delivered' && o.status !== 'partial' && (
+            <button className="row-act row-act--danger" onClick={() => requestStatus(o, 'cancelled')} aria-label={`ביטול הזמנה ${o.id}`}>ביטול</button>
           )}
         </span>
       </td>

@@ -8,7 +8,7 @@ import { useStore } from '../data/store';
 import { useCustomers } from '../data/customers';
 import { STAGE_LABEL, useLeads } from '../data/leads';
 import { Ltr, fmtDate } from '../lib/format';
-import { STATUS_LABEL } from '../data/types';
+import { STAGE_LABEL as ORDER_STAGE, stageOf } from '../data/types';
 
 type Item = { key: string; group: string; icon: ReactNode; title: string; meta: ReactNode; tag?: string; run: () => void };
 
@@ -41,7 +41,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
     const orderItem = (o: (typeof orders)[number]): Item => ({
       key: `o${o.id}`, group: s ? 'הזמנות' : 'דורש טיפול עכשיו', icon: <FileText size={18} aria-hidden="true" />, title: o.customerName,
       meta: <>הזמנה <Ltr>{o.id}</Ltr> · <Ltr>{fmtDate(o.date)}</Ltr> <Ltr>{o.time}</Ltr> · {o.branchName}{o.qNumber && <> · <Ltr>{o.qNumber}</Ltr></>}</>,
-      tag: STATUS_LABEL[o.status], run: () => onPick(o.id),
+      tag: ORDER_STAGE[stageOf(o)], run: () => onPick(o.id),
     });
     if (!s) return orders.filter((o) => o.health === 'critical' || o.health === 'urgent').slice(0, 6).map(orderItem);
     const os = orders.filter((o) =>

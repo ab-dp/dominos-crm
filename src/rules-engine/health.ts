@@ -5,7 +5,7 @@ import { CLOSED, type Order } from '../data/types';
 import { DEFAULT_THRESHOLDS, type Thresholds } from '../data/thresholds';
 
 export type Severity = 'red' | 'orange' | 'yellow' | 'info';
-export type FixAction = 'q' | 'branch' | 'pay' | 'status' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel' | 'ackQUpdate';
+export type FixAction = 'q' | 'branch' | 'pay' | 'status' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel' | 'ackQUpdate' | 'ops';
 
 /* alert: false – אדום (חסר), אבל עוד רחוק; לא קופץ בפעמון ובהתראה לכולם עד שמתקרב */
 export type Issue = { rule: number; severity: Severity; label: string; action: FixAction; actionLabel: string; alert?: boolean };
@@ -17,7 +17,7 @@ const RANK: Record<Severity, number> = { red: 3, orange: 2, yellow: 1, info: 0 }
 /* כללי החריגים בשמם – למסננים במסך החריגים */
 export const RULE_LABEL: Record<number, string> = {
   1: 'לא הועברה ל-Q', 2: 'פער מול Q', 3: 'מועד עבר', 4: 'אין אישור סניף', 5: 'אשראי לא חויב', 6: 'אין אישור לקוח',
-  7: 'חיוב אשראי נכשל', 11: 'לעדכן שינוי ב-Q', 8: 'חסרים פרטים', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q', 0: 'חסר אישור סניף',
+  7: 'חיוב אשראי נכשל', 11: 'לעדכן שינוי ב-Q', 8: 'חסרים פרטים', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q', 0: 'חסר אישור סניף', 12: 'לעדכן את התפעול',
 };
 
 export function orderDateTime(o: Order): Date {
@@ -75,6 +75,10 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
     return out.sort(bySeverity);
   }
 
+  // תזכורת שלא חוסמת: אחרי ההקלדה ל-Q – לעדכן את התפעול
+  if (o.qNumber && o.opsNotified === false) {
+    out.push({ rule: 12, severity: 'orange', label: 'לעדכן את התפעול', action: 'ops', actionLabel: 'עודכן התפעול' });
+  }
   if (minutesLeft < 0) {
     out.push({ rule: 3, severity: diff < 0 ? 'red' : 'orange', label: diff < 0 ? 'מועד עבר, לא נסגרה' : 'שעת האספקה עברה', action: 'close', actionLabel: 'סמן סופקה' });
   }
@@ -90,7 +94,7 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
     out.push({ rule: 5, severity: late ? 'red' : 'orange', label: late ? 'אשראי לא חויב – עבר המועד' : 'אשראי לא חויב', action: 'pay', actionLabel: 'סמן שולם' });
   }
   if (soon && (o.status === 'new' || o.status === 'pending_customer')) {
-    out.push({ rule: 6, severity: 'red', label: 'אין אישור לקוח', action: 'status', actionLabel: 'שנה סטטוס' });
+    out.push({ rule: 6, severity: 'red', label: 'אין אישור לקוח', action: 'status', actionLabel: 'הלקוח אישר' });
   }
   const miss = missingOf(o);
   if (miss.length) {

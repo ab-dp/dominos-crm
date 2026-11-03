@@ -23,7 +23,7 @@
 .morning__count { margin-inline-start: auto; font: 500 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .progress { position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--gray-100); overflow: hidden; }
 .progress__bar { display: block; height: 100%; background: var(--ok-fg); }
-.morning__cards { list-style: none; margin: 0; padding: 4px 0 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); transform-origin: top; }
+.morning__cards { list-style: none; margin: 0; padding: 4px 0 6px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); transform-origin: top; }
 .morning__cards > li + li { border-inline-start: 1px solid var(--gray-100); }
 .task {
   position: relative;

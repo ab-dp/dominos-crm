@@ -8,7 +8,7 @@ import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useStore, type OrderView } from '../../data/store';
 import { lockMonth, markExported, monthLabel, reopenMonth, summarize, useMonth, useMonthOrders, type MonthDoc } from '../../data/months';
-import { CLOSED, METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL, type Order } from '../../data/types';
+import { CLOSED, METHOD_LABEL, OUTCOME_LABEL, PAYMENT_LABEL, STAGE_LABEL, closeLabel, stageOf, type Order } from '../../data/types';
 import { Button, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone } from '../../lib/format';
@@ -151,7 +151,7 @@ function Gaps({ rows, locked }: { rows: { o: OrderView; blockers: Issue[] }[]; l
             <li key={o.id} className="mgaps__row">
               <button className="mgaps__main" onClick={(e) => panel.open(o.id, e.currentTarget)}>
                 <span className="mgaps__id"><Ltr>{o.id}</Ltr></span>
-                <span className="mgaps__who"><b>{o.customerName}</b><span className="muted"><Ltr>{fmtDate(o.date)}</Ltr> · {o.branchName || 'ללא סניף'} · {STATUS_LABEL[o.status]}</span></span>
+                <span className="mgaps__who"><b>{o.customerName}</b><span className="muted"><Ltr>{fmtDate(o.date)}</Ltr> · {o.branchName || 'ללא סניף'} · {STAGE_LABEL[stageOf(o)]}</span></span>
                 <span className="mgaps__why">{blockers.map((b) => <span key={b.rule} className="mgaps__tag">{b.label}</span>)}</span>
                 <span className="mgaps__sum"><Money value={o.amount} /></span>
               </button>
@@ -173,7 +173,7 @@ function Export({ ym, orders, month, locked }: { ym: string; orders: Order[]; mo
     downloadCsv(`הנהלת חשבונות ${monthLabel(ym)}.csv`, [
       ['חודש', monthLabel(ym), `${orders.length} הזמנות`],
       ['הזמנה', 'תאריך', 'לקוח', 'סניף', 'אשכול', 'סטטוס', 'אמצעי תשלום', 'טלפון הקפה', 'מצב תשלום', "מס' Q", 'סכום הזמנה', 'סכום Q', 'תעודת רכש', 'הערות לחיוב', 'תיקון לאחר סגירה'],
-      ...sorted.map((o) => [o.id, fmtDate(o.date), o.customerName, o.branchName, o.cluster, STATUS_LABEL[o.status], o.methodLabel || METHOD_LABEL[o.method] || o.method,
+      ...sorted.map((o) => [o.id, fmtDate(o.date), o.customerName, o.branchName, o.cluster, closeLabel(o), o.methodLabel || METHOD_LABEL[o.method] || o.method,
         o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment], o.qNumber ?? '', o.amount, o.qAmount ?? '', o.poNumber ?? '', o.billingNote ?? '', o.postCloseFix?.reason ?? '']),
     ]);
     if (locked) return;
@@ -247,6 +247,7 @@ function LockStep({ ym, orders, month, done, fixes, onGo }: { ym: string; orders
           <div><dt>סך החודש</dt><dd><Ltr>{fmtMoney(s.sum)}</Ltr></dd></div>
           <div><dt>ממוצע</dt><dd><Ltr>{s.count ? fmtMoney(Math.round(s.sum / s.count)) : '—'}</Ltr></dd></div>
           <div><dt>בוטלו</dt><dd><Ltr>{s.cancelled}</Ltr></dd></div>
+          {s.byOutcome && (['ontime', 'late', 'partial'] as const).map((k) => <div key={k}><dt>{OUTCOME_LABEL[k]}</dt><dd><Ltr>{s.byOutcome![k] ?? 0}</Ltr></dd></div>)}
           {Object.entries(s.byMethod).map(([m, v]) => <div key={m}><dt>{METHOD_LABEL[m] ?? m}</dt><dd><Ltr>{fmtMoney(v.sum)}</Ltr><small> · <Ltr>{v.count}</Ltr></small></dd></div>)}
         </dl>
         {s.byCustomer.length > 0 && (

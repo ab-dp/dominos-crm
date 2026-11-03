@@ -7,12 +7,17 @@ import { Maximize2, Minimize2, RefreshCw, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
-import { HealthBadge, Missing, StatusMenu, Tip } from '../../design/components';
+import { HealthBadge, Missing, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
 import { healthOf, issuesFor } from '../../rules-engine/health';
-import { FixButton, OrderMarks, PoEdit } from './OrderActions';
+import { FixButton, PoEdit } from './OrderActions';
+import { OrderTimeline } from './OrderTimeline';
+import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
+
+// פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
+const STEP_ACTIONS = ['q', 'branch', 'status', 'close', 'ops'];
 import { OrderDocsSection } from './OrderDocs';
 import { BranchEdit, DeliveryTypeEdit, EditKv, ItemsEditor, MethodEdit, NotesSection, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
 import { phoneError } from '../../lib/names';
@@ -77,7 +82,6 @@ export function OrderPanel() {
 }
 
 function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull: (f: boolean) => void }) {
-  const { requestStatus } = useStore();
   const save = useOrderSave(o);
   const [editItems, setEditItems] = useState(false);
   /* שינוי של משתמש אחר בזמן שהתיק פתוח: הודעה מה השתנה ועל ידי מי */
@@ -161,13 +165,11 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             <span className="muted">· {o.changedAfterApproval.by}</span>
           </div>
         )}
-        <div className="panel__row">
-          <StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />
-          <span className="panel__marks"><OrderMarks o={o} /></span>
-        </div>
-        {o.issues.length > 0 && (
+        <OrderTimeline o={o} />
+        {/* פעולות שהן חלק מהציר מופיעות בציר עצמו – כאן רק שאר הבעיות */}
+        {o.issues.some((i) => !STEP_ACTIONS.includes(i.action)) && (
           <div className="missing" aria-label="מה חסר">
-            {o.issues.map((i) => (
+            {o.issues.filter((i) => !STEP_ACTIONS.includes(i.action)).map((i) => (
               <div key={i.rule} className={`missing__item missing__item--${i.severity}`}>
                 <span>{i.label}</span>
                 <FixButton o={o} issue={i} onOpen={() => document.getElementById(i.rule === 2 ? 'sec-items' : 'sec-delivery')?.scrollIntoView({ behavior: 'smooth' })} />
@@ -196,7 +198,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             <Section id="details" title="פרטים">
               <Kv k="לקוח" v={o.customerName} />
               <EditKv k="ערוץ קבלה" value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ ההזמנה')} onSave={(v) => save({ channel: v }, 'ערוץ הקבלה')} />
-              <Kv k="מטפל" v={o.handler} />
+              <Kv k="מטפל" v={<HandlerEdit o={o} />} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
             </Section>
             <Section id="delivery" title="אספקה">
@@ -207,7 +209,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               {o.delivery === 'delivery' && <EditKv k="כתובת" value={o.address ?? ''} display={o.address || <Missing>חסרה</Missing>} placeholder="רחוב, מספר, עיר" onSave={(v) => save({ address: v || undefined }, 'הכתובת')} />}
               <EditKv k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <Missing />} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
               <EditKv k="טלפון" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />
-              <EditKv k="הנחיות" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההנחיות')} />
+              <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
             </Section>
             <Section id="items" title="פריטים ומחיר" action={!editItems && <button className="link" onClick={() => setEditItems(true)}>עריכה</button>}>
               {editItems ? <ItemsEditor o={o} onDone={() => setEditItems(false)} /> : (
@@ -258,6 +260,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
       </div>
       <div className="panel__foot">
         <span className="muted">לחיצה על ערך פותחת עריכה · נשמר אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>
+        <DeleteOrder o={o} />
         <button className="link" onClick={panel.close}>חזרה לרשימה</button>
       </div>
     </>
@@ -280,7 +283,7 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 export const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
-  delivery: 'סוג אספקה', instructions: 'הנחיות', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
+  delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
 };
 export function showVal(k: string, v: unknown): string {

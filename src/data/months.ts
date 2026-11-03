@@ -5,12 +5,14 @@ import { useEffect, useState } from 'react';
 import { collection, doc, onSnapshot, query, serverTimestamp, where, writeBatch } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { fromDoc } from './orders';
-import type { Order } from './types';
+import { outcomeOf, type Order } from './types';
 
 export type MonthSummary = {
   count: number; sum: number; cancelled: number;
   byMethod: Record<string, { count: number; sum: number }>;
   byCustomer: { name: string; count: number; sum: number }[];
+  /* פילוח אספקה: בזמן / באיחור / חלקית / בוטלה */
+  byOutcome?: Record<string, number>;
 };
 export type MonthDoc = {
   status: 'open' | 'locked';
@@ -106,5 +108,6 @@ export function summarize(orders: Order[]): MonthSummary {
   return {
     count: live.length, sum: live.reduce((t, o) => t + val(o), 0), cancelled: orders.length - live.length,
     byMethod, byCustomer: [...byCust.values()].sort((a, b) => b.sum - a.sum),
+    byOutcome: orders.reduce<Record<string, number>>((m, o) => { const k = outcomeOf(o); m[k] = (m[k] ?? 0) + 1; return m; }, {}),
   };
 }

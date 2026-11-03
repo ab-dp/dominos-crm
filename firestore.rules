@@ -233,7 +233,8 @@ service cloud.firestore {
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['amount', 'qAmount', 'calcAmount', 'deliveryFee', 'date', 'status', 'payment'])
             || (!monthLocked(resource.data.date) && !monthLocked(request.resource.data.date))
             || lockFixOk(request.resource.data));
-      allow delete: if false;
+      // מחיקה לגמרי – רק מנהל מערכת, ולא בחודש נעול (ביומן נשארת רשומה עם הסיבה)
+      allow delete: if isAdmin() && !monthLocked(resource.data.date);
 
       // הערות פנימיות: אפשר רק להוסיף. אף אחד, כולל מנהל, לא עורך ולא מוחק.
       match /notes/{nid} {
@@ -243,7 +244,8 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['text', 'by', 'byName', 'at'])
           && request.resource.data.text is string && request.resource.data.text.size() > 0
           && noCard(request.resource.data.text);
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAdmin();
       }
 
       // "פותח כרגע": כל משתמש כותב ומוחק רק את הרשומה של עצמו
@@ -252,7 +254,7 @@ service cloud.firestore {
         allow create, update: if isActive() && vid == request.auth.uid
           && request.resource.data.keys().hasOnly(['name', 'at'])
           && request.resource.data.name is string && request.resource.data.name.size() <= 120;
-        allow delete: if isActive() && vid == request.auth.uid;
+        allow delete: if (isActive() && vid == request.auth.uid) || isAdmin();
       }
     }
 
@@ -286,14 +288,16 @@ service cloud.firestore {
         && request.resource.data.type in ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
         && request.resource.data.size is int && request.resource.data.size <= 2097152
         && request.resource.data.chunks is int && request.resource.data.chunks >= 1 && request.resource.data.chunks <= 4;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
 
       match /chunks/{ci} {
         allow read: if isActive();
         allow create: if isActive()
           && getAfter(/databases/$(database)/documents/orderDocs/$(did)).data.by == request.auth.uid
           && request.resource.data.data is bytes && request.resource.data.data.size() <= 720000;
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAdmin();
       }
     }
 

@@ -1,12 +1,12 @@
 /* דוחות (אפיון 10): מרכז דוחות, ודף דוח אחיד – מסננים בשורה אחת, מדדים, גרף עם "הצג כטבלה",
    טבלה עם שורת סיכום, לחיצה על שורה מציגה את ההזמנות שמרכיבות אותה, וייצוא לאקסל שנרשם ביומן. */
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CalendarCheck, ChartColumn, Download, RefreshCw, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { logReportExport, useOrdersRange } from '../../data/orders';
 import { useStore } from '../../data/store';
-import type { Order } from '../../data/types';
+import { METHOD_LABEL, OUTCOME_LABEL, outcomeOf, type Order, type Outcome } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, toISODate } from '../../lib/format';
@@ -22,7 +22,7 @@ export function ReportsHub() {
       <header className="page__head">
         <div>
           <h1 className="page__title">דוחות</h1>
-          <p className="page__sub">כל הדוחות לפי תאריך אספקה וסכום Q, בלי הזמנות שבוטלו (חוץ מדוח הביטולים).</p>
+          <p className="page__sub">כל הדוחות לפי תאריך אספקה וסכום Q. סכומים בלי הזמנות שבוטלו; הביטולים נספרים בנפרד.</p>
         </div>
       </header>
       <Link to="/reports/close" className="rhub__card rhub__card--feature">
@@ -42,13 +42,14 @@ export function ReportsHub() {
 }
 
 /* ---------- טווחי תאריכים ---------- */
-type Preset = 'month' | 'prev' | 'd7' | 'd30' | 'm3' | 'custom';
-const PRESETS: [Preset, string][] = [['month', 'החודש'], ['prev', 'החודש הקודם'], ['d7', '7 ימים'], ['d30', '30 ימים'], ['m3', '3 חודשים'], ['custom', 'מותאם']];
+type Preset = 'week' | 'month' | 'prev' | 'd30' | 'm3' | 'custom';
+const PRESETS: [Preset, string][] = [['week', 'השבוע'], ['month', 'החודש'], ['prev', 'החודש הקודם'], ['d30', '30 ימים'], ['m3', '3 חודשים'], ['custom', 'מותאם']];
 function rangeOf(p: Preset, now: Date): [string, string] {
   const y = now.getFullYear(); const m = now.getMonth();
   const day = (d: Date) => toISODate(d);
   if (p === 'prev') return [day(new Date(y, m - 1, 1)), day(new Date(y, m, 0))];
-  if (p === 'd7') return [day(new Date(now.getTime() - 6 * 86400000)), day(now)];
+  // שבוע: ראשון עד שבת של השבוע הנוכחי
+  if (p === 'week') { const s = new Date(y, m, now.getDate() - now.getDay()); return [day(s), day(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6))]; }
   if (p === 'd30') return [day(new Date(now.getTime() - 29 * 86400000)), day(now)];
   if (p === 'm3') return [day(new Date(y, m - 2, 1)), day(new Date(y, m + 1, 0))];
   return [day(new Date(y, m, 1)), day(new Date(y, m + 1, 0))];
@@ -66,6 +67,8 @@ const fmtCell = (c: Col, v: string | number | undefined) => {
 export function ReportView() {
   const { id } = useParams();
   const def = REPORTS.find((r) => r.id === id);
+  // דוח שהוסר (קישור ישן) – חוזרים למרכז הדוחות
+  if (!def) return <Navigate to="/reports" replace />;
   if (!def || def.link) return <div className="page"><div className="card"><EmptyState icon={<ChartColumn size={24} />} title="הדוח לא נמצא" action={<Link className="btn btn--primary btn--md" to="/reports"><span className="btn__label">לכל הדוחות</span></Link>} /></div></div>;
   return <Report key={def.id} def={def} />;
 }
@@ -81,6 +84,9 @@ function Report({ def }: { def: ReportDef }) {
   const to = preset === 'custom' ? params.get('to') ?? pt : pt;
   const cluster = params.get('cluster') ?? '';
   const branch = params.get('branch') ?? '';
+  const method = params.get('method') ?? '';
+  const outcome = (params.get('outcome') ?? '') as Outcome | '';
+  const handler = params.get('handler') ?? '';
   const [cust, setCust] = useState('');
   const set = (patch: Record<string, string | null>) => {
     const p = new URLSearchParams(params);
@@ -91,16 +97,20 @@ function Report({ def }: { def: ReportDef }) {
   const { orders: raw, loading, error, reload } = useOrdersRange(from, to);
   const clusters = useMemo(() => [...new Set(raw.map((o) => o.cluster).filter(Boolean))].sort(), [raw]);
   const branches = useMemo(() => [...new Set(raw.filter((o) => !cluster || o.cluster === cluster).map((o) => o.branchName))].sort(), [raw, cluster]);
-  const orders = useMemo(() => raw.filter((o) => (!cluster || o.cluster === cluster) && (!branch || o.branchName === branch) && (!cust.trim() || o.customerName.includes(cust.trim()))), [raw, cluster, branch, cust]);
+  const methods = useMemo(() => [...new Set(raw.map((o) => o.method))], [raw]);
+  const handlers = useMemo(() => [...new Set(raw.map((o) => o.handler || o.createdBy).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he')), [raw]);
+  const orders = useMemo(() => raw.filter((o) => (!cluster || o.cluster === cluster) && (!branch || o.branchName === branch) && (!cust.trim() || o.customerName.includes(cust.trim()))
+    && (!method || o.method === method) && (!outcome || outcomeOf(o) === outcome) && (!handler || (o.handler || o.createdBy) === handler)), [raw, cluster, branch, cust, method, outcome, handler]);
   const res: ReportResult = useMemo(() => def.compute(orders), [def, orders]);
   const [picked, setPicked] = useState<Row | null>(null);
   const [view, setView] = useState<'chart' | 'table'>('chart');
-  const filtered = !!(cluster || branch || cust.trim());
+  const filtered = !!(cluster || branch || cust.trim() || method || outcome || handler);
+  const panel = usePanel();
 
   const exportCsv = async () => {
     const esc = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
     const lines = [
-      [def.title, `${fmtDate(from)} – ${fmtDate(to)}`, filtered ? `מסונן: ${[cluster, branch, cust].filter(Boolean).join(' · ')}` : ''].map(esc).join(','),
+      [def.title, `${fmtDate(from)} – ${fmtDate(to)}`, filtered ? `מסונן: ${[cluster, branch, cust, method && (METHOD_LABEL[method] ?? method), outcome && OUTCOME_LABEL[outcome], handler].filter(Boolean).join(' · ')}` : ''].map(esc).join(','),
       res.cols.map((c) => esc(c.label)).join(','),
       ...res.rows.map((r) => res.cols.map((c) => esc(c.kind === 'money' || c.kind === 'num' ? String(r.cells[c.key] ?? '') : fmtCell(c, r.cells[c.key]))).join(',')),
       ...(res.totals ? [res.cols.map((c) => esc(c.kind === 'money' || c.kind === 'num' ? String(res.totals![c.key] ?? '') : fmtCell(c, res.totals![c.key]))).join(',')] : []),
@@ -111,7 +121,7 @@ function Report({ def }: { def: ReportDef }) {
     const a = document.createElement('a');
     a.href = url; a.download = `דוח ${def.title} ${from} עד ${to}.csv`; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
-    logReportExport(def.id, { from, to, rows: res.rows.length, filters: { cluster, branch, customer: cust.trim() } }).catch(() => undefined);
+    logReportExport(def.id, { from, to, rows: res.rows.length, filters: { cluster, branch, customer: cust.trim(), method, outcome, handler } }).catch(() => undefined);
     toast({ message: <>הדוח יוצא לאקסל · <Ltr>{res.rows.length}</Ltr> שורות</> });
   };
 
@@ -149,8 +159,20 @@ function Report({ def }: { def: ReportDef }) {
           <option value="">כל הסניפים</option>
           {branches.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
+        <select className="input input--sm report__sel" value={method} onChange={(e) => set({ method: e.target.value })} aria-label="אמצעי תשלום">
+          <option value="">כל אמצעי התשלום</option>
+          {methods.map((m) => <option key={m} value={m}>{METHOD_LABEL[m] ?? m}</option>)}
+        </select>
+        <select className="input input--sm report__sel" value={outcome} onChange={(e) => set({ outcome: e.target.value })} aria-label="סטטוס אספקה">
+          <option value="">כל הסטטוסים</option>
+          {(Object.keys(OUTCOME_LABEL) as Outcome[]).map((k) => <option key={k} value={k}>{OUTCOME_LABEL[k]}</option>)}
+        </select>
+        <select className="input input--sm report__sel" value={handler} onChange={(e) => set({ handler: e.target.value })} aria-label="מטפל">
+          <option value="">כל המטפלים</option>
+          {handlers.map((h) => <option key={h} value={h}>{h}</option>)}
+        </select>
         <input className="input input--sm report__cust" value={cust} onChange={(e) => setCust(e.target.value)} placeholder="לקוח" aria-label="סינון לפי לקוח" />
-        {filtered && <button className="chip is-on" onClick={() => { setCust(''); set({ cluster: null, branch: null }); }}>נקה סינון <X size={13} aria-hidden="true" /></button>}
+        {filtered && <button className="chip is-on" onClick={() => { setCust(''); set({ cluster: null, branch: null, method: null, outcome: null, handler: null }); }}>נקה סינון <X size={13} aria-hidden="true" /></button>}
       </div>
 
       {error && <p className="cform__formerr" role="alert">{error} – הדוח לא נטען.</p>}
@@ -160,7 +182,7 @@ function Report({ def }: { def: ReportDef }) {
         <>
           {res.kpis && (
             <dl className="report__kpis">
-              {res.kpis.map((k) => <div key={k.label} className={k.alert ? 'is-alert' : ''}><dt>{k.label}</dt><dd><Ltr>{k.money ? fmtMoney(Number(k.value)) : k.value}</Ltr></dd></div>)}
+              {res.kpis.map((k) => <div key={k.label} className={k.alert ? 'is-alert' : ''}><dt>{k.label}</dt><dd><Ltr>{k.money ? fmtMoney(Number(k.value)) : k.value}</Ltr>{k.sub && <small> {k.sub}</small>}</dd></div>)}
             </dl>
           )}
 
@@ -196,8 +218,8 @@ function Report({ def }: { def: ReportDef }) {
                   <thead><tr>{res.cols.map((c) => <th key={c.key} className={c.kind === 'money' || c.kind === 'num' || c.kind === 'pct' ? 'num' : ''}>{c.label}</th>)}</tr></thead>
                   <tbody>
                     {res.rows.map((r) => (
-                      <tr key={r.id} className={picked?.id === r.id ? 'is-picked' : ''} tabIndex={0} onClick={() => setPicked(picked?.id === r.id ? null : r)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') setPicked(picked?.id === r.id ? null : r); }} aria-label={`${r.cells[res.cols[0].key]} – הצג את ההזמנות`}>
+                      <tr key={r.id} className={picked?.id === r.id ? 'is-picked' : ''} tabIndex={0} onClick={(e) => (def.perOrder ? panel.open(r.orders[0].id, e.currentTarget) : setPicked(picked?.id === r.id ? null : r))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { if (def.perOrder) panel.open(r.orders[0].id, e.currentTarget); else setPicked(picked?.id === r.id ? null : r); } }} aria-label={def.perOrder ? `הזמנה ${r.id} – פתח את תיק ההזמנה` : `${r.cells[res.cols[0].key]} – הצג את ההזמנות`}>
                         {res.cols.map((c) => <td key={c.key} className={c.kind === 'money' || c.kind === 'num' || c.kind === 'pct' ? 'num' : ''}>{c.kind && c.kind !== 'text' ? <Ltr>{fmtCell(c, r.cells[c.key])}</Ltr> : fmtCell(c, r.cells[c.key])}</td>)}
                       </tr>
                     ))}

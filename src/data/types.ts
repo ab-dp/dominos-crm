@@ -3,15 +3,47 @@ export type PaymentState = 'pending' | 'paid' | 'failed' | 'cancelled';
 // אמצעי התשלום הבסיסיים נעולים ברשימות המערכת; אפשר להוסיף אחרים, לכן המזהה הוא מחרוזת
 export type PaymentMethod = 'credit' | 'account' | 'cash' | (string & {});
 
+/* status שומר רק את אישור הלקוח ואת הסגירה. השלב בציר נגזר מהנתונים – ראו stageOf */
 export const STATUS_LABEL: Record<OrderStatus, string> = {
-  new: 'חדשה',
-  pending_customer: 'ממתינה לאישור לקוח',
-  approved: 'אושרה',
+  new: 'ממתין לאישור לקוח', // ערך ישן – מוצג כמו "ממתין לאישור לקוח"
+  pending_customer: 'ממתין לאישור לקוח',
+  approved: 'הלקוח אישר',
   delivered: 'סופקה',
   partial: 'סופקה חלקית',
   cancelled: 'בוטלה',
 };
 export const CLOSED: OrderStatus[] = ['delivered', 'partial', 'cancelled'];
+
+/* ציר ההזמנה: ממתין לאישור לקוח ← ממתין לאישור סניף ← מאושר ← הוקלד ל-Q ← נסגרה (סופקה / חלקית, אפשר באיחור). בוטלה – מכל שלב */
+export type Stage = 'pending_customer' | 'pending_branch' | 'approved' | 'in_q' | 'delivered' | 'partial' | 'cancelled';
+export const STAGE_LABEL: Record<Stage, string> = {
+  pending_customer: 'ממתין לאישור לקוח',
+  pending_branch: 'ממתין לאישור סניף',
+  approved: 'מאושר',
+  in_q: 'הוקלד ל-Q',
+  delivered: 'סופקה',
+  partial: 'סופקה חלקית',
+  cancelled: 'בוטלה',
+};
+export const OPEN_STAGES: Stage[] = ['pending_customer', 'pending_branch', 'approved', 'in_q'];
+export function stageOf(o: Pick<Order, 'status' | 'branchApproval' | 'qNumber'>): Stage {
+  if (o.status === 'delivered' || o.status === 'partial' || o.status === 'cancelled') return o.status;
+  if (o.qNumber) return 'in_q';
+  if (o.branchApproval) return 'approved';
+  if (o.status === 'approved') return 'pending_branch';
+  return 'pending_customer';
+}
+/* סטטוס אספקה לדוחות: סופקה / סופקה באיחור / חלקית / בוטלה / פתוחה */
+export type Outcome = 'ontime' | 'late' | 'partial' | 'cancelled' | 'open';
+export const OUTCOME_LABEL: Record<Outcome, string> = { ontime: 'סופקה', late: 'סופקה באיחור', partial: 'סופקה חלקית', cancelled: 'בוטלה', open: 'פתוחה' };
+export function outcomeOf(o: Pick<Order, 'status' | 'late'>): Outcome {
+  if (o.status === 'cancelled') return 'cancelled';
+  if (o.status === 'partial') return 'partial';
+  if (o.status === 'delivered') return o.late ? 'late' : 'ontime';
+  return 'open';
+}
+export const closeLabel = (o: Pick<Order, 'status' | 'late'>) =>
+  (o.status === 'delivered' || o.status === 'partial') && o.late ? `${STATUS_LABEL[o.status]} · באיחור ${o.late.minutes ? `${o.late.minutes} דק'` : ''}`.trim() : STATUS_LABEL[o.status];
 
 export const PAYMENT_LABEL: Record<PaymentState, string> = {
   pending: 'ממתין לתשלום',
@@ -82,4 +114,10 @@ export type Order = {
   /* תיקון בחודש נעול (אפיון 7): הסיבה של התיקון האחרון; מסומן בדוח החודש "תיקון לאחר סגירה" */
   postCloseFix?: { reason: string; by: string; at?: unknown };
   cancelNote?: string;
+  /* אספקה באיחור – נרשם בסגירה (סופקה / חלקית), minutes לא חובה */
+  late?: { minutes: number };
+  /* תזכורת בשלב Q: עדכון התפעול. false = עוד לא עודכן; חסר = הזמנה מלפני התזכורת */
+  opsNotified?: boolean;
+  /* הוזנה בדיעבד – תאריך שעבר, לתיעוד בלבד */
+  backfill?: boolean;
 };

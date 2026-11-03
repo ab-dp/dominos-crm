@@ -2,16 +2,17 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, CalendarClock, CalendarDays, Check, CircleCheckBig, CreditCard, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX, Download } from 'lucide-react';
+import { UserPlus, UserCheck, BellRing, CalendarClock, CalendarDays, Check, CircleCheckBig, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX, Download } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
-import { Button, HealthBadge, Missing, RollingNumber, StatusMenu, Skeleton } from '../../design/components';
+import { Button, HealthBadge, Missing, RollingNumber, Skeleton } from '../../design/components';
 import { HEALTH_RANK, missingOf, orderDateTime } from '../../rules-engine/health';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
-import { FixButton, OrderMarks } from '../orders/OrderActions';
+import { FixButton } from '../orders/OrderActions';
+import { NextStep, StageTrack } from '../orders/OrderTimeline';
 import { downloadCsv } from '../../lib/csv';
 import { PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 import { fmtPhone } from '../../lib/format';
@@ -19,7 +20,7 @@ import '../pages.css';
 import './TodayPage.css';
 
 export function TodayPage() {
-  const { orders, now, requestStatus, dueTasks, loading } = useStore();
+  const { orders, now, dueTasks, loading } = useStore();
   const panel = usePanel();
   const nav = useNavigate();
   const reduce = useReducedMotion();
@@ -35,10 +36,12 @@ export function TodayPage() {
   const open = scope.filter((o) => !CLOSED.includes(o.status));
 
   const tasks = [
-    { key: 'yesterday', title: 'לסגור מאתמול', icon: <PackageCheck size={20} />, list: open.filter((o) => o.date < today), to: '/orders?tab=overdue', doneText: 'הכל נסגר' },
+    // לפי ציר ההזמנה: לקוח ← סניף ← Q ← תפעול ← סגירה
+    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'היום ומחר', icon: <UserCheck size={20} />, list: open.filter((o) => (o.date === today || o.date === tomorrow) && (o.status === 'new' || o.status === 'pending_customer')), to: '/exceptions?rule=6', doneText: 'כל הלקוחות אישרו' },
     { key: 'branch', title: 'אישורי סניף חסרים', sub: 'היום ומחר', icon: <Store size={20} />, list: open.filter((o) => (o.date === today || o.date === tomorrow) && !o.branchApproval), to: '/orders?tab=today&filter=branch', doneText: 'כל הסניפים אישרו' },
-    { key: 'q', title: 'להעביר ל-Q', icon: <Send size={20} />, list: open.filter((o) => o.date === today && !o.qNumber), to: '/orders?tab=today&filter=q', doneText: 'הכל הועבר' },
-    { key: 'credit', title: 'אשראי לחייב', icon: <CreditCard size={20} />, list: open.filter((o) => o.date === today && o.method === 'credit' && (o.payment === 'pending' || o.payment === 'failed')), to: '/orders?tab=today&filter=credit', doneText: 'הכל חויב' },
+    { key: 'q', title: 'להקליד ל-Q', icon: <Send size={20} />, list: open.filter((o) => o.date === today && !o.qNumber), to: '/orders?tab=today&filter=q', doneText: 'הכל הועבר' },
+    { key: 'ops', title: 'לעדכן את התפעול', icon: <BellRing size={20} />, list: open.filter((o) => !!o.qNumber && o.opsNotified === false), to: '/exceptions?rule=12', doneText: 'התפעול מעודכן' },
+    { key: 'yesterday', title: 'לסגור מאתמול', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, list: open.filter((o) => o.date < today), to: '/orders?tab=overdue', doneText: 'הכל נסגר' },
     { key: 'missing', title: 'פרטים חסרים', sub: 'להשלים בהזמנות', icon: <ClipboardX size={20} />, list: open.filter((o) => missingOf(o).length > 0), to: '/exceptions?rule=8', doneText: 'כל ההזמנות מלאות' },
   ];
   const allDone = !loading && tasks.every((t) => t.list.length === 0);
@@ -198,7 +201,7 @@ export function TodayPage() {
             <ol className="tl">
               {todays.map((o, i) => (
                 <TimelineRow key={o.id} o={o} isNowBefore={i === nowIdx} isNext={o.id === nextUp?.id} now={now} onOpen={(el) => panel.open(o.id, el)}
-                  status={<StatusMenu status={o.status} onChange={(s) => requestStatus(o, s)} />} />
+                  status={<StageTrack o={o} />} />
               ))}
               {nowIdx === -1 && <NowLine now={now} />}
             </ol>
@@ -238,7 +241,7 @@ function TimelineRow({ o, isNowBefore, isNext, now, onOpen, status }: { o: Order
         </button>
         <HealthBadge health={o.health} issues={o.issues} compact />
         {status}
-        <span className="tl__marks"><OrderMarks o={o} /></span>
+        <span className="tl__marks"><NextStep o={o} /></span>
       </li>
     </>
   );

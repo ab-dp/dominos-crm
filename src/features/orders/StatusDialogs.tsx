@@ -45,6 +45,8 @@ function PartialDialog({ onClose }: { onClose: () => void }) {
   const o = closing!.order;
   const [what, setWhat] = useState('');
   const [amount, setAmount] = useState(String(o.amount));
+  const [late, setLate] = useState(!!o.late);
+  const [mins, setMins] = useState(o.late?.minutes ? String(o.late.minutes) : '');
   const [err, setErr] = useState('');
   const next = money(amount);
   const save = () => {
@@ -52,7 +54,7 @@ function PartialDialog({ onClose }: { onClose: () => void }) {
     if (CARD_RE.test(what)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     if (next <= 0) return setErr('הסכום לחיוב חייב להיות גדול מ-0');
     update(o.id, {
-      status: 'partial', partialNote: what.trim(),
+      status: 'partial', partialNote: what.trim(), late: late ? { minutes: Number(mins.replace(/\D/g, '')) || 0 } : undefined,
       ...(next !== o.amount ? { amount: next } : {}),
     }, <>הזמנה <Ltr>{o.id}</Ltr> סומנה "סופקה חלקית" ועברה לארכיון{next !== o.amount && <> · לחיוב <Ltr>{fmtMoney(next)}</Ltr></>}</>);
     onClose();
@@ -71,6 +73,13 @@ function PartialDialog({ onClose }: { onClose: () => void }) {
         </label>
         {o.qNumber && next !== (o.qAmount ?? o.amount) && (
           <p className="sdialog__warn"><CircleAlert size={16} aria-hidden="true" /> הסכום שונה ממה שרשום ב-Q (<Ltr>{o.qNumber}</Ltr>). זכור לעדכן גם בקופה.</p>
+        )}
+        <label className="check-inline"><input type="checkbox" checked={late} onChange={(e) => setLate(e.target.checked)} /> סופקה גם באיחור</label>
+        {late && (
+          <label className="field">
+            <span className="field__label">זמן האיחור (דקות)</span>
+            <input className="input input--ltr sdialog__money" inputMode="numeric" value={mins} onChange={(e) => setMins(e.target.value)} placeholder="למשל 20" />
+          </label>
         )}
         {err && <p className="cform__err" role="alert">{err}</p>}
         <div className="udialog__actions">

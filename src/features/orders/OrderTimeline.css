@@ -1,0 +1,52 @@
+/* ציר ההזמנה – בתיק ההזמנה */
+.timeline-wrap { display: flex; align-items: flex-start; gap: 16px; padding: 12px 14px; border: 1px solid var(--gray-100); border-radius: var(--radius-panel); background: var(--gray-25); }
+.otl { flex: 1; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.otl-step { position: relative; display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+.otl-step + .otl-step::before { content: ''; position: absolute; inset-inline-end: calc(100% - 4px); top: 11px; width: calc(8px); height: 2px; background: var(--gray-200); }
+.otl-step__dot { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--font-mono); background: var(--white); color: var(--gray-600); box-shadow: inset 0 0 0 1.5px var(--gray-300); }
+.otl-step.is-done .otl-step__dot { background: var(--ok-fg); color: var(--white); box-shadow: none; }
+.otl-step.is-done.is-warn .otl-step__dot { background: var(--danger-fg); }
+.otl-step.is-now .otl-step__dot { background: var(--brand-600); color: var(--white); box-shadow: 0 0 0 3px var(--brand-100); }
+.otl-step__body { display: grid; gap: 3px; min-width: 0; justify-items: start; }
+.otl-step__title { font-size: var(--text-table); font-weight: 600; }
+.otl-step.is-todo .otl-step__title { color: var(--gray-600); font-weight: 500; }
+.otl-step__detail { font-size: var(--text-label); color: var(--gray-600); overflow-wrap: anywhere; }
+.otl-step__red { color: var(--danger-fg); font-weight: 600; }
+.otl-step__link { font-size: var(--text-label); }
+.otl-cancel { display: grid; gap: 4px; justify-items: end; flex: none; }
+.otl-cancel__tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-label); font-weight: 600; }
+.timeline-wrap.is-cancelled .otl { opacity: 0.55; }
+
+/* ציר קטן בשורה */
+.stage { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.stage__dots { display: inline-flex; gap: 3px; }
+.stage__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-200); }
+.stage__dot.is-done { background: var(--ok-fg); }
+.stage__dot.is-now { background: var(--brand-600); box-shadow: 0 0 0 2px var(--brand-100); }
+.stage__dot.is-warn { background: var(--danger-fg); }
+.stage__label { font-size: var(--text-label); font-weight: 500; }
+.stage--cancelled .stage__label { color: var(--danger-fg); }
+.stage--cancelled .stage__dot { background: var(--gray-200); }
+
+/* סגירה */
+.close-form { display: grid; gap: 10px; min-width: 230px; }
+.close-form__btns { display: flex; gap: 6px; }
+.close-form__mins { max-width: 120px; }
+.close-form__reopen { justify-self: start; font-size: var(--text-label); }
+
+@media (max-width: 700px) {
+  .timeline-wrap { flex-direction: column; }
+  .otl { grid-template-columns: 1fr 1fr; }
+  .otl-step + .otl-step::before { display: none; }
+  .otl-cancel { justify-items: start; }
+}
+
+/* מבנה: תחנות למעלה, הצעד הבא למטה */
+.timeline-wrap { flex-direction: column; align-items: stretch; gap: 12px; }
+.otl-step__edit { padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-table); font-weight: 600; color: inherit; cursor: pointer; text-align: start; text-decoration: underline dotted var(--gray-300); text-underline-offset: 3px; }
+.otl-step__edit:hover { color: var(--brand-700); }
+.otl-next { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+.otl-next__label { font-size: var(--text-label); color: var(--gray-600); font-weight: 600; }
+.otl-next__spacer { flex: 1; }
+.otl-next__warn { font-size: var(--text-label); }
+.otl-ops { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border: 1px solid #F0C69B; border-radius: 14px; background: var(--urgent-bg); color: var(--urgent-fg); font: inherit; font-size: var(--text-label); font-weight: 600; cursor: pointer; }

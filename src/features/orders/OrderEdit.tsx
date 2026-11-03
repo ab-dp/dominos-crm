@@ -258,10 +258,13 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
         <Button size="sm" variant="ghost" type="button" icon={<Plus size={15} />} onClick={() => add()}>פריט חופשי</Button>
       </div>
       <div className="iedit__grid">
-        <label className="field">
-          <span className="field__label">פירוט במילים</span>
-          <textarea className="input cform__ta" rows={2} value={contents} onChange={(e) => setContents(e.target.value)} placeholder="למשל: 12 משפחתיות, 6 שתייה" />
-        </label>
+        {/* פירוט במילים – רק בהזמנות ישנות שנרשם בהן; הזמנות חדשות נרשמות לפי פריטים */}
+        {o.contents && (
+          <label className="field">
+            <span className="field__label">פירוט במילים (מהזמנה ישנה)</span>
+            <textarea className="input cform__ta" rows={2} value={contents} onChange={(e) => setContents(e.target.value)} />
+          </label>
+        )}
         {o.delivery === 'delivery' && (
           <label className="field">
             <span className="field__label">דמי משלוח (₪)</span>

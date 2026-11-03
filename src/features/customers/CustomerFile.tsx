@@ -248,6 +248,9 @@ function lastMonths(orders: OrderView[], now: Date): MonthRow[] {
   });
 }
 
+// הזמנות שסופקו (או סופקו חלקית) באיחור
+const lateOf = (list: OrderView[]) => list.filter((o) => (o.status === 'delivered' || o.status === 'partial') && o.late).length;
+
 function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean }) {
   const { now } = useStore();
   const panel = usePanel();
@@ -262,7 +265,7 @@ function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean
       <div className="report__scroll">
         <table className="rtable">
           <caption className="sr-only">סיכום חודשי ל-12 החודשים האחרונים</caption>
-          <thead><tr><th>חודש</th><th className="num">הזמנות</th><th className="num">סך</th><th className="num">ממוצע</th><th className="num">ביטולים</th><th className="num">פערי Q</th><th className="num">פתוח לתשלום</th><th>מצב חודש</th></tr></thead>
+          <thead><tr><th>חודש</th><th className="num">הזמנות</th><th className="num">סך</th><th className="num">ממוצע</th><th className="num">ביטולים</th><th className="num">באיחור</th><th className="num">חלקית</th><th className="num">פערי Q</th><th className="num">פתוח לתשלום</th><th>מצב חודש</th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.key} className={open === r.key ? 'is-picked' : ''} tabIndex={0} onClick={() => setOpen(open === r.key ? null : r.key)} onKeyDown={(e) => { if (e.key === 'Enter') setOpen(open === r.key ? null : r.key); }}>
@@ -271,13 +274,15 @@ function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean
                 <td className="num"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
                 <td className="num"><Ltr>{r.count ? fmtMoney(r.avg) : '—'}</Ltr></td>
                 <td className="num"><Ltr>{r.cancelled}</Ltr></td>
+                <td className={`num ${lateOf(r.orders) ? 'monthly__warn' : ''}`}><Ltr>{lateOf(r.orders)}</Ltr></td>
+                <td className="num"><Ltr>{r.orders.filter((o) => o.status === 'partial').length}</Ltr></td>
                 <td className={`num ${r.gaps ? 'monthly__warn' : ''}`}><Ltr>{r.gaps}</Ltr></td>
                 <td className={`num ${r.unpaid ? 'monthly__warn' : ''}`}><Ltr>{fmtMoney(r.unpaid)}</Ltr></td>
                 <td><span className="muted" title="סגירת חודש – שלב 9">פתוח</span></td>
               </tr>
             ))}
           </tbody>
-          <tfoot><tr><td>סה"כ</td><td className="num"><Ltr>{total.count}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.sum)}</Ltr></td><td className="num"><Ltr>{total.count ? fmtMoney(Math.round(total.sum / total.count)) : '—'}</Ltr></td><td className="num"><Ltr>{total.cancelled}</Ltr></td><td className="num"><Ltr>{total.gaps}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.unpaid)}</Ltr></td><td /></tr></tfoot>
+          <tfoot><tr><td>סה"כ</td><td className="num"><Ltr>{total.count}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.sum)}</Ltr></td><td className="num"><Ltr>{total.count ? fmtMoney(Math.round(total.sum / total.count)) : '—'}</Ltr></td><td className="num"><Ltr>{total.cancelled}</Ltr></td><td className="num"><Ltr>{lateOf(rows.flatMap((r) => r.orders))}</Ltr></td><td className="num"><Ltr>{rows.flatMap((r) => r.orders).filter((o) => o.status === 'partial').length}</Ltr></td><td className="num"><Ltr>{total.gaps}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.unpaid)}</Ltr></td><td /></tr></tfoot>
         </table>
       </div>
       {picked && (

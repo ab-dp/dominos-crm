@@ -138,12 +138,12 @@ function Board({ leads, today, onMove, onOpen }: { leads: Lead[]; today: string;
             <ul className="lcol__list">
               {list.map((l) => (
                 <li key={l.id}>
-                  <article className={`lcard ${dragId === l.id ? 'is-drag' : ''}`} draggable
+                  <article className={`ldcard ${dragId === l.id ? 'is-drag' : ''}`} draggable
                     onDragStart={(e) => { e.dataTransfer.setData('text/lead', l.id); e.dataTransfer.effectAllowed = 'move'; setDragId(l.id); }}
                     onDragEnd={() => { setDragId(null); setOver(null); }}>
-                    <button className="lcard__main" onClick={() => onOpen(l)} aria-label={`${l.name}, ${STAGE_LABEL[l.stage]}${l.nextStep ? `, צעד הבא: ${l.nextStep.text}` : ''}`}>
-                      <span className="lcard__name">{l.name}</span>
-                      <span className="lcard__meta">
+                    <button className="ldcard__main" onClick={() => onOpen(l)} aria-label={`${l.name}, ${STAGE_LABEL[l.stage]}${l.nextStep ? `, צעד הבא: ${l.nextStep.text}` : ''}`}>
+                      <span className="ldcard__name">{l.name}</span>
+                      <span className="ldcard__meta">
                         {[fieldLabel(l.field), deciderOf(l)?.name].filter(Boolean).join(' · ')}
                         {l.potentialAmount > 0 && <> · <Ltr>{fmtMoney(l.potentialAmount)}</Ltr> בחודש</>}
                       </span>
@@ -171,7 +171,7 @@ function StageMenu({ lead, onMove }: { lead: Lead; onMove: (l: Lead, to: LeadSta
   return (
     <Dropdown.Root dir="rtl">
       <Dropdown.Trigger asChild>
-        <button className="icon-btn lcard__menu" aria-label={`העבר שלב: ${lead.name}`}><ChevronDown size={16} /></button>
+        <button className="icon-btn ldcard__menu" aria-label={`העבר שלב: ${lead.name}`}><ChevronDown size={16} /></button>
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content className="menu" align="end" sideOffset={4}>

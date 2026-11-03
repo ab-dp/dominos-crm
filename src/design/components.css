@@ -256,3 +256,5 @@
 .udialog__danger p { margin: 0; }
 .udialog__danger p + p { margin-top: 6px; }
 .udialog__actions { display: flex; gap: 8px; margin-top: 20px; }
+.pop__hint { margin: 0; font-size: var(--text-label); color: var(--urgent-fg); }
+.q-ops { margin-top: 2px; }

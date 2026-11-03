@@ -254,3 +254,24 @@ export async function logReportExport(reportId: string, after: Record<string, un
   batch.set(doc(collection(db, 'auditLog')), { ...auditDoc('order', `report:${reportId}`, 'export', null, after, 'form'), entity: 'report', entityId: reportId });
   await batch.commit();
 }
+
+/* ---------- מחיקת הזמנה – מנהל מערכת בלבד (נאכף בכללי האבטחה), לא בחודש נעול ----------
+   נמחקים ההזמנה, ההערות, רשומות "פותח כרגע" והמסמכים שלה. ביומן נשארת רשומה עם תמונת מצב והסיבה. המספר לא חוזר לשימוש. */
+export async function deleteOrder(o: Order, reason: string) {
+  const id = String(o.id);
+  const [notes, viewers, docs] = await Promise.all([
+    getDocs(collection(db, 'orders', id, 'notes')),
+    getDocs(collection(db, 'orders', id, 'viewers')),
+    getDocs(query(collection(db, 'orderDocs'), where('orderId', '==', id))),
+  ]);
+  const chunks = await Promise.all(docs.docs.map((d) => getDocs(collection(db, 'orderDocs', d.id, 'chunks'))));
+  const batch = writeBatch(db);
+  const { issues: _i, health: _h, ...snapshot } = o as Order & { issues?: unknown; health?: unknown };
+  batch.set(doc(collection(db, 'auditLog')), auditDoc('order', id, 'delete', snapshot, null, 'form', reason.trim()));
+  notes.docs.forEach((d) => batch.delete(d.ref));
+  viewers.docs.forEach((d) => batch.delete(d.ref));
+  chunks.forEach((c) => c.docs.forEach((d) => batch.delete(d.ref)));
+  docs.docs.forEach((d) => batch.delete(d.ref));
+  batch.delete(doc(db, 'orders', id));
+  await batch.commit();
+}
