@@ -21,3 +21,4 @@
 .pl-customers__list a { display: inline-flex; height: 28px; align-items: center; padding: 0 10px; border-radius: 14px; background: var(--gray-100); color: var(--gray-900); text-decoration: none; font-size: var(--text-label); }
 .pl-customers__list a:hover { background: var(--brand-50); color: var(--brand-800); }
 .pl-customers .muted { margin: 0; font-size: var(--text-label); }
+.pl-delete { color: var(--danger-fg); }

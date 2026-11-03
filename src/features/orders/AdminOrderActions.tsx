@@ -41,21 +41,19 @@ export function HandlerEdit({ o }: { o: OrderView }) {
   );
 }
 
-/* מחיקה לגמרי – מקלידים את מספר ההזמנה וסיבה */
+/* מחיקה לגמרי – עם סיבה (נשמרת ביומן) */
 export function DeleteOrder({ o }: { o: OrderView }) {
   const { isAdmin } = useAuth();
   const { lockedMonths } = useStore();
   const panel = usePanel();
   const toast = useToast();
   const [open, setOpen] = useState(false);
-  const [num, setNum] = useState('');
   const [reason, setReason] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   if (!isAdmin) return null;
   const locked = lockedMonths.includes(monthOf(o.date));
   const go = async () => {
-    if (num.trim() !== String(o.id)) return setErr(`כדי לאשר, הקלידו את מספר ההזמנה: ${o.id}`);
     if (reason.trim().length < 3) return setErr('חובה: סיבת המחיקה');
     if (/\d{13,}/.test(reason)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     setBusy(true);
@@ -78,11 +76,8 @@ export function DeleteOrder({ o }: { o: OrderView }) {
             </>
           ) : (
             <form className="sdialog__form" onSubmit={(e) => { e.preventDefault(); go(); }}>
-              <label className="field"><span className="field__label">הקלידו את מספר ההזמנה לאישור</span>
-                <input className="input input--ltr" inputMode="numeric" value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} placeholder={String(o.id)} />
-              </label>
               <label className="field"><span className="field__label">סיבת המחיקה <span className="req">חובה</span></span>
-                <input className="input" value={reason} onChange={(e) => { setReason(e.target.value); setErr(''); }} placeholder="למשל: הוזנה בטעות פעמיים" />
+                <input className="input" autoFocus value={reason} onChange={(e) => { setReason(e.target.value); setErr(''); }} placeholder="למשל: הוזנה בטעות פעמיים" />
               </label>
               {err && <span className="cform__err" role="alert">{err}</span>}
               <div className="udialog__actions"><Button variant="danger" type="submit" loading={busy}>מחק לצמיתות</Button><Button variant="ghost" type="button" onClick={() => setOpen(false)}>ביטול</Button></div>

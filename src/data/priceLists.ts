@@ -43,3 +43,20 @@ export async function updatePriceList(pl: PriceList, patch: Partial<Pick<PriceLi
   audit(batch, pl.id, 'update', detail ? (detail as { before?: unknown }).before ?? before : before, detail ? (detail as { after?: unknown }).after ?? patch : patch);
   await batch.commit();
 }
+
+/* מחיקת מחירון – מנהל מערכת בלבד (נאכף בכללי האבטחה). לקוחות שמשויכים אליו נשארים בלי מחירון, באותה פעולה,
+   ומחירים מיוחדים שלהם לבסיסים של המחירון יורדים. הזמנות קיימות לא משתנות (המחיר שמור בתוכן). ביומן – תמונת מצב והסיבה. */
+export async function deletePriceList(pl: PriceList, assigned: { id: string; customPrices: { itemId: string }[] }[], reason: string) {
+  const u = auth.currentUser!;
+  const batch = writeBatch(db);
+  const ids = new Set(pl.items.map((i) => i.id));
+  assigned.forEach((c) => batch.update(doc(db, 'customers', c.id), {
+    priceListId: '', customPrices: c.customPrices.filter((x) => !ids.has(x.itemId)), updatedAt: serverTimestamp(), updatedBy: u.uid,
+  }));
+  batch.set(doc(collection(db, 'auditLog')), {
+    entity: 'priceList', entityId: pl.id, action: 'delete', before: { name: pl.name, kind: pl.kind, items: pl.items }, after: { customers: assigned.length }, source: 'form', note: reason.trim(),
+    by: u.uid, byName: u.displayName ?? u.email ?? '', at: serverTimestamp(), ok: true,
+  });
+  batch.delete(doc(db, 'priceLists', pl.id));
+  await batch.commit();
+}

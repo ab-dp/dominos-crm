@@ -2,8 +2,10 @@
    כל מחיר ניתן לעריכה ידנית בכל רגע וכל עריכה נרשמת ביומן. שינוי מחירון לא משנה הזמנות קיימות. */
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, Copy, Pencil, Plus, Tags, Users, X } from 'lucide-react';
-import { createPriceList, updatePriceList, usePriceLists, type PriceItem, type PriceList } from '../../data/priceLists';
+import { Check, Copy, Pencil, Plus, Tags, Trash2, Users, X } from 'lucide-react';
+import { useAuth } from '../../auth/AuthContext';
+import { Shell } from '../leads/LeadDialogs';
+import { createPriceList, deletePriceList, updatePriceList, usePriceLists, type PriceItem, type PriceList } from '../../data/priceLists';
 import { newId, useCustomers } from '../../data/customers';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -161,6 +163,7 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
           <label className="check-inline"><input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> הצג פריטים לא פעילים</label>
           <Button size="sm" icon={<Copy size={15} />} onClick={onDuplicate}>שכפל מחירון</Button>
           <Button size="sm" variant={pl.active ? 'ghost' : 'secondary'} onClick={async () => { await updatePriceList(pl, { active: !pl.active }); toast({ message: pl.active ? 'המחירון סומן כלא פעיל – לא יוצע ללקוחות חדשים' : 'המחירון הופעל' }); }}>{pl.active ? 'סמן כלא פעיל' : 'הפעל'}</Button>
+          <DeletePriceList pl={pl} />
         </span>
       </div>
 
@@ -200,5 +203,51 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
         )}
       </div>
     </section>
+  );
+}
+
+/* מחיקת מחירון – מנהל מערכת בלבד, עם סיבה. לקוחות משויכים נשארים בלי מחירון; הזמנות קיימות לא משתנות */
+function DeletePriceList({ pl }: { pl: PriceList }) {
+  const { isAdmin } = useAuth();
+  const { items: customers } = useCustomers();
+  const [, setParams] = useSearchParams();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (!isAdmin) return null;
+  const assigned = customers.filter((c) => c.priceListId === pl.id && c.status !== 'merged');
+  const go = async () => {
+    if (reason.trim().length < 3) return setErr('חובה: סיבת המחיקה');
+    setBusy(true);
+    try {
+      await deletePriceList(pl, assigned, reason);
+      setOpen(false);
+      setParams((p) => { const n = new URLSearchParams(p); n.delete('id'); return n; }, { replace: true });
+      toast({ message: <>המחירון "{pl.name}" נמחק{assigned.length ? <> · <Ltr>{assigned.length}</Ltr> לקוחות נשארו בלי מחירון</> : null}</> });
+    } catch { setErr('המחיקה נכשלה – אין הרשאה או אין חיבור'); setBusy(false); }
+  };
+  return (
+    <>
+      <Button size="sm" variant="ghost" className="pl-delete" icon={<Trash2 size={15} />} onClick={() => setOpen(true)}>מחק מחירון</Button>
+      {open && (
+        <Shell title={`מחיקת המחירון "${pl.name}"`} sub={<>המחירון ובסיסי המחיר שלו יימחקו. הזמנות קיימות לא משתנות – המחיר שמור בתוכן. ביומן תישאר רשומה עם הסיבה.</>} onClose={() => setOpen(false)}>
+          <form className="sdialog__form" onSubmit={(e) => { e.preventDefault(); go(); }}>
+            {assigned.length > 0 && (
+              <p className="sdialog__warn">
+                <Users size={16} aria-hidden="true" />
+                <span><Ltr>{assigned.length}</Ltr> לקוחות משויכים למחירון ויישארו בלי מחירון: {assigned.slice(0, 5).map((c) => c.name).join(', ')}{assigned.length > 5 ? '…' : ''}</span>
+              </p>
+            )}
+            <label className="field"><span className="field__label">סיבת המחיקה <span className="req">חובה</span></span>
+              <input className="input" autoFocus value={reason} onChange={(e) => { setReason(e.target.value); setErr(''); }} placeholder="למשל: מחירון ישן, הוחלף במחירון 2027" />
+            </label>
+            {err && <span className="cform__err" role="alert">{err}</span>}
+            <div className="udialog__actions"><Button variant="danger" type="submit" loading={busy}>מחק מחירון</Button><Button variant="ghost" type="button" onClick={() => setOpen(false)}>ביטול</Button></div>
+          </form>
+        </Shell>
+      )}
+    </>
   );
 }
