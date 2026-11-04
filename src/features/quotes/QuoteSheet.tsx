@@ -77,7 +77,6 @@ export const QuoteSheet = forwardRef<HTMLElement, { d: SheetData }>(function Quo
         </ul>
       </div>
       <div className="qs-foot">
-        {d.handler && <p>איש הקשר שלכם: <b>{d.handler}</b></p>}
         <p>תודה שבחרתם ב-Domino's Pizza · נשמח לעמוד לשירותכם</p>
       </div>
     </article>
