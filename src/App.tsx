@@ -37,6 +37,8 @@ const PriceListsPage = named(() => import('./features/pricelists/PriceListsPage'
 const ExceptionsPage = named(() => import('./features/exceptions/ExceptionsPage'), 'ExceptionsPage');
 const ReportsHub = named(() => import('./features/reports/ReportsPage'), 'ReportsHub');
 const ReportView = named(() => import('./features/reports/ReportsPage'), 'ReportView');
+const QuotesPage = named(() => import('./features/quotes/QuotesPage'), 'QuotesPage');
+const QuotePage = named(() => import('./features/quotes/QuoteEditor'), 'QuotePage');
 
 export function App() {
   return (
@@ -85,6 +87,9 @@ function Gate() {
               <Route path="/leads" element={<LeadsPage />} />
               <Route path="/leads/:id" element={<LeadFile />} />
               <Route path="/pricelists" element={<PriceListsPage />} />
+              <Route path="/quotes" element={<QuotesPage />} />
+              <Route path="/quotes/new" element={<QuotePage />} />
+              <Route path="/quotes/:id" element={<QuotePage />} />
               <Route path="/exceptions" element={<ExceptionsPage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="*" element={<Navigate to="/today" replace />} />

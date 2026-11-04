@@ -154,8 +154,10 @@ service cloud.firestore {
       allow read: if isActive();
       allow create, update: if isActive()
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
-        && request.resource.data.kind in ['shared', 'unique']
+        && request.resource.data.get('kind', 'shared') in ['shared', 'unique']
         && request.resource.data.active is bool
+        && noCard(request.resource.data.get('note', ''))
+        && request.resource.data.get('minPizzas', 0) is number
         && request.resource.data.items is list && request.resource.data.items.size() <= 500
         && request.resource.data.updatedBy == request.auth.uid;
       // מחיקה – רק מנהל מערכת
@@ -361,6 +363,70 @@ service cloud.firestore {
         && onlyChanges(['done', 'doneBy', 'doneByName', 'doneAt'])
         && request.resource.data.done is bool
         && (request.resource.data.done == false || request.resource.data.doneBy == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // ---------- הצעות מחיר: מספר רץ נפרד (counters/quotes, החל מ-1001). אין מחיקה; הצעה שהפכה להזמנה לא חוזרת אחורה. ----------
+    function quoteCounterPath() { return /databases/$(database)/documents/counters/quotes; }
+    function quotePath(n) { return /databases/$(database)/documents/quotes/$(string(n)); }
+    function validQuote(d) {
+      return d.status in ['draft', 'sent', 'noanswer', 'approved', 'rejected', 'ordered']
+        && d.customer is map && d.customer.get('name', '') is string && d.customer.get('name', '').size() <= 120
+        && noCard(d.customer.get('name', '')) && noCard(d.customer.get('contact', '')) && noCard(d.customer.get('email', ''))
+        && d.customer.get('phone', '') is string && d.customer.get('phone', '').size() <= 20
+        && d.customer.get('taxId', '') is string && d.customer.get('taxId', '').size() <= 12
+        && (opt(d, 'customerId') == '' || exists(/databases/$(database)/documents/customers/$(d.customerId)))
+        && d.delivery in ['delivery', 'pickup']
+        && d.lines is list && d.lines.size() <= 200
+        && d.total is number && d.total >= 0 && d.total < 1000000
+        && d.validDays is number && d.validDays >= 1 && d.validDays <= 120
+        && noCard(opt(d, 'notes')) && noCard(opt(d, 'address')) && noCard(opt(d, 'lastNote')) && noCard(opt(d, 'rejectReason'))
+        && (d.status != 'ordered' || (d.get('orderId', null) is int && exists(orderPath(d.orderId))))
+        && d.keys().size() <= 50;
+    }
+
+    match /quotes/{qid} {
+      allow read: if isActive();
+      allow create: if isActive()
+        && validQuote(request.resource.data)
+        && request.resource.data.status == 'draft'
+        && request.resource.data.number == int(qid)
+        && (exists(quoteCounterPath())
+              ? get(quoteCounterPath()).data.next == request.resource.data.number
+              : request.resource.data.number == 1001)
+        && getAfter(quoteCounterPath()).data.next == request.resource.data.number + 1
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow update: if isActive()
+        && validQuote(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['number', 'createdAt', 'createdBy'])
+        && (resource.data.status != 'ordered' || request.resource.data.status == 'ordered');
+      allow delete: if false;
+
+      // יומן המעקב: אפשר רק להוסיף. אף אחד, כולל מנהל, לא עורך ולא מוחק.
+      match /notes/{nid} {
+        allow read: if isActive();
+        allow create: if isActive()
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.keys().hasOnly(['text', 'kind', 'status', 'by', 'byName', 'at'])
+          && request.resource.data.kind in ['note', 'status']
+          && request.resource.data.text is string && request.resource.data.text.size() > 0
+          && noCard(request.resource.data.text);
+        allow update, delete: if false;
+      }
+    }
+
+    match /counters/quotes {
+      allow read: if isActive();
+      allow create: if isActive()
+        && request.resource.data.keys().hasOnly(['next'])
+        && request.resource.data.next == 1002
+        && existsAfter(quotePath(1001));
+      allow update: if isActive()
+        && request.resource.data.keys().hasOnly(['next'])
+        && request.resource.data.next == resource.data.next + 1
+        && existsAfter(quotePath(resource.data.next));
       allow delete: if false;
     }
 

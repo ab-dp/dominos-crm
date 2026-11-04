@@ -15,7 +15,8 @@ import { EMPTY_CUSTOMER, newId, primaryContact, updateCustomer, useCustomers, ty
 import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
 import { usePriceLists } from '../../data/priceLists';
-import { useStore, type NewOrderMode } from '../../data/store';
+import { useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
+import { setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, type OrderStatus } from '../../data/types';
 import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -50,7 +51,7 @@ export function NewOrderDialog() {
   return <NewOrderForm key={JSON.stringify(newOrder)} initial={newOrder} onClose={closeNewOrder} />;
 }
 
-function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; customerId?: string; date?: string; customerName?: string }; onClose: () => void }) {
+function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose: () => void }) {
   const toast = useToast();
   const panel = usePanel();
   const reduce = useReducedMotion();
@@ -71,22 +72,25 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
   const today = toISODate(now);
   const tomorrow = toISODate(new Date(now.getTime() + 86400000));
+  /* מהצעת מחיר: הלקוח, המועד, המשלוח והשורות (כמות ומחיר) עוברים לטופס. נשאר לפרט סוגים ותוספות */
+  const fq = initial.fromQuote;
+  const prefill = useRef(!!fq);
 
-  const [mode, setMode] = useState<NewOrderMode>(initial.customerName || initial.mode === 'newCustomer' ? 'newCustomer' : 'full');
-  const [customerId, setCustomerId] = useState(initial.customerId ?? '');
-  const [nc, setNc] = useState({ name: initial.customerName ?? '', type: 'occasional' as Customer['type'], taxId: '', contactName: '', contactPhone: '', paymentMethod: 'credit', accountPhone: '' });
-  const [date, setDate] = useState(initial.date ?? today);
-  const [time, setTime] = useState('');
+  const [mode, setMode] = useState<NewOrderMode>(initial.customerName || initial.mode === 'newCustomer' || (fq && !fq.customerId) ? 'newCustomer' : 'full');
+  const [customerId, setCustomerId] = useState(initial.customerId ?? fq?.customerId ?? '');
+  const [nc, setNc] = useState({ name: initial.customerName ?? fq?.customer.name ?? '', type: 'occasional' as Customer['type'], taxId: fq?.customer.taxId ?? '', contactName: fq?.customer.contact ?? '', contactPhone: fq?.customer.phone ? fmtPhone(fq.customer.phone) : '', paymentMethod: 'credit', accountPhone: '' });
+  const [date, setDate] = useState(initial.date ?? (fq?.date && fq.date >= today ? fq.date : today));
+  const [time, setTime] = useState(fq?.time ?? '');
   const [branch, setBranch] = useState<BranchChoice | null>(null);
-  const [delivery, setDelivery] = useState<'delivery' | 'pickup'>('delivery');
+  const [delivery, setDelivery] = useState<'delivery' | 'pickup'>(fq?.delivery ?? 'delivery');
   const [addressId, setAddressId] = useState('');
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState(fq?.address ?? '');
   const [contactId, setContactId] = useState('');
-  const [contact, setContact] = useState({ name: '', phone: '' });
-  const [fee, setFee] = useState('');
+  const [contact, setContact] = useState({ name: fq?.customerId ? fq.customer.contact : '', phone: fq?.customerId && fq.customer.phone ? fmtPhone(fq.customer.phone) : '' });
+  const [fee, setFee] = useState(fq?.fee?.price ? String(fq.fee.price) : '');
   const [override, setOverride] = useState<string | null>(null); // סכום לחיוב שהוקלד ידנית
   const [poFile, setPoFile] = useState<File | null>(null);
-  const [lines, setLines] = useState<Line[]>([]);
+  const [lines, setLines] = useState<Line[]>(() => (fq?.lines ?? []).map((l) => ({ key: newId(), group: l.category, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.unitPrice ? { manualPrice: true } : {}) })));
   const [status, setStatus] = useState<OrderStatus>('pending_customer');
   // הזמנה בתאריך שעבר – לתיעוד בלבד: נשמרת ישר כסגורה, לפי התוצאה
   const [outcome, setOutcome] = useState<'' | 'delivered' | 'late' | 'partial' | 'cancelled'>('');
@@ -106,7 +110,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
   const isNew = mode === 'newCustomer';
   const c = isNew ? undefined : customers.find((x) => x.id === customerId);
-  const [plSel, setPlSel] = useState<string | null>(null); // מחירון שנבחר בהזמנה; ברירת מחדל – של הלקוח
+  const [plSel, setPlSel] = useState<string | null>(fq ? fq.priceListId ?? '' : null); // מחירון שנבחר בהזמנה; ברירת מחדל – של הלקוח
   const plId = plSel ?? c?.priceListId ?? '';
   const priceList = priceLists.find((p) => p.id === plId);
   const branchObj = branches.find((b) => b.id === branch?.branchId);
@@ -117,18 +121,21 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   useEffect(() => {
     if (!c) return;
     const addr = c.addresses[0];
+    const fromQuote = prefill.current;
+    prefill.current = false;
     setMethod(c.paymentMethod);
     setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : '');
-    setAddressId(addr?.id ?? '');
-    setAddress(addr?.address ?? c.businessAddress ?? '');
-    setContactId('');
-    setContact({ name: '', phone: '' });
+    setAddressId(fromQuote && address ? c.addresses.find((a) => a.address.trim() === address.trim())?.id ?? '' : addr?.id ?? '');
+    if (!fromQuote || !address) setAddress(addr?.address ?? c.businessAddress ?? '');
     setSaveContact(false);
     setSaveAddress(false);
     if (addr?.preferredBranchId && branches.some((b) => b.id === addr.preferredBranchId)) {
       const b = branches.find((x) => x.id === addr.preferredBranchId)!;
       setBranch((cur) => cur ?? { branchId: b.id, clusterId: b.clusterId });
     }
+    if (fromQuote) return;
+    setContactId('');
+    setContact({ name: '', phone: '' });
     setLines([]);
     setPlSel(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -303,8 +310,12 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         // הקובץ נשמר אחרי ההזמנה; אם נכשל – ההזמנה כבר שמורה ואפשר לצרף שוב מהתיק
         await uploadOrderDoc(n, poFile, input.customerId || '').catch(() => toast({ message: <>ההזמנה נשמרה, אבל צירוף תעודת הרכש נכשל – אפשר לצרף אותה מתיק ההזמנה <Ltr>{n}</Ltr></> }));
       }
+      if (fq) {
+        // ההזמנה כבר נשמרה; אם סימון ההצעה נכשל – רק מודיעים
+        await setQuoteStatus(fq, 'ordered', '', { orderId: n }).catch(() => toast({ message: <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
+      }
       toast({
-        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת באדום</b></>}</>,
+        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת באדום</b></>}</>,
         action: { label: 'פתח תיק', run: () => panel.open(n) },
       });
       onClose();
@@ -513,7 +524,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table')) e.preventDefault(); }}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
           <div className="cform__head norder__head">
-            <Dialog.Title className="udialog__title">הזמנה חדשה</Dialog.Title>
+            <Dialog.Title className="udialog__title">{fq ? <>הזמנה מהצעה <Ltr>{fq.id}</Ltr></> : 'הזמנה חדשה'}</Dialog.Title>
             <div className="seg norder__modes" role="tablist" aria-label="סוג ההזמנה">
               {MODES.map(([m, label, icon]) => (
                 <button type="button" key={m} role="tab" aria-selected={mode === m} className={mode === m ? 'is-on' : ''} onClick={() => { setMode(m); setErrors({}); }}>
@@ -525,6 +536,13 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
           </div>
 
           <form ref={formRef} className="cform__body" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
+            {fq && (
+              <p className="no-fromquote" role="note">
+                <b>מתוך הצעת מחיר <Ltr>{fq.id}</Ltr>:</b> הלקוח, המועד, המשלוח והפריטים עם המחירים הועתקו.
+                {fq.lines.some((l) => l.category === 'פיצות') && ' נשאר לפרט בפיצות סוגים ותוספות (אפשר לפצל שורה לכמה שורות).'} אחרי השמירה ההצעה תסומן "הפכה להזמנה".
+                {!fq.customerId && ' הלקוח לא קיים במערכת – ייפתח לו תיק עם הפרטים מההצעה.'}
+              </p>
+            )}
             {/* החלפת לקוח קיים / לקוח חדש: הופעה רכה בלבד – התוכן לא תלוי בסיום אנימציית יציאה */}
             <motion.div key={mode === 'newCustomer' ? 'n' : 'e'} {...fade} transition={{ duration: 0.18 }}>
                 {isNew ? (

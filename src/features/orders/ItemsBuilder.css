@@ -5,6 +5,7 @@
 .ib-source__pick select { width: auto; min-width: 220px; }
 .ib-source__note { font-size: var(--text-label); color: var(--urgent-fg); }
 .ib-source__mode { font-size: var(--text-label); color: var(--gray-600); }
+.ib-source__cond { flex-basis: 100%; font-size: var(--text-label); color: var(--missing-fg); }
 
 /* לשוניות */
 .ib-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }

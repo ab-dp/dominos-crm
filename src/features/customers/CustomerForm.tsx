@@ -201,7 +201,7 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                 <L label="מחירון">
                   <select className="input" value={f.priceListId} onChange={(e) => set('priceListId', e.target.value)}>
                     <option value="">ללא מחירון</option>
-                    {priceLists.filter((p) => p.active || p.id === f.priceListId).map((p) => <option key={p.id} value={p.id}>{p.name}{p.kind === 'unique' ? ' (ייחודי)' : ''}</option>)}
+                    {priceLists.filter((p) => p.active || p.id === f.priceListId).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </L>
                 <L label=" ">

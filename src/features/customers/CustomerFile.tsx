@@ -15,8 +15,10 @@ import { useBranches, useClusters } from '../../data/branches';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
 import { useCustomerOrders } from '../../data/orders';
+import { SHORT_STATUS, isExpired, useQuotes } from '../../data/quotes';
+import '../quotes/quotes.css';
 import { useStore, type OrderView } from '../../data/store';
-import { CLOSED } from '../../data/types';
+import { CATEGORIES, CLOSED } from '../../data/types';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { usePanel } from '../../app/PanelContext';
 import { OrdersTable } from '../orders/OrdersTable';
@@ -32,9 +34,9 @@ import { MergeDialog } from './MergeDialog';
 import '../pages.css';
 import './CustomerFile.css';
 
-type Tab = 'overview' | 'orders' | 'monthly' | 'prices' | 'payment' | 'contacts' | 'docs' | 'activity' | 'history';
+type Tab = 'overview' | 'orders' | 'quotes' | 'monthly' | 'prices' | 'payment' | 'contacts' | 'docs' | 'activity' | 'history';
 const TABS: [Tab, string][] = [
-  ['overview', 'סקירה'], ['orders', 'הזמנות'], ['monthly', 'סיכומים חודשיים'], ['prices', 'מחירון'], ['payment', 'תשלום והקפה'],
+  ['overview', 'סקירה'], ['orders', 'הזמנות'], ['quotes', 'הצעות מחיר'], ['monthly', 'סיכומים חודשיים'], ['prices', 'מחירון'], ['payment', 'תשלום והקפה'],
   ['contacts', 'אנשי קשר וכתובות'], ['docs', 'מסמכים'], ['activity', 'פעילות'], ['history', 'היסטוריה'],
 ];
 
@@ -146,6 +148,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
       <motion.div key={tab} role="tabpanel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.16 }}>
           {tab === 'overview' && <Overview c={c} onTab={setTab} orders={corders} loading={ordersLoading} />}
           {tab === 'orders' && <OrdersTab c={c} orders={corders} loading={ordersLoading} />}
+          {tab === 'quotes' && <QuotesTab c={c} />}
           {tab === 'monthly' && <MonthlyTab orders={corders} loading={ordersLoading} />}
           {tab === 'prices' && <PricesTab c={c} />}
           {tab === 'payment' && <PaymentTab c={c} sharing={sharing} method={method} onEdit={() => setEditing(true)} />}
@@ -342,6 +345,42 @@ function missingOf(c: Customer): [string, Tab][] {
   return customerGaps(c).map((g) => [g.label, g.tab]);
 }
 
+/* ---------- הצעות מחיר של הלקוח ---------- */
+function QuotesTab({ c }: { c: Customer }) {
+  const nav = useNavigate();
+  const { now } = useStore();
+  const { items, loading } = useQuotes({ customerId: c.id });
+  const today = toISODate(now);
+  return (
+    <div className="card">
+      <div className="card__head">
+        <h2 className="card__title">הצעות מחיר</h2>
+        <span className="muted"><Ltr>{items.length}</Ltr></span>
+        <Button size="sm" className="card__head-end" icon={<Plus size={15} />} onClick={() => nav(`/quotes/new?customer=${c.id}`)}>הצעה חדשה</Button>
+      </div>
+      {loading ? <div className="loading-rows"><Skeleton h={30} /></div> : items.length === 0 ? <p className="muted cfile__plhint">עוד אין הצעות מחיר ללקוח. הצעה חדשה מכאן כבר מקושרת ללקוח ולמחירון שלו.</p> : (
+        <table className="items">
+          <thead><tr><th>הצעה</th><th>תאריך</th><th>סכום</th><th>סטטוס</th><th>עדכון אחרון</th></tr></thead>
+          <tbody>
+            {items.map((q) => {
+              const exp = isExpired(q, today);
+              return (
+                <tr key={q.id} className="cfile__qrow" onClick={() => nav(`/quotes/${q.id}`)}>
+                  <td><Link to={`/quotes/${q.id}`}><Ltr>{q.id}</Ltr></Link></td>
+                  <td><Ltr>{fmtDate(q.issueDate)}</Ltr></td>
+                  <td><Ltr>{fmtMoney(q.total)}</Ltr></td>
+                  <td><span className={`qstat qstat--${exp ? 'expired' : q.status}`}>{exp ? 'פג תוקף' : SHORT_STATUS[q.status]}{q.orderId ? <> · הזמנה <Ltr>{q.orderId}</Ltr></> : null}</span></td>
+                  <td className="muted">{q.lastNote || '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 /* ---------- מחירון + מחירים ייחודיים ללקוח ---------- */
 function PricesTab({ c }: { c: Customer }) {
   const { items: priceLists } = usePriceLists();
@@ -374,18 +413,18 @@ function PricesTab({ c }: { c: Customer }) {
     if (!item) return;
     const base = mode === 'p' ? item.pickupPrice ?? item.price : item.price;
     const cur = custom(itemId);
-    const d = mode === 'd' ? (!draft.trim() || v === base ? undefined : v) : cur?.price !== item.price ? cur?.price : undefined;
-    const pk = mode === 'p' ? (!draft.trim() || v === base ? undefined : v) : cur?.pickupPrice;
+    const d = mode === 'd' ? (!draft.trim() || !(v > 0) || v === base ? undefined : v) : cur && cur.price !== item.price ? cur.price : undefined;
+    const pk = mode === 'p' ? (!draft.trim() || !(v > 0) || v === base ? undefined : v) : cur?.pickupPrice;
     const rest = c.customPrices.filter((x) => x.itemId !== itemId);
-    // שורה נשמרת רק אם יש בה מחיר מיוחד למשלוח או לאיסוף
-    const next = d === undefined && pk === undefined ? rest : [...rest, { itemId, price: d ?? item.price, ...(pk !== undefined ? { pickupPrice: pk } : {}) }];
+    // שורה נשמרת רק אם יש בה מחיר מיוחד למשלוח או לאיסוף. מוצר בלי מחיר במחירון – המחיר המיוחד הוא המחיר היחיד
+    const next = d === undefined && pk === undefined ? rest : [...rest, { itemId, price: d ?? item.price ?? 0, ...(pk !== undefined ? { pickupPrice: pk } : {}) }];
     await updateCustomer(c, { customPrices: next });
     toast({ message: !draft.trim() || v === base ? 'המחיר חזר למחיר המחירון' : `מחיר ייחודי ל${c.name} (${mode === 'p' ? 'איסוף עצמי' : 'משלוח'}): ${fmtMoney(v)}` });
   };
   const cell = (it: (typeof pl.items)[number], mode: 'd' | 'p') => {
     const cp = custom(it.id);
     const base = mode === 'p' ? it.pickupPrice ?? it.price : it.price;
-    const special = mode === 'p' ? cp?.pickupPrice : cp && cp.price !== it.price ? cp.price : undefined;
+    const special = mode === 'p' ? cp?.pickupPrice : cp && cp.price && cp.price !== it.price ? cp.price : undefined;
     const key = `${it.id}:${mode}`;
     const label = mode === 'p' ? 'איסוף עצמי' : 'משלוח';
     return editing === key ? (
@@ -393,8 +432,8 @@ function PricesTab({ c }: { c: Customer }) {
         onChange={(e) => setDraft(e.target.value)} onBlur={() => save(key)}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(key); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); } }} />
     ) : (
-      <button className={`pricecell ${special !== undefined ? 'is-custom' : ''}`} onClick={() => { setEditing(key); setDraft(special !== undefined ? String(special) : ''); }} aria-label={`${it.name}, ${label}: ${special !== undefined ? `מחיר ייחודי ${fmtMoney(special)}` : `מחיר מחירון ${fmtMoney(base)}`}. לחץ לשינוי`}>
-        {special !== undefined ? <><Ltr>{fmtMoney(special)}</Ltr><span className="pricecell__tag">ייחודי</span></> : <span className="muted"><Ltr>{fmtMoney(base)}</Ltr></span>}
+      <button className={`pricecell ${special !== undefined ? 'is-custom' : ''}`} onClick={() => { setEditing(key); setDraft(special !== undefined ? String(special) : ''); }} aria-label={`${it.name}, ${label}: ${special !== undefined ? `מחיר ייחודי ${fmtMoney(special)}` : base ? `מחיר מחירון ${fmtMoney(base)}` : 'אין מחיר במחירון'}. לחץ לשינוי`}>
+        {special !== undefined ? <><Ltr>{fmtMoney(special)}</Ltr><span className="pricecell__tag">ייחודי</span></> : <span className="muted">{base ? <Ltr>{fmtMoney(base)}</Ltr> : 'אין מחיר'}</span>}
         <Pencil size={13} aria-hidden="true" />
       </button>
     );
@@ -404,21 +443,34 @@ function PricesTab({ c }: { c: Customer }) {
     <div className="card">
       <div className="card__head">
         <h2 className="card__title">{pl.name}</h2>
-        <span className="muted">{pl.kind === 'shared' ? 'מחירון משותף' : 'מחירון ייחודי'} · כל המחירים כוללים מע"מ</span>
-        <Link className="link card__head-end" to={`/pricelists?id=${pl.id}`}>פתח מחירון</Link>
+        <span className="muted">כל המחירים כוללים מע"מ</span>
+        <span className="card__head-end cfile__placts">
+          <select className="input input--sm cfile__plsel" value={pl.id} aria-label="החלף מחירון" onChange={async (e) => { await updateCustomer(c, { priceListId: e.target.value }); toast({ message: e.target.value ? 'המחירון של הלקוח הוחלף' : 'המחירון הוסר מהלקוח' }); }}>
+            {priceLists.filter((p) => p.active || p.id === pl.id).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            <option value="">בלי מחירון</option>
+          </select>
+          <Link className="link" to={`/pricelists?id=${pl.id}`}>פתח מחירון</Link>
+        </span>
       </div>
       <PriceNote c={c} />
-      <p className="muted cfile__plhint">מחיר ייחודי ללקוח לא משנה את המחירון המשותף. לחיצה על מחיר – שינוי; Enter שומר, שדה ריק מחזיר למחיר המחירון.</p>
+      {pl.note && <p className="cfile__plhint cfile__plcond">תנאי המחירון: {pl.note}</p>}
+      <p className="muted cfile__plhint">מחיר ייחודי ללקוח לא משנה את המחירון עצמו. לחיצה על מחיר – שינוי; Enter שומר, שדה ריק מחזיר למחיר המחירון.</p>
       <table className="items cfile__prices">
-        <thead><tr><th>בסיס מחיר</th><th>ללקוח – משלוח</th><th>ללקוח – איסוף עצמי</th></tr></thead>
+        <thead><tr><th>מוצר</th><th>ללקוח – משלוח</th><th>ללקוח – איסוף עצמי</th></tr></thead>
         <tbody>
-          {pl.items.filter((i) => i.active).map((it) => (
-            <tr key={it.id}>
-              <td>{it.name}</td>
-              <td>{cell(it, 'd')}</td>
-              <td>{cell(it, 'p')}</td>
-            </tr>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const its = pl.items.filter((i) => i.active && i.category === cat);
+            return its.length > 0 && [
+              <tr key={cat} className="cfile__plcat"><th colSpan={3}>{cat}</th></tr>,
+              ...its.map((it) => (
+                <tr key={it.id}>
+                  <td>{it.name}</td>
+                  <td>{cell(it, 'd')}</td>
+                  <td>{cell(it, 'p')}</td>
+                </tr>
+              )),
+            ];
+          })}
         </tbody>
       </table>
     </div>

@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { UsersPage } from './UsersPage';
 import { ListsPage } from './ListsPage';
 import { ThresholdsPage } from './ThresholdsPage';
+import { QuoteTermsPage } from './QuoteTermsPage';
 
 export function SettingsPage() {
   const { isAdmin } = useAuth();
@@ -16,12 +17,14 @@ export function SettingsPage() {
         <NavLink to="/settings/users" className={({ isActive }) => (isActive ? 'is-on' : '')}>משתמשים</NavLink>
         <NavLink to="/settings/lists" className={({ isActive }) => (isActive ? 'is-on' : '')}>רשימות</NavLink>
         <NavLink to="/settings/thresholds" className={({ isActive }) => (isActive ? 'is-on' : '')}>ספי התראות</NavLink>
+        <NavLink to="/settings/quotes" className={({ isActive }) => (isActive ? 'is-on' : '')}>הצעות מחיר</NavLink>
       </nav>
       <Routes>
         <Route index element={<Navigate to="users" replace />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="lists" element={<ListsPage />} />
         <Route path="thresholds" element={<ThresholdsPage />} />
+        <Route path="quotes" element={<QuoteTermsPage />} />
       </Routes>
     </>
   );

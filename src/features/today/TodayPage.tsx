@@ -2,7 +2,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, UserCheck, BellRing, CalendarClock, CalendarDays, Check, CircleCheckBig, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX, Download } from 'lucide-react';
+import { UserPlus, UserCheck, BellRing, CalendarClock, CalendarDays, Check, CircleCheckBig, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX, Download, FileText } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
@@ -20,7 +20,7 @@ import '../pages.css';
 import './TodayPage.css';
 
 export function TodayPage() {
-  const { orders, now, dueTasks, loading } = useStore();
+  const { orders, now, dueTasks, loading, quoteFollowups } = useStore();
   const panel = usePanel();
   const nav = useNavigate();
   const reduce = useReducedMotion();
@@ -43,6 +43,8 @@ export function TodayPage() {
     { key: 'ops', title: 'לעדכן את התפעול', icon: <BellRing size={20} />, list: open.filter((o) => !!o.qNumber && o.opsNotified === false), to: '/exceptions?rule=12', doneText: 'התפעול מעודכן' },
     { key: 'yesterday', title: 'לסגור מאתמול', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, list: open.filter((o) => o.date < today), to: '/orders?tab=overdue', doneText: 'הכל נסגר' },
     { key: 'missing', title: 'פרטים חסרים', sub: 'להשלים בהזמנות', icon: <ClipboardX size={20} />, list: open.filter((o) => missingOf(o).length > 0), to: '/exceptions?rule=8', doneText: 'כל ההזמנות מלאות' },
+    // הצעות מחיר שנשלחו ולא עודכנו מעבר לסף – לחזור ללקוח
+    { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, list: quoteFollowups, to: '/quotes?tab=waiting', doneText: 'אין הצעות שמחכות' },
   ];
   const allDone = !loading && tasks.every((t) => t.list.length === 0);
 

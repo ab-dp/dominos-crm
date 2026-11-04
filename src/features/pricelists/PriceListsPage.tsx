@@ -1,19 +1,27 @@
-/* מחירונים (אפיון 6.7): משותף או ייחודי, פריטים ומחירים (כולל מע"מ), לקוחות משויכים, "שכפל מחירון".
-   כל מחיר ניתן לעריכה ידנית בכל רגע וכל עריכה נרשמת ביומן. שינוי מחירון לא משנה הזמנות קיימות. */
-import { useState } from 'react';
+/* מחירונים (אפיון 6.7): מוצרים לפי הקטגוריות של ההזמנה, ומדרגות משלוח. המחירים מוקלדים ידנית וכוללים מע"מ.
+   עריכה ישירה בטבלה – כמו בהזמנה: Enter לשורה הבאה, "+ שורה", והדבקה מאקסל. כל שורה נשמרת כשיוצאים ממנה, וכל עריכה נרשמת ביומן.
+   לקוחות משויכים מכאן או מתיק הלקוח; מחירון של לקוח נבחר לבד בהצעת מחיר ובהזמנה. שינוי מחירון לא משנה הזמנות והצעות קיימות. */
+import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, Check, Copy, Pencil, Plus, Tags, Trash2, Users, X } from 'lucide-react';
+import { Check, Copy, Pencil, Plus, Search, Tags, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Shell } from '../leads/LeadDialogs';
-import { GENERAL_GROUP, createPriceList, deletePriceList, groupOf, updatePriceList, usePriceLists, type PriceItem, type PriceList } from '../../data/priceLists';
-import { newId, useCustomers } from '../../data/customers';
+import {
+  DELIVERY_CAT, PL_TABS, assignPriceList, createPriceList, deletePriceList, updatePriceList, usePriceLists, type PriceItem, type PriceList,
+} from '../../data/priceLists';
+import { newId, useCustomers, type Customer } from '../../data/customers';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtMoney } from '../../lib/format';
-import { findSimilar, isSimilar } from '../../lib/names';
 import '../pages.css';
 import '../branches/BranchesPage.css';
+import '../orders/ItemsBuilder.css';
 import './PriceListsPage.css';
+
+const num = (s: string) => { const v = Number(s.replace(/[^\d.]/g, '')); return s.trim() && Number.isFinite(v) && v > 0 ? v : undefined; };
+const txt = (v?: number) => (v === undefined ? '' : String(v));
+// שם כפול בקטגוריה: אותו שם בדיוק (בלי רווחים וגרשיים). שמות שנבדלים במספר – "עד 8" ו"עד 24" – אינם כפולים
+const sameName = (a: string, b: string) => { const k = (x: string) => x.replace(/["'׳״\s\-–]/g, ''); return !!k(a) && k(a) === k(b); };
 
 export function PriceListsPage() {
   const { items, loading, error } = usePriceLists();
@@ -22,20 +30,22 @@ export function PriceListsPage() {
   const [params, setParams] = useSearchParams();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newKind, setNewKind] = useState<PriceList['kind']>('shared');
   const [err, setErr] = useState('');
+  const [dup, setDup] = useState<PriceList | null>(null);
   const selectedId = params.get('id') ?? items[0]?.id;
   const selected = items.find((p) => p.id === selectedId);
   const assigned = (id: string) => customers.filter((c) => c.priceListId === id && c.status !== 'merged');
 
-  const create = async (name: string, kind: PriceList['kind'], from?: PriceList) => {
-    if (!name.trim()) return setErr('חובה: שם המחירון');
-    const similar = findSimilar(name, items);
-    if (similar && !from) return setErr(`כבר קיים מחירון בשם דומה: "${similar.name}"`);
-    const id = await createPriceList(name, kind, from ? from.items.map((i) => ({ ...i, id: newId() })) : []);
-    setCreating(false); setNewName(''); setErr('');
-    setParams({ id }, { replace: true });
-    toast({ message: from ? <>נוצר עותק: "{name}" עם <Ltr>{from.items.length}</Ltr> פריטים</> : <>המחירון "{name}" נוצר</> });
+  const create = async () => {
+    if (!newName.trim()) return setErr('חובה: שם המחירון');
+    const similar = items.find((x) => sameName(x.name, newName));
+    if (similar) return setErr(`כבר קיים מחירון בשם הזה: "${similar.name}"`);
+    try {
+      const id = await createPriceList(newName);
+      setCreating(false); setNewName(''); setErr('');
+      setParams({ id }, { replace: true });
+      toast({ message: <>המחירון "{newName.trim()}" נוצר – הוסיפו מוצרים בטבלה</> });
+    } catch { setErr('השמירה נכשלה – אין הרשאה או אין חיבור'); }
   };
 
   return (
@@ -43,7 +53,7 @@ export function PriceListsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">מחירונים</h1>
-          <p className="page__sub">מחירון הוא קבוצות מוצרים ורמות מחיר, לא תפריט: לכל רמה מחיר למשלוח ולאיסוף עצמי. סדר הקבוצות כאן הוא סדר הכפתורים בהזמנה. בהזמנה בוחרים מוצר, רמה ופירוט. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות קיימות.</p>
+          <p className="page__sub">מחירון = מוצרים לפי הקטגוריות של ההזמנה, ומחיר שאתם קובעים לכל מוצר – למשלוח ולאיסוף עצמי. מוצר יכול להישאר בלי מחיר ולהשלים אותו בהצעה. בהצעת מחיר ובהזמנה בוחרים מחירון, ומחירון שמשויך ללקוח נבחר לבד. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות והצעות קיימות.</p>
         </div>
         <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
       </header>
@@ -55,221 +65,364 @@ export function PriceListsPage() {
             <ul className="clist">
               {creating && (
                 <li className="name-editor pl-new">
-                  <input className="input input--sm" autoFocus value={newName} placeholder="שם המחירון" aria-label="שם המחירון"
+                  <input className="input input--sm" autoFocus value={newName} placeholder="למשל: מחירון עסקים 2027" aria-label="שם המחירון"
                     onChange={(e) => { setNewName(e.target.value); setErr(''); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); create(newName, newKind); } if (e.key === 'Escape') setCreating(false); }} />
-                  <div className="seg seg--sm" role="radiogroup" aria-label="סוג מחירון">
-                    <button type="button" role="radio" aria-checked={newKind === 'shared'} className={newKind === 'shared' ? 'is-on' : ''} onClick={() => setNewKind('shared')}>משותף</button>
-                    <button type="button" role="radio" aria-checked={newKind === 'unique'} className={newKind === 'unique' ? 'is-on' : ''} onClick={() => setNewKind('unique')}>ייחודי ללקוח</button>
-                  </div>
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); create(); } if (e.key === 'Escape') { setCreating(false); setErr(''); } }} />
                   <div className="pl-new__actions">
-                    <Button size="sm" variant="primary" onClick={() => create(newName, newKind)}>צור</Button>
+                    <Button size="sm" variant="primary" onClick={create}>צור</Button>
                     <Button size="sm" variant="ghost" onClick={() => { setCreating(false); setErr(''); }}>ביטול</Button>
                   </div>
                   {err && <p className="pop__err" role="alert">{err}</p>}
                 </li>
               )}
-              {loading ? [0, 1].map((i) => <li key={i} className="citem-skel"><Skeleton h={18} /></li>) : items.map((p) => (
-                <li key={p.id} className={p.active ? '' : 'is-inactive'}>
-                  <button className={`citem pl-item ${p.id === selectedId ? 'is-on' : ''}`} aria-pressed={p.id === selectedId} onClick={() => setParams({ id: p.id }, { replace: true })}>
-                    <span className="citem__name">{p.name}</span>
-                    {p.kind === 'unique' && <span className="tag-inactive">ייחודי</span>}
-                    {!p.active && <span className="tag-inactive">לא פעיל</span>}
-                    <span className="citem__count"><Ltr>{p.items.filter((i) => i.active).length}</Ltr> פריטים · <Ltr>{assigned(p.id).length}</Ltr> לקוחות</span>
-                  </button>
-                </li>
-              ))}
+              {loading ? [0, 1].map((i) => <li key={i} className="citem-skel"><Skeleton h={18} /></li>) : items.map((p) => {
+                const n = p.items.filter((i) => i.category !== DELIVERY_CAT).length;
+                return (
+                  <li key={p.id} className={p.active ? '' : 'is-inactive'}>
+                    <button className={`citem pl-item ${p.id === selectedId ? 'is-on' : ''}`} aria-pressed={p.id === selectedId} onClick={() => setParams({ id: p.id }, { replace: true })}>
+                      <span className="citem__name">{p.name}</span>
+                      {!p.active && <span className="tag-inactive">לא פעיל</span>}
+                      <span className="citem__count"><Ltr>{n}</Ltr> מוצרים · <Ltr>{assigned(p.id).length}</Ltr> לקוחות</span>
+                    </button>
+                  </li>
+                );
+              })}
               {!loading && items.length === 0 && !creating && <li className="clist__empty">עוד אין מחירונים. <button className="link" onClick={() => setCreating(true)}>צור את הראשון</button></li>}
             </ul>
           </section>
 
-          {selected ? <Editor key={selected.id} pl={selected} all={items} customersCount={assigned(selected.id)} onDuplicate={() => create(`עותק של ${selected.name}`, selected.kind, selected)} /> : !loading && (
-            <div className="card"><EmptyState icon={<Tags size={24} />} title="בחר מחירון או צור חדש">מחירון משותף משמש כמה לקוחות; ייחודי – לקוח אחד.</EmptyState></div>
+          {selected ? <Editor key={selected.id} pl={selected} all={items} customers={customers} assigned={assigned(selected.id)} onDuplicate={() => setDup(selected)} /> : !loading && (
+            <div className="card"><EmptyState icon={<Tags size={24} />} title="בחר מחירון או צור חדש">מחירון אחד יכול לשמש לקוחות רבים, או לקוח אחד בלבד.</EmptyState></div>
           )}
         </div>
       )}
+      {dup && <DuplicateDialog from={dup} all={items} onClose={() => setDup(null)} onDone={(id) => { setDup(null); setParams({ id }, { replace: true }); }} />}
     </div>
   );
 }
 
-function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: PriceList[]; customersCount: { id: string; name: string }[]; onDuplicate: () => void }) {
+/* ---------- עורך המחירון ---------- */
+type Row = { id: string; category: string; name: string; price: string; pickup: string; upTo: string; active: boolean };
+const toRow = (i: PriceItem): Row => ({ id: i.id, category: i.category, name: i.name, price: txt(i.price), pickup: txt(i.pickupPrice), upTo: txt(i.upTo), active: i.active });
+const toItem = (r: Row): PriceItem => ({
+  id: r.id, category: r.category, name: r.name.trim(), active: r.active, price: num(r.price),
+  ...(r.category === DELIVERY_CAT ? { upTo: num(r.upTo) } : { pickupPrice: num(r.pickup) }),
+});
+const same = (a: Row, b?: Row) => !!b && JSON.stringify(toItem(a)) === JSON.stringify(toItem(b));
+const blank = (r: Row) => !r.name.trim() && !r.price.trim() && !r.pickup.trim() && !r.upTo.trim();
+
+function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; all: PriceList[]; customers: Customer[]; assigned: Customer[]; onDuplicate: () => void }) {
   const toast = useToast();
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(pl.name);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ group: '', name: '', price: '', pickup: '' });
-  const [adding, setAdding] = useState(false);
-  const [err, setErr] = useState('');
-  const [showInactive, setShowInactive] = useState(false);
-  const [groupEdit, setGroupEdit] = useState<{ from: string; to: string } | null>(null);
+  const [nameErr, setNameErr] = useState('');
+  const [tab, setTab] = useState(PL_TABS[0]);
+  const [rows, setRows] = useState<Row[]>(() => pl.items.map(toRow));
+  const [draftKey, setDraftKey] = useState(newId);
+  const [focusRow, setFocusRow] = useState<string | null>(null);
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [picking, setPicking] = useState(false);
+  const [note, setNote] = useState(pl.note ?? '');
+  const [minP, setMinP] = useState(pl.minPizzas ? String(pl.minPizzas) : '');
+  const tableRef = useRef<HTMLDivElement>(null);
+  const server = useMemo(() => pl.items.map(toRow), [pl.items]);
 
-  const saveItems = async (items: PriceItem[], msg: string, before?: unknown, after?: unknown) => {
-    try { await updatePriceList(pl, { items }, { before, after }); toast({ message: msg }); }
-    catch { toast({ message: 'השמירה נכשלה' }); }
+  // שינוי מהשרת (משתמש אחר, או אחרי שמירה) – נטען כל עוד לא עורכים שורה
+  useEffect(() => {
+    if (focusRow) return;
+    setRows(server);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [server]);
+
+  const save = async (next: Row[], msg?: string) => {
+    const kept = next.filter((r) => !blank(r) && r.name.trim());
+    setState('saving');
+    try {
+      await updatePriceList(pl, { items: kept.map(toItem) }, msg ? { after: { change: msg } } : undefined);
+      setState('saved');
+      return true;
+    } catch { setState('error'); return false; }
   };
 
-  const commitItem = async (id: string | null) => {
-    const n = draft.name.trim();
-    const g = draft.group.trim() || GENERAL_GROUP;
-    const price = Number(draft.price.replace(/[^\d.]/g, ''));
-    const pickupPrice = draft.pickup.trim() ? Number(draft.pickup.replace(/[^\d.]/g, '')) : price;
-    if (!n) return setErr('חובה: שם בסיס המחיר');
-    if (!draft.price.trim() || !(price > 0)) return setErr('חובה: מחיר למשלוח (כולל מע"מ)');
-    if (!(pickupPrice > 0)) return setErr('מחיר לאיסוף עצמי לא תקין');
-    // כפילות: אותה רמה באותה קבוצה
-    const dupe = findSimilar(n, pl.items.filter((i) => groupOf(i) === g).map((i) => ({ id: i.id, name: i.name })), id ?? undefined);
-    if (dupe) return setErr(`בקבוצה "${g}" כבר יש רמת מחיר בשם דומה: "${dupe.name}"`);
-    if (id) {
-      const old = pl.items.find((i) => i.id === id)!;
-      await saveItems(pl.items.map((i) => (i.id === id ? { ...i, group: g, name: n, price, pickupPrice } : i)), old.price !== price || (old.pickupPrice ?? old.price) !== pickupPrice ? `${n}: משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}` : 'בסיס המחיר עודכן', { item: old.name, price: old.price, pickupPrice: old.pickupPrice ?? old.price }, { item: n, price, pickupPrice });
-      setEditing(null);
-    } else {
-      await saveItems([...pl.items, { id: newId(), group: g, name: n, price, pickupPrice, active: true }], `${g} · ${n} נוסף · משלוח ${fmtMoney(price)} · איסוף ${fmtMoney(pickupPrice)}`, null, { item: n, price, pickupPrice });
-      setAdding(false);
+  const catRows = rows.filter((r) => r.category === tab);
+  const draft: Row = { id: draftKey, category: tab, name: '', price: '', pickup: '', upTo: '', active: true };
+  const shown = [...catRows, draft];
+  const isDelivery = tab === DELIVERY_CAT;
+  const dupOf = (r: Row) => r.name.trim() ? catRows.find((x) => x.id !== r.id && sameName(x.name, r.name)) : undefined;
+  const problem = (r: Row) => {
+    if (blank(r)) return '';
+    if (!r.name.trim()) return isDelivery ? 'חסר שם למדרגה' : 'חסר שם מוצר';
+    if (r.price.trim() && num(r.price) === undefined) return 'מחיר לא תקין';
+    if (r.pickup.trim() && num(r.pickup) === undefined) return 'מחיר איסוף לא תקין';
+    const d = dupOf(r);
+    if (d) return `כבר יש בקטגוריה "${d.name}" – שם כפול`;
+    return '';
+  };
+
+  const change = (id: string, patch: Partial<Row>) => {
+    setRows((rs) => (rs.some((r) => r.id === id) ? rs.map((r) => (r.id === id ? { ...r, ...patch } : r)) : [...rs, { ...draft, id, ...patch }]));
+    if (id === draftKey) setDraftKey(newId());
+    setState('idle');
+  };
+  // יציאה משורה: שומרים אם השתנתה ואין בה בעיה
+  const leaveRow = (id: string) => {
+    setFocusRow(null);
+    const r = rows.find((x) => x.id === id);
+    if (!r) return;
+    if (blank(r)) { if (server.some((s) => s.id === id)) save(rows.filter((x) => x.id !== id)); else setRows((rs) => rs.filter((x) => x.id !== id)); return; }
+    if (problem(r) || same(r, server.find((s) => s.id === id))) return;
+    save(rows, `${r.category} · ${r.name.trim()}${num(r.price) ? ` · ${fmtMoney(num(r.price)!)}` : ''}`);
+  };
+  const remove = async (r: Row) => {
+    const before = rows;
+    const next = rows.filter((x) => x.id !== r.id);
+    setRows(next);
+    if (await save(next, `הוסר: ${r.name}`)) {
+      toast({ message: <>"{r.name || 'שורה'}" הוסר מהמחירון</>, onUndo: () => { setRows(before); save(before, `הוחזר: ${r.name}`); } });
     }
-    setDraft({ group: g, name: '', price: '', pickup: '' }); setErr('');
+  };
+  const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const row = (e.target as HTMLElement).closest('[data-row], [data-draft]');
+    const next = row?.nextElementSibling?.matches('[data-row], [data-draft]') ? row.nextElementSibling : tableRef.current?.querySelector('[data-draft]');
+    if (next && next !== row) (next.querySelector('input[data-col="name"]') as HTMLInputElement | null)?.focus();
+    else (e.target as HTMLInputElement).blur();
+  };
+  /* הדבקה מאקסל: כל שורה – שם, מחיר משלוח, מחיר איסוף (או עד כמה פריטים, במשלוח) */
+  const onPaste = (e: ClipboardEvent<HTMLInputElement>, id: string) => {
+    const text = e.clipboardData.getData('text');
+    if (!/[\t\n]/.test(text.trim())) return;
+    e.preventDefault();
+    const lines = text.split(/\r?\n/).map((l) => l.split('\t').map((x) => x.trim())).filter((c) => c[0]);
+    const added: Row[] = lines.map(([n, p = '', q = ''], i) => ({ ...draft, id: i === 0 ? id : newId(), name: n, price: p, ...(isDelivery ? { upTo: q } : { pickup: q }) }));
+    const next = [...rows.filter((r) => r.id !== id), ...added.filter((a) => !catRows.some((r) => r.id !== id && sameName(r.name, a.name)))];
+    setRows(next); setDraftKey(newId());
+    save(next, `הודבקו ${added.length} שורות`).then((ok) => ok && toast({ message: <>נוספו <Ltr>{added.length}</Ltr> שורות מההדבקה</> }));
   };
 
-  const groups = [...new Set(pl.items.map(groupOf))];
-  const rows = pl.items.filter((i) => showInactive || i.active).sort((a, b) => groups.indexOf(groupOf(a)) - groups.indexOf(groupOf(b)));
-  // קבוצה בשם דומה (לא זהה) לקבוצה קיימת – כנראה אותה קבוצה בכתיב אחר
-  const similarGroup = (g: string, except?: string) => groups.find((x) => x !== except && x !== g.trim() && isSimilar(x, g));
-
-  /* סדר הקבוצות = סדר הכפתורים בהזמנה. נשמר כסדר הפריטים במחירון */
-  const moveGroup = (g: string, dir: -1 | 1) => {
-    const i = groups.indexOf(g), j = i + dir;
-    if (j < 0 || j >= groups.length) return;
-    const order = [...groups]; [order[i], order[j]] = [order[j], order[i]];
-    saveItems(order.flatMap((x) => pl.items.filter((it) => groupOf(it) === x)), `הקבוצה "${g}" הוזזה ${dir < 0 ? 'למעלה' : 'למטה'}`, { groups }, { groups: order });
+  const saveNote = async () => {
+    const m = minP.trim() ? Number(minP.replace(/\D/g, '')) || 0 : 0;
+    if (note.trim() === (pl.note ?? '') && m === (pl.minPizzas ?? 0)) return;
+    setState('saving');
+    try { await updatePriceList(pl, { note: note.trim(), minPizzas: m }); setState('saved'); } catch { setState('error'); }
   };
-  /* שינוי שם קבוצה – לכל הרמות שבה. שם של קבוצה קיימת מאחד את שתיהן */
-  const renameGroup = async () => {
-    if (!groupEdit) return;
-    const to = groupEdit.to.trim();
-    if (!to) return setErr('חובה: שם הקבוצה');
-    if (to === groupEdit.from) return setGroupEdit(null);
-    const merge = groups.includes(to);
-    if (merge) {
-      const clash = pl.items.filter((i) => groupOf(i) === groupEdit.from).find((i) => pl.items.some((x) => groupOf(x) === to && isSimilar(x.name, i.name)));
-      if (clash) return setErr(`בקבוצה "${to}" כבר יש רמה בשם "${clash.name}" – שנו קודם את שם הרמה`);
-    }
-    const n = pl.items.filter((i) => groupOf(i) === groupEdit.from).length;
-    const levels = n === 1 ? 'רמת מחיר אחת עודכנה' : `${n} רמות מחיר עודכנו`;
-    await saveItems(pl.items.map((i) => (groupOf(i) === groupEdit.from ? { ...i, group: to } : i)), `${merge ? `הקבוצה "${groupEdit.from}" אוחדה עם "${to}"` : `שם הקבוצה עודכן ל"${to}"`} · ${levels} · הזמנות קיימות לא משתנות`, { group: groupEdit.from }, { group: to });
-    setGroupEdit(null); setErr('');
+  const rename = async () => {
+    const d = all.find((x) => x.id !== pl.id && sameName(x.name, name));
+    if (!name.trim() || d) { setNameErr(d ? `כבר קיים מחירון בשם "${d.name}"` : 'חובה: שם'); return; }
+    await updatePriceList(pl, { name: name.trim() }); setRenaming(false); setNameErr(''); toast({ message: 'שם המחירון עודכן' });
   };
-  const draftSimilar = (adding || editing) && draft.group.trim() ? similarGroup(draft.group) : undefined;
-  const row = (id: string | null) => (
-    <tr className="brow brow--edit" key={id ?? 'new'} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitItem(id); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); setAdding(false); setErr(''); } }}>
-      <td><input className="input input--sm" list="pl-groups" value={draft.group} onChange={(e) => { setDraft({ ...draft, group: e.target.value }); setErr(''); }} aria-label="קבוצת מוצרים" placeholder="למשל: משפחתיות" /></td>
-      <td><input className="input input--sm" autoFocus value={draft.name} onChange={(e) => { setDraft({ ...draft, name: e.target.value }); setErr(''); }} aria-label="שם רמת המחיר" placeholder="למשל: רגילה / עם תוספת" /></td>
-      <td><input className="input input--sm input--ltr pl-price" inputMode="decimal" value={draft.price} onChange={(e) => { setDraft({ ...draft, price: e.target.value }); setErr(''); }} aria-label="מחיר למשלוח כולל מע״מ" placeholder="₪" /></td>
-      <td><input className="input input--sm input--ltr pl-price" inputMode="decimal" value={draft.pickup} onChange={(e) => { setDraft({ ...draft, pickup: e.target.value }); setErr(''); }} aria-label="מחיר לאיסוף עצמי כולל מע״מ" placeholder={draft.price ? `כמו משלוח` : '₪'} /></td>
-      <td colSpan={2} className="br-actions">
-        <Button size="sm" variant="primary" icon={<Check size={15} />} onClick={() => commitItem(id)}>שמור</Button>
-        <Button size="sm" variant="ghost" onClick={() => { setEditing(null); setAdding(false); setErr(''); }}>ביטול</Button>
-      </td>
-    </tr>
-  );
+  const count = (c: string) => rows.filter((r) => r.category === c && r.name.trim()).length;
+  const unpriced = catRows.filter((r) => r.name.trim() && !num(r.price)).length;
 
   return (
-    <section className="card" aria-labelledby="h-pled">
+    <section className="card pled" aria-labelledby="h-pled">
       <div className="card__head br-branches__head">
         {renaming ? (
           <span className="name-editor__row pl-rename">
-            <input className="input input--sm" autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-label="שם המחירון"
-              onKeyDown={async (e) => {
-                if (e.key === 'Escape') { setRenaming(false); setName(pl.name); }
-                if (e.key === 'Enter') { e.preventDefault(); const d = findSimilar(name, all, pl.id); if (!name.trim() || d) { setErr(d ? `כבר קיים מחירון בשם "${d.name}"` : 'חובה: שם'); return; } await updatePriceList(pl, { name: name.trim() }); setRenaming(false); toast({ message: 'שם המחירון עודכן' }); }
-              }} />
-            <button className="icon-btn icon-btn--sm" aria-label="ביטול" onClick={() => { setRenaming(false); setName(pl.name); }}><X size={16} /></button>
+            <input className="input input--sm" autoFocus value={name} onChange={(e) => { setName(e.target.value); setNameErr(''); }} aria-label="שם המחירון"
+              onKeyDown={(e) => { if (e.key === 'Escape') { setRenaming(false); setName(pl.name); setNameErr(''); } if (e.key === 'Enter') { e.preventDefault(); rename(); } }} />
+            <button className="icon-btn icon-btn--sm" aria-label="שמור שם" onClick={rename}><Check size={16} /></button>
+            <button className="icon-btn icon-btn--sm" aria-label="ביטול" onClick={() => { setRenaming(false); setName(pl.name); setNameErr(''); }}><X size={16} /></button>
           </span>
         ) : (
           <>
             <h2 id="h-pled" className="card__title">{pl.name}</h2>
             <button className="icon-btn icon-btn--sm" aria-label="שנה שם מחירון" onClick={() => setRenaming(true)}><Pencil size={15} /></button>
+            {!pl.active && <span className="tag-inactive">לא פעיל</span>}
           </>
         )}
-        <span className="tag">{pl.kind === 'shared' ? 'משותף' : 'ייחודי ללקוח'}</span>
         <span className="card__head-end pl-head-actions">
-          <label className="check-inline"><input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> הצג פריטים לא פעילים</label>
-          <Button size="sm" icon={<Copy size={15} />} onClick={onDuplicate}>שכפל מחירון</Button>
-          <Button size="sm" variant={pl.active ? 'ghost' : 'secondary'} onClick={async () => { await updatePriceList(pl, { active: !pl.active }); toast({ message: pl.active ? 'המחירון סומן כלא פעיל – לא יוצע ללקוחות חדשים' : 'המחירון הופעל' }); }}>{pl.active ? 'סמן כלא פעיל' : 'הפעל'}</Button>
-          <DeletePriceList pl={pl} />
+          <span className={`pl-state pl-state--${state}`} aria-live="polite">{state === 'saving' ? 'שומר…' : state === 'saved' ? <><Check size={14} aria-hidden="true" /> נשמר</> : state === 'error' ? 'השמירה נכשלה – בדקו חיבור ונסו שוב' : ''}</span>
+          <Button size="sm" icon={<Copy size={15} />} onClick={onDuplicate}>שכפל</Button>
+          <Button size="sm" variant="ghost" onClick={async () => { await updatePriceList(pl, { active: !pl.active }); toast({ message: pl.active ? 'המחירון סומן כלא פעיל – לא יוצע בהצעות ובהזמנות חדשות' : 'המחירון הופעל' }); }}>{pl.active ? 'סמן כלא פעיל' : 'הפעל'}</Button>
+          <DeletePriceList pl={pl} assigned={assigned} />
         </span>
+        {nameErr && <p className="pop__err pl-nameerr" role="alert">{nameErr}</p>}
       </div>
 
-      <div className="otable-wrap br-table-wrap">
-        <table className="otable otable--dense br-table pl-table">
-          <caption className="sr-only">קבוצות ורמות מחיר במחירון {pl.name}</caption>
-          <thead><tr><th>קבוצת מוצרים</th><th>רמת מחיר</th><th>משלוח</th><th>איסוף עצמי</th><th>מצב</th><th><span className="sr-only">פעולות</span></th></tr></thead>
-          <tbody>
-            {adding && row(null)}
-            {rows.map((it, idx) => editing === it.id ? row(it.id) : (
-              <tr key={it.id} data-group-start={idx === 0 || groupOf(rows[idx - 1]) !== groupOf(it) || undefined} className={`brow ${it.active ? '' : 'is-inactive'}`} tabIndex={0}
-                onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === 'Enter') { e.preventDefault(); setEditing(it.id); setDraft({ group: groupOf(it), name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); } }}>
-                <td className="pl-group">{(idx === 0 || groupOf(rows[idx - 1]) !== groupOf(it)) && (() => {
-                  const g = groupOf(it), gi = groups.indexOf(g);
-                  if (groupEdit?.from === g) {
-                    const near = similarGroup(groupEdit.to, g);
-                    return (
-                      <span className="pl-group__edit">
-                        <input className="input input--sm" autoFocus value={groupEdit.to} aria-label={`שם חדש לקבוצה ${g}`}
-                          onChange={(e) => { setGroupEdit({ ...groupEdit, to: e.target.value }); setErr(''); }}
-                          onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); renameGroup(); } if (e.key === 'Escape') { setGroupEdit(null); setErr(''); } }} />
-                        <button type="button" className="icon-btn icon-btn--sm" aria-label="שמור שם קבוצה" onClick={renameGroup}><Check size={15} /></button>
-                        <button type="button" className="icon-btn icon-btn--sm" aria-label="ביטול" onClick={() => { setGroupEdit(null); setErr(''); }}><X size={15} /></button>
-                        {near && <span className="pl-group__warn">דומה לקבוצה "{near}" – <button type="button" className="link" onClick={() => setGroupEdit({ ...groupEdit, to: near })}>לאחד איתה</button></span>}
-                      </span>
-                    );
-                  }
-                  return (
-                    <span className="pl-group__head">
-                      <b>{g}</b>
-                      <span className="pl-group__tools">
-                        <button type="button" className="icon-btn icon-btn--sm" aria-label={`שנה שם לקבוצה ${g}`} onClick={(e) => { e.stopPropagation(); setGroupEdit({ from: g, to: g }); setErr(''); }}><Pencil size={14} /></button>
-                        <button type="button" className="icon-btn icon-btn--sm" aria-label={`הזז את ${g} למעלה`} disabled={gi === 0} onClick={(e) => { e.stopPropagation(); moveGroup(g, -1); }}><ArrowUp size={14} /></button>
-                        <button type="button" className="icon-btn icon-btn--sm" aria-label={`הזז את ${g} למטה`} disabled={gi === groups.length - 1} onClick={(e) => { e.stopPropagation(); moveGroup(g, 1); }}><ArrowDown size={14} /></button>
-                      </span>
-                    </span>
-                  );
-                })()}</td>
-                <td className="strong">{it.name}</td>
-                <td className="num"><Ltr>{fmtMoney(it.price)}</Ltr></td>
-                <td className="num"><Ltr>{fmtMoney(it.pickupPrice ?? it.price)}</Ltr></td>
-                <td>
-                  <button className={`switch ${it.active ? 'is-on' : ''}`} role="switch" aria-checked={it.active} aria-label={`${it.name}: ${it.active ? 'פעיל' : 'לא פעיל'}`}
-                    onClick={() => saveItems(pl.items.map((i) => (i.id === it.id ? { ...i, active: !i.active } : i)), `${it.name} ${it.active ? 'הושבת' : 'הופעל'}`, { item: it.name, active: it.active }, { item: it.name, active: !it.active })}>
-                    <span className="switch__track"><span className="switch__thumb" /></span><span className="switch__label">{it.active ? 'פעיל' : 'לא פעיל'}</span>
-                  </button>
-                </td>
-                <td className="br-actions"><Button size="sm" variant="ghost" icon={<Pencil size={15} />} onClick={() => { setEditing(it.id); setAdding(false); setDraft({ group: groupOf(it), name: it.name, price: String(it.price), pickup: String(it.pickupPrice ?? it.price) }); setErr(''); }}>ערוך</Button></td>
-              </tr>
-            ))}
-            {draftSimilar && <tr className="brow-msg"><td colSpan={6}><p className="pl-group__warn">יש כבר קבוצה בשם דומה: "{draftSimilar}" – <button type="button" className="link" onClick={() => setDraft({ ...draft, group: draftSimilar })}>להשתמש בה</button></p></td></tr>}
-            {err && <tr className="brow-msg"><td colSpan={6}><p className="pop__err" role="alert">{err}</p></td></tr>}
-          </tbody>
-        </table>
-        {!adding && (
-          <button className="pl-add" onClick={() => { setAdding(true); setEditing(null); setDraft({ group: groups[groups.length - 1] ?? '', name: '', price: '', pickup: '' }); setErr(''); }}><Plus size={16} aria-hidden="true" /> הוסף רמת מחיר</button>
-        )}
-        <datalist id="pl-groups">{groups.map((g) => <option key={g} value={g} />)}</datalist>
+      {/* תנאי המחירון: מוצג כאזהרה בהצעה ובהזמנה, לא בדף שיוצא ללקוח */}
+      <div className="pl-terms">
+        <label className="pl-terms__note">
+          <span className="field__label">תנאי המחירון <span className="muted">(לא חובה)</span></span>
+          <input className="input input--sm" value={note} onChange={(e) => setNote(e.target.value)} onBlur={saveNote} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            placeholder="למשל: המחירים תקפים מ-10 פיצות משפחתיות ומעלה" />
+        </label>
+        <label className="pl-terms__min">
+          <span className="field__label">מינימום פיצות</span>
+          <input className="input input--sm input--ltr" inputMode="numeric" value={minP} onChange={(e) => setMinP(e.target.value.replace(/\D/g, ''))} onBlur={saveNote} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            placeholder="—" aria-describedby="pl-min-hint" />
+        </label>
+        <p id="pl-min-hint" className="pl-terms__hint">כשבהצעה יש פחות פיצות מהמינימום – מופיעה אזהרה. התנאי לא מופיע בדף שהלקוח מקבל.</p>
+      </div>
+
+      <div className="pl-body">
+        <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
+          {PL_TABS.map((c) => (
+            <button type="button" role="tab" key={c} aria-selected={tab === c} className={`ib-tab ${tab === c ? 'is-on' : ''} ${c === DELIVERY_CAT ? 'pl-tab--dlv' : ''}`} onClick={() => { setTab(c); setFocusRow(null); }}>
+              {c}{count(c) > 0 && <span className="ib-tab__n"><Ltr>{count(c)}</Ltr></span>}
+            </button>
+          ))}
+        </div>
+
+        <div className={`ib-table plt ${isDelivery ? 'plt--dlv' : ''}`} role="group" aria-label={`מחירון ${pl.name} – ${tab}`} ref={tableRef}>
+          <div className="plt-r plt-r--head" aria-hidden="true">
+            <span>{isDelivery ? 'מדרגת משלוח' : 'מוצר'} <small>כמו שיופיע בהצעה</small></span>
+            <span>{isDelivery ? 'דמי משלוח' : 'מחיר משלוח'} <small>₪ כולל מע"מ</small></span>
+            <span>{isDelivery ? 'עד כמה פריטים' : 'מחיר איסוף'} <small>{isDelivery ? 'להצעה אוטומטית' : 'ריק = כמו משלוח'}</small></span>
+            <span />
+          </div>
+          {shown.map((r) => {
+            const isDraft = r.id === draftKey;
+            const p = focusRow === r.id ? '' : problem(r);
+            const label = r.name.trim() || (isDraft ? 'שורה חדשה' : 'שורה');
+            return (
+              <div key={r.id} className="plt-g" data-row={isDraft ? undefined : true} data-draft={isDraft || undefined}
+                onFocus={() => setFocusRow(r.id)}
+                onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leaveRow(r.id); }}>
+                <div className={`plt-r ${isDraft ? 'is-draft' : ''}`}>
+                  <input className={`input input--sm ${p && !r.name.trim() ? 'is-invalid' : ''}`} data-col="name" value={r.name} onKeyDown={onKey} onPaste={(e) => onPaste(e, r.id)}
+                    placeholder={isDraft ? (isDelivery ? 'למשל: משלוח עד 8 פריטים' : tab === 'פיצות' ? 'למשל: פיצה משפחתית עם תוספת' : tab === 'משקאות' ? 'למשל: שתייה גדולה' : 'שם המוצר') : ''}
+                    onChange={(e) => change(r.id, { name: e.target.value })} aria-label={`${isDelivery ? 'מדרגת משלוח' : 'מוצר'} – ${label}`} />
+                  <input className={`input input--sm input--ltr ${r.price.trim() && num(r.price) === undefined ? 'is-invalid' : ''}`} inputMode="decimal" value={r.price} onKeyDown={onKey} placeholder="—"
+                    onChange={(e) => change(r.id, { price: e.target.value })} aria-label={`${isDelivery ? 'דמי משלוח' : 'מחיר משלוח'} – ${label}`} />
+                  {isDelivery
+                    ? <input className="input input--sm input--ltr" inputMode="numeric" value={r.upTo} onKeyDown={onKey} placeholder="—" onChange={(e) => change(r.id, { upTo: e.target.value.replace(/\D/g, '') })} aria-label={`עד כמה פריטים – ${label}`} />
+                    : <input className={`input input--sm input--ltr ${r.pickup.trim() && num(r.pickup) === undefined ? 'is-invalid' : ''}`} inputMode="decimal" value={r.pickup} onKeyDown={onKey} placeholder={num(r.price) ? fmtMoney(num(r.price)!) : '—'}
+                        onChange={(e) => change(r.id, { pickup: e.target.value })} aria-label={`מחיר איסוף – ${label}`} />}
+                  {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר – ${label}`} onClick={() => remove(r)}><Trash2 size={15} /></button>}
+                </div>
+                {p && <p className="ib-err plt-err" role="alert">{p}</p>}
+              </div>
+            );
+          })}
+          <button type="button" className="ib-addrow" onClick={() => tableRef.current?.querySelector<HTMLInputElement>('[data-draft] input[data-col="name"]')?.focus()}>
+            <Plus size={14} aria-hidden="true" /> שורה
+          </button>
+        </div>
+        <p className="ib-foot">
+          <span>Enter – לשורה הבאה · כל שורה נשמרת כשיוצאים ממנה · אפשר להדביק כמה שורות מאקסל (שם, מחיר{isDelivery ? ', עד כמה פריטים' : ', מחיר איסוף'})</span>
+          {unpriced > 0 && <span className="muted"><Ltr>{unpriced}</Ltr> בלי מחיר – ימולאו בהצעה</span>}
+        </p>
       </div>
 
       <div className="pl-customers">
-        <h3 className="pl-customers__title"><Users size={16} aria-hidden="true" /> לקוחות משויכים · <Ltr>{customersCount.length}</Ltr></h3>
-        {customersCount.length === 0 ? <p className="muted">אף לקוח לא משויך. משייכים מתוך טופס הלקוח או מהטאב "מחירון" בתיק הלקוח.</p> : (
-          <ul className="pl-customers__list">{customersCount.map((c) => <li key={c.id}><Link to={`/customers/${c.id}`}>{c.name}</Link></li>)}</ul>
+        <h3 className="pl-customers__title"><Users size={16} aria-hidden="true" /> לקוחות משויכים · <Ltr>{assigned.length}</Ltr>
+          <Button size="sm" className="pl-customers__add" icon={<Plus size={15} />} onClick={() => setPicking(true)}>שייך לקוחות</Button>
+        </h3>
+        {assigned.length === 0 ? <p className="muted">אף לקוח לא משויך. לקוח משויך מקבל את המחירון הזה אוטומטית בהצעות ובהזמנות.</p> : (
+          <ul className="pl-customers__list">
+            {assigned.map((c) => (
+              <li key={c.id} className="pl-cchip">
+                <Link to={`/customers/${c.id}`}>{c.name}</Link>
+                <button type="button" aria-label={`הסר את ${c.name} מהמחירון`} onClick={async () => {
+                  try { await assignPriceList([c], '', pl.name); toast({ message: <>{c.name} הוסר מהמחירון</>, onUndo: () => assignPriceList([{ ...c, priceListId: '' }], pl.id, pl.name) }); }
+                  catch { toast({ message: 'השמירה נכשלה – בדקו חיבור' }); }
+                }}><X size={13} /></button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
+      {picking && <AssignDialog pl={pl} customers={customers} all={all} onClose={() => setPicking(false)} />}
     </section>
   );
 }
 
-/* מחיקת מחירון – מנהל מערכת בלבד, עם סיבה. לקוחות משויכים נשארים בלי מחירון; הזמנות קיימות לא משתנות */
-function DeletePriceList({ pl }: { pl: PriceList }) {
+/* ---------- שיוך לקוחות: חיפוש וסימון ---------- */
+function AssignDialog({ pl, customers, all, onClose }: { pl: PriceList; customers: Customer[]; all: PriceList[]; onClose: () => void }) {
+  const toast = useToast();
+  const [q, setQ] = useState('');
+  const [sel, setSel] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const pool = customers.filter((c) => c.status === 'active' && c.priceListId !== pl.id);
+  const shown = pool.filter((c) => !q.trim() || c.name.includes(q.trim())).slice(0, 80);
+  const plName = (id: string) => all.find((p) => p.id === id)?.name;
+  const moving = pool.filter((c) => sel.includes(c.id) && c.priceListId && plName(c.priceListId)).length;
+  const go = async () => {
+    if (!sel.length) return setErr('סמנו לפחות לקוח אחד');
+    setBusy(true);
+    try {
+      await assignPriceList(pool.filter((c) => sel.includes(c.id)), pl.id, pl.name);
+      toast({ message: <><Ltr>{sel.length}</Ltr> לקוחות שויכו ל"{pl.name}"</> });
+      onClose();
+    } catch { setErr('השמירה נכשלה – אין הרשאה או אין חיבור'); setBusy(false); }
+  };
+  return (
+    <Shell title={`שיוך לקוחות ל"${pl.name}"`} sub="לקוח משויך מקבל את המחירון אוטומטית בהצעות מחיר ובהזמנות. ללקוח יש מחירון אחד – שיוך כאן מחליף מחירון קודם." onClose={onClose}>
+      <div className="sdialog__form">
+        <label className="tablebar__search pl-assign__search">
+          <Search size={16} aria-hidden="true" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="חיפוש לקוח" aria-label="חיפוש לקוח" data-autofocus />
+        </label>
+        <ul className="pl-assign">
+          {shown.map((c) => (
+            <li key={c.id}>
+              <label className="check-inline pl-assign__row">
+                <input type="checkbox" checked={sel.includes(c.id)} onChange={(e) => { setErr(''); setSel((s) => (e.target.checked ? [...s, c.id] : s.filter((x) => x !== c.id))); }} />
+                <span className="pl-assign__name">{c.name}</span>
+                {c.priceListId && plName(c.priceListId) && <span className="muted">כרגע: {plName(c.priceListId)}</span>}
+              </label>
+            </li>
+          ))}
+          {shown.length === 0 && <li className="muted">{q ? `לא נמצא לקוח "${q}"` : 'כל הלקוחות הפעילים כבר משויכים למחירון הזה'}</li>}
+        </ul>
+        {moving > 0 && <p className="sdialog__warn"><Users size={16} aria-hidden="true" /> <span><Ltr>{moving}</Ltr> מהלקוחות שסימנתם יעברו ממחירון אחר</span></p>}
+        {err && <span className="cform__err" role="alert">{err}</span>}
+        <div className="udialog__actions">
+          <Button variant="primary" loading={busy} onClick={go}>{sel.length ? `שייך ${sel.length} לקוחות` : 'שייך'}</Button>
+          <Button variant="ghost" onClick={onClose}>ביטול</Button>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+/* ---------- שכפול: עותק של המחירון, ואפשר לשנות את כל המחירים באחוז ---------- */
+function DuplicateDialog({ from, all, onClose, onDone }: { from: PriceList; all: PriceList[]; onClose: () => void; onDone: (id: string) => void }) {
+  const toast = useToast();
+  const [name, setName] = useState(`עותק של ${from.name}`);
+  const [pct, setPct] = useState('');
+  const [round, setRound] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const p = pct.trim() ? Number(pct.replace(/[^\d.-]/g, '')) : 0;
+  const adj = (v?: number) => (v === undefined ? undefined : round ? Math.round(v * (1 + p / 100)) : Math.round(v * (1 + p / 100) * 100) / 100);
+  const go = async () => {
+    if (!name.trim()) return setErr('חובה: שם המחירון');
+    const similar = all.find((x) => sameName(x.name, name));
+    if (similar) return setErr(`כבר קיים מחירון בשם הזה: "${similar.name}"`);
+    if (!Number.isFinite(p) || p <= -100 || p > 300) return setErr('אחוז לא תקין – למשל 10 או ‎-5');
+    setBusy(true);
+    try {
+      const id = await createPriceList(name, from.items.map((i) => ({ ...i, id: newId(), price: adj(i.price), pickupPrice: adj(i.pickupPrice) })), { note: from.note, minPizzas: from.minPizzas });
+      toast({ message: <>נוצר "{name.trim()}"{p ? <> · המחירים שונו ב-<Ltr>{`${p}%`}</Ltr></> : null}</> });
+      onDone(id);
+    } catch { setErr('השמירה נכשלה – אין הרשאה או אין חיבור'); setBusy(false); }
+  };
+  const sample = from.items.find((i) => i.price);
+  return (
+    <Shell title={`שכפול "${from.name}"`} sub="כל המוצרים והמדרגות עוברים לעותק. לקוחות לא עוברים – משייכים אותם לעותק אחר כך." onClose={onClose}>
+      <form className="sdialog__form" onSubmit={(e) => { e.preventDefault(); go(); }}>
+        <label className="field"><span className="field__label">שם המחירון החדש</span>
+          <input className="input" value={name} onChange={(e) => { setName(e.target.value); setErr(''); }} data-autofocus />
+        </label>
+        <label className="field"><span className="field__label">שינוי כל המחירים באחוז <span className="muted">(לא חובה)</span></span>
+          <input className="input input--ltr pl-dup__pct" inputMode="decimal" value={pct} onChange={(e) => { setPct(e.target.value); setErr(''); }} placeholder="למשל 10 או ‎-5" />
+        </label>
+        <label className="check-inline"><input type="checkbox" checked={round} onChange={(e) => setRound(e.target.checked)} /> לעגל לשקל שלם</label>
+        {p !== 0 && sample && <p className="muted">לדוגמה: {sample.name} <Ltr>{fmtMoney(sample.price!)}</Ltr> ← <Ltr>{fmtMoney(adj(sample.price)!)}</Ltr></p>}
+        {err && <span className="cform__err" role="alert">{err}</span>}
+        <div className="udialog__actions"><Button variant="primary" type="submit" loading={busy}>צור עותק</Button><Button variant="ghost" type="button" onClick={onClose}>ביטול</Button></div>
+      </form>
+    </Shell>
+  );
+}
+
+/* מחיקת מחירון – מנהל מערכת בלבד, עם סיבה. לקוחות משויכים נשארים בלי מחירון; הזמנות והצעות קיימות לא משתנות */
+function DeletePriceList({ pl, assigned }: { pl: PriceList; assigned: Customer[] }) {
   const { isAdmin } = useAuth();
-  const { items: customers } = useCustomers();
   const [, setParams] = useSearchParams();
   const toast = useToast();
   const [open, setOpen] = useState(false);
@@ -277,7 +430,6 @@ function DeletePriceList({ pl }: { pl: PriceList }) {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   if (!isAdmin) return null;
-  const assigned = customers.filter((c) => c.priceListId === pl.id && c.status !== 'merged');
   const go = async () => {
     if (reason.trim().length < 3) return setErr('חובה: סיבת המחיקה');
     setBusy(true);
@@ -290,9 +442,9 @@ function DeletePriceList({ pl }: { pl: PriceList }) {
   };
   return (
     <>
-      <Button size="sm" variant="ghost" className="pl-delete" icon={<Trash2 size={15} />} onClick={() => setOpen(true)}>מחק מחירון</Button>
+      <Button size="sm" variant="ghost" className="pl-delete" icon={<Trash2 size={15} />} onClick={() => setOpen(true)}>מחק</Button>
       {open && (
-        <Shell title={`מחיקת המחירון "${pl.name}"`} sub={<>המחירון ובסיסי המחיר שלו יימחקו. הזמנות קיימות לא משתנות – המחיר שמור בתוכן. ביומן תישאר רשומה עם הסיבה.</>} onClose={() => setOpen(false)}>
+        <Shell title={`מחיקת המחירון "${pl.name}"`} sub={<>המחירון והמוצרים שלו יימחקו. הזמנות והצעות קיימות לא משתנות – המחיר שמור בתוכן. ביומן תישאר רשומה עם הסיבה.</>} onClose={() => setOpen(false)}>
           <form className="sdialog__form" onSubmit={(e) => { e.preventDefault(); go(); }}>
             {assigned.length > 0 && (
               <p className="sdialog__warn">

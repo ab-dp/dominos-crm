@@ -7,7 +7,7 @@ import { useToast } from '../../design/Toast';
 import '../pages.css';
 import './ThresholdsPage.css';
 
-const KEYS: (keyof Thresholds)[] = ['qFromTime', 'qLeadMinutes', 'soonDays', 'creditDeadline', 'nearMinutes'];
+const KEYS: (keyof Thresholds)[] = ['qFromTime', 'qLeadMinutes', 'soonDays', 'creditDeadline', 'nearMinutes', 'quoteFollowupHours'];
 
 export function ThresholdsPage() {
   const { th, saved } = useThresholds();

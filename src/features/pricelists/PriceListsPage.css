@@ -1,35 +1,61 @@
 .pl-new { display: grid; gap: 8px; margin-bottom: 6px; }
-.pl-new .seg { justify-self: start; }
 .pl-new__actions { display: flex; gap: 6px; }
 .pl-item { height: auto; min-height: 48px; flex-wrap: wrap; padding: 8px 12px; }
 .pl-item .citem__count { flex-basis: 100%; margin: 0; text-align: start; }
 .pl-rename { flex: 1; max-width: 360px; }
 .pl-rename .input { flex: 1; }
+.pl-nameerr { flex-basis: 100%; }
 .pl-head-actions { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.pl-price { width: 120px; }
-.pl-table td:nth-child(2) { width: 160px; }
-.pl-add {
-  display: flex; align-items: center; gap: 6px; width: 100%;
-  height: 44px; padding: 0 16px;
-  border: 0; border-top: 1px dashed var(--gray-300); background: var(--white);
-  font: inherit; font-weight: 500; color: var(--brand-600); cursor: pointer; text-align: start;
-}
-.pl-add:hover { background: var(--brand-50); }
+.pl-delete { color: var(--danger-fg); }
+.pl-state { display: inline-flex; align-items: center; gap: 4px; min-width: 60px; font-size: var(--text-label); color: var(--gray-600); }
+.pl-state--saved { color: var(--ok-fg); }
+.pl-state--error { color: var(--danger-fg); font-weight: 600; }
+
+/* תנאי המחירון */
+.pl-terms { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 6px 12px; padding: 12px 16px; border-bottom: 1px solid var(--gray-100); background: var(--gray-50); }
+.pl-terms label { display: grid; gap: 4px; }
+.pl-terms__hint { grid-column: 1 / -1; margin: 0; font-size: var(--text-micro); color: var(--gray-600); }
+
+/* טבלת המוצרים – כמו בבונה הפריטים של ההזמנה */
+.pl-body { padding: 12px 16px 4px; }
+.pl-tab--dlv { margin-inline-start: 10px; }
+.plt-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 120px) minmax(0, 120px) 36px; gap: 6px; align-items: center; }
+.plt-r--head { padding: 2px 0 6px; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
+.plt-r--head small { display: block; font-weight: 500; color: var(--gray-600); }
+.plt-g { padding: 3px 0; }
+.plt-g + .plt-g { border-top: 1px dashed var(--gray-100); }
+.plt-r .input { width: 100%; min-width: 0; }
+.plt-r.is-draft .input { background: var(--gray-50); }
+.plt-r.is-draft .input:focus { background: var(--white); }
+.plt .is-invalid { border-color: var(--danger-fg); box-shadow: 0 0 0 1px var(--danger-fg); background: var(--danger-bg); }
+.plt-err { margin: 4px 0 2px; }
+
+/* לקוחות משויכים */
 .pl-customers { padding: 14px 16px 16px; border-top: 1px solid var(--gray-100); }
 .pl-customers__title { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: var(--text-table); font-weight: 600; }
+.pl-customers__add { margin-inline-start: auto; }
 .pl-customers__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.pl-customers__list a { display: inline-flex; height: 28px; align-items: center; padding: 0 10px; border-radius: 14px; background: var(--gray-100); color: var(--gray-900); text-decoration: none; font-size: var(--text-label); }
-.pl-customers__list a:hover { background: var(--brand-50); color: var(--brand-800); }
+.pl-cchip { display: inline-flex; align-items: center; height: 28px; border-radius: 14px; background: var(--gray-100); font-size: var(--text-label); }
+.pl-cchip a { padding: 0 4px 0 10px; color: var(--gray-900); text-decoration: none; }
+.pl-cchip a:hover { color: var(--brand-800); text-decoration: underline; }
+.pl-cchip button { display: grid; place-items: center; width: 24px; height: 24px; margin-inline-end: 2px; border: 0; border-radius: 50%; background: transparent; color: var(--gray-600); cursor: pointer; }
+.pl-cchip button:hover { background: var(--white); color: var(--danger-fg); }
 .pl-customers .muted { margin: 0; font-size: var(--text-label); }
-.pl-delete { color: var(--danger-fg); }
-/* קבוצת מוצרים – שם הקבוצה בשורה הראשונה שלה, וקו מפריד בין קבוצות */
-.pl-group b { color: var(--brand-800); }
-.pl-table tr[data-group-start] td { border-top: 2px solid var(--gray-100); }
 
-.pl-group__head { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.pl-group__tools { display: inline-flex; gap: 0; opacity: .55; }
-.brow:hover .pl-group__tools, .pl-group__tools:focus-within { opacity: 1; }
-.pl-group__tools .icon-btn:disabled { opacity: .3; cursor: default; }
-.pl-group__edit { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.pl-group__edit .input { width: 140px; }
-.pl-group__warn { flex-basis: 100%; margin: 0; font-size: var(--text-label); font-weight: 400; color: var(--urgent-fg); }
+.pl-assign__search { width: 100%; }
+.pl-assign { list-style: none; margin: 0; padding: 4px; max-height: 320px; overflow-y: auto; border: 1px solid var(--gray-100); border-radius: var(--radius); display: grid; gap: 2px; }
+.pl-assign__row { display: flex; width: 100%; padding: 6px 8px; border-radius: var(--radius); color: var(--gray-900); }
+.pl-assign__row:hover { background: var(--gray-50); }
+.pl-assign__name { font-weight: 500; }
+.pl-assign__row .muted { margin-inline-start: auto; font-size: var(--text-micro); }
+.pl-dup__pct { max-width: 160px; }
+
+@media (max-width: 640px) {
+  .pl-terms { grid-template-columns: 1fr 96px; }
+  /* בטלפון: השם בשורה מלאה, המחירים מתחתיו */
+  .plt-r { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px; }
+  .plt-r > :first-child { grid-column: 1 / -1; }
+  .plt-r--head > :first-child { display: none; }
+  .plt-r--head small { display: none; }
+  .plt-g { padding: 8px 0; }
+}

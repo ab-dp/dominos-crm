@@ -89,3 +89,7 @@
 .monthly__none { padding: 10px; }
 
 .cfile__pricenote { padding: 14px 16px 4px; max-width: 560px; }
+.cfile__placts { display: inline-flex; align-items: center; gap: 10px; }
+.cfile__plcond { color: var(--missing-fg); }
+.cfile__prices .cfile__plcat th { padding-top: 12px; text-align: start; font-size: var(--text-label); font-weight: 700; color: var(--brand-800); background: transparent; }
+.cfile__qrow { cursor: pointer; } .cfile__qrow:hover td { background: var(--gray-50); }

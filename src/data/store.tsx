@@ -11,6 +11,7 @@ import { LOCKED_FIELDS, monthOf, useLockedMonths } from './months';
 import { STATUS_LABEL } from './types';
 import { useThresholds, type Thresholds } from './thresholds';
 import { useOpenTasks, type Task } from './tasks';
+import { needsFollowup, useQuotes, type Quote } from './quotes';
 import { toISODate } from '../lib/format';
 import type { Order, OrderStatus } from './types';
 
@@ -23,7 +24,8 @@ export const SENSITIVE: (keyof Order)[] = ['date', 'time', 'branchId', 'delivery
 export const isLocked = (o: Order) => o.status === 'approved' || o.status === 'delivered' || o.status === 'partial' || !!o.qNumber || !!o.branchApproval;
 export type ConflictState = { error: ConflictError; patch: Partial<Order>; message: ReactNode };
 export type ClosingRequest = { order: Order; status: 'partial' | 'cancelled' };
-export type NewOrderRequest = { mode?: NewOrderMode; customerId?: string; date?: string; customerName?: string };
+/* fromQuote – הזמנה מהצעת מחיר שאושרה: הלקוח, המועד והשורות עוברים לטופס, ואחרי השמירה ההצעה מסומנת "הפכה להזמנה" */
+export type NewOrderRequest = { mode?: NewOrderMode; customerId?: string; date?: string; customerName?: string; fromQuote?: Quote };
 /* שינוי בהזמנה של חודש נעול – ממתין לסיבה לפני השמירה */
 export type LockFixRequest = { ids: number[]; patch: Partial<Order>; message: ReactNode; months: string[] };
 
@@ -52,6 +54,9 @@ type Store = {
   /* משימות מעקב פתוחות, וכמה מהן להיום או באיחור – לתפריט, לפעמון ולמסך היום */
   tasks: Task[];
   dueTasks: Task[];
+  /* הצעות מחיר פתוחות, ואלה שממתינות לתשובה ולא עודכנו מעבר לסף – לתפריט ולמסך היום */
+  quotes: Quote[];
+  quoteFollowups: Quote[];
   lockedMonths: string[];
   lockFix: LockFixRequest | null;
   confirmLockFix: (reason: string) => void;
@@ -70,6 +75,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const { orders: raw, loading, error } = useLiveOrders();
   const { th: thresholds } = useThresholds();
   const tasks = useOpenTasks();
+  const { items: quotes } = useQuotes('open');
   const [now, setNow] = useState(() => new Date());
   const [newOrder, setNewOrder] = useState<NewOrderRequest | null>(null);
   const [closing, setClosing] = useState<ClosingRequest | null>(null);
@@ -175,9 +181,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const endLockFix = useCallback(() => setLockFix(null), []);
   const today = toISODate(now);
   const dueTasks = useMemo(() => tasks.filter((t) => t.due <= today), [tasks, today]);
+  const quoteFollowups = useMemo(() => quotes.filter((q) => needsFollowup(q, now, thresholds.quoteFollowupHours)), [quotes, now, thresholds.quoteFollowupHours]);
 
   return (
-    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }}>
+    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }}>
       {children}
     </Ctx.Provider>
   );

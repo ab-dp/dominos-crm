@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import type { Customer } from '../../data/customers';
-import { GENERAL_GROUP, groupOf, priceOf, type PriceItem, type PriceList } from '../../data/priceLists';
+import { DELIVERY_CAT, priceOf, type PriceItem, type PriceList } from '../../data/priceLists';
 import { useStore } from '../../data/store';
 import { CATEGORIES, OTHER, PIZZA, categoryOf, groupItems, splitPart, type OrderItem } from '../../data/types';
 import { Ltr, fmtMoney } from '../../lib/format';
@@ -14,7 +14,7 @@ import './ItemsBuilder.css';
 
 /* tText / pText – הטקסט כפי שמוקלד (פסיק בסוף, "12."), עד שיוצאים מהשדה. autoName – סוג הפיצה הועתק מהשורה הקודמת ולא נכתב. לא נשמרים */
 export type Line = OrderItem & { key: string; tText?: string; pText?: string; autoName?: boolean };
-export type CatalogItem = PriceItem & { unit: number; custom: boolean };
+export type CatalogItem = PriceItem & { unit?: number; custom: boolean };
 type Delivery = 'delivery' | 'pickup';
 const NO_LIST = '__none';
 const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
@@ -26,13 +26,18 @@ export const isBlank = (l: OrderItem & { autoName?: boolean }) => !l.qty && !l.t
 export const lineProblem = (l: OrderItem) => !isBlank(l) && (!l.name.trim() || l.qty <= 0);
 export const lineText = (l: OrderItem) => `${l.name} ${l.detail ?? ''} ${(l.toppings ?? []).join(' ')} ${(l.parts ?? []).join(' ')}`;
 
-/* רמות המחיר של המחירון שנבחר, במחיר המתאים: משלוח/איסוף, ומחיר מיוחד ללקוח – רק במחירון של הלקוח */
+/* המוצרים של המחירון שנבחר (בלי מדרגות המשלוח), במחיר המתאים: משלוח/איסוף, ומחיר מיוחד ללקוח – רק במחירון של הלקוח.
+   מוצר בלי מחיר במחירון – unit ריק */
 export function useCatalog(priceList: PriceList | undefined, customer: Customer | undefined, delivery: Delivery): CatalogItem[] {
-  return useMemo(() => (priceList?.items ?? []).filter((i) => i.active).map((i) => {
+  return useMemo(() => buildCatalog(priceList, customer, delivery), [priceList, customer, delivery]);
+}
+export function buildCatalog(priceList: PriceList | undefined, customer: Customer | undefined, delivery: Delivery): CatalogItem[] {
+  return (priceList?.items ?? []).filter((i) => i.active && i.category !== DELIVERY_CAT).map((i) => {
     const cp = customer && customer.priceListId === priceList?.id ? customer.customPrices.find((p) => p.itemId === i.id) : undefined;
-    const unit = delivery === 'pickup' ? cp?.pickupPrice ?? priceOf(i, 'pickup') : cp && cp.price !== i.price ? cp.price : i.price;
-    return { ...i, unit, custom: !!cp && (delivery === 'pickup' ? cp.pickupPrice !== undefined : cp.price !== i.price) };
-  }), [priceList, customer, delivery]);
+    const own = !!cp && !!cp.price && cp.price !== i.price; // מחיר מיוחד למשלוח (0 = אין)
+    const unit = delivery === 'pickup' ? cp?.pickupPrice ?? priceOf(i, 'pickup') : own ? cp!.price : i.price;
+    return { ...i, unit, custom: delivery === 'pickup' ? cp?.pickupPrice !== undefined : own };
+  });
 }
 
 /* הצעות – רק ממה שכבר נכתב בהזמנות: סוגים / מוצרים לפי קטגוריה, תוספות, והמחיר האחרון של כל מוצר */
@@ -63,13 +68,14 @@ function useHints() {
   }, [orders]);
 }
 
-/* מחירון: שם הסוג / המוצר דומה לשם קבוצה במחירון ("משפחתית" ↔ "משפחתיות"), או זהה לשם רמה */
-const norm = (s: string) => s.replace(/["'׳״\s\-–]/g, '').replace(/(ות|ים|ה|ת)$/, '');
-function catalogFor(catalog: CatalogItem[], name: string) {
-  const n = norm(name);
-  if (n.length < 2) return [];
-  const byGroup = catalog.filter((i) => { const g = norm(groupOf(i)); return g.length >= 2 && groupOf(i) !== GENERAL_GROUP && (n.includes(g) || g.includes(n)); });
-  return byGroup.length ? byGroup : catalog.filter((i) => norm(i.name) === n);
+/* מחירון: מוצרים עם מחיר באותה קטגוריה ששמם דומה למה שהוקלד ("משפחתית" ↔ "פיצה משפחתית עם תוספת").
+   אין התאמה – כל המוצרים של הקטגוריה (עד 6) */
+export const normName = (s: string) => s.replace(/["'׳״\s\-–]/g, '').replace(/(ות|ים|ה|ת)$/, '');
+export function catalogFor<T extends Pick<CatalogItem, 'category' | 'name' | 'unit'>>(catalog: T[], category: string, name: string): T[] {
+  const inCat = catalog.filter((i) => i.category === category && i.unit);
+  const n = normName(name);
+  const near = n.length >= 2 ? inCat.filter((i) => { const g = normName(i.name); return g.includes(n) || n.includes(g); }) : [];
+  return (near.length ? near : inCat).slice(0, 6);
 }
 
 /* מעבר משלוח ⇄ איסוף: שורות שהמחיר שלהן נלקח מהמחירון מתעדכנות (חוץ ממחיר ששונה ידנית). מחזיר כמה שורות השתנו */
@@ -81,7 +87,7 @@ export function useRepriceOnDelivery(delivery: Delivery, catalog: CatalogItem[],
     let n = 0;
     setLines((ls) => ls.map((l) => {
       const it = l.itemId && !l.manualPrice ? catalog.find((x) => x.id === l.itemId) : undefined;
-      if (!it || it.unit === l.unitPrice) return l;
+      if (!it?.unit || it.unit === l.unitPrice) return l;
       n++;
       return { ...l, unitPrice: it.unit, pText: undefined };
     }));
@@ -102,17 +108,19 @@ export function PriceSource({ lists, customer, value, onChange, delivery }: {
 }) {
   const own = customer?.priceListId;
   const options = lists.filter((p) => p.active || p.id === value || p.id === own);
+  const note = lists.find((p) => p.id === value)?.note?.trim();
   return (
     <div className="ib-source">
       <label className="ib-source__pick">
-        <span className="ib-source__label">מחירון להצעות מחיר</span>
-        <select className="input input--sm" value={value || NO_LIST} onChange={(e) => onChange(e.target.value === NO_LIST ? '' : e.target.value)} aria-label="מחירון להצעות מחיר">
+        <span className="ib-source__label">מחירון</span>
+        <select className="input input--sm" value={value || NO_LIST} onChange={(e) => onChange(e.target.value === NO_LIST ? '' : e.target.value)} aria-label="מחירון">
           {options.map((p) => <option key={p.id} value={p.id}>{p.name}{p.id === own ? ' – של הלקוח' : ''}</option>)}
           <option value={NO_LIST}>ללא מחירון</option>
         </select>
       </label>
       {value && <span className="ib-source__mode">מחירי <b>{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</b></span>}
       {customer && own && value !== own && <span className="ib-source__note">לא המחירון של הלקוח – מחירים מיוחדים שלו לא חלים</span>}
+      {note && <span className="ib-source__cond">תנאי המחירון: {note}</span>}
     </div>
   );
 }
@@ -214,14 +222,14 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
           };
           // מחיר מוצע – כשעומדים על הסוג / המוצר או על המחיר
           const priceFocus = active && !isDraft && l.name.trim() && (focus!.field === 'name' || focus!.field === 'price');
-          const levels = priceFocus ? catalogFor(catalog, l.name) : [];
+          const levels = priceFocus && tab !== OTHER ? catalogFor(catalog, tab, l.name) : [];
           const last = priceFocus && tab !== OTHER ? hints.lastPrice(tab, l.name) : undefined;
           return (
             <div key={l.key} className="ib-rgroup" data-row={isDraft ? undefined : true} data-draft={isDraft || undefined}
               onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus((f) => (f?.key === l.key ? null : f)); }}>
               <div className={`ib-r ${isDraft ? 'is-draft' : ''}`} role="row">
                 <span className="ib-r__name">
-                  {tab === OTHER && l.group && l.group !== GENERAL_GROUP && <span className="ib-r__old">{l.group}</span>}
+                  {tab === OTHER && l.group && l.group !== 'כללי' && <span className="ib-r__old">{l.group}</span>}
                   <input className={`input input--sm ${bad && !l.name.trim() ? 'is-invalid' : ''}`} list={tab === OTHER ? undefined : `ib-names-${CATEGORIES.indexOf(tab)}`} value={l.name}
                     placeholder={isDraft && prevName ? prevName : pizza ? 'למשל: משפחתית' : 'מוצר'}
                     onChange={(e) => change(l.key, { name: e.target.value, autoName: undefined })} aria-label={`${tab === PIZZA ? 'סוג פיצה' : 'מוצר'} – ${label}`} aria-invalid={bad && !l.name.trim() ? true : undefined} {...on(l.key, 'name')} />
@@ -264,7 +272,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
                   {levels.map((it) => (
                     <button type="button" key={it.id} className={`ib-sug__chip ${l.itemId === it.id ? 'is-on' : ''}`} onMouseDown={(e) => e.preventDefault()}
                       onClick={() => change(l.key, { itemId: it.id, unitPrice: it.unit, manualPrice: undefined, pText: undefined })}>
-                      {groupOf(it)} · {it.name} <Ltr>{fmtMoney(it.unit)}</Ltr>{it.custom && ' (ללקוח)'}
+                      {it.name} <Ltr>{fmtMoney(it.unit!)}</Ltr>{it.custom && ' (ללקוח)'}
                     </button>
                   ))}
                   {last !== undefined && last !== l.unitPrice && (
@@ -288,7 +296,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
         <span>Enter – לשורה הבאה{tab === PIZZA ? ' · שורה חדשה ממשיכה את סוג הפיצה הקודם' : ''}{pizza ? ' · כמה תוספות – עם פסיק' : ''}</span>
         {count(tab) > 0 && <b>סה״כ {tab}: <Ltr>{count(tab)}</Ltr></b>}
       </p>
-      {CATEGORIES.map((c, i) => <datalist key={c} id={`ib-names-${i}`}>{hints.names(c).map((h) => <option key={h} value={h} />)}</datalist>)}
+      {CATEGORIES.map((c, i) => <datalist key={c} id={`ib-names-${i}`}>{[...new Set([...catalog.filter((x) => x.category === c).map((x) => x.name), ...hints.names(c)])].map((h) => <option key={h} value={h} />)}</datalist>)}
     </div>
   );
 }
