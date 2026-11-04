@@ -23,7 +23,7 @@ import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/
 import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
-import { ItemsBuilder, PriceSource, toSaved, useCatalog, useRepriceOnDelivery, type Line } from './ItemsBuilder';
+import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, useCatalog, useRepriceOnDelivery, type Line } from './ItemsBuilder';
 import { uploadOrderDoc } from '../../data/orderDocs';
 import { FileDrop } from './OrderDocs';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
@@ -141,12 +141,15 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const catalog = useCatalog(priceList, c, delivery);
   useRepriceOnDelivery(delivery, catalog, setLines, (n) => { if (n) toast({ message: <>המחירים עודכנו ל{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</> }); });
   const past = !!date && date < today; // תאריך שעבר – הזמנה לתיעוד בלבד
-  const linesTotal = lines.reduce((t, l) => t + l.qty * l.unitPrice, 0);
-  const useLines = lines.length > 0;
+  const real = lines.filter((l) => !isBlank(l)); // השורה הריקה שבסוף הטבלה לא נחשבת
+  const linesTotal = real.reduce((t, l) => t + l.qty * l.unitPrice, 0);
+  const useLines = real.length > 0;
   // דמי המשלוח נוספים לסכום הפריטים
   const feeValue = delivery === 'delivery' ? money(fee) : 0;
   const total = linesTotal + feeValue;
-  const canOverride = lines.length > 0 || feeValue > 0;
+  const canOverride = real.length > 0 || feeValue > 0;
+  // פריטים בלי מחיר: הסכום הכולל להזמנה נכתב ישירות (כמו היום), בלי "שונה ידנית"
+  const totalOnly = real.length > 0 && linesTotal === 0;
   const finalAmount = canOverride && override !== null ? money(override) : total;
   const isManual = canOverride && override !== null && finalAmount !== total;
 
@@ -201,10 +204,10 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     else if (CARD_RE.test(channel)) e.channel = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (delivery === 'delivery' && !address.trim()) m.address = MISS;
     if (isManual && finalAmount <= 0) m.final = MISS;
-    if (lines.length && total - feeValue <= 0) m.amount = 'סכום הפריטים הוא 0'; // בלי פריטים – חסר "פריטים" בלבד
-    if (useLines && lines.some((l) => !l.name.trim() || l.qty <= 0)) e.amount = 'לכל פריט במחיר ידני צריך תיאור, ולכל פריט – כמות';
-    if (lines.some((l) => CARD_RE.test(`${l.name} ${l.detail ?? ''}`))) e.amount = 'אסור לרשום כאן מספר כרטיס אשראי';
-    if (!lines.length) m.contents = MISS;
+    if (totalOnly && !isManual) m.amount = 'אין מחיר: מלאו מחיר בשורות או סכום כולל'; // בלי פריטים – חסר "פריטים" בלבד
+    if (real.some(lineProblem)) e.amount = 'בשורה המסומנת באדום חסרים כמות או סוג / מוצר';
+    if (real.some((l) => CARD_RE.test(lineText(l)))) e.amount = 'אסור לרשום כאן מספר כרטיס אשראי';
+    if (!real.length) m.contents = MISS;
     if (past && !outcome) e.outcome = 'בהזמנה בתאריך שעבר – בחרו מה קרה בה';
     if (past && outcome === 'cancelled' && !pastReason.trim()) e.outcome = 'חובה: סיבת הביטול';
     if (past && outcome === 'partial' && !pastReason.trim()) e.outcome = 'חובה: מה סופק בפועל';
@@ -227,7 +230,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   const goTo = (k: string) => {
     const root = formRef.current; if (!root) return;
     const el = k === 'branch' ? root.querySelector<HTMLElement>('.bpick__trigger')
-      : k === 'contents' || k === 'amount' ? root.querySelector<HTMLElement>('.ib-add__btn')
+      : k === 'amount' && totalOnly ? root.querySelector<HTMLElement>('[data-field="final"]')
+      : k === 'contents' || k === 'amount' ? root.querySelector<HTMLElement>('.ib [data-draft] input')
       : root.querySelector<HTMLElement>(`[data-field="${k}"]`);
     el?.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
     el?.focus({ preventScroll: true });
@@ -250,7 +254,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       branchId: b?.id ?? '', branchName: b?.name ?? '', branchPhone: b?.phone ?? '',
       cluster: b ? clusters.find((x) => x.id === b.clusterId)?.name ?? '' : '',
       amount: finalAmount,
-      calcAmount: isManual ? total : undefined,
+      calcAmount: isManual && !totalOnly ? total : undefined,
       status: past ? (outcome === 'cancelled' ? 'cancelled' : outcome === 'partial' ? 'partial' : 'delivered') : status,
       payment: past ? (outcome === 'cancelled' ? 'cancelled' : pastQ.trim() ? 'paid' : 'pending') : 'pending',
       ...(past ? {
@@ -420,22 +424,27 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
       {/* מקור המחיר: מחירון (של הלקוח, כללי, או בלי); משלוח/איסוף נקבע בחלק "אספקה" */}
       <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={delivery} />
       <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => clearErr('amount', 'contents')} />
-      {lines.length === 0 && (
+      {real.length === 0 && (
         <p className={`no-items-empty ${errors.contents ? 'is-err' : ''}`}>
-          בחרו קבוצת מוצרים{catalog.length ? '' : ' (או מחירון)'} או "פריט ידני": רמת מחיר, כמות, פירוט והערה – והפריט נכנס להזמנה.
+          בחרו קטגוריה ומלאו שורה: כמות, סוג או מוצר{' '}ותוספות. מחיר לשורה – רשות; אפשר לכתוב רק סכום כולל להזמנה.
         </p>
       )}
       {err('amount')}
       {/* סיכום בשורה אחת: פריטים · דמי משלוח · סה"כ. שינוי הסכום הסופי – רק כשצריך */}
-      <div className={`ib-sum ${isManual ? 'is-manual' : ''}`}>
-        <span>פריטים <b><Ltr>{fmtMoney(linesTotal)}</Ltr></b></span>
+      <div className={`ib-sum ${isManual && !totalOnly ? 'is-manual' : ''}`}>
+        <span>פריטים {totalOnly ? <span className="muted">ללא מחיר לשורה</span> : <b><Ltr>{fmtMoney(linesTotal)}</Ltr></b>}</span>
         {delivery === 'delivery' && (
           <label className="ib-sum__fee">דמי משלוח
             <input className="input input--sm input--ltr" inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" aria-label="דמי משלוח (₪)" />
           </label>
         )}
         <span className="ib-sum__total">סה"כ לחיוב <b><Ltr>{fmtMoney(finalAmount)}</Ltr></b></span>
-        {canOverride && (override === null
+        {totalOnly && (
+          <label className="ib-sum__override ib-sum__only">סכום כולל להזמנה
+            <input className="input input--sm input--ltr" inputMode="decimal" value={override ?? ''} placeholder="₪" onChange={(e) => { setOverride(e.target.value); clearErr('final', 'amount'); }} aria-label="סכום כולל להזמנה (₪)" {...inv('final')} />
+          </label>
+        )}
+        {canOverride && !totalOnly && (override === null
           ? <button type="button" className="link" onClick={() => setOverride(String(total))}>שנה סכום</button>
           : (
             <span className="ib-sum__override">
@@ -501,7 +510,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
-        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-box, .ib-line__priceinput')) e.preventDefault(); }}
+        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table')) e.preventDefault(); }}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
           <div className="cform__head norder__head">
             <Dialog.Title className="udialog__title">הזמנה חדשה</Dialog.Title>

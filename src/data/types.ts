@@ -72,7 +72,49 @@ export const itemLabel = (i: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'pa
   const tops = i.parts?.length ? ` — ${partsText(i.parts)}` : i.toppings?.length ? ` — ${i.toppings.join(', ')}` : '';
   return `${head}${tops}${i.detail ? ` · ${i.detail}` : ''}`;
 };
-export const itemsText = (items: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'parts' | 'detail' | 'qty'>[]) => items.map((i) => `${i.qty}× ${itemLabel(i)}`).join(', ');
+/* קטגוריות קבועות לקליטת פריטים. בשורה חדשה: group = הקטגוריה, name = סוג הפיצה / המוצר (מלל חופשי).
+   שורות מהזמנות ישנות (קבוצת מחירון או פריט ידני) נכנסות ל"אחר" ומוצגות כמו שנרשמו. */
+export const CATEGORIES = ['פיצות', 'ליד הפיצה', 'כריכים', 'קינוחים', 'משקאות'];
+export const PIZZA = 'פיצות';
+export const OTHER = 'אחר';
+export const categoryOf = (i: Pick<OrderItem, 'group'>) => (i.group && CATEGORIES.includes(i.group) ? i.group : OTHER);
+const SPLIT_NAME: Record<number, string> = { 2: 'חצי-חצי', 4: 'רבעים' };
+// "חצי-חצי: פטריות | רגילה" – בלי ½ ליד מספר, שלא ייקרא "1½"
+export const toppingText = (i: Pick<OrderItem, 'toppings' | 'parts'>) => (i.parts?.length
+  ? `${SPLIT_NAME[i.parts.length] ?? 'חלוקה'}: ${i.parts.map((p) => p.trim() || 'רגילה').join(' | ')}`
+  : i.toppings?.length ? i.toppings.join(', ') : '');
+
+type ItemsPick = Pick<OrderItem, 'group' | 'name' | 'toppings' | 'parts' | 'detail' | 'qty'>;
+export type ItemType = { name: string; qty: number; rows: { qty: number; text: string }[] };
+export type ItemCategory = { category: string; qty: number; types: ItemType[] };
+/* תצוגה מקובצת: קטגוריה ← סוג / מוצר ← פירוט. שורות זהות מתאחדות ("4 פטריות" ולא 4+…) */
+export function groupItems(items: ItemsPick[]): ItemCategory[] {
+  const cats = new Map<string, ItemCategory>();
+  items.forEach((i) => {
+    const cat = categoryOf(i);
+    const c = cats.get(cat) ?? { category: cat, qty: 0, types: [] };
+    cats.set(cat, c);
+    c.qty += i.qty;
+    const name = cat === OTHER ? (i.group && i.group !== 'כללי' ? `${i.group} · ${i.name}` : i.name).trim() : i.name.trim();
+    let t = c.types.find((x) => x.name === name);
+    if (!t) { t = { name, qty: 0, rows: [] }; c.types.push(t); }
+    t.qty += i.qty;
+    const text = [toppingText(i) || (cat === PIZZA ? 'ללא תוספת' : ''), i.detail?.trim()].filter(Boolean).join(' · ');
+    const same = t.rows.find((r) => r.text === text);
+    if (same) same.qty += i.qty; else t.rows.push({ qty: i.qty, text });
+  });
+  return [...CATEGORIES, OTHER].flatMap((k) => cats.get(k) ?? []);
+}
+/* "13 משפחתית — 4 פטריות · 4 זיתים · 5 ללא תוספת" / "6 קולה 1.5 ליטר" */
+export const typeText = (t: ItemType) => {
+  if (t.rows.length === 1) return t.rows[0].text ? `${t.qty} ${t.name} — ${t.rows[0].text}` : `${t.qty} ${t.name}`;
+  return `${t.qty} ${t.name} — ${t.rows.map((r) => `${r.qty} ${r.text || 'רגיל'}`).join(' · ')}`;
+};
+export const itemsText = (items: ItemsPick[]) => {
+  // הזמנה ישנה בלבד – אותו טקסט כמו תמיד
+  if (!items.some((i) => categoryOf(i) !== OTHER)) return items.map((i) => `${i.qty}× ${itemLabel(i)}`).join(', ');
+  return groupItems(items).map((c) => `${c.category} (${c.qty}): ${c.types.map(typeText).join(' ; ')}`).join(' | ');
+};
 
 export type Order = {
   id: number;

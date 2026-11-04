@@ -9,7 +9,8 @@ import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { HealthBadge, Missing, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
-import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL, itemLabel } from '../../data/types';
+import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
+import { ItemsView } from './ItemsBuilder';
 import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, PoEdit } from './OrderActions';
@@ -61,7 +62,7 @@ export function OrderPanel() {
             <Dialog.Overlay asChild forceMount>
               <motion.div className="panel-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
             </Dialog.Overlay>
-            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} aria-labelledby="panel-title" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-box, .ib-line__priceinput')) e.preventDefault(); }}
+            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} aria-labelledby="panel-title" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table')) e.preventDefault(); }}
               onOpenAutoFocus={(e) => { e.preventDefault(); document.getElementById('panel-title')?.focus(); }}
               onCloseAutoFocus={restoreFocus}>
               <motion.div
@@ -215,14 +216,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               {editItems ? <ItemsEditor o={o} onDone={() => setEditItems(false)} /> : (
                 <>
                   {o.contents && <p className="order-contents">{o.contents}</p>}
-                  {o.items.length > 0 && <table className="items">
-                    <thead><tr><th>פריט</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
-                    <tbody>
-                      {o.items.map((it, i) => (
-                        <tr key={i}><td>{itemLabel(it)}</td><td><Ltr>{it.qty}</Ltr></td><td><Money value={it.unitPrice} /></td><td><Money value={it.qty * it.unitPrice} /></td></tr>
-                      ))}
-                    </tbody>
-                  </table>}
+                  {o.items.length > 0 && <ItemsView items={o.items} />}
                   {!o.contents && o.items.length === 0 && <p><Missing>חסרה תכולת ההזמנה</Missing> · <button className="link" onClick={() => setEditItems(true)}>הוסף פירוט</button></p>}
                 </>
               )}

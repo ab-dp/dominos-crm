@@ -7,7 +7,7 @@ import { newId, useCustomers } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { addOrderNote, useOrderNotes } from '../../data/orders';
 import { usePriceLists } from '../../data/priceLists';
-import { ItemsBuilder, PriceSource, toSaved, useCatalog, type Line } from './ItemsBuilder';
+import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, useCatalog, type Line } from './ItemsBuilder';
 import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, type Order } from '../../data/types';
 import { Button, Missing } from '../../design/components';
@@ -186,24 +186,31 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
   const [lines, setLines] = useState<Line[]>(() => o.items.map((it) => ({ ...it, key: newId() })));
   const [contents, setContents] = useState(o.contents ?? '');
   const [fee, setFee] = useState(o.deliveryFee ? String(o.deliveryFee) : '');
-  const calc = lines.reduce((t, l) => t + l.qty * l.unitPrice, 0) + (o.delivery === 'delivery' ? money(fee) : 0);
-  const hasLines = lines.length > 0;
+  const real = lines.filter((l) => !isBlank(l));
+  const linesTotal = real.reduce((t, l) => t + l.qty * l.unitPrice, 0);
+  const calc = linesTotal + (o.delivery === 'delivery' ? money(fee) : 0);
+  const hasLines = real.length > 0;
+  // פריטים בלי מחיר – הסכום הכולל נכתב ידנית, בלי "שונה ידנית / מחושב"
+  const totalOnly = hasLines && linesTotal === 0;
   const [amount, setAmount] = useState(String(o.amount));
   // סכום קיים ששונה מסכום הפריטים נשמר כמו שהוא (שונה ידנית) – פתיחת העריכה לא משנה אותו בשקט
   const [manual, setManual] = useState(() => !hasLines || o.calcAmount !== undefined
     || o.amount !== o.items.reduce((t, l) => t + l.qty * l.unitPrice, 0) + (o.delivery === 'delivery' ? o.deliveryFee ?? 0 : 0));
-  const final = manual ? money(amount) : calc;
+  const final = manual || totalOnly ? money(amount) : calc;
   const [err, setErr] = useState('');
 
-  useEffect(() => { if (!manual) setAmount(String(calc)); }, [calc, manual]);
+  // בלי מחירים בשורות – הסכום שנכתב נשאר כמו שהוא
+  useEffect(() => { if (!manual && !totalOnly) setAmount(String(calc)); }, [calc, manual, totalOnly]);
 
   const submit = () => {
-    if (final <= 0) return setErr('הסכום לחיוב חייב להיות גדול מ-0');
+    if (real.some(lineProblem)) return setErr('בשורה המסומנת באדום חסרים כמות או סוג / מוצר');
+    if (real.some((l) => CARD_RE.test(lineText(l)))) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
+    if (final <= 0) return setErr(totalOnly ? 'אין מחיר בשורות – כתבו סכום כולל להזמנה' : 'הסכום לחיוב חייב להיות גדול מ-0');
     if (CARD_RE.test(contents)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     const feeV = o.delivery === 'delivery' ? money(fee) : 0;
     save({
       items: toSaved(lines), contents: contents.trim() || undefined, deliveryFee: feeV || undefined,
-      amount: final, calcAmount: hasLines && final !== calc ? calc : undefined,
+      amount: final, calcAmount: hasLines && !totalOnly && final !== calc ? calc : undefined,
     }, 'פירוט ההזמנה והסכום');
     onDone();
   };
@@ -227,12 +234,12 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
           </label>
         )}
       </div>
-      <div className={`no-final ${hasLines && final !== calc ? 'is-manual' : ''}`}>
+      <div className={`no-final ${hasLines && !totalOnly && final !== calc ? 'is-manual' : ''}`}>
         <label className="field">
-          <span className="field__label">סכום לחיוב (לפי הסגירה מול הלקוח)</span>
+          <span className="field__label">{totalOnly ? 'סכום כולל להזמנה' : 'סכום לחיוב (לפי הסגירה מול הלקוח)'}</span>
           <input className="input input--ltr" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value); setManual(true); setErr(''); }} />
         </label>
-        {hasLines && (final !== calc
+        {hasLines && !totalOnly && (final !== calc
           ? <p className="no-final__note"><span className="no-final__tag">שונה ידנית</span> מחושב: <Ltr>{fmtMoney(calc)}</Ltr> <button type="button" className="link" onClick={() => setManual(false)}>חזור לחישוב</button></p>
           : <p className="muted no-hint">מתעדכן לבד מהפריטים. אפשר להקליד סכום אחר.</p>)}
       </div>
