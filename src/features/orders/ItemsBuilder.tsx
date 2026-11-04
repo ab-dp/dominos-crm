@@ -3,7 +3,7 @@
    בפיצות – כמות, סוג, תוספות, חלוקה ומחיר; בשאר – כמות, מוצר ומחיר. הכול מלל חופשי עם הצעות מהזמנות קודמות.
    המחיר רשות: מחירון או מחיר אחרון מוצעים בלחיצה ולא נכנסים לבד. שורה ריקה בסוף תמיד מוכנה להקלדה. */
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import type { Customer } from '../../data/customers';
 import { GENERAL_GROUP, groupOf, priceOf, type PriceItem, type PriceList } from '../../data/priceLists';
 import { useStore } from '../../data/store';
@@ -156,13 +156,13 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
     else change(l.key, { parts: Array.from({ length: n }, (_, i) => cur[i] ?? ''), toppings: undefined, tText: undefined });
   };
 
-  // Enter: לשורה הבאה (בסוף – לשורה הריקה). Ctrl+Enter ממשיך לשמירת ההזמנה
+  // Enter (או "+ שורה"): לשורה הבאה (בסוף – לשורה הריקה). Ctrl+Enter ממשיך לשמירת ההזמנה
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || e.ctrlKey || e.metaKey) return;
     e.preventDefault();
     const row = (e.target as HTMLElement).closest('[data-row]');
     const next = row?.nextElementSibling?.matches('[data-row]') ? row.nextElementSibling : row?.parentElement?.querySelector('[data-draft]');
-    if (next && next !== row) (next.querySelector('input[data-col="qty"]') as HTMLInputElement | null)?.focus();
+    if (next && next !== row) (next.querySelector('input[data-col="name"]') as HTMLInputElement | null)?.focus();
   };
   const bad = (ls: Line[]) => ls.some((l) => l.key !== focus?.key && lineProblem(l));
   const on = (key: string, field: Field) => ({ onFocus: () => setFocus({ key, field }), onKeyDown: onKey, 'data-col': field });
@@ -184,11 +184,11 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
 
       <div className={`ib-table ${pizza ? 'ib-table--pizza' : ''}`} role="table" aria-label={`פריטים – ${tab}`}>
         <div className="ib-r ib-r--head" role="row">
-          <span role="columnheader">כמות</span>
           <span role="columnheader">{tab === PIZZA ? 'סוג פיצה' : tab === OTHER ? 'פריט' : 'מוצר'}</span>
           {pizza && <span role="columnheader">תוספות</span>}
           {pizza && <span role="columnheader">חלוקה</span>}
           <span role="columnheader">מחיר ליח׳ <small>רשות</small></span>
+          <span role="columnheader">כמות</span>
           <span />
         </div>
         {rows.map((l) => {
@@ -220,8 +220,6 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
             <div key={l.key} className="ib-rgroup" data-row={isDraft ? undefined : true} data-draft={isDraft || undefined}
               onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus((f) => (f?.key === l.key ? null : f)); }}>
               <div className={`ib-r ${isDraft ? 'is-draft' : ''}`} role="row">
-                <input className={`input input--sm input--ltr ${bad && l.qty <= 0 ? 'is-invalid' : ''}`} inputMode="numeric" value={l.qty || ''} placeholder={isDraft ? '+' : ''}
-                  onChange={(e) => change(l.key, { qty: Number(e.target.value.replace(/\D/g, '')) || 0 })} aria-label={`כמות – ${label}`} aria-invalid={bad && l.qty <= 0 ? true : undefined} {...on(l.key, 'qty')} />
                 <span className="ib-r__name">
                   {tab === OTHER && l.group && l.group !== GENERAL_GROUP && <span className="ib-r__old">{l.group}</span>}
                   <input className={`input input--sm ${bad && !l.name.trim() ? 'is-invalid' : ''}`} list={tab === OTHER ? undefined : `ib-names-${CATEGORIES.indexOf(tab)}`} value={l.name}
@@ -250,6 +248,8 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
                 <input className="input input--sm input--ltr" inputMode="decimal" value={priceText} placeholder="—" aria-label={`מחיר ליחידה – ${label}`}
                   onChange={(e) => { const v = money(e.target.value); change(l.key, { pText: e.target.value, unitPrice: v, manualPrice: v > 0 || undefined, ...(v ? {} : { itemId: undefined }) }); }}
                   onBlur={() => { if (!isDraft && l.pText !== undefined) change(l.key, { pText: undefined }); }} {...on(l.key, 'price')} />
+                <input className={`input input--sm input--ltr ${bad && l.qty <= 0 ? 'is-invalid' : ''}`} inputMode="numeric" value={l.qty || ''} placeholder=""
+                  onChange={(e) => change(l.key, { qty: Number(e.target.value.replace(/\D/g, '')) || 0 })} aria-label={`כמות – ${label}`} aria-invalid={bad && l.qty <= 0 ? true : undefined} {...on(l.key, 'qty')} />
                 {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(l.key)}><Trash2 size={15} /></button>}
               </div>
               {l.detail && <p className="ib-r__note">הערה: {l.detail}</p>}
@@ -277,6 +277,11 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
             </div>
           );
         })}
+        {tab !== OTHER && (
+          <button type="button" className="ib-addrow" onClick={() => rootRef.current?.querySelector<HTMLInputElement>('[data-draft] input[data-col="name"]')?.focus()}>
+            <Plus size={14} aria-hidden="true" /> שורה
+          </button>
+        )}
         {bad(catLines) && <p className="ib-err" role="alert">בשורה המסומנת באדום חסרים {tab === PIZZA ? 'כמות או סוג פיצה' : 'כמות או מוצר'}</p>}
       </div>
       <p className="ib-foot">

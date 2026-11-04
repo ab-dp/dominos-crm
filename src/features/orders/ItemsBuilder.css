@@ -18,8 +18,9 @@
 
 /* הטבלה */
 .ib-table { border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 6px 8px 8px; background: var(--white); }
-.ib-r { display: grid; grid-template-columns: 64px minmax(0, 2.4fr) minmax(0, 104px) 36px; gap: 6px; align-items: center; }
-.ib-table--pizza .ib-r { grid-template-columns: 64px minmax(0, 1.3fr) minmax(0, 2fr) 112px minmax(0, 96px) 36px; }
+/* סדר העמודות מימין לשמאל: סוג / מוצר · תוספות · חלוקה · מחיר · כמות (הכי שמאל) · הסרה */
+.ib-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 104px) 64px 36px; gap: 6px; align-items: center; }
+.ib-table--pizza .ib-r { grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr) 112px minmax(0, 96px) 64px 36px; }
 .ib-r--head { padding: 2px 0 6px; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
 .ib-r--head small { font-weight: 500; color: var(--gray-500); }
 .ib-rgroup { padding: 3px 0; }
@@ -42,6 +43,8 @@
 .ib-sug__chip { height: 26px; padding: 0 10px; border: 1px solid var(--gray-200); border-radius: 13px; background: var(--gray-50); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
 .ib-sug__chip:hover { border-color: var(--brand-600); color: var(--brand-800); }
 .ib-sug__chip.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); font-weight: 600; }
+.ib-addrow { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; height: 28px; padding: 0 10px; border: 1px dashed var(--gray-300); border-radius: 14px; background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 600; color: var(--brand-700); cursor: pointer; }
+.ib-addrow:hover { border-color: var(--brand-600); background: var(--brand-50); }
 .ib-err { margin: 6px 0 0; font-size: var(--text-label); font-weight: 600; color: var(--danger-fg); }
 .ib-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin: 6px 2px 10px; font-size: var(--text-label); color: var(--gray-600); }
 .ib-foot b { color: var(--gray-900); font-size: var(--text-table); }
@@ -50,13 +53,14 @@
   .ib-source__pick select { min-width: 0; max-width: 220px; }
   /* בטלפון כל שורה היא כרטיס: כמות + סוג בשורה הראשונה, תוספות וחלוקה מתחת */
   .ib-r--head { display: none; }
-  .ib-r { grid-template-columns: 56px minmax(0, 1fr) 84px 32px; }
-  .ib-table--pizza .ib-r { grid-template-columns: 56px minmax(0, 1fr) 84px; }
+  .ib-r { grid-template-columns: minmax(0, 1fr) 84px 56px 32px; }
+  /* פיצה: סוג · מחיר · כמות בשורה הראשונה, תוספות מתחת, חלוקה והסרה בסוף */
+  .ib-table--pizza .ib-r { grid-template-columns: minmax(0, 1fr) 84px 56px; }
   .ib-table--pizza .ib-r > :nth-child(1) { grid-column: 1; grid-row: 1; }
-  .ib-table--pizza .ib-r > :nth-child(2) { grid-column: 2; grid-row: 1; }
+  .ib-table--pizza .ib-r > :nth-child(4) { grid-column: 2; grid-row: 1; }
   .ib-table--pizza .ib-r > :nth-child(5) { grid-column: 3; grid-row: 1; }
-  .ib-table--pizza .ib-r > :nth-child(3) { grid-column: 1 / -1; grid-row: 2; }
-  .ib-table--pizza .ib-r > :nth-child(4) { grid-column: 1 / 3; grid-row: 3; }
+  .ib-table--pizza .ib-r > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  .ib-table--pizza .ib-r > :nth-child(3) { grid-column: 1 / 3; grid-row: 3; }
   .ib-table--pizza .ib-r > :nth-child(6) { grid-column: 3; grid-row: 3; justify-self: end; }
   .ib-rgroup { padding: 8px 0; }
   .ib-r__note, .ib-sug { margin-inline-start: 0; margin-right: 0; }
