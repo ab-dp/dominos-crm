@@ -7,7 +7,7 @@ import { Minus, Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { Customer } from '../../data/customers';
 import { GENERAL_GROUP, groupOf, priceOf, type PriceItem, type PriceList } from '../../data/priceLists';
 import { useStore } from '../../data/store';
-import { itemLabel, partsText, type OrderItem } from '../../data/types';
+import { itemLabel, partsText, splitPart, type OrderItem } from '../../data/types';
 import { Button } from '../../design/components';
 import { Ltr, fmtMoney } from '../../lib/format';
 import { newId } from '../../data/customers';
@@ -41,7 +41,7 @@ function useHints() {
       const g = i.itemId ? i.group || GENERAL_GROUP : MANUAL;
       const m = byGroup.get(g) ?? new Map<string, number>();
       byGroup.set(g, m);
-      [...(i.toppings ?? []), ...(i.parts ?? []).flat()].forEach((t) => bump(m, t));
+      [...(i.toppings ?? []), ...(i.parts ?? []).flatMap(splitPart)].forEach((t) => bump(m, t));
       if (!i.itemId) {
         bump(names, i.name);
         const prev = lastPrice.get(i.name.trim());
@@ -137,6 +137,14 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
   const [err, setErr] = useState('');
   const [priceEdit, setPriceEdit] = useState<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const close = (group?: string) => {
+    setD(null);
+    requestAnimationFrame(() => {
+      const btns = [...(rootRef.current?.querySelectorAll<HTMLButtonElement>('.ib-add__btn') ?? [])];
+      (btns.find((x) => group && x.textContent?.trim() === group) ?? btns[0])?.focus();
+    });
+  };
   const groups = useMemo(() => [...new Set(catalog.map(groupOf))], [catalog]);
   const levels = (g: string) => catalog.filter((i) => groupOf(i) === g);
 
@@ -146,7 +154,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
   const openEdit = (l: Line) => {
     setErr('');
     const inCatalog = !!l.itemId && catalog.some((x) => x.id === l.itemId);
-    const parts = l.parts?.length ? l.parts : [l.toppings ?? []];
+    const parts = l.parts?.length ? l.parts.map(splitPart) : [l.toppings ?? []];
     setD({ key: l.key, manual: !inCatalog, group: l.group ?? GENERAL_GROUP, itemId: inCatalog ? l.itemId! : '', name: inCatalog ? '' : itemTitle(l), price: String(l.unitPrice),
       qty: l.qty, split: (parts.length === 2 || parts.length === 4 ? parts.length : 1) as Split, parts, note: l.detail ?? '' });
   };
@@ -169,7 +177,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
     if (!d.manual && !level) return setErr('בחרו רמת מחיר');
     if (d.qty <= 0) return setErr('חובה: כמות');
     if (/\d{13,}/.test(`${d.name} ${d.note} ${parts.flat().join(' ')}`)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
-    const split = d.split > 1 ? { parts, toppings: [] } : { toppings: parts[0] ?? [], parts: undefined };
+    const split = d.split > 1 ? { parts: parts.map((p) => p.join(', ')), toppings: [] } : { toppings: parts[0] ?? [], parts: undefined };
     const old = d.key ? lines.find((x) => x.key === d.key) : undefined;
     const keepManualPrice = old && !d.manual && old.itemId === level?.id && old.manualPrice;
     const line: Line = d.manual
@@ -180,13 +188,13 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
     setErr('');
     // "הוסף ועוד אחד מאותו סוג": החלון נשאר פתוח עם אותה רמה, כמות וחלוקה – בלי הפירוט וההערה
     if (again) setD({ ...d, key: undefined, parts: resize([], d.split), note: '', name: d.manual ? '' : d.name });
-    else setD(null);
+    else close(d.manual ? 'פריט ידני' : d.group);
   };
 
   const setLine = (key: string, p: Partial<Line>) => { setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...p } : l))); onTouched?.(); };
 
   return (
-    <div className="ib">
+    <div className="ib" ref={rootRef}>
       <div className="ib-add" role="group" aria-label="הוספת פריט">
         {groups.map((g) => (
           <button type="button" key={g} className={`ib-add__btn ${d && !d.manual && !d.key && d.group === g ? 'is-on' : ''}`} onClick={() => openGroup(g)}>
@@ -198,10 +206,10 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
 
       {d && (
         <div ref={boxRef} className="ib-box" role="group" aria-label={d.key ? 'עריכת פריט' : d.manual ? 'פריט ידני' : `הוספת ${d.group}`}
-          onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); setD(null); } }}>
+          onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); close(d.manual ? 'פריט ידני' : d.group); } }}>
           <div className="ib-box__head">
             <b>{d.key ? 'עריכת פריט' : d.manual ? 'פריט ידני' : `הוספת ${d.group}`}</b>
-            <button type="button" className="icon-btn icon-btn--sm" aria-label="סגור" onClick={() => setD(null)}><X size={15} /></button>
+            <button type="button" className="icon-btn icon-btn--sm" aria-label="סגור" onClick={() => close(d.manual ? 'פריט ידני' : d.group)}><X size={15} /></button>
           </div>
 
           {!d.manual ? (

@@ -3,6 +3,7 @@
    לקוח חדש – מקים לקוח והזמנה באותה שמירה.
    פרט חובה שחסר לא חוסם: אחרי אישור ההזמנה נשמרת ומסומנת באדום עד שמשלימים. Ctrl+Enter שומר. */
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { saveError } from '../../lib/saveError';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Popover from '@radix-ui/react-popover';
 import { motion, useReducedMotion } from 'motion/react';
@@ -303,8 +304,8 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
         action: { label: 'פתח תיק', run: () => panel.open(n) },
       });
       onClose();
-    } catch {
-      setErrors({ form: 'השמירה נכשלה – בדוק חיבור ונסה שוב. שום דבר לא נשמר.' });
+    } catch (e) {
+      setErrors({ form: `${saveError(e)}. שום דבר לא נשמר.` });
       setBusy(false);
     }
   };
@@ -619,6 +620,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
             {errors.form && <p className="cform__formerr" role="alert"><CircleAlert size={16} aria-hidden="true" /> {errors.form}</p>}
           </form>
 
+          {errors.form && <p className="cform__formerr no-formerr" role="alert"><CircleAlert size={16} aria-hidden="true" /> {errors.form}</p>}
           {(missLive.length > 0 || dup || similar.length > 0) && (customerChosen || dup) && (
             <ul className="no-missing" aria-live="polite" aria-label="לפני השמירה">
               {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים:</b> {missKeys.map((k, i) => <span key={k}>{i > 0 && ', '}<button type="button" className="link no-missing__go" onClick={() => goTo(k)}>{MISS_LABEL[k]}</button></span>)} – אפשר לשמור עכשיו, וההזמנה תסומן באדום עד שישלימו.</span></li>}

@@ -60,11 +60,13 @@ export const METHOD_LABEL: Record<string, string> = {
 export type Branch = { id: string; name: string; cluster: string; phone: string };
 
 /* שורה בהזמנה: מוצר מהמחירון (itemId, group = קבוצה, name = רמת המחיר) או פריט ידני (בלי itemId, name = שם המוצר).
-   toppings – הפירוט (בפיצה: תוספות; בנלווים: שם המוצר). parts – חלוקה לחצי-חצי או רבעים, פירוט לכל חלק (אז toppings ריק).
+   toppings – הפירוט (בפיצה: תוספות; בנלווים: שם המוצר). parts – חלוקה לחצי-חצי או רבעים: טקסט פירוט לכל חלק, מופרד בפסיקים (אז toppings ריק).
+   רשימה של טקסטים ולא רשימה של רשימות – Firestore לא שומר רשימה בתוך רשימה.
    detail – הערה לשורה. manualPrice – המחיר שונה ידנית ולא מתעדכן במעבר משלוח/איסוף */
-export type OrderItem = { itemId?: string; group?: string; name: string; toppings?: string[]; parts?: string[][]; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
+export type OrderItem = { itemId?: string; group?: string; name: string; toppings?: string[]; parts?: string[]; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
 const FRACTION: Record<number, string> = { 2: '½', 4: '¼' };
-export const partsText = (parts: string[][]) => parts.map((p) => `${FRACTION[parts.length] ?? ''} ${p.length ? p.join(', ') : 'רגילה'}`.trim()).join(' | ');
+export const partsText = (parts: string[]) => parts.map((p) => `${FRACTION[parts.length] ?? ''} ${p || 'רגילה'}`.trim()).join(' | ');
+export const splitPart = (p: string) => p.split(',').map((x) => x.trim()).filter(Boolean);
 export const itemLabel = (i: Pick<OrderItem, 'group' | 'name' | 'toppings' | 'parts' | 'detail'>) => {
   const head = i.group && i.group !== 'כללי' ? `${i.group} · ${i.name}` : i.name;
   const tops = i.parts?.length ? ` — ${partsText(i.parts)}` : i.toppings?.length ? ` — ${i.toppings.join(', ')}` : '';

@@ -1,6 +1,7 @@
 /* מצב ההזמנות החי: קריאה מ-Firestore, תקינות מחושבת מחדש כל דקה, וכל עדכון נכתב לשרת וליומן.
    אחרי כל שינוי מוצגת הודעה עם "בטל" – הביטול כותב בחזרה את הערך הקודם (וגם הוא נרשם ביומן). */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { saveError } from '../lib/saveError';
 import { useToast } from '../design/Toast';
 import { healthOf, issuesFor, type Health, type Issue } from '../rules-engine/health';
 import { getDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -132,7 +133,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }))
       .catch((e) => {
         if (e instanceof ConflictError) { setConflict({ error: e, patch, message }); return; }
-        toast({ message: 'השמירה נכשלה – השינוי לא נשמר. בדוק חיבור ונסה שוב.' });
+        toast({ message: `${saveError(e)} – השינוי לא נשמר` });
       });
   }, [toast]);
 

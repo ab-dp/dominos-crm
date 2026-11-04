@@ -92,3 +92,4 @@
 .no-items__reset { display: block; margin-top: 2px; font-size: 11px; }
 .cform__hint svg { vertical-align: -1px; }
 .no-missing__go { font-weight: 600; color: var(--urgent-fg); text-decoration: underline; text-underline-offset: 2px; }
+.no-formerr { margin: 0; padding: 10px 20px; border-top: 1px solid var(--danger-fg); background: var(--danger-bg); color: var(--danger-fg); font-weight: 600; }

@@ -258,3 +258,4 @@
 .udialog__actions { display: flex; gap: 8px; margin-top: 20px; }
 .pop__hint { margin: 0; font-size: var(--text-label); color: var(--urgent-fg); }
 .q-ops { margin-top: 2px; }
+@media (hover: none) and (pointer: coarse) { .btn__kbd { display: none; } } /* בטלפון אין קיצורי מקלדת */
