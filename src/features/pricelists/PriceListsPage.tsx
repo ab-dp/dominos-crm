@@ -153,7 +153,9 @@ function Editor({ pl, all, customersCount, onDuplicate }: { pl: PriceList; all: 
       const clash = pl.items.filter((i) => groupOf(i) === groupEdit.from).find((i) => pl.items.some((x) => groupOf(x) === to && isSimilar(x.name, i.name)));
       if (clash) return setErr(`בקבוצה "${to}" כבר יש רמה בשם "${clash.name}" – שנו קודם את שם הרמה`);
     }
-    await saveItems(pl.items.map((i) => (groupOf(i) === groupEdit.from ? { ...i, group: to } : i)), merge ? `הקבוצה "${groupEdit.from}" אוחדה עם "${to}"` : `שם הקבוצה עודכן: "${to}"`, { group: groupEdit.from }, { group: to });
+    const n = pl.items.filter((i) => groupOf(i) === groupEdit.from).length;
+    const levels = n === 1 ? 'רמת מחיר אחת עודכנה' : `${n} רמות מחיר עודכנו`;
+    await saveItems(pl.items.map((i) => (groupOf(i) === groupEdit.from ? { ...i, group: to } : i)), `${merge ? `הקבוצה "${groupEdit.from}" אוחדה עם "${to}"` : `שם הקבוצה עודכן ל"${to}"`} · ${levels} · הזמנות קיימות לא משתנות`, { group: groupEdit.from }, { group: to });
     setGroupEdit(null); setErr('');
   };
   const draftSimilar = (adding || editing) && draft.group.trim() ? similarGroup(draft.group) : undefined;

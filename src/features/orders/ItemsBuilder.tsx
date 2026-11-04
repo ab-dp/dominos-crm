@@ -99,13 +99,17 @@ export function PriceSource({ lists, customer, value, onChange, delivery }: {
 }
 
 /* ---------- שדה פירוט: צ'יפים + הקלדה, הצעות מהזמנות קודמות ---------- */
-function TokenField({ values, onChange, hints, label, first }: { values: string[]; onChange: (v: string[]) => void; hints: string[]; label: string; first?: boolean }) {
+function TokenField({ values, onChange, hints, label, first, onDone }: { values: string[]; onChange: (v: string[]) => void; hints: string[]; label: string; first?: boolean; onDone?: () => void }) {
   const [text, setText] = useState('');
   const listId = useMemo(() => `ib-h-${newId()}`, []);
-  const add = (v: string) => { const t = v.trim().replace(/,$/, ''); if (t && !values.includes(t)) onChange([...values, t]); setText(''); };
+  // צ'יפ שנוסף לבד מההצעות: ה-Enter שהמשתמש לוחץ מיד אחריו לא מוסיף עדיין את הפריט
+  const autoAdded = useRef(false);
+  const add = (v: string, auto = false) => { const t = v.trim().replace(/,$/, ''); if (t && !values.includes(t)) onChange([...values, t]); setText(''); autoAdded.current = auto; };
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if ((e.key === 'Enter' || e.key === ',') && text.trim()) { e.preventDefault(); add(text); }
+    else if (e.key === 'Enter' && !text.trim()) { e.preventDefault(); if (autoAdded.current) autoAdded.current = false; else onDone?.(); }
     else if (e.key === 'Backspace' && !text && values.length) onChange(values.slice(0, -1));
+    if (e.key !== 'Enter') autoAdded.current = false;
   };
   return (
     <div className="ib-tokens" onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement | null)?.focus()}>
@@ -113,8 +117,8 @@ function TokenField({ values, onChange, hints, label, first }: { values: string[
         <span key={t} className="ib-token">{t}<button type="button" aria-label={`הסר ${t}`} onClick={() => onChange(values.filter((x) => x !== t))}><X size={12} /></button></span>
       ))}
       <input className="ib-tokens__input" list={listId} value={text} data-first={first || undefined} data-pending={text.trim() || undefined}
-        onChange={(e) => { const v = e.target.value; if (hints.includes(v)) add(v); else setText(v); }}
-        onBlur={() => { if (text.trim()) add(text); }} onKeyDown={onKey} placeholder={values.length ? '' : 'הקלידו ו-Enter'} aria-label={label} />
+        onChange={(e) => { const v = e.target.value; if (hints.includes(v)) add(v, true); else setText(v); }}
+        onBlur={() => { if (text.trim()) add(text); }} onKeyDown={onKey} placeholder={values.length ? 'Enter ריק – הוסף פריט' : 'הקלידו ו-Enter'} aria-label={label} />
       <datalist id={listId}>{hints.filter((h) => !values.includes(h)).map((h) => <option key={h} value={h} />)}</datalist>
     </div>
   );
@@ -249,7 +253,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
           {d.parts.map((p, i) => (
             <div className="ib-row" key={`${d.split}-${i}`} data-part={i}>
               <span className="ib-row__label">{PART_LABEL[d.split][i]}</span>
-              <TokenField values={p} onChange={(v) => setD({ ...d, parts: d.parts.map((x, j) => (j === i ? v : x)) })} hints={groupHints} label={PART_LABEL[d.split][i]} />
+              <TokenField values={p} onChange={(v) => setD({ ...d, parts: d.parts.map((x, j) => (j === i ? v : x)) })} hints={groupHints} label={PART_LABEL[d.split][i]} onDone={() => commit(false)} />
             </div>
           ))}
           {withTopping && (

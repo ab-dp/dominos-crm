@@ -91,3 +91,4 @@
 .no-items__desc { min-width: 160px; }
 .no-items__reset { display: block; margin-top: 2px; font-size: 11px; }
 .cform__hint svg { vertical-align: -1px; }
+.no-missing__go { font-weight: 600; color: var(--urgent-fg); text-decoration: underline; text-underline-offset: 2px; }

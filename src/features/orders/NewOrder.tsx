@@ -200,7 +200,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
     else if (CARD_RE.test(channel)) e.channel = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (delivery === 'delivery' && !address.trim()) m.address = MISS;
     if (isManual && finalAmount <= 0) m.final = MISS;
-    if (total - feeValue <= 0) m.amount = lines.length ? 'סכום הפריטים הוא 0' : MISS;
+    if (lines.length && total - feeValue <= 0) m.amount = 'סכום הפריטים הוא 0'; // בלי פריטים – חסר "פריטים" בלבד
     if (useLines && lines.some((l) => !l.name.trim() || l.qty <= 0)) e.amount = 'לכל פריט במחיר ידני צריך תיאור, ולכל פריט – כמות';
     if (lines.some((l) => CARD_RE.test(`${l.name} ${l.detail ?? ''}`))) e.amount = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (!lines.length) m.contents = MISS;
@@ -220,7 +220,17 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   };
   const live = check();
   // פרטים חסרים לא חוסמים: מוצגים מראש מעל כפתור השמירה, וההזמנה נשמרת בלחיצה אחת ומסומנת באדום
-  const missLive = past ? [] : [...new Set(Object.keys(live.m).map((k) => MISS_LABEL[k]).filter(Boolean))];
+  const missKeys = past ? [] : Object.keys(live.m).filter((k, i, a) => MISS_LABEL[k] && a.findIndex((x) => MISS_LABEL[x] === MISS_LABEL[k]) === i);
+  const missLive = missKeys.map((k) => MISS_LABEL[k]);
+  /* קפיצה לשדה החסר */
+  const goTo = (k: string) => {
+    const root = formRef.current; if (!root) return;
+    const el = k === 'branch' ? root.querySelector<HTMLElement>('.bpick__trigger')
+      : k === 'contents' || k === 'amount' ? root.querySelector<HTMLElement>('.ib-add__btn')
+      : root.querySelector<HTMLElement>(`[data-field="${k}"]`);
+    el?.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    el?.focus({ preventScroll: true });
+  };
   const validate = () => {
     const { e, m } = check();
     setErrors({ ...m, ...e });
@@ -300,7 +310,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
   };
 
   const err = (k: string) => errors[k] ? <span className="cform__err" id={`no-${k}`} role="alert">{errors[k]}</span> : null;
-  const inv = (k: string) => ({ 'aria-invalid': !!errors[k] || undefined, 'aria-describedby': errors[k] ? `no-${k}` : undefined });
+  const inv = (k: string) => ({ 'data-field': k, 'aria-invalid': !!errors[k] || undefined, 'aria-describedby': errors[k] ? `no-${k}` : undefined });
   const customerChosen = isNew ? nc.name.trim().length > 0 : !!c;
   const saveLabel = `${dup ? 'שמור כהזמנה נוספת' : isNew ? (similar.length ? 'שמור כלקוח חדש והזמנה' : 'שמור לקוח והזמנה') : 'שמור הזמנה'}${
     missLive.length && customerChosen ? ` עם ${missLive.length === 1 ? 'פרט חסר' : `${missLive.length} פרטים חסרים`}` : ''}`;
@@ -611,7 +621,7 @@ function NewOrderForm({ initial, onClose }: { initial: { mode?: NewOrderMode; cu
 
           {(missLive.length > 0 || dup || similar.length > 0) && (customerChosen || dup) && (
             <ul className="no-missing" aria-live="polite" aria-label="לפני השמירה">
-              {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים: {missLive.join(', ')}</b> – אפשר לשמור עכשיו, וההזמנה תסומן באדום עד שישלימו.</span></li>}
+              {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים:</b> {missKeys.map((k, i) => <span key={k}>{i > 0 && ', '}<button type="button" className="link no-missing__go" onClick={() => goTo(k)}>{MISS_LABEL[k]}</button></span>)} – אפשר לשמור עכשיו, וההזמנה תסומן באדום עד שישלימו.</span></li>}
               {dup && <li><CircleAlert size={16} aria-hidden="true" /><span><b>יש הזמנה דומה</b> (<Ltr>{dup.id}</Ltr> · <Ltr>{dup.time}</Ltr>) – השמירה תיצור הזמנה נוספת.</span></li>}
               {similar.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>לקוח דומה כבר קיים</b> ({similar[0].c.name}) – השמירה תפתח לקוח חדש.</span></li>}
             </ul>

@@ -22,6 +22,8 @@
 .report__kpis dt { font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
 .report__kpis dd { margin: 0; font: 500 22px/1.2 var(--font-mono); letter-spacing: -0.02em; }
 .report__kpis .is-alert dd { color: var(--danger-fg); }
+.report__kpis dd small { display: block; margin-top: 2px; font: 500 var(--text-label) var(--font); letter-spacing: 0; color: var(--gray-600); }
+.rtable td.rtable__wrap { white-space: normal; min-width: 180px; max-width: 260px; padding-block: 8px; line-height: 1.4; }
 .report__chart { margin-bottom: 16px; }
 .seg--sm-text button { height: 28px; padding: 0 10px; font-size: var(--text-label); }
 .report__mini { width: calc(100% - 36px); margin: 8px 18px 16px; border-collapse: collapse; font-size: var(--text-table); }
@@ -33,8 +35,8 @@
 .report__table-card { margin-bottom: 16px; }
 .report__scroll { overflow-x: auto; }
 .rtable { width: 100%; border-collapse: collapse; font-size: var(--text-table); }
-.rtable th { position: sticky; top: 0; height: 36px; padding: 0 14px; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); text-align: start; white-space: nowrap; }
-.rtable td { height: 44px; padding: 0 14px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; }
+.rtable th { position: sticky; top: 0; height: 36px; padding: 0 10px; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); text-align: start; white-space: nowrap; }
+.rtable td { height: 44px; padding: 0 10px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; }
 .rtable .num { text-align: end; }
 .rtable td bdi { font-family: var(--font-mono); font-size: 13.5px; }
 .rtable tbody tr { cursor: pointer; outline: none; transition: background var(--dur-instant) var(--ease); }

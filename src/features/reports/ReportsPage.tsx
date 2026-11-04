@@ -220,7 +220,7 @@ function Report({ def }: { def: ReportDef }) {
                     {res.rows.map((r) => (
                       <tr key={r.id} className={picked?.id === r.id ? 'is-picked' : ''} tabIndex={0} onClick={(e) => (def.perOrder ? panel.open(r.orders[0].id, e.currentTarget) : setPicked(picked?.id === r.id ? null : r))}
                         onKeyDown={(e) => { if (e.key === 'Enter') { if (def.perOrder) panel.open(r.orders[0].id, e.currentTarget); else setPicked(picked?.id === r.id ? null : r); } }} aria-label={def.perOrder ? `הזמנה ${r.id} – פתח את תיק ההזמנה` : `${r.cells[res.cols[0].key]} – הצג את ההזמנות`}>
-                        {res.cols.map((c) => <td key={c.key} className={c.kind === 'money' || c.kind === 'num' || c.kind === 'pct' ? 'num' : ''}>{c.kind && c.kind !== 'text' ? <Ltr>{fmtCell(c, r.cells[c.key])}</Ltr> : fmtCell(c, r.cells[c.key])}</td>)}
+                        {res.cols.map((c) => <td key={c.key} className={c.kind === 'money' || c.kind === 'num' || c.kind === 'pct' ? 'num' : c.key === 'items' ? 'rtable__wrap' : ''}>{c.kind && c.kind !== 'text' ? <Ltr>{fmtCell(c, r.cells[c.key])}</Ltr> : fmtCell(c, r.cells[c.key])}</td>)}
                       </tr>
                     ))}
                   </tbody>

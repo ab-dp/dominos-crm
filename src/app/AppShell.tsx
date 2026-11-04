@@ -206,10 +206,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Popover.Root>
         </div>
         <div className="sidebar__foot">
-          <NavItem to="/styleguide" label="מדריך סגנון" collapsed={collapsed} quiet>
-            <span className="nav__icon" aria-hidden="true"><Palette size={20} /></span>
-            <span className="nav__label">מדריך סגנון</span>
-          </NavItem>
+          {import.meta.env.DEV && (
+            <NavItem to="/styleguide" label="מדריך סגנון" collapsed={collapsed} quiet>
+              <span className="nav__icon" aria-hidden="true"><Palette size={20} /></span>
+              <span className="nav__label">מדריך סגנון</span>
+            </NavItem>
+          )}
           <button className="nav nav--quiet" onClick={() => setCollapsed(!collapsed)} aria-expanded={!collapsed} aria-label={collapsed ? 'הרחב תפריט' : 'קפל תפריט'}>
             <span className="nav__icon" aria-hidden="true">{collapsed ? <PanelRightOpen size={20} /> : <PanelRightClose size={20} />}</span>
             <span className="nav__label">קפל תפריט</span>
