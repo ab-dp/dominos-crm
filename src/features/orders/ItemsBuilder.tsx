@@ -326,19 +326,24 @@ export function ItemsView({ items }: { items: OrderItem[] }) {
           </ul>
         </section>
       ))}
-      {priced && (
-        <details className="iview__prices">
-          <summary>מחירים לפי שורה</summary>
-          <table className="items">
-            <thead><tr><th>שורה</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
-            <tbody>
-              {items.map((it, i) => (
-                <tr key={i}><td>{rowLabel(it)}</td><td><Ltr>{it.qty}</Ltr></td><td>{it.unitPrice ? <Ltr>{fmtMoney(it.unitPrice)}</Ltr> : '—'}</td><td>{it.unitPrice ? <Ltr>{fmtMoney(it.qty * it.unitPrice)}</Ltr> : '—'}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
-      )}
+      {priced && <PriceRows items={items} />}
     </div>
+  );
+}
+
+/* מחירים לפי שורה – מתקפל, מתחת לפירוט */
+export function PriceRows({ items }: { items: OrderItem[] }) {
+  return (
+    <details className="iview__prices">
+        <summary>מחירים לפי שורה</summary>
+        <table className="items">
+          <thead><tr><th>שורה</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
+          <tbody>
+            {items.map((it, i) => (
+              <tr key={i}><td>{rowLabel(it)}</td><td><Ltr>{it.qty}</Ltr></td><td>{it.unitPrice ? <Ltr>{fmtMoney(it.unitPrice)}</Ltr> : '—'}</td><td>{it.unitPrice ? <Ltr>{fmtMoney(it.qty * it.unitPrice)}</Ltr> : '—'}</td></tr>
+            ))}
+          </tbody>
+        </table>
+    </details>
   );
 }

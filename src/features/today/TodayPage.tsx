@@ -1,17 +1,16 @@
-/* מסך "היום" (אפיון 6.1): תוך עשר שניות לדעת מה דחוף, ותוך דקות לסגור את משימות הבוקר. */
+/* מסך "היום" (אפיון 6.1): רק מה שעוד דורש טיפול – משימות פתוחות, ולידן ציר הזמנות היום. משימה שהושלמה יורדת מהמסך. */
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, UserCheck, BellRing, CalendarClock, CalendarDays, Check, CircleCheckBig, PackageCheck, Send, Store, Wallet, ListChecks, ClipboardX, Download, FileText } from 'lucide-react';
+import { UserPlus, UserCheck, BellRing, ChevronLeft, CircleCheckBig, TriangleAlert, PackageCheck, Send, Store, ListChecks, ClipboardX, Download, FileText } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED, itemsText } from '../../data/types';
-import { Button, HealthBadge, Missing, RollingNumber, Skeleton } from '../../design/components';
-import { HEALTH_RANK, missingOf, orderDateTime } from '../../rules-engine/health';
-import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
-import { FixButton } from '../orders/OrderActions';
+import { Button, HealthBadge, Missing, Skeleton } from '../../design/components';
+import { missingOf, orderDateTime } from '../../rules-engine/health';
+import { Ltr, Money, fmtDate, toISODate, weekday } from '../../lib/format';
 import { NextStep, StageTrack } from '../orders/OrderTimeline';
 import { downloadCsv } from '../../lib/csv';
 import { PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
@@ -19,47 +18,42 @@ import { fmtPhone } from '../../lib/format';
 import '../pages.css';
 import './TodayPage.css';
 
+// כללים שיש להם משימה משלה ברשימה
+const COVERED = [6, 4, 0, 1, 12, 8];
+
 export function TodayPage() {
   const { orders, now, dueTasks, loading, quoteFollowups } = useStore();
   const panel = usePanel();
   const nav = useNavigate();
   const reduce = useReducedMotion();
   const [mine, setMine] = useState(false);
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const pendingUsers = usePendingRequests();
   const firstName = (profile?.name ?? '').split(' ')[0];
 
   const today = toISODate(now);
   const tomorrow = toISODate(new Date(now.getTime() + 86400000));
-  const week = toISODate(new Date(now.getTime() + 7 * 86400000));
   const scope = mine ? orders.filter((o) => (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name)) : orders;
   const open = scope.filter((o) => !CLOSED.includes(o.status));
 
-  const tasks = [
-    // לפי ציר ההזמנה: לקוח ← סניף ← Q ← תפעול ← סגירה
-    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'היום ומחר', icon: <UserCheck size={20} />, list: open.filter((o) => (o.date === today || o.date === tomorrow) && (o.status === 'new' || o.status === 'pending_customer')), to: '/exceptions?rule=6', doneText: 'כל הלקוחות אישרו' },
-    { key: 'branch', title: 'אישורי סניף חסרים', sub: 'היום ומחר', icon: <Store size={20} />, list: open.filter((o) => (o.date === today || o.date === tomorrow) && !o.branchApproval), to: '/orders?tab=today&filter=branch', doneText: 'כל הסניפים אישרו' },
-    { key: 'q', title: 'להקליד ל-Q', icon: <Send size={20} />, list: open.filter((o) => o.date === today && !o.qNumber), to: '/orders?tab=today&filter=q', doneText: 'הכל הועבר' },
-    { key: 'ops', title: 'לעדכן את התפעול', icon: <BellRing size={20} />, list: open.filter((o) => !!o.qNumber && o.opsNotified === false), to: '/exceptions?rule=12', doneText: 'התפעול מעודכן' },
-    { key: 'yesterday', title: 'לסגור מאתמול', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, list: open.filter((o) => o.date < today), to: '/orders?tab=overdue', doneText: 'הכל נסגר' },
-    { key: 'missing', title: 'פרטים חסרים', sub: 'להשלים בהזמנות', icon: <ClipboardX size={20} />, list: open.filter((o) => missingOf(o).length > 0), to: '/exceptions?rule=8', doneText: 'כל ההזמנות מלאות' },
-    // הצעות מחיר שנשלחו ולא עודכנו מעבר לסף – לחזור ללקוח
-    { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, list: quoteFollowups, to: '/quotes?tab=waiting', doneText: 'אין הצעות שמחכות' },
+  /* משימות לפי ציר ההזמנה: לקוח ← תפעול ← Q ← קבוצת תפעול ← סגירה. מופיעה רק משימה שיש בה מה לעשות */
+  const tasks: { key: string; title: string; sub?: string; icon: ReactNode; count: number; to: string; red?: boolean }[] = [
+    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'הזמנות של היום ומחר', icon: <UserCheck size={20} />, count: open.filter((o) => (o.date === today || o.date === tomorrow) && (o.status === 'new' || o.status === 'pending_customer')).length, to: '/exceptions?rule=6', red: true },
+    { key: 'branch', title: 'לעדכן בתפעול', sub: 'הזמנות של היום ומחר', icon: <Store size={20} />, count: open.filter((o) => (o.date === today || o.date === tomorrow) && !o.branchApproval).length, to: '/orders?tab=today&filter=branch' },
+    { key: 'q', title: 'להקליד ל-Q', sub: 'הזמנות של היום', icon: <Send size={20} />, count: open.filter((o) => o.date === today && !o.qNumber).length, to: '/orders?tab=today&filter=q' },
+    { key: 'ops', title: 'לשלוח בקבוצת תפעול', sub: 'הוקלדו ל-Q ועוד לא נשלחו', icon: <BellRing size={20} />, count: open.filter((o) => !!o.qNumber && o.opsNotified === false).length, to: '/exceptions?rule=12' },
+    { key: 'yesterday', title: 'לסגור הזמנות שעברו', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, count: open.filter((o) => o.date < today).length, to: '/orders?tab=overdue', red: true },
+    // חריגים אדומים שאין להם משימה משלה למעלה (אשראי שלא חויב, פער מול Q, שעה שעברה היום, שינוי לעדכן ב-Q)
+    { key: 'urgent', title: 'חריגים דחופים', sub: 'במסך חריגים ומשימות', icon: <TriangleAlert size={20} />, count: open.filter((o) => o.health === 'critical' && !COVERED.includes(o.issues[0]?.rule)).length, to: '/exceptions', red: true },
+    { key: 'missing', title: 'להשלים פרטים חסרים', icon: <ClipboardX size={20} />, count: open.filter((o) => missingOf(o).length > 0).length, to: '/exceptions?rule=8' },
+    { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, count: quoteFollowups.length, to: '/quotes?tab=waiting' },
+    { key: 'followups', title: 'משימות מעקב להיום', icon: <ListChecks size={20} />, count: dueTasks.length, to: '/exceptions' },
+    { key: 'users', title: 'בקשות הצטרפות לאישור', icon: <UserPlus size={20} />, count: isAdmin ? pendingUsers : 0, to: '/settings/users' },
   ];
-  const allDone = !loading && tasks.every((t) => t.list.length === 0);
-
-  const urgent = open
-    .filter((o) => o.health === 'critical' || o.health === 'urgent')
-    .sort((a, b) => HEALTH_RANK[b.health] - HEALTH_RANK[a.health] || (a.date + a.time).localeCompare(b.date + b.time))
-    .slice(0, 10);
+  const openTasks = tasks.filter((t) => t.count > 0);
 
   const todays = scope.filter((o) => o.date === today && o.status !== 'cancelled').sort((a, b) => a.time.localeCompare(b.time));
   const nowIdx = todays.findIndex((o) => orderDateTime(o) > now);
-  const month = today.slice(0, 7);
-  const monthTotal = scope.filter((o) => o.date.startsWith(month) && o.status !== 'cancelled').reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
-  const tasksDone = tasks.filter((t) => t.list.length === 0).length;
-  const criticalNow = urgent.filter((o) => o.health === 'critical');
-  const urgentOnly = urgent.filter((o) => o.health === 'urgent');
   const nextUp = todays.find((o) => orderDateTime(o) > now && !CLOSED.includes(o.status));
   const hour = now.getHours();
   const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : 'ערב טוב';
@@ -69,9 +63,9 @@ export function TodayPage() {
     const list = orders.filter((o) => (o.date === today || o.date === tomorrow) && o.status !== 'cancelled')
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     downloadCsv(`הזמנות היום ומחר ${fmtDate(today)}.csv`, [
-      ['תאריך', 'שעה', 'הזמנה', 'לקוח', 'סניף', 'טלפון סניף', 'סטטוס', 'אישור סניף', "מס' Q", 'סכום', 'אמצעי תשלום', 'טלפון הקפה', 'מצב תשלום', 'משלוח/איסוף', 'כתובת', 'איש קשר', 'טלפון', 'תכולה', 'הנחיות'],
+      ['תאריך', 'שעה', 'הזמנה', 'לקוח', 'סניף', 'טלפון סניף', 'סטטוס', 'עודכן בתפעול', "מס' Q", 'סכום', 'אמצעי תשלום', 'טלפון הקפה', 'מצב תשלום', 'משלוח/איסוף', 'כתובת', 'איש קשר', 'טלפון', 'תכולה', 'הנחיות'],
       ...list.map((o) => [fmtDate(o.date), o.time, o.id, o.customerName, o.branchName, o.branchPhone ? fmtPhone(o.branchPhone) : '', STATUS_LABEL[o.status],
-        o.branchApproval?.manager ?? '', o.qNumber ?? '', o.qAmount ?? o.amount, o.methodLabel ?? o.method, o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment],
+        o.branchApproval ? o.branchApproval.manager || 'כן' : '', o.qNumber ?? '', o.qAmount ?? o.amount, o.methodLabel ?? o.method, o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment],
         o.delivery === 'delivery' ? 'משלוח' : 'איסוף', o.address ?? '', o.contactName ?? '', o.contactPhone ? fmtPhone(o.contactPhone) : '',
         o.items.length ? itemsText(o.items) + (o.contents ? ` · ${o.contents}` : '') : o.contents ?? '', o.instructions ?? '']),
     ]);
@@ -84,9 +78,9 @@ export function TodayPage() {
           <p className="today__date">יום {weekday(today)} · <Ltr>{fmtDate(today)}</Ltr></p>
           <h1 className="page__title">{greeting}{firstName && <>, {firstName}</>}</h1>
           <p className="today__summary" aria-live="polite">
-            {urgent.length === 0
-              ? <>אין כרגע שום דבר דחוף <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>
-              : <><b className={criticalNow.length ? 'is-critical' : 'is-urgent'}><Ltr>{urgent.length}</Ltr> דורשות טיפול</b> <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום <span aria-hidden="true">·</span> משימות הבוקר <Ltr>{`${tasksDone}/${tasks.length}`}</Ltr></>}
+            {loading ? '…' : openTasks.length
+              ? <><b><Ltr>{openTasks.length}</Ltr> {openTasks.length === 1 ? 'משימה פתוחה' : 'משימות פתוחות'}</b> <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>
+              : <>אין משימות פתוחות <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>}
           </p>
         </div>
         <div className="page__head-end">
@@ -98,98 +92,34 @@ export function TodayPage() {
         </div>
       </header>
 
-      {pendingUsers > 0 && (
-        <div className="admin-banner" role="status">
-          <UserPlus size={20} aria-hidden="true" />
-          <span><Ltr>{pendingUsers}</Ltr> בקשות הצטרפות ממתינות לאישור</span>
-          <Button size="sm" variant="primary" onClick={() => nav('/settings/users')}>לאישור</Button>
-        </div>
-      )}
-
-      {/* ---------- משימות הבוקר ---------- */}
-      <section aria-labelledby="h-morning" className="morning">
-        <div className="morning__head">
-          <h2 id="h-morning" className="section-title">משימות הבוקר</h2>
-          <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={tasks.length} aria-valuenow={tasksDone} aria-label={`${tasksDone} מתוך ${tasks.length} הושלמו`}>
-            <motion.span className="progress__bar" animate={{ width: `${(tasksDone / tasks.length) * 100}%` }} transition={{ type: 'spring', stiffness: 200, damping: 30 }} />
+      <div className="today__grid">
+        {/* ---------- משימות פתוחות: רק מה שעוד דורש טיפול. משימה שהושלמה יורדת מהרשימה ---------- */}
+        <section className="card" aria-labelledby="h-tasks">
+          <div className="card__head">
+            <h2 id="h-tasks" className="card__title">משימות פתוחות</h2>
+            {openTasks.length > 0 && <span className="pill pill--alert"><Ltr>{openTasks.length}</Ltr></span>}
           </div>
-          <span className="morning__count"><Ltr>{tasksDone}</Ltr> מתוך <Ltr>{tasks.length}</Ltr></span>
-        </div>
-        <AnimatePresence mode="wait" initial={false}>
-          {allDone ? (
-            <motion.div key="done" className="morning__done"
-              initial={reduce ? { opacity: 0 } : { opacity: 0, scaleY: 0.6 }} animate={{ opacity: 1, scaleY: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.24, ease: [0.2, 0, 0, 1] }}>
-              <CircleCheckBig size={20} aria-hidden="true" /> משימות הבוקר הושלמו
-            </motion.div>
+          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2].map((i) => <Skeleton key={i} h={44} />)}</div> : openTasks.length === 0 ? (
+            <p className="calm"><CircleCheckBig size={18} aria-hidden="true" /> אין משימות פתוחות</p>
           ) : (
-            <motion.ol key="cards" className="morning__cards" exit={reduce ? { opacity: 0 } : { opacity: 0, scaleY: 0.8 }} transition={{ duration: 0.2 }}>
-              {tasks.map((t, i) => {
-                const n = t.list.length;
-                return (
-                  <li key={t.key}>
-                    <button className={`task ${n === 0 ? 'task--done' : ''}`} onClick={() => nav(t.to)} aria-label={`${i + 1}. ${t.title}: ${n === 0 ? t.doneText : `${n} פתוחות`}`}>
-                      <span className="task__step" aria-hidden="true">{i + 1}</span>
+            <ul className="otasks">
+              <AnimatePresence initial={false}>
+                {openTasks.map((t) => (
+                  <motion.li key={t.key} layout={!reduce} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, transition: { duration: 0.2 } }}>
+                    <button className={`task ${t.red ? 'task--red' : ''}`} onClick={() => nav(t.to)}>
                       <span className="task__icon" aria-hidden="true">{t.icon}</span>
                       <span className="task__text">
                         <span className="task__title">{t.title}</span>
                         {t.sub && <span className="task__sub">{t.sub}</span>}
                       </span>
-                      <span className="task__count" aria-hidden="true">
-                        <AnimatePresence mode="wait" initial={false}>
-                          {n === 0 ? (
-                            <motion.span key="ok" className="task__ok" initial={reduce ? false : { rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.24 }}>
-                              <Check size={20} strokeWidth={3} />
-                            </motion.span>
-                          ) : (
-                            <motion.span key="n" exit={reduce ? { opacity: 0 } : { rotateY: -90, opacity: 0 }} transition={{ duration: 0.16 }}>
-                              {loading ? <Skeleton w={28} h={26} /> : <RollingNumber value={n} />}
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </span>
+                      <span className="task__count"><Ltr>{t.count}</Ltr></span>
+                      <ChevronLeft className="task__go" size={18} aria-hidden="true" />
                     </button>
-                  </li>
-                );
-              })}
-            </motion.ol>
-          )}
-        </AnimatePresence>
-      </section>
-
-      <div className="today__grid">
-        {/* ---------- דחוף עכשיו ---------- */}
-        <section className="card" aria-labelledby="h-urgent">
-          <div className="card__head">
-            <h2 id="h-urgent" className="card__title">דחוף עכשיו</h2>
-            {urgent.length > 0 && <span className="pill pill--alert"><Ltr>{urgent.length}</Ltr></span>}
-          </div>
-          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2].map((i) => <Skeleton key={i} h={34} />)}</div> : urgent.length === 0 ? (
-            <p className="calm"><CircleCheckBig size={18} aria-hidden="true" /> אין כרגע שום דבר דחוף</p>
-          ) : (
-            <div className="urgent">
-              {([['critical', 'חריגות', criticalNow], ['urgent', 'דחוף', urgentOnly]] as const).map(([level, title, list]) => list.length > 0 && (
-                <div key={level} className="urgent__group">
-                  <p className={`urgent__label urgent__label--${level}`}>{title} <Ltr>{list.length}</Ltr></p>
-                  <ul>
-                    <AnimatePresence initial={false}>
-                      {list.map((o) => (
-                        <motion.li key={o.id} layout={!reduce}
-                          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                          exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.24 } }}
-                          className={`urgent__row urgent__row--${o.health}`}>
-                          <button className="urgent__main" onClick={(e) => panel.open(o.id, e.currentTarget)}>
-                            <span className="urgent__issue">{o.issues[0].label}</span>
-                            <span className="urgent__meta" title={`${o.customerName} · ${o.time} · ${o.branchName}`}>{o.customerName} · {o.date === today ? 'היום' : o.date === tomorrow ? 'מחר' : <Ltr>{fmtDate(o.date)}</Ltr>} <Ltr>{o.time}</Ltr> · {o.branchName}</span>
-                          </button>
-                          <FixButton key={o.issues[0].rule} o={o} issue={o.issues[0]} onOpen={() => panel.open(o.id)} />
-                        </motion.li>
-                      ))}
-                    </AnimatePresence>
-                  </ul>
-                </div>
-              ))}
-            </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
           )}
         </section>
 
@@ -199,7 +129,7 @@ export function TodayPage() {
             <h2 id="h-timeline" className="card__title">ציר הזמנות היום</h2>
             <span className="muted"><Ltr>{todays.length}</Ltr> הזמנות</span>
           </div>
-          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={34} />)}</div> : todays.length === 0 ? <p className="calm">אין הזמנות להיום</p> : (
+          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={34} />)}</div> : todays.length === 0 ? <p className="calm calm--quiet">אין הזמנות להיום</p> : (
             <ol className="tl">
               {todays.map((o, i) => (
                 <TimelineRow key={o.id} o={o} isNowBefore={i === nowIdx} isNext={o.id === nextUp?.id} now={now} onOpen={(el) => panel.open(o.id, el)}
@@ -210,14 +140,6 @@ export function TodayPage() {
           )}
         </section>
       </div>
-
-      {/* ---------- שורת מידע ---------- */}
-      <section className="info" aria-label="סיכום">
-        {dueTasks.length > 0 && <button className="info__item info__item--tasks" onClick={() => nav('/exceptions')}><ListChecks size={18} aria-hidden="true" /> משימות מעקב להיום <b><Ltr>{dueTasks.length}</Ltr></b></button>}
-        <button className="info__item" onClick={() => nav('/orders?tab=tomorrow')}><CalendarClock size={18} aria-hidden="true" /> מחר <b><Ltr>{open.filter((o) => o.date === tomorrow).length}</Ltr></b> הזמנות</button>
-        <button className="info__item" onClick={() => nav('/orders?tab=future&range=7')}><CalendarDays size={18} aria-hidden="true" /> <Ltr>7</Ltr> ימים קרובים <b><Ltr>{open.filter((o) => o.date > today && o.date <= week).length}</Ltr></b></button>
-        <span className="info__item"><Wallet size={18} aria-hidden="true" /> סך החודש <b><Ltr>{fmtMoney(monthTotal)}</Ltr></b></span>
-      </section>
     </div>
   );
 }

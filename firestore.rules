@@ -385,6 +385,19 @@ service cloud.firestore {
         && d.keys().size() <= 50;
     }
 
+    // סיכום לתפעול: "סומן שנשלח" לכל אשכול וטווח תאריכים – איזו גרסה של כל הזמנה נשלחה. אין מחיקה.
+    match /opsSends/{sid} {
+      allow read: if isActive();
+      allow create, update: if isActive()
+        && request.resource.data.keys().hasOnly(['cluster', 'from', 'to', 'snap', 'by', 'byName', 'at'])
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.cluster is string && request.resource.data.cluster.size() <= 120
+        && request.resource.data.from is string && request.resource.data.to is string
+        && request.resource.data.snap is map && request.resource.data.snap.size() <= 500
+        && request.resource.data.byName is string && request.resource.data.byName.size() <= 120;
+      allow delete: if false;
+    }
+
     match /quotes/{qid} {
       allow read: if isActive();
       allow create: if isActive()

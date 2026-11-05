@@ -155,3 +155,62 @@
 .changed-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: var(--urgent-bg); color: var(--urgent-fg); font-size: 11px; font-weight: 600; white-space: nowrap; }
 .changed-tag--sm { height: 18px; margin-inline-start: 6px; padding: 0 6px; vertical-align: 1px; }
 .del-order { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: auto; margin-inline-end: 16px; color: var(--danger-fg); font-size: var(--text-label); }
+
+/* ---------- "להעברה לקופה": הבלוק הראשון בתיק – ערכים גדולים, תווית מעל ערך ---------- */
+.reg { margin: 14px 0 6px; padding: 14px 16px 12px; border: 1.5px solid var(--brand-100); border-radius: var(--radius-panel, 12px); background: var(--white); box-shadow: inset 0 3px 0 var(--brand-600); }
+.reg__head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.reg__title { margin: 0; font-size: var(--text-table); font-weight: 700; color: var(--brand-800); }
+.reg__copy { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: auto; font-size: var(--text-label); }
+.reg__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 14px; }
+.reg__wide { grid-column: 1 / -1; }
+.reg .kv { grid-template-columns: 1fr; gap: 0; align-items: start; min-height: 0; }
+.reg .kv__k { font-size: var(--text-micro); }
+.reg .kv__v, .reg .kv__btn { font-size: 15px; font-weight: 600; }
+.reg .kv__v bdi { font-size: 15px; font-weight: 600; }
+.reg .kv__btn { margin: 0 -8px; }
+.reg .kv.is-editing .kv__k { padding-top: 0; }
+.reg .seg--inline { flex-wrap: wrap; }
+.reg__items { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+.reg__items-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.reg__items-head .kv__k { font-size: var(--text-micro); }
+.reg__items-head .link { font-size: var(--text-label); }
+.reg__note { margin-top: 6px; }
+.reg__sum { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+.reg__sum .kv__k { font-size: var(--text-micro); }
+.reg__sum > b { font: 600 24px var(--font-mono); letter-spacing: -0.02em; }
+.reg__sum .muted { font-size: var(--text-label); }
+.reg__tag { padding: 1px 8px; border-radius: 10px; background: var(--missing-bg); color: var(--missing-fg); font-size: 11px; font-weight: 600; }
+
+/* שורת Q */
+.reg-q { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-50); border: 1px solid var(--gray-100); }
+.reg-q__f { display: grid; gap: 2px; flex: 1 1 130px; }
+.reg-q__f--amt { flex: 0 1 110px; }
+.reg-q__f .kv__k { font-size: var(--text-micro); }
+.reg-q__ops { min-height: 36px; font-size: var(--text-label); font-weight: 500; }
+.reg-q__btns { display: flex; align-items: center; gap: 10px; }
+.reg-q__warn { flex-basis: 100%; display: flex; align-items: center; gap: 6px; margin: 0; color: var(--urgent-fg); font-size: var(--text-label); font-weight: 600; }
+.reg-q__err { flex-basis: 100%; margin: 0; }
+.reg-q--done { align-items: center; background: var(--ok-bg); border-color: transparent; }
+.reg-q__done { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ok-fg); }
+.reg-q__done bdi { font-family: var(--font-mono); }
+.reg-q__gap { padding: 1px 8px; border-radius: 10px; background: var(--danger-bg); color: var(--danger-fg); font-size: 11px; font-weight: 600; }
+.reg-q__edit { margin-inline-start: auto; font-size: var(--text-label); }
+
+/* מתחת לבלוק: ציר ההזמנה ושאר הבעיות, ואז לשוניות */
+.panel__flow { display: grid; gap: 10px; padding: 12px 0 4px; }
+.panel__tabs--body { position: sticky; top: -4px; z-index: 1; margin: 10px 0 0; padding-top: 4px; background: var(--white); border-bottom: 1px solid var(--gray-100); }
+.panel__tabs--body button { white-space: nowrap; }
+
+@media (max-width: 560px) {
+  .reg { padding: 12px; }
+  .reg__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* בחירה (אמצעי תשלום, משלוח/איסוף) – בשורה מלאה, שהכפתורים יישבו בשורה אחת */
+  .reg .kv:has(.seg--inline) { grid-column: 1 / -1; }
+  .reg .seg--inline { flex-wrap: nowrap; }
+  .panel__title { min-width: 0; font-size: 18px; overflow-wrap: anywhere; }
+}
+.regi { display: grid; gap: 4px; font-size: var(--text-table); line-height: 1.5; }
+.regi__cat { display: flex; gap: 10px; }
+.regi__name { flex: none; min-width: 84px; color: var(--brand-800); }
+.regi__type { display: block; }
+.regi__plain { margin: 0; font-size: var(--text-table); }

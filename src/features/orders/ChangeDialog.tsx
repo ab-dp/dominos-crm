@@ -75,8 +75,8 @@ function ChangeForm({ onClose }: { onClose: () => void }) {
               <label className="chdialog__opt">
                 <input type="checkbox" checked={resetBranch} onChange={(e) => setResetBranch(e.target.checked)} />
                 <span>
-                  <b>אישור הסניף לא תקף – לבקש אישור מחדש</b>
-                  <small>אושר ע"י {o.branchApproval.manager}{branchChanged ? ` בסניף ${o.branchName}` : ''}. {!branchChanged && <>להתקשר ל{o.branchName} · <Ltr>{fmtPhone(o.branchPhone)}</Ltr></>}</small>
+                  <b>העדכון בתפעול לא תקף – לעדכן את התפעול מחדש</b>
+                  <small>עודכן בתפעול{o.branchApproval.manager ? ` · ${o.branchApproval.manager}` : ''}{branchChanged ? ` · סניף ${o.branchName}` : ''}. {!branchChanged && <>להתקשר ל{o.branchName} · <Ltr>{fmtPhone(o.branchPhone)}</Ltr></>}</small>
                 </span>
               </label>
             )}

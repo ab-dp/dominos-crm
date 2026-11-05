@@ -1,4 +1,5 @@
-/* תיק הזמנה בפאנל צדדי (אפיון 6.3): כותרת קבועה, "מה חסר" לחיץ, גלילה אחת עם עוגנים, טאב היסטוריה. */
+/* תיק הזמנה בפאנל צדדי (אפיון 6.3): קודם "להעברה לקופה" – כל מה שצריך כדי להוריד את ההזמנה ל-Q, ושורת Q.
+   מתחת: ציר ההזמנה, ושאר הפרטים בלשוניות (פרטים נוספים · תשלום ומסמכים · הערות · היסטוריה). */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -8,27 +9,25 @@ import { useAuth } from '../../auth/AuthContext';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { HealthBadge, Missing, Tip } from '../../design/components';
-import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
+import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
-import { ItemsView } from './ItemsBuilder';
+
 import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, PoEdit } from './OrderActions';
 import { OrderTimeline } from './OrderTimeline';
+import { RegisterBlock } from './OrderRegister';
 import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
 const STEP_ACTIONS = ['q', 'branch', 'status', 'close', 'ops'];
 import { OrderDocsSection } from './OrderDocs';
-import { BranchEdit, DeliveryTypeEdit, EditKv, ItemsEditor, MethodEdit, NotesSection, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
-import { phoneError } from '../../lib/names';
+import { EditKv, NotesSection, useOrderSave } from './OrderEdit';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import './OrderPanel.css';
 
-const ANCHORS = [
-  ['details', 'פרטים'], ['delivery', 'אספקה'], ['items', 'פריטים ומחיר'], ['approvals', 'אישורים'],
-  ['payment', 'תשלום'], ['docs', 'מסמכים'], ['notes', 'הערות'],
-] as const;
+type Tab = 'more' | 'pay' | 'notes' | 'history';
+const TABS: [Tab, string][] = [['more', 'פרטים נוספים'], ['pay', 'תשלום ומסמכים'], ['notes', 'הערות'], ['history', 'היסטוריה']];
 
 export function OrderPanel() {
   const panel = usePanel();
@@ -84,7 +83,6 @@ export function OrderPanel() {
 
 function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull: (f: boolean) => void }) {
   const save = useOrderSave(o);
-  const [editItems, setEditItems] = useState(false);
   /* שינוי של משתמש אחר בזמן שהתיק פתוח: הודעה מה השתנה ועל ידי מי */
   const { profile } = useAuth();
   const prev = useRef(o);
@@ -98,32 +96,19 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
     const fields = [...new Set(Object.keys(FIELD).filter((k) => JSON.stringify(p[k as keyof OrderView]) !== JSON.stringify(o[k as keyof OrderView])).map((k) => FIELD[k]))];
     if (fields.length) setRemoteNote({ by: o.updatedByName || 'משתמש אחר', fields });
   }, [o, profile?.uid]);
-  useEffect(() => setEditItems(false), [o.id]);
   const panel = usePanel();
   const nav = useNavigate();
-  const [tab, setTab] = useState<'file' | 'history'>('file');
-  const [activeSec, setActiveSec] = useState<string>('details');
+  const [tab, setTab] = useState<Tab>('more');
+  useEffect(() => setTab('more'), [o.id]);
   const [scrolled, setScrolled] = useState(false);
-  const bodyRef = useRef<HTMLDivElement>(null);
   const gap = o.qAmount !== undefined && o.qAmount !== o.amount;
-
-  // הדגשת העוגן של החלק שקוראים כרגע
-  useEffect(() => {
-    const root = bodyRef.current;
-    if (!root || tab !== 'file') return;
-    const io = new IntersectionObserver((entries) => {
-      const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (top) setActiveSec(top.target.id.replace('sec-', ''));
-    }, { root, rootMargin: '0px 0px -65% 0px' });
-    root.querySelectorAll('.sec').forEach((s) => io.observe(s));
-    return () => io.disconnect();
-  }, [tab, o.id]);
+  const openCustomer = () => { panel.close(); nav(`/customers/${o.customerId}`); };
 
   return (
     <>
       <div className={`panel__head ${scrolled ? 'is-scrolled' : ''}`}>
         <div className="panel__row">
-          <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>הזמנה <Ltr>{o.id}</Ltr></Dialog.Title>
+          <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>הזמנה <Ltr>{o.id}</Ltr> · {o.customerName}</Dialog.Title>
           <HealthBadge health={o.health} issues={o.issues} />
           {viewers.length > 0 && (
             <span className="viewers" role="status"><span className="viewers__dot" aria-hidden="true" />{viewers.map((v) => v.name.split(' ')[0]).join(', ')} {viewers.length === 1 ? 'פותח' : 'פותחים'} את ההזמנה כרגע</span>
@@ -143,13 +128,6 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="panel__row panel__meta">
-          <button className="link" onClick={() => { panel.close(); nav(`/customers/${o.customerId}`); }}>{o.customerName}</button>
-          <span>·</span>
-          <span>יום {weekday(o.date)} <Ltr>{fmtDate(o.date)}</Ltr> · {o.time ? <Ltr>{o.time}</Ltr> : <Missing>ללא שעה</Missing>}</span>
-          <span>·</span>
-          <span>{o.branchName || <Missing>ללא סניף</Missing>}</span>
-        </div>
         {o.postCloseFix && (
           <div className="changed-note">
             <span className="changed-tag">תיקון לאחר סגירה</span>
@@ -166,91 +144,76 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             <span className="muted">· {o.changedAfterApproval.by}</span>
           </div>
         )}
-        <OrderTimeline o={o} />
-        {/* פעולות שהן חלק מהציר מופיעות בציר עצמו – כאן רק שאר הבעיות */}
-        {o.issues.some((i) => !STEP_ACTIONS.includes(i.action)) && (
-          <div className="missing" aria-label="מה חסר">
-            {o.issues.filter((i) => !STEP_ACTIONS.includes(i.action)).map((i) => (
-              <div key={i.rule} className={`missing__item missing__item--${i.severity}`}>
-                <span>{i.label}</span>
-                <FixButton o={o} issue={i} onOpen={() => document.getElementById(i.rule === 2 ? 'sec-items' : 'sec-delivery')?.scrollIntoView({ behavior: 'smooth' })} />
-              </div>
-            ))}
-          </div>
-        )}
-        <nav className="panel__tabs" aria-label="ניווט בתיק">
-          <button className={tab === 'file' ? 'is-on' : ''} onClick={() => setTab('file')}>תיק</button>
-          {tab === 'file' && ANCHORS.map(([id, label]) => (
-            <a key={id} href={`#sec-${id}`} className={activeSec === id ? 'is-on' : ''} aria-current={activeSec === id ? 'location' : undefined} onClick={(e) => { e.preventDefault(); document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>{label}</a>
-          ))}
-          <button className={`panel__tab-history ${tab === 'history' ? 'is-on' : ''}`} onClick={() => setTab('history')}>היסטוריה</button>
-        </nav>
       </div>
 
-      <div className="panel__body" ref={bodyRef} onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)} tabIndex={0} role="region" aria-label="תוכן תיק ההזמנה">
-        {tab === 'history' ? <History o={o} /> : (
-          <>
-            {(o.status === 'partial' || o.status === 'cancelled') && (
-              <div className={`closed-note closed-note--${o.status}`}>
-                <b>{o.status === 'partial' ? 'סופקה חלקית' : `בוטלה${o.cancelReason ? ` · ${o.cancelReason}` : ''}`}</b>
-                {(o.partialNote || o.cancelNote) && <span>{o.partialNote ?? o.cancelNote}</span>}
-              </div>
-            )}
-            <Section id="details" title="פרטים">
-              <Kv k="לקוח" v={o.customerName} />
-              <EditKv k="ערוץ קבלה" value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ ההזמנה')} onSave={(v) => save({ channel: v }, 'ערוץ הקבלה')} />
+      <div className="panel__body" onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)} tabIndex={0} role="region" aria-label="תוכן תיק ההזמנה">
+        {(o.status === 'partial' || o.status === 'cancelled') && (
+          <div className={`closed-note closed-note--${o.status}`}>
+            <b>{o.status === 'partial' ? 'סופקה חלקית' : `בוטלה${o.cancelReason ? ` · ${o.cancelReason}` : ''}`}</b>
+            {(o.partialNote || o.cancelNote) && <span>{o.partialNote ?? o.cancelNote}</span>}
+          </div>
+        )}
+        {/* קודם כל: מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q */}
+        <RegisterBlock o={o} />
+
+        <div className="panel__flow">
+          <OrderTimeline o={o} />
+          {/* פעולות שהן חלק מהציר מופיעות בציר עצמו – כאן רק שאר הבעיות */}
+          {o.issues.some((i) => !STEP_ACTIONS.includes(i.action)) && (
+            <div className="missing" aria-label="מה חסר">
+              {o.issues.filter((i) => !STEP_ACTIONS.includes(i.action)).map((i) => (
+                <div key={i.rule} className={`missing__item missing__item--${i.severity}`}>
+                  <span>{i.label}</span>
+                  <FixButton o={o} issue={i} onOpen={() => { if (i.rule === 2 || i.rule === 9) setTab('pay'); else document.querySelector('.reg')?.scrollIntoView({ behavior: 'smooth' }); }} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <nav className="panel__tabs panel__tabs--body" role="tablist" aria-label="עוד בתיק ההזמנה">
+          {TABS.map(([k, label]) => (
+            <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'is-on' : ''} onClick={() => setTab(k)}>{label}</button>
+          ))}
+        </nav>
+        <div role="tabpanel" aria-label={TABS.find(([k]) => k === tab)?.[1]}>
+          {tab === 'more' && (
+            <Section id="details" title="פרטים נוספים">
+              <Kv k="לקוח" v={<button className="link" onClick={openCustomer}>{o.customerName} · לתיק הלקוח</button>} />
+              <EditKv k="ערוץ / מספר פניה" value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ או מספר פניה')} onSave={(v) => save({ channel: v }, 'ערוץ / מספר פניה')} />
               <Kv k="מטפל" v={<HandlerEdit o={o} />} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
+              {o.branchPhone && <Kv k="טלפון הסניף" v={<Ltr>{fmtPhone(o.branchPhone)}</Ltr>} />}
+              {o.cluster && <Kv k="אשכול" v={o.cluster} />}
             </Section>
-            <Section id="delivery" title="אספקה">
-              <EditKv k="תאריך" kind="date" value={o.date} display={<>יום {weekday(o.date)} · {showDate(o.date)}</>} validate={validDate} onSave={(v) => save({ date: v }, 'תאריך האספקה')} />
-              <EditKv k="שעה" kind="time" value={o.time} display={o.time ? <Ltr>{o.time}</Ltr> : <Missing />} validate={validTime} onSave={(v) => save({ time: v }, 'שעת האספקה')} />
-              <DeliveryTypeEdit o={o} />
-              <BranchEdit o={o} />
-              {o.delivery === 'delivery' && <EditKv k="כתובת" value={o.address ?? ''} display={o.address || <Missing>חסרה</Missing>} placeholder="רחוב, מספר, עיר" onSave={(v) => save({ address: v || undefined }, 'הכתובת')} />}
-              <EditKv k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <Missing />} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
-              <EditKv k="טלפון" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />
-              <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
-            </Section>
-            <Section id="items" title="פריטים ומחיר" action={!editItems && <button className="link" onClick={() => setEditItems(true)}>עריכה</button>}>
-              {editItems ? <ItemsEditor o={o} onDone={() => setEditItems(false)} /> : (
-                <>
-                  {o.contents && <p className="order-contents">{o.contents}</p>}
-                  {o.items.length > 0 && <ItemsView items={o.items} />}
-                  {!o.contents && o.items.length === 0 && <p><Missing>חסרה תכולת ההזמנה</Missing> · <button className="link" onClick={() => setEditItems(true)}>הוסף פירוט</button></p>}
-                </>
-              )}
-              <div className="sums">
-                {!!o.deliveryFee && <div><span>מתוכו דמי משלוח</span><b><Money value={o.deliveryFee} /></b></div>}
-                {o.calcAmount !== undefined && <div><span>מחושב מהפריטים</span><b className="muted"><Money value={o.calcAmount} /></b></div>}
-                <div><span>סכום לחיוב{o.calcAmount !== undefined && <span className="no-final__tag"> שונה ידנית</span>}</span><b>{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</b></div>
-                <div className={gap ? 'is-gap' : ''}>
-                  <span>סכום Q</span>
-                  <b>{o.qAmount !== undefined ? <Money value={o.qAmount} /> : '—'}</b>
-                  {gap && <em>פער <Ltr>{fmtMoney(Math.abs((o.qAmount ?? 0) - o.amount))}</Ltr></em>}
+          )}
+          {tab === 'pay' && (
+            <>
+              <Section id="payment" title="תשלום">
+                <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
+                <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
+                {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
+                <div className="sums">
+                  <div><span>סכום לחיוב</span><b>{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</b></div>
+                  <div className={gap ? 'is-gap' : ''}>
+                    <span>סכום Q</span>
+                    <b>{o.qAmount !== undefined ? <Money value={o.qAmount} /> : '—'}</b>
+                    {gap && <em>פער <Ltr>{fmtMoney(Math.abs((o.qAmount ?? 0) - o.amount))}</Ltr></em>}
+                  </div>
                 </div>
-              </div>
-            </Section>
-            <Section id="approvals" title="אישורים וסימונים">
-              <Kv k="אישור לקוח" v={o.status === 'approved' || o.status === 'delivered' || o.status === 'partial' ? 'אושר' : <span className="warn-text">טרם אושר</span>} />
-              <Kv k="אישור סניף" v={o.branchApproval ? <>אושר ע״י {o.branchApproval.manager}</> : <span className="warn-text">חסר</span>} />
-              <Kv k="הועברה ל-Q" v={o.qNumber ? <><Ltr>{o.qNumber}</Ltr> · <Money value={o.qAmount ?? o.amount} /></> : <span className="warn-text">לא הועברה</span>} />
-            </Section>
-            <Section id="payment" title="תשלום">
-              <MethodEdit o={o} />
-              {o.method === 'account' && <EditKv k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />}
-              <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
-              <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
-              {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
-            </Section>
-            <Section id="docs" title="מסמכים">
-              <OrderDocsSection orderId={o.id} customerId={o.customerId} />
-            </Section>
+              </Section>
+              <Section id="docs" title="מסמכים">
+                <OrderDocsSection orderId={o.id} customerId={o.customerId} />
+              </Section>
+            </>
+          )}
+          {tab === 'notes' && (
             <Section id="notes" title="הערות פנימיות">
               <NotesSection o={o} />
             </Section>
-          </>
-        )}
+          )}
+          {tab === 'history' && <History o={o} />}
+        </div>
       </div>
       <div className="panel__foot">
         <span className="muted">לחיצה על ערך פותחת עריכה · נשמר אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>
@@ -275,7 +238,7 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 
 /* יומן ההזמנה – נקרא מ-auditLog, שאי אפשר לערוך או למחוק (נאכף בשרת) */
 export const FIELD: Record<string, string> = {
-  status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'אישור סניף', poNumber: 'תעודת רכש',
+  status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'עדכון בתפעול', poNumber: 'תעודת רכש',
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
@@ -285,7 +248,7 @@ export function showVal(k: string, v: unknown): string {
   if (k === 'status') return STATUS_LABEL[v as keyof typeof STATUS_LABEL] ?? String(v);
   if (k === 'payment') return PAYMENT_LABEL[v as keyof typeof PAYMENT_LABEL] ?? String(v);
   if (k === 'amount' || k === 'qAmount') return fmtMoney(Number(v));
-  if (k === 'branchApproval') return `אושר ע"י ${(v as { manager?: string }).manager ?? ''}`;
+  if (k === 'branchApproval') return `עודכן בתפעול${(v as { manager?: string }).manager ? ` · ${(v as { manager: string }).manager}` : ''}`;
   if (k === 'date') return fmtDate(String(v));
   if (k === 'qGapAck') return v ? `אושר שהפער מוסבר: ${(v as { note?: string }).note ?? ''}` : '—';
   if (k === 'qCancelAck') return v ? 'אושר שבוטלה גם בקופה' : '—';

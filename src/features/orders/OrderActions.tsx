@@ -19,18 +19,18 @@ export function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     update(o.id, { branchApproval: { manager: name.trim(), at: o.branchApproval?.at ?? new Date().toISOString() }, ...(custPending ? { status: 'approved' as const } : {}) },
-      name.trim() ? <>אישור סניף נשמר · {o.branchName} · {name.trim()}</> : <>אישור סניף נשמר בלי שם מאשר · {o.branchName}</>);
+      <>עודכן בתפעול · {o.branchName}{name.trim() && <> · {name.trim()}</>}</>);
     done();
   };
   return (
     <form onSubmit={submit}>
       <p className="pop__text">{o.branchName}{o.branchPhone && <> · <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></>}</p>
-      <Field label="שם המנהל שאישר (לא חובה)" hint={name.trim() ? undefined : 'בלי שם – האישור יסומן באדום. בהזמנה קטנה אפשר להמשיך.'}>
+      <Field label="שם המאשר (לא חובה)">
         <input className="input" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
       <div className="pop__row">
-        <Button variant="primary" size="sm" type="submit" kbd="Enter">{o.branchApproval ? 'שמור' : 'סמן אישור'}</Button>
-        {o.branchApproval && <Button size="sm" variant="ghost" type="button" onClick={() => { update(o.id, { branchApproval: undefined }, <>אישור הסניף בוטל · הזמנה <Ltr>{o.id}</Ltr></>); done(); }}>בטל אישור</Button>}
+        <Button variant="primary" size="sm" type="submit" kbd="Enter">{o.branchApproval ? 'שמור' : 'סמן עודכן בתפעול'}</Button>
+        {o.branchApproval && <Button size="sm" variant="ghost" type="button" onClick={() => { update(o.id, { branchApproval: undefined }, <>סימון "עודכן בתפעול" בוטל · הזמנה <Ltr>{o.id}</Ltr></>); done(); }}>בטל סימון</Button>}
       </div>
     </form>
   );
@@ -59,7 +59,7 @@ export function QForm({ o, done }: { o: OrderView; done: () => void }) {
   return (
     <form onSubmit={submit}>
       {early && (
-        <p className="pop__warn"><TriangleAlert size={14} aria-hidden="true" /> {o.status !== 'approved' ? 'הלקוח עוד לא אישר' : 'אין אישור סניף'}. אפשר להמשיך.</p>
+        <p className="pop__warn"><TriangleAlert size={14} aria-hidden="true" /> {o.status !== 'approved' ? 'הלקוח עוד לא אישר' : 'התפעול עוד לא עודכן'}. אפשר להמשיך.</p>
       )}
       <Field label="מס' הזמנה ב-Q (חובה)">
         <input className="input input--ltr" autoFocus value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} placeholder="cs000" aria-invalid={!!err} />
@@ -68,9 +68,9 @@ export function QForm({ o, done }: { o: OrderView; done: () => void }) {
         <input className="input input--ltr" inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.value)} />
       </Field>
       <label className="check-inline q-ops">
-        <input type="checkbox" checked={ops} onChange={(e) => setOps(e.target.checked)} /> עדכנתי את התפעול
+        <input type="checkbox" checked={ops} onChange={(e) => setOps(e.target.checked)} /> נשלח בקבוצת תפעול
       </label>
-      {!ops && <p className="pop__hint">תזכורת: לעדכן את התפעול על ההזמנה. אפשר לסמן גם אחר כך.</p>}
+      {!ops && <p className="pop__hint">תזכורת: לשלוח את ההזמנה בקבוצת התפעול. אפשר לסמן גם אחר כך.</p>}
       {err && <p className="pop__err">{err}</p>}
       <div className="pop__row"><Button variant="primary" size="sm" type="submit" kbd="Enter">{early ? 'שמור בכל זאת' : 'שמור'}</Button></div>
     </form>
@@ -135,8 +135,8 @@ export function OrderMarks({ o, only }: { o: OrderView; only?: 'branch' | 'q' | 
   return (
     <>
       {show('branch') && (
-        <MarkAction open={open === 'branch'} onOpenChange={set('branch')} done={!!o.branchApproval} label="סניף"
-          srLabel={o.branchApproval ? `אישור סניף: אושר ע"י ${o.branchApproval.manager}` : 'אישור סניף: חסר. לחץ לסימון'} title="אישור סניף">
+        <MarkAction open={open === 'branch'} onOpenChange={set('branch')} done={!!o.branchApproval} label="תפעול"
+          srLabel={o.branchApproval ? `עודכן בתפעול${o.branchApproval.manager ? ` · ${o.branchApproval.manager}` : ''}` : 'עודכן בתפעול: עוד לא. לחץ לסימון'} title="עודכן בתפעול">
           <BranchForm o={o} done={() => setOpen(null)} />
         </MarkAction>
       )}
@@ -246,7 +246,7 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
   );
   const done = () => setOpen(false);
   switch (issue.action) {
-    case 'branch': return pop(<BranchForm o={o} done={done} />, 'אישור סניף');
+    case 'branch': return pop(<BranchForm o={o} done={done} />, 'עודכן בתפעול');
     case 'q': return pop(<QForm o={o} done={done} />, 'הועברה ל-Q');
     case 'pay': return pop(<PayForm o={o} done={done} />, 'מצב תשלום');
     case 'po': return pop(<PoForm o={o} done={done} />, 'תעודת רכש');
@@ -255,7 +255,7 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
     case 'ackQUpdate': return pop(<QUpdateForm o={o} done={done} />, 'עדכון ב-Q');
     case 'close': return pop(<CloseForm o={o} done={done} />, 'סגירת הזמנה');
     case 'ops':
-      return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); update(o.id, { opsNotified: true }, <>התפעול עודכן · הזמנה <Ltr>{o.id}</Ltr></>); }}>{issue.actionLabel}</Button>;
+      return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); update(o.id, { opsNotified: true }, <>נשלח בקבוצת תפעול · הזמנה <Ltr>{o.id}</Ltr></>); }}>{issue.actionLabel}</Button>;
     case 'status':
       return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); update(o.id, { status: 'approved' }, <>הלקוח אישר · הזמנה <Ltr>{o.id}</Ltr></>); }}>הלקוח אישר</Button>;
     default:

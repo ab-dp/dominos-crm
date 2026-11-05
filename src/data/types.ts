@@ -14,11 +14,11 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 };
 export const CLOSED: OrderStatus[] = ['delivered', 'partial', 'cancelled'];
 
-/* ציר ההזמנה: ממתין לאישור לקוח ← ממתין לאישור סניף ← מאושר ← הוקלד ל-Q ← נסגרה (סופקה / חלקית, אפשר באיחור). בוטלה – מכל שלב */
+/* ציר ההזמנה: ממתין לאישור לקוח ← ממתין לעדכון בתפעול ← מאושר ← הוקלד ל-Q ← נסגרה (סופקה / חלקית, אפשר באיחור). בוטלה – מכל שלב */
 export type Stage = 'pending_customer' | 'pending_branch' | 'approved' | 'in_q' | 'delivered' | 'partial' | 'cancelled';
 export const STAGE_LABEL: Record<Stage, string> = {
   pending_customer: 'ממתין לאישור לקוח',
-  pending_branch: 'ממתין לאישור סניף',
+  pending_branch: 'ממתין לעדכון בתפעול',
   approved: 'מאושר',
   in_q: 'הוקלד ל-Q',
   delivered: 'סופקה',
@@ -171,7 +171,7 @@ export type Order = {
   cancelNote?: string;
   /* אספקה באיחור – נרשם בסגירה (סופקה / חלקית), minutes לא חובה */
   late?: { minutes: number };
-  /* תזכורת בשלב Q: עדכון התפעול. false = עוד לא עודכן; חסר = הזמנה מלפני התזכורת */
+  /* תזכורת בשלב Q: לשלוח בקבוצת התפעול. false = עוד לא נשלח; חסר = הזמנה מלפני התזכורת */
   opsNotified?: boolean;
   /* הוזנה בדיעבד – תאריך שעבר, לתיעוד בלבד */
   backfill?: boolean;

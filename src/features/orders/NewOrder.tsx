@@ -40,7 +40,7 @@ const START_STATUS: [OrderStatus, string][] = [['pending_customer', 'ממתין 
 const MISS = 'חסר – אפשר להשלים אחר כך';
 const MISS_LABEL: Record<string, string> = {
   ncContact: 'איש קשר', contactName: 'איש קשר', ncPhone: 'טלפון', contactPhone: 'טלפון', time: 'שעה', branch: 'סניף',
-  channel: 'ערוץ', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש',
+  channel: 'ערוץ / מספר פניה', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש',
 };
 
 const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
@@ -618,8 +618,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
               )}
               <Row>{branchField}{!past && statusField}</Row>
               <Row>
-                <L label="ערוץ ההזמנה" req>
-                  <input className="input" list="no-channels" value={channel} onChange={(e) => { setChannel(e.target.value); clearErr('channel'); }} placeholder="למשל: וואטסאפ, מכירות, מוקד, WellBe" {...inv('channel')} />
+                <L label="ערוץ / מספר פניה" req>
+                  <input className="input" list="no-channels" value={channel} onChange={(e) => { setChannel(e.target.value); clearErr('channel'); }} placeholder="למשל: וואטסאפ, מוקד, WellBe או מספר פניה" {...inv('channel')} />
                   <datalist id="no-channels">{channelHints.map((h) => <option key={h} value={h} />)}</datalist>
                   {err('channel')}
                 </L>
