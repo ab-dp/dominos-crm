@@ -89,3 +89,46 @@
 .iview__rows bdi { font-family: var(--font-mono); font-weight: 700; }
 .iview__prices summary { cursor: pointer; font-size: var(--text-label); font-weight: 600; color: var(--brand-700); }
 .iview__prices .items { margin-top: 6px; }
+
+/* ---------- פיצות לפי סוג: כרטיס לכל סוג, שורה לכל תוספת ---------- */
+.pgs { display: grid; gap: 8px; }
+.pg { border: 1px solid var(--gray-100); border-radius: var(--radius); background: var(--white); padding: 8px 10px 8px; }
+.pg:focus-within { border-color: var(--brand-100); box-shadow: 0 0 0 1px var(--brand-100); }
+.pg__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 6px; border-bottom: 1px solid var(--gray-100); margin-bottom: 4px; }
+.pg__name { flex: 1 1 200px; max-width: 280px; font-weight: 700; font-size: var(--text-table); }
+.pg__gprice { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-label); color: var(--gray-600); }
+.pg__gprice .input { width: 84px; }
+.pg__count { margin-inline-start: auto; font-size: var(--text-label); font-weight: 600; color: var(--brand-800); white-space: nowrap; }
+.pg__sug { margin: 4px 0 2px; }
+.pg__cols, .pg__r { display: grid; grid-template-columns: minmax(0, 1fr) 112px 92px 64px 32px; gap: 6px; align-items: center; }
+.pg__cols { padding: 2px 0 2px; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
+.pg__cols small { font-weight: 500; color: var(--gray-500); }
+.pg__row { padding: 2px 0; }
+.pg__r .input { width: 100%; min-width: 0; }
+.pg__row.is-draft .input { background: var(--gray-50); }
+.pg__row.is-draft .input:focus { background: var(--white); }
+.pg__rprice { position: relative; display: block; }
+.pg__rprice .is-own { border-color: var(--urgent-edge); background: var(--urgent-bg); }
+.pg__reset { position: absolute; inset-inline-end: 4px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 18px; height: 18px; border: 0; border-radius: 50%; background: var(--white); color: var(--gray-600); cursor: pointer; }
+.pg__reset:hover { color: var(--danger-fg); }
+.pg .ib-sug, .pg .ib-r__note { margin-inline-start: 0; margin-right: 0; }
+.pg__addtop { margin-top: 4px; }
+.pg--closed { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; font: inherit; text-align: start; cursor: pointer; }
+.pg--closed:hover { border-color: var(--brand-600); }
+.pg--closed b { flex: none; font-size: var(--text-table); }
+.pg--closed.is-bad { border-color: var(--danger-fg); }
+.pg__sum { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-label); color: var(--gray-600); }
+.pg__price { font: 500 var(--text-label) var(--font-mono); color: var(--gray-600); }
+.pg--closed .pg__count { margin-inline-start: 0; }
+.pgs__foot { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.pgs__quick { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: var(--text-label); color: var(--gray-600); }
+.pgs__total { margin-inline-start: auto; font-size: var(--text-table); }
+@media (max-width: 640px) {
+  .pg__cols { display: none; }
+  /* בטלפון: תוספות בשורה מלאה, מתחת חלוקה · מחיר · כמות · הסרה */
+  .pg__r { grid-template-columns: minmax(0, 1fr) 80px 56px 32px; }
+  .pg__r > :first-child { grid-column: 1 / -1; }
+  .pg__row { padding: 6px 0; }
+  .pg__row + .pg__row { border-top: 1px dashed var(--gray-100); }
+  .pg__name { max-width: none; }
+}

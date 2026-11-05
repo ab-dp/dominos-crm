@@ -521,7 +521,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
-        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table')) e.preventDefault(); }}
+        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table, .pgs')) e.preventDefault(); }}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
           <div className="cform__head norder__head">
             <Dialog.Title className="udialog__title">{fq ? <>הזמנה מהצעה <Ltr>{fq.id}</Ltr></> : 'הזמנה חדשה'}</Dialog.Title>

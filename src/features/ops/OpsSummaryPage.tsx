@@ -190,7 +190,7 @@ function OrderRow({ o, multiDay, mark }: { o: Order; multiDay: boolean; mark?: '
   const contact = [o.contactName?.trim(), o.contactPhone?.trim() && fmtPhone(o.contactPhone.trim())].filter(Boolean);
   return (
     <tr className={mark ? `is-${mark}` : ''}>
-      <td className="os-when">{multiDay && <span>{weekday(o.date)} <Ltr>{dm(o.date)}</Ltr></span>}<b><Ltr>{o.time}</Ltr></b></td>
+      <td className="os-when">{multiDay && <span>{weekday(o.date)} <Ltr>{dm(o.date)}</Ltr></span>}<b><Ltr>{o.time}</Ltr></b>{pizzasIn([o]) > 0 && <em className="os-pz"><Ltr>{pizzasIn([o])}</Ltr> פיצות</em>}</td>
       <td>
         {mark && <span className={`os-tag os-tag--${mark}`}>{mark === 'new' ? 'חדש' : 'עודכן'}</span>}
         <b>{o.customerName}</b>

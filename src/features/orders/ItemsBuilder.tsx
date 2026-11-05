@@ -10,10 +10,11 @@ import { useStore } from '../../data/store';
 import { CATEGORIES, OTHER, PIZZA, categoryOf, groupItems, splitPart, type OrderItem } from '../../data/types';
 import { Ltr, fmtMoney } from '../../lib/format';
 import { newId } from '../../data/customers';
+import { PizzaGroups } from './PizzaGroups';
 import './ItemsBuilder.css';
 
 /* tText / pText – הטקסט כפי שמוקלד (פסיק בסוף, "12."), עד שיוצאים מהשדה. autoName – סוג הפיצה הועתק מהשורה הקודמת ולא נכתב. לא נשמרים */
-export type Line = OrderItem & { key: string; tText?: string; pText?: string; autoName?: boolean };
+export type Line = OrderItem & { key: string; tText?: string; pText?: string; autoName?: boolean; gid?: string }; // gid – הכרטיס של סוג הפיצה, לא נשמר
 export type CatalogItem = PriceItem & { unit?: number; custom: boolean };
 type Delivery = 'delivery' | 'pickup';
 const NO_LIST = '__none';
@@ -97,7 +98,7 @@ export function useRepriceOnDelivery(delivery: Delivery, catalog: CatalogItem[],
 }
 
 /* שמירה: בלי שורות ריקות ובלי שדות ריקים */
-export const toSaved = (lines: Line[]): OrderItem[] => lines.filter((l) => !isBlank(l)).map(({ key: _k, tText: _t, pText: _p, autoName: _a, itemId, group, toppings, parts, detail, manualPrice, ...l }) => ({
+export const toSaved = (lines: Line[]): OrderItem[] => lines.filter((l) => !isBlank(l)).map(({ key: _k, tText: _t, pText: _p, autoName: _a, gid: _g, itemId, group, toppings, parts, detail, manualPrice, ...l }) => ({
   ...(itemId ? { itemId } : {}), ...(group ? { group } : {}), ...l, name: l.name.trim(),
   ...(parts?.length ? { parts: parts.map((p) => p.trim()) } : toppings?.length ? { toppings } : {}), ...(detail?.trim() ? { detail: detail.trim() } : {}), ...(manualPrice ? { manualPrice: true } : {}),
 }));
@@ -148,6 +149,17 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
   const rows = tab === OTHER ? catLines : [...catLines, draft];
   // תוספות שכבר נכתבו בהזמנה הזו קודם, ואז מההזמנות הקודמות
   const topHints = useMemo(() => [...new Set([...lines.flatMap((l) => [...(l.toppings ?? []), ...(l.parts ?? []).flatMap(splitPart)]), ...hints.tops])], [lines, hints.tops]);
+  // פיצות: הכרטיסים עובדים רק על שורות הפיצה, שאר הקטגוריות נשמרות כמו שהן
+  const pizzaLines = useMemo(() => lines.filter((l) => categoryOf(l) === PIZZA), [lines]);
+  // שורות הפיצה נשארות במקומן (במקום השורה הראשונה שלהן, או בהתחלה)
+  const setPizza = (f: (ls: Line[]) => Line[]) => setLines((ls) => {
+    const isP = (l: Line) => categoryOf(l) === PIZZA;
+    const next = f(ls.filter(isP));
+    const at = ls.findIndex(isP);
+    const rest = ls.filter((l) => !isP(l));
+    const pos = at < 0 ? 0 : ls.slice(0, at).filter((l) => !isP(l)).length;
+    return [...rest.slice(0, pos), ...next, ...rest.slice(pos)];
+  });
   const count = (cat: string) => lines.filter((l) => categoryOf(l) === cat && !isBlank(l)).reduce((t, l) => t + l.qty, 0);
 
   const change = (key: string, patch: Partial<Line>) => {
@@ -190,6 +202,10 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
         })}
       </div>
 
+      {tab === PIZZA ? (
+        <PizzaGroups lines={pizzaLines} setLines={setPizza} catalog={catalog} topHints={topHints} onTouched={onTouched}
+          typeHints={[...new Set([...catalog.filter((x) => x.category === PIZZA).map((x) => x.name), ...hints.names(PIZZA)])]} lastPrice={(n) => hints.lastPrice(PIZZA, n)} />
+      ) : (
       <div className={`ib-table ${pizza ? 'ib-table--pizza' : ''}`} role="table" aria-label={`פריטים – ${tab}`}>
         <div className="ib-r ib-r--head" role="row">
           <span role="columnheader">{tab === PIZZA ? 'סוג פיצה' : tab === OTHER ? 'פריט' : 'מוצר'}</span>
@@ -292,9 +308,10 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
         )}
         {bad(catLines) && <p className="ib-err" role="alert">בשורה המסומנת באדום חסרים {tab === PIZZA ? 'כמות או סוג פיצה' : 'כמות או מוצר'}</p>}
       </div>
+      )}
       <p className="ib-foot">
-        <span>Enter – לשורה הבאה{tab === PIZZA ? ' · שורה חדשה ממשיכה את סוג הפיצה הקודם' : ''}{pizza ? ' · כמה תוספות – עם פסיק' : ''}</span>
-        {count(tab) > 0 && <b>סה״כ {tab}: <Ltr>{count(tab)}</Ltr></b>}
+        <span>{tab === PIZZA ? 'Enter – לתוספת הבאה באותו סוג · Enter בשורה ריקה – סוג פיצה חדש · כמה תוספות – עם פסיק' : `Enter – לשורה הבאה${pizza ? ' · כמה תוספות – עם פסיק' : ''}`}</span>
+        {tab !== PIZZA && count(tab) > 0 && <b>סה״כ {tab}: <Ltr>{count(tab)}</Ltr></b>}
       </p>
       {CATEGORIES.map((c, i) => <datalist key={c} id={`ib-names-${i}`}>{[...new Set([...catalog.filter((x) => x.category === c).map((x) => x.name), ...hints.names(c)])].map((h) => <option key={h} value={h} />)}</datalist>)}
     </div>

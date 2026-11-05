@@ -1,7 +1,7 @@
 .panel-overlay { position: fixed; inset: 0; background: rgba(11, 35, 64, 0.22); z-index: 50; }
 .panel {
   position: fixed; top: 0; bottom: 0; left: 0;
-  width: min(45vw, 760px); min-width: min(520px, 100vw);
+  width: min(52vw, 820px); min-width: min(520px, 100vw);
   display: flex; flex-direction: column;
   background: var(--white);
   box-shadow: var(--shadow-panel);
@@ -214,3 +214,34 @@
 .regi__name { flex: none; min-width: 84px; color: var(--brand-800); }
 .regi__type { display: block; }
 .regi__plain { margin: 0; font-size: var(--text-table); }
+
+/* ---------- הדגשה: הערכים בבלוק "להעברה לקופה" גדולים וברורים, התכולה הכי בולטת ---------- */
+.reg .kv__k, .reg__items-head .kv__k, .reg__sum .kv__k, .reg-q__f .kv__k { font-size: 12.5px; font-weight: 600; color: var(--gray-600); }
+.reg .kv__v, .reg .kv__btn, .reg .kv__v bdi { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+.reg__grid { gap: 8px 16px; }
+.reg__items { margin-top: 12px; padding: 10px 12px 12px; border: 1px solid var(--brand-100); border-radius: var(--radius); background: var(--brand-50, #f2f8fb); }
+.regi { gap: 6px; font-size: 15.5px; line-height: 1.55; }
+.regi__cat { gap: 12px; }
+.regi__cat + .regi__cat { padding-top: 6px; border-top: 1px solid var(--brand-100); }
+.regi__name { min-width: 96px; font-size: 15.5px; font-weight: 800; color: var(--brand-800); }
+.regi__cat > span { font-weight: 600; color: var(--gray-900); }
+.regi__type + .regi__type { margin-top: 2px; }
+.regi__plain { font-size: 15.5px; font-weight: 600; }
+.reg__note .kv__v, .reg__note .kv__btn { font-size: 15px; font-weight: 600; }
+.reg__sum > b { font-size: 26px; font-weight: 700; }
+.reg__title { font-size: 15px; }
+.regi__types { display: grid; gap: 6px; }
+.regi__type b { font-weight: 800; }
+.regi__rows { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 3px; }
+.regi__tag { padding: 1px 9px; border-radius: 12px; background: var(--white); border: 1px solid var(--brand-100); font-size: 14.5px; font-weight: 600; }
+.regi__tag bdi { font-weight: 800; color: var(--brand-800); }
+
+/* סידור הבלוק: כל ערך בתא עם קו מפריד, מתי ואיפה (תאריך · שעה · סניף) הכי בולטים */
+.reg__grid { gap: 0 16px; }
+.reg__grid > * { padding: 7px 0; border-bottom: 1px solid var(--gray-100); }
+.reg__grid > :nth-child(-n+3) .kv__v, .reg__grid > :nth-child(-n+3) .kv__btn, .reg__grid > :nth-child(-n+3) .kv__v bdi { font-size: 18px; font-weight: 800; }
+.reg__grid > :nth-child(-n+3) { padding-top: 2px; }
+.reg__wide { border-bottom: 0; }
+.reg__head { padding-bottom: 6px; border-bottom: 2px solid var(--brand-100); margin-bottom: 2px; }
+.reg__sum { justify-content: space-between; padding: 10px 12px; margin-top: 10px; border: 0; border-radius: var(--radius); background: var(--gray-50); }
+.reg__sum .kv__k { order: -1; }

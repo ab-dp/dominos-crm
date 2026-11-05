@@ -156,7 +156,19 @@ function ItemsCompact({ o }: { o: OrderView }) {
         <div key={g.category} className="regi__cat">
           <b className="regi__name">{g.category} <Ltr>{g.qty}</Ltr></b>
           {g.types.some((t) => t.rows.some((r) => r.text))
-            ? <span>{g.types.map((t, i) => <span key={i} className="regi__type">{typeText(t)}</span>)}</span>
+            ? (
+              <span className="regi__types">
+                {/* סוג בשורה משלו: "12 משפחתית", ומתחת תגית לכל פירוט – "4 פטריות", "3 זיתים, בצל" */}
+                {g.types.map((t, i) => (
+                  <span key={i} className="regi__type">
+                    <b><Ltr>{t.qty}</Ltr> {t.name}</b>
+                    {t.rows.some((r) => r.text) && (
+                      <span className="regi__rows">{t.rows.map((r, j) => <span key={j} className="regi__tag"><Ltr>{r.qty}</Ltr> {r.text || 'רגיל'}</span>)}</span>
+                    )}
+                  </span>
+                ))}
+              </span>
+            )
             : <span>{g.types.map(typeText).join(' · ')}</span>}
         </div>
       ))}
