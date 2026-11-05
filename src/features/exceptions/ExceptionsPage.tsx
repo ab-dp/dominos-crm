@@ -53,7 +53,7 @@ export function ExceptionsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">חריגים ומשימות</h1>
-          <p className="page__sub">כל מה שדורש טיפול, לפי חומרה. כל שורה עם הכפתור שפותר אותה.</p>
+          <p className="page__sub">לפי חומרה – בכל שורה הכפתור שפותר אותה.</p>
         </div>
         <dl className="head-stats">
           <div className={by('red').length ? 'is-alert' : ''}><dt>חריגות</dt><dd><Ltr>{all.filter((r) => r.issue.severity === 'red').length}</Ltr></dd></div>

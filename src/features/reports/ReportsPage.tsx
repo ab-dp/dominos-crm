@@ -22,7 +22,7 @@ export function ReportsHub() {
       <header className="page__head">
         <div>
           <h1 className="page__title">דוחות</h1>
-          <p className="page__sub">כל הדוחות לפי תאריך אספקה וסכום Q. סכומים בלי הזמנות שבוטלו; הביטולים נספרים בנפרד.</p>
+          <p className="page__sub">לפי תאריך אספקה וסכום Q, בלי הזמנות שבוטלו.</p>
         </div>
       </header>
       <Link to="/reports/close" className="rhub__card rhub__card--feature">

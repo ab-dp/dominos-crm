@@ -310,7 +310,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: L
       </div>
       )}
       <p className="ib-foot">
-        <span>{tab === PIZZA ? 'Enter – לתוספת הבאה באותו סוג · Enter בשורה ריקה – סוג פיצה חדש · כמה תוספות – עם פסיק' : `Enter – לשורה הבאה${pizza ? ' · כמה תוספות – עם פסיק' : ''}`}</span>
+        <span className="ib-hint">{tab === PIZZA ? 'Enter – לתוספת הבאה באותו סוג · Enter בשורה ריקה – סוג פיצה חדש · כמה תוספות – עם פסיק' : `Enter – לשורה הבאה${pizza ? ' · כמה תוספות – עם פסיק' : ''}`}</span>
         {tab !== PIZZA && count(tab) > 0 && <b>סה״כ {tab}: <Ltr>{count(tab)}</Ltr></b>}
       </p>
       {CATEGORIES.map((c, i) => <datalist key={c} id={`ib-names-${i}`}>{[...new Set([...catalog.filter((x) => x.category === c).map((x) => x.name), ...hints.names(c)])].map((h) => <option key={h} value={h} />)}</datalist>)}

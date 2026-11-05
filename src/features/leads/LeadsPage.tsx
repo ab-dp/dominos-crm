@@ -49,7 +49,7 @@ export function LeadsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">לקוחות פוטנציאליים</h1>
-          <p className="page__sub">עסקים שאנחנו רוצים לצרף. לכל ליד פתוח יש צעד הבא עם תאריך – והוא מופיע במשימות.</p>
+          <p className="page__sub">לכל ליד פתוח – צעד הבא עם תאריך.</p>
         </div>
         <dl className="head-stats">
           <div><dt>לידים פתוחים</dt><dd><Ltr>{open.length}</Ltr></dd></div>

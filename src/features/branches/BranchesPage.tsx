@@ -36,7 +36,7 @@ export function BranchesPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">סניפים ואשכולות</h1>
-          <p className="page__sub">הרשימה נבנית ידנית וכל המשתמשים יכולים להוסיף. סניף לא פעיל נעלם מבחירה בהזמנות חדשות, אבל נשאר בהזמנות הישנות ובדוחות.</p>
+          <p className="page__sub">סניף לא פעיל לא מופיע בבחירה בהזמנות חדשות.</p>
         </div>
       </header>
 

@@ -47,7 +47,7 @@ export function QuotesPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">הצעות מחיר</h1>
-          <p className="page__sub">יוצרים הצעה, מורידים PDF ומסמנים שנשלחה. כאן עוקבים: רושמים הערות, מסמנים אושרה / נדחתה / אין מענה, והצעה שאושרה הופכת להזמנה בלחיצה.</p>
+          <p className="page__sub">יצירה, שליחה ומעקב – עד הפיכה להזמנה.</p>
         </div>
         <dl className="head-stats" aria-live="polite">
           <div className={follow ? 'is-alert' : ''}><dt>לחזור ללקוח</dt><dd><Ltr>{follow}</Ltr></dd></div>

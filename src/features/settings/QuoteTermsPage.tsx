@@ -28,7 +28,7 @@ export function QuoteTermsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">הצעות מחיר – תנאים קבועים</h1>
-          <p className="page__sub">מופיעים בסוף כל הצעה, תחת "תנאים". תמיד מופיעים לפניהם: "הצעה זו בתוקף עד…" ו"כל המחירים בהצעה כוללים מע"מ". תנאי בכל שורה.</p>
+          <p className="page__sub">מופיעים בסוף כל הצעה. תנאי בכל שורה.</p>
         </div>
       </header>
       <div className="card thr">

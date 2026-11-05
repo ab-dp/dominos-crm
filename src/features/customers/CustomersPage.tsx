@@ -51,7 +51,7 @@ export function CustomersPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">לקוחות</h1>
-          <p className="page__sub">כל הלקוחות העסקיים, כולל טלפון ההקפה. לחיצה על לקוח פותחת את התיק שלו.</p>
+          <p className="page__sub">לחיצה על לקוח פותחת את התיק שלו.</p>
         </div>
         <div className="page__head-end">
           <Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>לקוח חדש</Button>

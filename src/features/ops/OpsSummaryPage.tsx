@@ -72,7 +72,7 @@ export function OpsSummaryPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">סיכום לתפעול</h1>
-          <p className="page__sub">דף לכל אשכול, מחולק לפי סניפים. מצלמים מסך או מורידים PDF ושולחים לקבוצת התפעול.</p>
+          <p className="page__sub">דף לכל אשכול – לצילום מסך או PDF.</p>
         </div>
         {clusters.length > 1 && (
           <div className="page__head-end">

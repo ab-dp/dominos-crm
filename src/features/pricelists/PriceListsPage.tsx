@@ -53,7 +53,7 @@ export function PriceListsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">מחירונים</h1>
-          <p className="page__sub">מחירון = מוצרים לפי הקטגוריות של ההזמנה, ומחיר שאתם קובעים לכל מוצר – למשלוח ולאיסוף עצמי. מוצר יכול להישאר בלי מחיר ולהשלים אותו בהצעה. בהצעת מחיר ובהזמנה בוחרים מחירון, ומחירון שמשויך ללקוח נבחר לבד. המחירים כוללים מע"מ, ושינוי מחירון לא משנה הזמנות והצעות קיימות.</p>
+          <p className="page__sub">מוצרים ומחירים לפי קטגוריה. המחירים כוללים מע"מ.</p>
         </div>
         <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
       </header>
@@ -301,7 +301,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
           </button>
         </div>
         <p className="ib-foot">
-          <span>Enter – לשורה הבאה · כל שורה נשמרת כשיוצאים ממנה · אפשר להדביק כמה שורות מאקסל (שם, מחיר{isDelivery ? ', עד כמה פריטים' : ', מחיר איסוף'})</span>
+          <span className="ib-hint">Enter – לשורה הבאה · כל שורה נשמרת כשיוצאים ממנה · אפשר להדביק כמה שורות מאקסל (שם, מחיר{isDelivery ? ', עד כמה פריטים' : ', מחיר איסוף'})</span>
           {unpriced > 0 && <span className="muted"><Ltr>{unpriced}</Ltr> בלי מחיר – ימולאו בהצעה</span>}
         </p>
       </div>

@@ -15,7 +15,7 @@ export function ListsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">רשימות</h1>
-          <p className="page__sub">הערכים שמופיעים לבחירה בטפסים. פריט שהושבת לא יופיע בבחירה חדשה, אבל נשאר בהזמנות שכבר נשמרו.</p>
+          <p className="page__sub">פריט שהושבת לא יופיע בבחירה חדשה.</p>
         </div>
       </header>
       {error ? <div className="card"><EmptyState icon={<Lock size={24} />} title="לא ניתן לטעון">{error}</EmptyState></div>

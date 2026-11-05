@@ -41,7 +41,7 @@ export function ThresholdsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">ספי התראות</h1>
-          <p className="page__sub">מתי הזמנה נחשבת דחופה או חריגה. השינוי חל מיד על כל המשתמשים, ונרשם ביומן.</p>
+          <p className="page__sub">השינוי חל מיד על כל המשתמשים.</p>
         </div>
       </header>
       <div className="card thr">

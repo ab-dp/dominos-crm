@@ -66,7 +66,7 @@ export function UsersPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">ניהול משתמשים</h1>
-          <p className="page__sub">כל אחד יכול להירשם – רק מנהל המערכת פותח גישה. כל פעולה כאן נרשמת ביומן.</p>
+          <p className="page__sub">רק מנהל המערכת פותח גישה.</p>
         </div>
       </header>
 

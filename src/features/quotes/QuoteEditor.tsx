@@ -310,7 +310,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
           <h1 className="page__title">{quote ? <>הצעה <Ltr>{quote.id}</Ltr>{quote.customer.name && <> · {quote.customer.name}</>}</> : seed ? `הצעה חדשה (עותק של ${seed.id})` : 'הצעה חדשה'}</h1>
           <p className="page__sub">
             {quote ? <><span className={`qstat qstat--${expired ? 'expired' : quote.status}`}>{expired ? 'פג תוקף' : QUOTE_STATUS_LABEL[quote.status]}</span> · נוצרה ב-<Ltr>{quote.issueDate.split('-').reverse().join('.')}</Ltr> ע"י {quote.handler}</>
-              : 'בוחרים מוצרים ומחירים, משלוח ופרטי לקוח (לא חובה) – ודף ההצעה מתעדכן בצד. המחירים כוללים מע"מ.'}
+              : 'המחירים כוללים מע"מ.'}
           </p>
         </div>
         <div className="page__head-end">
@@ -347,7 +347,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
                   <button type="button" role="radio" aria-checked={f.delivery === 'pickup'} className={f.delivery === 'pickup' ? 'is-on' : ''} onClick={() => reprice({ delivery: 'pickup' })}>איסוף עצמי</button>
                 </div>
               </div>
-              <p className="qe-hint">
+              <p className="qe-hint qe-hint--edit">
                 {plId ? <>המחיר של כל מוצר מהמחירון נכנס לבד, ואפשר לשנות אותו בשורה – להצעה הזו בלבד.{linked && linked.priceListId === plId && ' המחירים המיוחדים של הלקוח כלולים.'}</> : 'מקלידים מחיר לכל שורה. מחיר שכבר הוצע בעבר למוצר מוצע בלחיצה.'}
               </p>
               {priceList?.note && <p className="qe-cond"><CircleAlert size={15} aria-hidden="true" /> תנאי המחירון: {priceList.note}</p>}
@@ -434,7 +434,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
                 </button>
               </div>
               <p className="ib-foot">
-                <span>Enter – לשורה הבאה · כותבים קבוצת מוצר ומחיר סופי ליחידה, בלי פירוט תוספות</span>
+                <span className="ib-hint">Enter – לשורה הבאה · כותבים קבוצת מוצר ומחיר סופי ליחידה, בלי פירוט תוספות</span>
                 {count(tab) > 0 && <b>סה״כ {tab}: <Ltr>{count(tab)}</Ltr></b>}
               </p>
               {CATEGORIES.map((c, i) => <datalist key={c} id={`qe-names-${i}`}>{nameHints(c).map((h) => <option key={h} value={h} />)}</datalist>)}
@@ -509,7 +509,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
               </div>
               <label className="qe-field qe-field--wide"><span className="field__label">הערות בהצעה <span className="muted">(יופיעו בדף)</span></span>
                 <textarea className="input cform__ta" rows={2} value={f.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="למשל: כולל כלים חד-פעמיים ומפיות" /></label>
-              <p className="qe-hint">התנאים הקבועים בסוף ההצעה {terms.length ? `(${terms.length})` : ''} נערכים בהגדרות → "הצעות מחיר".</p>
+              <p className="qe-hint qe-hint--edit">התנאים הקבועים בסוף ההצעה {terms.length ? `(${terms.length})` : ''} נערכים בהגדרות → "הצעות מחיר".</p>
             </section>
           </fieldset>
 

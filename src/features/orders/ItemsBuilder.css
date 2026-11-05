@@ -132,3 +132,7 @@
   .pg__row + .pg__row { border-top: 1px dashed var(--gray-100); }
   .pg__name { max-width: none; }
 }
+
+/* טיפים של מקלדת – רק כשעומדים בתוך הטבלה */
+:has(> .ib-foot):not(:focus-within) .ib-hint { visibility: hidden; } /* שומר מקום – כפתור מתחת לא זז ברגע הלחיצה */
+.ib-hint { font-size: 12px; }
