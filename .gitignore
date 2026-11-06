@@ -12,7 +12,8 @@ PLAN.md
 *.docx
 
 # הגדרות מקומיות
-.claude/
+.claude/*
+!.claude/skills/
 
 # סביבת בדיקה מקומית עם נתוני דמה
 .harness/
