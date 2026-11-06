@@ -1,17 +1,17 @@
-/* הטבלה המרכזית: קווי הפרדה דקים, נתונים במונו, פס צבע דק בקצה השורה הדחופה – ושום צבע מעבר לזה. */
+/* הטבלה המרכזית: קווי הפרדה דקים, ספרות טבלאיות, פס צבע רק בקצה שורה עם חריגה – ושום צבע מעבר לזה. */
 .otable-wrap { position: relative; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); overflow-x: auto; }
 .otable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-table); }
 .otable thead th {
   position: sticky; top: 0; z-index: 2;
-  height: 36px; padding: 0 10px;
-  background: var(--gray-50);
-  border-bottom: 1px solid var(--gray-100);
-  font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); letter-spacing: 0;
+  height: 38px; padding: 0 10px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-micro); font-weight: 500; color: var(--gray-600);
   text-align: start; white-space: nowrap;
 }
-.otable td { height: 54px; padding: 4px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; white-space: nowrap; }
+.otable td { height: 52px; padding: 4px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; white-space: nowrap; }
 .otable tbody tr:last-child td { border-bottom: 0; }
-.otable .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.otable .num { font-variant-numeric: tabular-nums; }
 .otable .strong { font-weight: 500; font-size: var(--text-body); color: var(--gray-900); }
 .col-check { width: 36px; padding-inline-end: 0 !important; }
 .col-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }
@@ -22,16 +22,12 @@
 .orow:focus-visible td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
 .orow.is-selected td { background: var(--brand-50); }
 .orow--critical td:first-child { box-shadow: inset -3px 0 0 var(--danger-fg); }
-.orow--urgent td:first-child { box-shadow: inset -3px 0 0 var(--urgent-edge); }
-.orow--missing td:first-child { box-shadow: inset -3px 0 0 var(--missing-edge); }
 .orow.is-flash td { animation: row-flash 1.2s var(--ease); }
 @keyframes row-flash { 0%, 30% { background: var(--brand-100); } 100% { background: transparent; } }
 
 .orow__cust { display: block; font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
-.orow__why { display: block; font-size: var(--text-label); font-weight: 500; margin-top: 1px; }
-.orow__why--critical { color: var(--danger-fg); }
-.orow__why--urgent { color: var(--urgent-fg); }
-.orow__why--missing { color: var(--missing-fg); }
+/* הסיבה בשורה – בטקסט רגיל; הצבע כבר מופיע בעמודת התקינות */
+.orow__why { display: block; font-size: var(--text-micro); font-weight: 500; margin-top: 1px; color: var(--gray-700); }
 .orow__branch { display: block; }
 .orow__sub { display: inline-flex; align-items: center; gap: 4px; font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .orow__sub svg { display: none; }
@@ -55,7 +51,7 @@
 
 /* עמודת הפעולה נשארת גלויה גם כשהטבלה רחבה מהמסך */
 .otable th:last-child, .otable td:last-child { position: sticky; left: 0; z-index: 1; background: var(--white); }
-.otable thead th:last-child { background: var(--gray-50); z-index: 3; }
+.otable thead th:last-child { background: var(--white); z-index: 3; }
 .orow:hover td:last-child { background: var(--gray-50); }
 .orow.is-selected td:last-child { background: var(--brand-50); }
 @media (max-width: 1500px) {
@@ -70,17 +66,16 @@
 
 /* ---------- טלפון: כל שורה הופכת לכרטיס ---------- */
 @media (max-width: 700px) {
-  .otable-wrap { background: transparent; box-shadow: none; overflow: visible; }
+  .otable-wrap { overflow: hidden; }
   .otable--orders, .otable--orders tbody { display: block; }
   .otable--orders thead { display: none; }
-  .otable--orders tbody { display: grid; gap: 8px; }
   .otable--orders .orow {
     display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "time cust health" "marks marks act";
-    gap: 6px 12px; padding: 12px 14px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card);
+    gap: 6px 12px; padding: 12px 14px; background: var(--white);
   }
-  .orow--critical { box-shadow: var(--shadow-card), inset -3px 0 0 var(--danger-fg); }
-  .orow--urgent { box-shadow: var(--shadow-card), inset -3px 0 0 var(--urgent-edge); }
-  .orow--missing { box-shadow: var(--shadow-card), inset -3px 0 0 var(--missing-edge); }
+  /* בטלפון: רשימה אחת עם קווי הפרדה במקום כרטיס לכל הזמנה */
+  .otable--orders .orow + .orow { border-top: 1px solid var(--line); }
+  .otable--orders .orow--critical { box-shadow: inset -3px 0 0 var(--danger-fg); }
   .otable--orders td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
   .otable--orders td.c-time { display: block; grid-area: time; font-size: var(--text-card-title); }
   .otable--orders td.c-cust { display: block; grid-area: cust; min-width: 0; }
@@ -96,10 +91,11 @@
 /* ביטול / סופקה חלקית – ישירות בשורה */
 .c-act__in { display: inline-flex; align-items: center; gap: 8px; }
 .row-acts { display: inline-flex; gap: 4px; }
-.row-act { height: 28px; padding: 0 9px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); cursor: pointer; white-space: nowrap; transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
+.row-act { height: 28px; padding: 0 10px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--gray-900); cursor: pointer; white-space: nowrap; transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
 .row-act:hover { border-color: var(--gray-300); color: var(--gray-900); }
-.row-act--danger { color: var(--danger-fg); border-color: var(--danger-line); }
-.row-act--danger:hover { border-color: var(--danger-fg); color: var(--danger-fg); background: var(--danger-bg); }
+/* ביטול: שקט עד שמצביעים עליו – הפעולה הבאה בולטת יותר מהפעולה ההרסנית */
+.row-act--danger { color: var(--gray-600); border-color: transparent; background: transparent; }
+.row-act--danger:hover, .row-act--danger:focus-visible { border-color: transparent; color: var(--danger-fg); background: var(--danger-bg); }
 @media (max-width: 700px) {
   /* בטלפון: שורת פעולות משלה מתחת לסימונים, כדי לא לדחוק את שם הלקוח */
   .otable--orders tr.orow { grid-template-areas: "time cust health" "marks marks marks" "act act act" !important; }

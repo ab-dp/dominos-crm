@@ -35,7 +35,7 @@
 .report__table-card { margin-bottom: 16px; }
 .report__scroll { overflow-x: auto; }
 .rtable { width: 100%; border-collapse: collapse; font-size: var(--text-table); }
-.rtable th { position: sticky; top: 0; height: 36px; padding: 0 10px; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); text-align: start; white-space: nowrap; }
+.rtable th { position: sticky; top: 0; height: 36px; padding: 0 10px; background: var(--white); border-bottom: 1px solid var(--line); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); text-align: start; white-space: nowrap; }
 .rtable td { height: 44px; padding: 0 10px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; }
 .rtable .num { text-align: end; }
 .rtable td bdi { font-family: var(--font-mono); font-size: var(--text-label); }

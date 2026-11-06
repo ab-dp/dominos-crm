@@ -74,14 +74,13 @@
   gap: 6px;
   height: 22px;
   padding: 0;
-  font-size: var(--text-label);
-  font-weight: 600;
+  font-size: var(--text-micro);
+  font-weight: 500;
   cursor: default;
 }
 .health svg { display: none; }
 .health::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .health--critical { color: var(--danger-fg); }
-.health--critical::before { box-shadow: 0 0 0 3px var(--danger-bg); }
 .health--urgent { color: var(--urgent-fg); }
 .health--missing { color: var(--missing-fg); }
 .health--ok { color: var(--ok-fg); }

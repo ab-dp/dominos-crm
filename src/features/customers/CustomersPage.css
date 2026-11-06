@@ -3,10 +3,11 @@
 .is-inactive-row td { color: var(--gray-600); }
 .cust-inactive { margin-inline-start: 8px; }
 .ctype { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; }
-.ctype--regular { background: var(--brand-50); color: var(--brand-800); }
-.ctype--occasional { background: var(--gray-100); color: var(--gray-600); }
+/* קבוע הוא ברירת המחדל – טקסט שקט; מזדמן מקבל תג, כי הוא החריג */
+.ctype--regular { padding: 0; color: var(--gray-600); }
+.ctype--occasional { background: var(--gray-100); color: var(--gray-700); }
 .shared-tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: var(--radius-panel); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 600; }
 .po-tag { display: inline-grid; place-items: center; color: var(--brand-600); }
 .tablebar .seg button { display: inline-flex; align-items: center; gap: 6px; }
 .cust-gaps { display: flex; flex-wrap: wrap; gap: 4px; white-space: normal; }
-.cust-gaps .mgaps__tag { padding: 2px 8px; border-radius: 999px; background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-micro); font-weight: 600; }
+.cust-gaps .mgaps__tag { padding: 2px 8px; border-radius: var(--radius-tag); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-micro); font-weight: 600; }
