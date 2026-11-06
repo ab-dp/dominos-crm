@@ -21,18 +21,17 @@
 .btn--sm { height: 30px; padding: 0 10px; font-size: var(--text-label); }
 .btn--md { height: 38px; padding: 0 16px; font-size: var(--text-table); }
 .btn--lg { height: 44px; padding: 0 20px; }
-.btn--primary { background: var(--brand-600); color: var(--white); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.14), 0 1px 2px rgba(0, 63, 92, 0.24); }
+.btn--primary { background: var(--brand-600); color: var(--white); }
 .btn--primary:hover:not(:disabled) { background: var(--brand-700); }
 .btn--primary:active:not(:disabled) { background: var(--brand-800); }
-.btn--secondary { background: var(--white); color: var(--gray-900); border-color: var(--gray-200); box-shadow: 0 1px 2px rgba(15,27,42,0.05); }
+.btn--secondary { background: var(--white); color: var(--gray-900); border-color: var(--gray-200); }
 .btn--secondary:hover:not(:disabled) { border-color: var(--gray-300); background: var(--gray-50); }
 .btn--ghost { background: transparent; color: var(--gray-600); }
-.btn--ghost:hover:not(:disabled) { color: var(--gray-900); }
-.btn--ghost:hover:not(:disabled) { background: var(--gray-100); }
+.btn--ghost:hover:not(:disabled) { color: var(--gray-900); background: var(--gray-100); }
 .btn--danger { background: var(--white); color: var(--danger-fg); border-color: var(--danger-line); }
 .btn--danger:hover:not(:disabled) { background: var(--danger-bg); }
 /* כפתור הפתרון בתוך שורה עם בעיה */
-.btn--fix { background: var(--white); color: var(--brand-700); border-color: var(--gray-200); box-shadow: 0 1px 2px rgba(15,27,42,0.05); }
+.btn--fix { background: var(--white); color: var(--brand-700); border-color: var(--gray-200); }
 .btn--fix:hover:not(:disabled) { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); }
 .btn__spin { animation: spin 0.9s linear infinite; }
 .btn__kbd { margin-inline-start: 2px; }
@@ -147,7 +146,6 @@
   height: 38px;
   padding: 0 12px;
   border: 1px solid var(--gray-200);
-  box-shadow: inset 0 1px 1px rgba(15, 27, 42, 0.03);
   border-radius: var(--radius);
   font: inherit;
   color: var(--gray-900);
@@ -195,8 +193,8 @@
   animation: shimmer 1.4s ease-in-out infinite;
 }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
-.empty { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 48px 16px; color: var(--gray-600); }
-.empty__icon { width: 64px; height: 64px; display: grid; place-items: center; color: var(--brand-600); margin-bottom: 4px; background: radial-gradient(circle, var(--brand-50) 0 60%, transparent 61%); }
+.empty { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 40px 16px; color: var(--gray-600); }
+.empty__icon { width: 48px; height: 48px; display: grid; place-items: center; color: var(--gray-400); margin-bottom: 2px; }
 .empty__title { margin: 0; font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
 .empty__text { margin: 0 0 10px; max-width: 420px; }
 

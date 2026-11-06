@@ -1,8 +1,8 @@
 /* מבנה מסך אחיד: כותרת, סיכום ופעולה ראשית באותה שורה ובאותו מקום בכל מסך. רשת של 4/8. */
 .page { max-width: 1440px; margin: 0 auto; }
-.page__head { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 20px; }
+.page__head { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 16px; }
 .page__title { margin: 0; font-size: var(--text-screen-title); font-weight: 600; line-height: 1.2; letter-spacing: -0.012em; }
-.page__sub { margin: 4px 0 0; color: var(--gray-600); font-size: var(--text-table); }
+.page__sub { margin: 4px 0 0; color: var(--gray-600); font-size: var(--text-label); }
 .page__head-end { margin-inline-start: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
 
 /* טאבים: קו תחתון, מספר במונו, בלי גלולות צבעוניות */
@@ -24,7 +24,7 @@
 .seg { display: inline-flex; padding: 2px; border-radius: var(--radius-panel); background: var(--gray-100); }
 .seg button { height: 30px; padding: 0 12px; border: 0; border-radius: var(--radius); background: transparent; font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); cursor: pointer; transition: color var(--dur-instant) var(--ease); }
 .seg button:hover { color: var(--gray-900); }
-.seg button.is-on { background: var(--white); color: var(--gray-900); font-weight: 600; box-shadow: 0 1px 2px rgba(15, 27, 42, 0.1), 0 0 0 1px rgba(15, 27, 42, 0.04); }
+.seg button.is-on { background: var(--white); color: var(--gray-900); font-weight: 600; box-shadow: 0 0 0 1px var(--gray-200); }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -34,7 +34,7 @@
   transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease);
 }
 .chip:hover { border-color: var(--gray-300); }
-.chip.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); box-shadow: inset 0 0 0 1px var(--brand-600); }
+.chip.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); }
 
 /* כרטיס: רק למה שבאמת אובייקט נפרד. מסגרת דקה, בלי צל כבד */
 .card { background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); }
@@ -57,6 +57,8 @@
 }
 .tablebar__search:hover { border-color: var(--gray-300); }
 .tablebar__search:focus-within { border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0, 100, 145, 0.16); }
+/* הטבעת על העטיפה בלבד – לא כפולה על השדה */
+.tablebar__search input:focus-visible { box-shadow: none; }
 .tablebar__search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: var(--text-label); color: var(--gray-900); }
 .tablebar__search button { display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-600); cursor: pointer; }
 .seg--sm button { height: 28px; padding: 0 7px; display: grid; place-items: center; }
@@ -101,15 +103,15 @@
 }
 
 /* ---------- סיכום בכותרת המסך: מספרים גדולים, תווית קטנה ---------- */
-.head-stats { margin: 0 0 0 0; margin-inline-start: auto; display: flex; gap: 0; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); }
-.head-stats > div { display: grid; gap: 2px; padding: 10px 20px; min-width: 120px; }
-.head-stats > div + div { border-inline-start: 1px solid var(--gray-100); }
-.head-stats dt { font-size: var(--text-micro); font-weight: 600; letter-spacing: 0; color: var(--gray-600); }
-.head-stats dd { margin: 0; font: 500 var(--text-screen-title)/1.2 var(--font-mono); letter-spacing: -0.02em; color: var(--gray-900); }
+/* מספרי המסך: חלק משורת הכותרת, בלי כרטיס */
+.head-stats { margin: 0; margin-inline-start: auto; display: flex; gap: 32px; }
+.head-stats > div { display: grid; gap: 2px; }
+.head-stats dt { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+.head-stats dd { margin: 0; font: 600 var(--text-section)/1.2 var(--font); color: var(--gray-900); }
 .head-stats .is-alert dd { color: var(--danger-fg); }
 @media (max-width: 700px) {
-  .head-stats { width: 100%; margin-inline-start: 0; }
-  .head-stats > div { flex: 1; min-width: 0; padding: 8px 12px; }
+  .head-stats { width: 100%; margin-inline-start: 0; justify-content: space-between; gap: 12px; padding: 10px 0; border-block: 1px solid var(--line); }
+  .head-stats > div { min-width: 0; }
   .head-stats dd { font-size: var(--text-card-title); }
 }
 .loading-rows { display: grid; gap: 10px; padding: 16px 18px; }
