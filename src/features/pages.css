@@ -84,18 +84,19 @@
   .tablebar__search { min-width: 100%; order: 3; }
 }
 .subnav__label { align-self: center; margin-inline-end: 4px; padding-inline-end: 20px; border-inline-end: 1px solid var(--gray-100); font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
-@media (max-width: 700px) {
-  .chips { flex-wrap: wrap; }
-}
 @media (max-width: 700px) { .tablebar .seg--sm { display: none; } }
 
-/* טלפון: בלי גלילה הצידה בשום מקום – טאבים נשברים לשורות, טבלאות רשימה הופכות לשורות מוערמות */
+/* טלפון: הדף לא נגלל הצידה. טאבים ומסננים בשורה אחת שנגללת בתוך עצמה (המסך לא קופץ כשבוחרים),
+   וטבלאות רשימה הופכות לרשימה אחת עם קווי הפרדה */
 @media (max-width: 700px) {
-  .tabs { flex-wrap: wrap; overflow: visible; gap: 0 18px; }
+  .tabs { flex-wrap: nowrap; overflow-x: auto; gap: 0 18px; }
+  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+  .chip { flex: none; }
   .otable:not(.otable--orders) { display: block; }
   .otable:not(.otable--orders) thead { display: none; }
-  .otable:not(.otable--orders) tbody { display: grid; gap: 8px; }
-  .otable:not(.otable--orders) tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 14px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); }
+  .otable:not(.otable--orders) tbody { display: block; }
+  .otable:not(.otable--orders) tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 14px; background: var(--white); }
+  .otable:not(.otable--orders) tr + tr { border-top: 1px solid var(--line); }
   .otable:not(.otable--orders) td { display: block; height: auto !important; padding: 0 !important; border: 0 !important; white-space: normal; position: static !important; background: none !important; box-shadow: none !important; }
   .otable:not(.otable--orders) td:empty { display: none; }
   .otable:not(.otable--orders) td:first-child { flex-basis: 100%; font-weight: 600; }

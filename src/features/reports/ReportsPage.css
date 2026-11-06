@@ -86,7 +86,17 @@
   .bars__row { grid-template-columns: minmax(80px, 120px) minmax(0, 1fr) 80px; }
   .report__orders button { grid-template-columns: 56px minmax(0, 1fr) auto; }
   .report__odate { display: none; }
-  .report__sel, .report__cust { flex: 1; min-width: 0; }
+  /* מסננים בשני טורים, טווח בשורה אחת שנגללת, ומספרים ברשת של שניים */
+  .report__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .report__filters > .seg, .report__filters > .report__dates, .report__filters > .chip { grid-column: 1 / -1; }
+  .report__filters > .seg { overflow-x: auto; scrollbar-width: none; justify-self: start; max-width: 100%; }
+  .report__filters > .seg button { flex: none; white-space: nowrap; }
+  .report__sel, .report__cust { width: 100%; min-width: 0; }
+  .report__kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report__kpis > div { padding: 10px 14px; border-top: 1px solid var(--line-soft); }
+  .report__kpis > div + div { border-inline-start: 0; }
+  .report__kpis > div:nth-child(-n+2) { border-top: 0; }
+  .report__kpis > div:nth-child(even) { border-inline-start: 1px solid var(--line-soft); }
 }
 @media (prefers-reduced-motion: reduce) { .report__drill { animation: none; } }
 .rhub__card--feature { margin-bottom: 12px; box-shadow: 0 0 0 1px var(--brand-100), var(--shadow-card); }
