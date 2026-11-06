@@ -1,7 +1,7 @@
 /* לקוחות פוטנציאליים: לוח, טבלה, משימות ותיק ליד. צבע רק לשלב ולצעד הבא באיחור */
 
 /* ---------- שלב ---------- */
-.lpill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; font-weight: 600; white-space: nowrap; background: var(--gray-100); color: var(--gray-600); }
+.lpill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--radius-panel); font-size: var(--text-micro); font-weight: 600; white-space: nowrap; background: var(--gray-100); color: var(--gray-600); }
 .lpill--contacted { background: var(--brand-50); color: var(--brand-700); }
 .lpill--proposal { background: var(--brand-100); color: var(--brand-800); }
 .lpill--trial { background: var(--urgent-bg); color: var(--urgent-fg); }
@@ -23,8 +23,8 @@
 .lcol.is-over, .lend.is-over { background: var(--brand-50); box-shadow: inset 0 0 0 2px var(--brand-600); }
 .lcol__head { display: flex; align-items: baseline; gap: 8px; padding: 2px 4px 4px; }
 .lcol__title { margin: 0; font-size: var(--text-table); font-weight: 600; }
-.lcol__n { font: 500 12px var(--font-mono); color: var(--gray-600); }
-.lcol__sum { margin-inline-start: auto; font: 500 12px var(--font-mono); color: var(--gray-600); }
+.lcol__n { font: 500 var(--text-micro) var(--font-mono); color: var(--gray-600); }
+.lcol__sum { margin-inline-start: auto; font: 500 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .lcol__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .lcol__empty { padding: 18px 8px; border: 1px dashed var(--gray-200); border-radius: var(--radius); text-align: center; font-size: var(--text-label); color: var(--gray-600); }
 .lboard:not(.is-dragging) .lcol__empty { opacity: 0.6; }
@@ -39,7 +39,7 @@
 
 .lboard__ends { display: grid; gap: 12px; }
 .lend { display: grid; justify-items: center; gap: 4px; padding: 22px 10px; border: 1px dashed var(--gray-300); border-radius: var(--radius-panel); text-align: center; font-size: var(--text-table); font-weight: 600; color: var(--gray-600); transition: background var(--dur-quick) var(--ease), box-shadow var(--dur-quick) var(--ease); }
-.lend small { font-size: 12px; font-weight: 400; }
+.lend small { font-size: var(--text-micro); font-weight: 400; }
 .lend--won svg { color: var(--ok-fg); }
 .lboard.is-dragging .lend { border-color: var(--brand-600); color: var(--gray-900); }
 
@@ -62,7 +62,7 @@
 /* ---------- תיק ליד ---------- */
 .lfile__avatar { background: var(--brand-600); }
 .lsteps { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; flex-wrap: wrap; }
-.lsteps button { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 14px; border: 1px solid var(--gray-200); border-radius: 16px; background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); cursor: pointer; }
+.lsteps button { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 14px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); cursor: pointer; }
 .lsteps button:hover:not(:disabled) { border-color: var(--brand-600); color: var(--brand-800); }
 .lsteps .is-done button { background: var(--brand-50); border-color: var(--brand-100); color: var(--brand-800); }
 .lsteps .is-now button { background: var(--brand-600); border-color: var(--brand-600); color: var(--white); font-weight: 600; cursor: default; opacity: 1; }
@@ -86,7 +86,7 @@
 .lcontacts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .lcontacts li { display: grid; gap: 2px; font-size: var(--text-table); }
 .lcontacts__name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-.lcontacts__dec { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 8px; background: var(--urgent-bg); color: var(--urgent-fg); font-size: 11px; font-weight: 600; }
+.lcontacts__dec { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: var(--radius-panel); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 600; }
 .lcontacts__links { display: flex; gap: 4px; flex-wrap: wrap; margin-inline-start: -8px; }
 .lfile__tabs { padding: 0 18px; margin-bottom: 0; }
 .lfile .cfile__timeline { padding: 0 18px; }

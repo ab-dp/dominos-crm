@@ -25,7 +25,7 @@ export function MergeDialog({ source, all, onClose, onMerged }: { source: Custom
       await mergeCustomers(source, target, note.trim());
       toast({ message: <>"{source.name}" מוזג לתוך "{target.name}"</> });
       onMerged(target);
-    } catch { toast({ message: 'המיזוג נכשל' }); setBusy(false); }
+    } catch { toast({ tone: 'error', message: 'המיזוג נכשל' }); setBusy(false); }
   };
 
   return (

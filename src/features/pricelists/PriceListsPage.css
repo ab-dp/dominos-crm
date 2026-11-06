@@ -35,7 +35,7 @@
 .pl-customers__title { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: var(--text-table); font-weight: 600; }
 .pl-customers__add { margin-inline-start: auto; }
 .pl-customers__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.pl-cchip { display: inline-flex; align-items: center; height: 28px; border-radius: 14px; background: var(--gray-100); font-size: var(--text-label); }
+.pl-cchip { display: inline-flex; align-items: center; height: 28px; border-radius: var(--radius-panel); background: var(--gray-100); font-size: var(--text-label); }
 .pl-cchip a { padding: 0 4px 0 10px; color: var(--gray-900); text-decoration: none; }
 .pl-cchip a:hover { color: var(--brand-800); text-decoration: underline; }
 .pl-cchip button { display: grid; place-items: center; width: 24px; height: 24px; margin-inline-end: 2px; border: 0; border-radius: 50%; background: transparent; color: var(--gray-600); cursor: pointer; }

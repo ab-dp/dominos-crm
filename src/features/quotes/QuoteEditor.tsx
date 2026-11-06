@@ -533,7 +533,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
           <div className="udialog__actions">
             <Button variant="primary" icon={<Check size={16} />} data-autofocus onClick={async () => {
               closeAsk();
-              try { await setQuoteStatus(quote, 'sent'); toast({ message: <>הצעה <Ltr>{quote.id}</Ltr> סומנה כנשלחה</> }); } catch { toast({ message: 'העדכון נכשל – בדקו חיבור' }); }
+              try { await setQuoteStatus(quote, 'sent'); toast({ message: <>הצעה <Ltr>{quote.id}</Ltr> סומנה כנשלחה</> }); } catch { toast({ tone: 'error', message: 'העדכון נכשל – בדקו חיבור' }); }
             }}>כן, סמן שנשלחה</Button>
             <Button variant="ghost" onClick={() => closeAsk()}>עוד לא נשלחה</Button>
           </div>

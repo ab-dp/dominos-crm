@@ -132,7 +132,7 @@ function TaskGroup({ title, tone, list, when }: { title: string; tone: 'red' | '
   if (!list.length) return null;
   const done = (t: Task) => setTaskDone(t, true)
     .then(() => toast({ message: <>משימה סומנה כבוצעה · {t.customerName}</>, onUndo: () => { setTaskDone({ ...t, done: true }, false).catch(() => undefined); } }))
-    .catch(() => toast({ message: 'הסימון נכשל – בדוק חיבור' }));
+    .catch(() => toast({ tone: 'error', message: 'הסימון נכשל – בדוק חיבור' }));
   return (
     <div className="exc__group">
       <p className={`exc__label exc__label--${tone}`}>{title} <Ltr>{list.length}</Ltr></p>

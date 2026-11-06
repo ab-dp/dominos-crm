@@ -10,7 +10,7 @@
   border-radius: var(--radius);
   font: inherit;
   font-weight: 600;
-  letter-spacing: 0.002em;
+  letter-spacing: 0;
   cursor: pointer;
   white-space: nowrap;
   transition: background var(--dur-instant) var(--ease), border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease), transform var(--dur-instant) var(--ease);
@@ -21,18 +21,17 @@
 .btn--sm { height: 30px; padding: 0 10px; font-size: var(--text-label); }
 .btn--md { height: 38px; padding: 0 16px; font-size: var(--text-table); }
 .btn--lg { height: 44px; padding: 0 20px; }
-.btn--primary { background: var(--brand-600); color: var(--white); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.14), 0 1px 2px rgba(0, 63, 92, 0.24); }
+.btn--primary { background: var(--brand-600); color: var(--white); }
 .btn--primary:hover:not(:disabled) { background: var(--brand-700); }
 .btn--primary:active:not(:disabled) { background: var(--brand-800); }
-.btn--secondary { background: var(--white); color: var(--gray-900); border-color: var(--gray-200); box-shadow: 0 1px 2px rgba(15,27,42,0.05); }
+.btn--secondary { background: var(--white); color: var(--gray-900); border-color: var(--gray-200); }
 .btn--secondary:hover:not(:disabled) { border-color: var(--gray-300); background: var(--gray-50); }
 .btn--ghost { background: transparent; color: var(--gray-600); }
-.btn--ghost:hover:not(:disabled) { color: var(--gray-900); }
-.btn--ghost:hover:not(:disabled) { background: var(--gray-100); }
-.btn--danger { background: var(--white); color: var(--danger-fg); border-color: #EDB3BC; }
+.btn--ghost:hover:not(:disabled) { color: var(--gray-900); background: var(--gray-100); }
+.btn--danger { background: var(--white); color: var(--danger-fg); border-color: var(--danger-line); }
 .btn--danger:hover:not(:disabled) { background: var(--danger-bg); }
 /* כפתור הפתרון בתוך שורה עם בעיה */
-.btn--fix { background: var(--white); color: var(--brand-700); border-color: var(--gray-200); box-shadow: 0 1px 2px rgba(15,27,42,0.05); }
+.btn--fix { background: var(--white); color: var(--brand-700); border-color: var(--gray-200); }
 .btn--fix:hover:not(:disabled) { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); }
 .btn__spin { animation: spin 0.9s linear infinite; }
 .btn__kbd { margin-inline-start: 2px; }
@@ -47,8 +46,8 @@
   padding: 0 5px;
   border: 1px solid var(--gray-300);
   border-bottom-width: 2px;
-  border-radius: 5px;
-  font: 500 11px/1 var(--font-mono);
+  border-radius: var(--radius);
+  font: 500 var(--text-micro)/1 var(--font-mono);
   color: var(--gray-600);
   background: var(--white);
 }
@@ -59,7 +58,7 @@
   color: var(--white);
   font-size: var(--text-label);
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow-float);
   max-width: 280px;
   z-index: 90;
@@ -75,14 +74,13 @@
   gap: 6px;
   height: 22px;
   padding: 0;
-  font-size: var(--text-label);
-  font-weight: 600;
+  font-size: var(--text-micro);
+  font-weight: 500;
   cursor: default;
 }
 .health svg { display: none; }
 .health::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .health--critical { color: var(--danger-fg); }
-.health--critical::before { box-shadow: 0 0 0 3px var(--danger-bg); }
 .health--urgent { color: var(--urgent-fg); }
 .health--missing { color: var(--missing-fg); }
 .health--ok { color: var(--ok-fg); }
@@ -123,7 +121,7 @@
   gap: 8px;
   height: 36px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: var(--text-table);
   cursor: pointer;
   outline: none;
@@ -147,7 +145,6 @@
   height: 38px;
   padding: 0 12px;
   border: 1px solid var(--gray-200);
-  box-shadow: inset 0 1px 1px rgba(15, 27, 42, 0.03);
   border-radius: var(--radius);
   font: inherit;
   color: var(--gray-900);
@@ -155,7 +152,7 @@
   width: 100%;
   transition: border-color var(--dur-instant) var(--ease), box-shadow var(--dur-instant) var(--ease);
 }
-.input::placeholder { color: #8A96A5; }
+.input::placeholder { color: var(--gray-400); }
 .input:hover { border-color: var(--gray-300); }
 .input:focus { outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0, 100, 145, 0.16); }
 .input--ltr { direction: ltr; text-align: right; font-family: var(--font-mono); font-size: var(--text-table); }
@@ -187,16 +184,18 @@
 .roll__digit { display: inline-block; font-variant-numeric: tabular-nums; }
 
 /* ---------- Skeleton / Empty ---------- */
+.screen-loading { display: grid; gap: 10px; animation: fade-in var(--dur-standard) var(--ease) 180ms both; }
+.screen-loading__rows { display: grid; gap: 14px; margin-top: 10px; padding: 18px; }
 .skeleton {
   display: inline-block;
-  border-radius: 6px;
-  background: linear-gradient(90deg, var(--gray-100) 0%, #F6F7F9 50%, var(--gray-100) 100%);
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--gray-100) 0%, var(--gray-50) 50%, var(--gray-100) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
-.empty { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 48px 16px; color: var(--gray-600); }
-.empty__icon { width: 64px; height: 64px; display: grid; place-items: center; color: var(--brand-600); margin-bottom: 4px; background: radial-gradient(circle, var(--brand-50) 0 60%, transparent 61%); }
+.empty { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 40px 16px; color: var(--gray-600); }
+.empty__icon { width: 48px; height: 48px; display: grid; place-items: center; color: var(--gray-400); margin-bottom: 2px; }
 .empty__title { margin: 0; font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
 .empty__text { margin: 0 0 10px; max-width: 420px; }
 
@@ -233,7 +232,7 @@
 /* חלון בדיקת פער מול Q */
 .gap-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-bottom: 12px; background: var(--gray-100); border: 1px solid var(--gray-100); border-radius: var(--radius); overflow: hidden; font-size: var(--text-micro); color: var(--gray-600); }
 .gap-sum span { display: grid; gap: 2px; padding: 8px 10px; background: var(--white); }
-.gap-sum b { font: 500 14px var(--font-mono); color: var(--gray-900); }
+.gap-sum b { font: 500 var(--text-table) var(--font-mono); color: var(--gray-900); }
 .gap-sum__diff b { color: var(--danger-fg); }
 .gap-fix { width: 100%; }
 .gap-or { margin: 12px 0 6px !important; }

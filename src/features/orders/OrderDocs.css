@@ -20,7 +20,7 @@
 .odocs__up { display: grid; gap: 8px; }
 .odocs__kindsel { display: flex; align-items: center; gap: 8px; }
 .odocs__kindsel .input { width: auto; min-width: 160px; }
-.odocs__kind { display: inline-flex; padding: 0 6px; border-radius: 4px; background: var(--gray-100); color: var(--gray-900); font-weight: 600; font-size: 11px; }
+.odocs__kind { display: inline-flex; padding: 0 6px; border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-900); font-weight: 600; font-size: var(--text-micro); }
 .odocs--card { gap: 0; }
 .odocs__body { display: grid; gap: 12px; padding: 14px 18px 18px; }
 .odocs__empty { margin: 0; }

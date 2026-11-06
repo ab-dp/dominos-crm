@@ -3,8 +3,8 @@
 .sg__h3 { margin: 18px 0 10px; font-size: var(--text-table); font-weight: 600; color: var(--gray-600); }
 .sg__swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 .swatch { display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto auto; column-gap: 10px; font-size: var(--text-label); align-items: center; }
-.swatch__chip { grid-row: span 3; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--gray-100); }
-.swatch code { font-size: 12px; direction: ltr; text-align: right; }
+.swatch__chip { grid-row: span 3; width: 44px; height: 44px; border-radius: var(--radius-panel); border: 1px solid var(--gray-100); }
+.swatch code { font-size: var(--text-micro); direction: ltr; text-align: right; }
 .swatch__use { color: var(--gray-600); }
 .sg__row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .state-demo { padding: 8px 14px; border-radius: var(--radius); font-size: var(--text-table); }

@@ -48,7 +48,7 @@
 .no-final .cform__field { max-width: 280px; }
 .no-final.is-manual { background: var(--missing-bg); }
 .no-final__note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0; font-size: var(--text-label); }
-.no-final__tag { padding: 1px 8px; border-radius: 10px; background: var(--white); font-weight: 600; color: var(--missing-fg); }
+.no-final__tag { padding: 1px 8px; border-radius: var(--radius-panel); background: var(--white); font-weight: 600; color: var(--missing-fg); }
 .norder .fdrop { margin-bottom: 10px; }
 
 /* פרטים חסרים לפני שמירה – מעל כפתור השמירה, תמיד גלוי */
@@ -86,10 +86,10 @@
 .no-calc__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: var(--text-table); }
 .no-calc__pick { width: auto; min-width: 200px; }
 .chip--manual { border-style: dashed; color: var(--brand-700); }
-.no-base { display: inline-block; max-width: 160px; padding: 2px 8px; border-radius: 10px; background: var(--brand-50); color: var(--brand-800); font-size: var(--text-label); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.no-base { display: inline-block; max-width: 160px; padding: 2px 8px; border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-800); font-size: var(--text-label); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 .no-base.is-manual { background: var(--gray-100); color: var(--gray-600); }
 .no-items__desc { min-width: 160px; }
-.no-items__reset { display: block; margin-top: 2px; font-size: 11px; }
+.no-items__reset { display: block; margin-top: 2px; font-size: var(--text-micro); }
 .cform__hint svg { vertical-align: -1px; }
 .no-missing__go { font-weight: 600; color: var(--urgent-fg); text-decoration: underline; text-underline-offset: 2px; }
 .no-formerr { margin: 0; padding: 10px 20px; border-top: 1px solid var(--danger-fg); background: var(--danger-bg); color: var(--danger-fg); font-weight: 600; }

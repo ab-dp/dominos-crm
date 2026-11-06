@@ -29,7 +29,7 @@ const BASE = import.meta.env.BASE_URL;
 
 const MOBILE_MAIN = ['/today', '/orders', '/exceptions', '/customers'];
 
-type NavDef = { to: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
+type NavDef = { to: string; label: string; short?: string; icon: ReactNode; count?: number; alert?: boolean };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { orders, openNewOrder, closeNewOrder, dueTasks, quoteFollowups } = useStore();
@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
         { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length },
         { to: '/ops', label: 'סיכום לתפעול', icon: <Truck size={20} /> },
-        { to: '/exceptions', label: 'חריגים ומשימות', icon: <TriangleAlert size={20} />, count: urgentCount + dueTasks.length, alert: critical.length > 0 },
+        { to: '/exceptions', label: 'חריגים ומשימות', short: 'חריגים', icon: <TriangleAlert size={20} />, count: urgentCount + dueTasks.length, alert: critical.length > 0 },
       ],
     },
     {
@@ -180,7 +180,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <li key={it.to} className={MOBILE_MAIN.includes(it.to) ? '' : 'nav-li--more'}>
                     <NavItem to={it.to} label={it.label} collapsed={collapsed}>
                       <span className="nav__icon" aria-hidden="true">{it.icon}</span>
-                      <span className="nav__label">{it.label}</span>
+                      {/* בתפריט התחתון של הטלפון מוצג שם קצר; השם המלא נשאר לקורא מסך */}
+                      <span className="nav__label"><span className={it.short ? "nav__full" : undefined}>{it.label}</span>{it.short && <span className="nav__short" aria-hidden="true">{it.short}</span>}</span>
                       {!!it.count && <span className={`nav__count ${it.alert ? 'nav__count--alert' : ''}`}><Ltr>{it.count}</Ltr></span>}
                     </NavItem>
                   </li>

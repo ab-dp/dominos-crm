@@ -2,6 +2,10 @@
 
 html, body, #root { height: 100%; }
 
+/* מקום קבוע לפס הגלילה – הדף לא זז הצידה במעבר בין מסך קצר לארוך. פס דק בכל מקום */
+@media (hover: hover) and (pointer: fine) { html { scrollbar-gutter: stable; } }
+* { scrollbar-width: thin; scrollbar-color: var(--gray-300) transparent; }
+
 body {
   margin: 0;
   font-family: var(--font);
@@ -12,12 +16,13 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'kern' 1;
+  font-variant-numeric: tabular-nums;
 }
 
 h1, h2, h3, h4 { letter-spacing: -0.005em; }
 
 /* נתונים שמשווים בעין – שעות, סכומים, מספרי הזמנה, Q וטלפונים – בגופן מונו מיושר */
-.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 :focus-visible {
   outline: none;

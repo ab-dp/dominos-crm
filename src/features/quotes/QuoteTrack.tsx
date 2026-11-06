@@ -28,7 +28,7 @@ export function QuoteActions({ q, compact }: { q: Quote; compact?: boolean }) {
     try {
       await setQuoteStatus(q, s);
       toast({ message: msg, ...(s === 'approved' ? { action: { label: 'הפוך להזמנה', run: () => openNewOrder({ fromQuote: { ...q, status: 'approved' } }) } } : {}) });
-    } catch { toast({ message: 'העדכון נכשל – בדקו חיבור' }); }
+    } catch { toast({ tone: 'error', message: 'העדכון נכשל – בדקו חיבור' }); }
   };
   const size = compact ? 'sm' : 'md';
   return (

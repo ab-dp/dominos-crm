@@ -20,7 +20,7 @@
 .cdialog { width: min(600px, calc(100vw - 32px)); }
 .cdialog__table { width: 100%; border-collapse: collapse; font-size: var(--text-table); margin-bottom: 4px; }
 .cdialog__table th, .cdialog__table td { padding: 9px 10px; border-bottom: 1px solid var(--gray-100); text-align: start; vertical-align: top; }
-.cdialog__table thead th { font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); background: var(--gray-50); }
+.cdialog__table thead th { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); background: var(--white); }
 .cdialog__table tbody th { font-weight: 600; white-space: nowrap; }
 .cdialog__base { color: var(--gray-600); text-decoration: line-through; text-decoration-color: var(--gray-300); }
 .cdialog__theirs { font-weight: 600; color: var(--brand-800); background: var(--brand-50); }

@@ -38,7 +38,7 @@ export function CreditCheck({ ym, orders, month, loading, locked }: { ym: string
   const sum = (list: Order[]) => list.reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
   const unpaid = rows.filter((o) => o.payment === 'pending' || o.payment === 'failed');
   const found = rows.filter((o) => checked[o.id]).length;
-  const toggle = (o: Order) => setChecked(ym, month, o.id, !checked[o.id]).catch(() => toast({ message: 'הסימון לא נשמר – בדוק חיבור' }));
+  const toggle = (o: Order) => setChecked(ym, month, o.id, !checked[o.id]).catch(() => toast({ tone: 'error', message: 'הסימון לא נשמר – בדוק חיבור' }));
 
   const exportCsv = () => {
     downloadCsv(`דוח הקפות ${monthLabel(ym)}${customer ? ` - ${customer}` : ''}.csv`, [

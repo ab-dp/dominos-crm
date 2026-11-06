@@ -179,7 +179,7 @@ function Export({ ym, orders, month, locked }: { ym: string; orders: Order[]; mo
     if (locked) return;
     setBusy(true);
     try { await markExported(ym, month, orders.length); toast({ message: <>החודש סומן "הועבר להנהלת חשבונות" · <Ltr>{orders.length}</Ltr> הזמנות</> }); }
-    catch { toast({ message: 'הקובץ ירד, אבל הסימון לא נשמר – בדוק חיבור ונסה שוב' }); }
+    catch { toast({ tone: 'error', message: 'הקובץ ירד, אבל הסימון לא נשמר – בדוק חיבור ונסה שוב' }); }
     setBusy(false);
   };
   return (
@@ -212,7 +212,7 @@ function LockStep({ ym, orders, month, done, fixes, onGo }: { ym: string; orders
   const lock = async () => {
     setBusy(true);
     try { await lockMonth(ym, month, summarize(orders)); toast({ message: <>החודש <bdi dir="ltr">{monthLabel(ym)}</bdi> נסגר ונעול</> }); }
-    catch { toast({ message: 'הנעילה נכשלה – בדוק חיבור ונסה שוב' }); }
+    catch { toast({ tone: 'error', message: 'הנעילה נכשלה – בדוק חיבור ונסה שוב' }); }
     setBusy(false);
   };
   const reopen = async (e: FormEvent) => {

@@ -19,7 +19,7 @@
   padding-inline-start: 14px;
   background: var(--gray-900);
   color: var(--white);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-panel);
   font-size: var(--text-table);
 }
@@ -28,8 +28,10 @@
   width: 22px; height: 22px;
   border-radius: 50%;
   display: grid; place-items: center;
-  background: #2E9E62;
+  background: var(--ok-mark);
 }
+.toast__ok--error { background: var(--danger-fg); }
+.toast--error { box-shadow: var(--shadow-panel), inset -3px 0 0 var(--danger-fg); }
 .toast__msg { flex: 1; }
 .toast__undo, .toast__action {
   display: inline-flex;
@@ -40,7 +42,7 @@
   border: 0;
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.12);
-  color: #9FD4F2;
+  color: var(--brand-sky);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -50,7 +52,7 @@
 .toast__ring-track { fill: none; stroke: rgba(255, 255, 255, 0.18); stroke-width: 2.5; }
 .toast__ring-bar {
   fill: none;
-  stroke: #9FD4F2;
+  stroke: var(--brand-sky);
   stroke-width: 2.5;
   stroke-linecap: round;
   animation-name: ring-drain;

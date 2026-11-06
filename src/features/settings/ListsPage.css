@@ -12,7 +12,7 @@
 .litem__lock { display: inline-grid; place-items: center; color: var(--gray-600); }
 .litem__actions { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 2px; opacity: 0.55; transition: opacity var(--dur-instant) var(--ease); }
 .litem:hover .litem__actions, .litem:focus-within .litem__actions { opacity: 1; }
-.litem__toggle { height: 28px; padding: 0 10px; border: 1px solid var(--gray-300); border-radius: 14px; background: var(--white); font: inherit; font-size: var(--text-label); cursor: pointer; }
+.litem__toggle { height: 28px; padding: 0 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-panel); background: var(--white); font: inherit; font-size: var(--text-label); cursor: pointer; }
 .litem__toggle:hover { border-color: var(--gray-600); }
 .litem__edit { flex: 1; display: flex; align-items: center; gap: 4px; }
 .litem__edit .input { flex: 1; }

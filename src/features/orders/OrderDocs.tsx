@@ -56,7 +56,7 @@ function DocList({ docs, showOrder }: { docs: OrderDoc[]; showOrder?: boolean })
       if (download) { const a = document.createElement('a'); a.href = url; a.download = d.name; a.click(); }
       else window.open(url, '_blank', 'noopener');
       setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch { toast({ message: 'פתיחת הקובץ נכשלה' }); }
+    } catch { toast({ tone: 'error', message: 'פתיחת הקובץ נכשלה' }); }
   };
   if (!docs.length) return null;
   return (
@@ -100,7 +100,7 @@ function Uploader({ target, defaultKind }: { target: { orderId?: number; custome
     try {
       await uploadDoc({ ...target, kind: effKind, kindLabel: label }, f);
       toast({ message: <>{label} צורף{target.orderId != null ? <> להזמנה <Ltr>{target.orderId}</Ltr></> : ' לתיק הלקוח'}</> });
-    } catch (e) { toast({ message: e instanceof Error && e.message ? e.message : 'הצירוף נכשל – בדוק חיבור' }); }
+    } catch (e) { toast({ tone: 'error', message: e instanceof Error && e.message ? e.message : 'הצירוף נכשל – בדוק חיבור' }); }
     setBusy(false); setPending(null);
   };
   return (

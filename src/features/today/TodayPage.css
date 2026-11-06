@@ -7,7 +7,7 @@
 
 /* ---------- כותרת אישית ---------- */
 .today__hero { align-items: flex-end; padding-bottom: 4px; }
-.today__hero .page__title { font-size: 26px; }
+.today__hero .page__title { font-size: var(--text-screen-title); }
 .today__date { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
 .today__date::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok-fg); box-shadow: 0 0 0 3px var(--ok-bg); }
 .today__summary { margin: 4px 0 0; color: var(--gray-600); font-size: var(--text-table); }
@@ -19,7 +19,7 @@
 .morning { position: relative; margin: 0 0 20px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); overflow: hidden; }
 .section-title { margin: 0; font-size: var(--text-card-title); font-weight: 600; }
 .morning__head { display: flex; align-items: center; gap: 14px; padding: 14px 20px 0; }
-.morning__head .section-title { font-size: var(--text-micro); font-weight: 600; letter-spacing: 0.04em; color: var(--gray-600); }
+.morning__head .section-title { font-size: var(--text-micro); font-weight: 600; letter-spacing: 0; color: var(--gray-600); }
 .morning__count { margin-inline-start: auto; font: 500 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .progress { position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--gray-100); overflow: hidden; }
 .progress__bar { display: block; height: 100%; background: var(--ok-fg); }
@@ -39,12 +39,13 @@
 .task:hover { background: var(--gray-50); }
 .task:hover .task__title { color: var(--brand-700); }
 .task__step { display: none; }
-.task__icon { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--gray-25); color: var(--navy); border: 1px solid var(--gray-100); }
+/* אייקון המשימה – סימן שקט, לא קופסה */
+.task__icon { width: 28px; height: 28px; display: grid; place-items: center; color: var(--gray-600); }
 .task__icon svg { width: 18px; height: 18px; }
 .task__text { display: grid; min-width: 0; }
 .task__title { font-weight: 600; transition: color var(--dur-instant) var(--ease); }
 .task__sub { font-size: var(--text-label); color: var(--gray-600); }
-.task__count { font: 500 30px/1 var(--font-mono); color: var(--gray-900); perspective: 400px; min-width: 36px; text-align: center; letter-spacing: -0.03em; }
+.task__count { font: 500 var(--text-kpi)/1 var(--font-mono); color: var(--gray-900); perspective: 400px; min-width: 36px; text-align: center; letter-spacing: -0.03em; }
 .task__ok { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ok-bg); color: var(--ok-fg); }
 .task--done .task__title { color: var(--gray-600); font-weight: 500; }
 .task--done .task__icon { background: var(--ok-bg); color: var(--ok-fg); border-color: transparent; }
@@ -57,7 +58,7 @@
 /* ---------- שני הטורים ---------- */
 .today__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
 .today__grid > * { min-width: 0; }
-.pill { min-width: 22px; height: 20px; padding: 0 7px; border-radius: 10px; font: 600 11px/20px var(--font-mono); text-align: center; }
+.pill { min-width: 22px; height: 20px; padding: 0 7px; border-radius: var(--radius-panel); font: 600 var(--text-micro)/20px var(--font-mono); text-align: center; }
 .pill--alert { background: var(--danger-bg); color: var(--danger-fg); }
 .calm { display: flex; align-items: center; gap: 8px; margin: 0; padding: 22px 18px; color: var(--ok-fg); font-weight: 500; }
 
@@ -65,7 +66,7 @@
 .urgent { display: grid; gap: 0; padding: 4px 0 8px; }
 .urgent__group + .urgent__group { border-top: 1px solid var(--gray-100); margin-top: 4px; padding-top: 4px; }
 .urgent ul { list-style: none; margin: 0; padding: 0; display: grid; }
-.urgent__label { margin: 10px 18px 4px; font-size: var(--text-micro); font-weight: 600; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; }
+.urgent__label { margin: 10px 18px 4px; font-size: var(--text-micro); font-weight: 600; letter-spacing: 0; display: flex; align-items: center; gap: 6px; }
 .urgent__label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
 .urgent__label--critical { color: var(--danger-fg); }
 .urgent__label--critical::before { background: var(--danger-fg); }
@@ -75,12 +76,10 @@
 .urgent__row + .urgent__row::after { content: ""; position: absolute; top: 0; inset-inline: 18px; height: 1px; background: var(--gray-100); }
 .urgent__row::before { content: ""; position: absolute; inset-inline-start: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; }
 .urgent__row--critical::before { background: var(--danger-fg); }
-.urgent__row--urgent::before { background: var(--urgent-edge); }
-.urgent__main { flex: 1; min-width: 0; display: grid; gap: 1px; padding: 10px 8px; border: 0; border-radius: 6px; background: transparent; font: inherit; text-align: start; cursor: pointer; }
+.urgent__main { flex: 1; min-width: 0; display: grid; gap: 1px; padding: 10px 8px; border: 0; border-radius: var(--radius); background: transparent; font: inherit; text-align: start; cursor: pointer; }
 .urgent__main:hover .urgent__issue { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .urgent__issue { font-weight: 600; font-size: var(--text-table); }
-.urgent__row--critical .urgent__issue { color: var(--danger-fg); }
-.urgent__row--urgent .urgent__issue { color: var(--urgent-fg); }
+.urgent__issue { color: var(--gray-900); }
 .urgent__meta { font-size: var(--text-label); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- ציר היום ---------- */
@@ -89,18 +88,18 @@
 .tl__row:hover { background: var(--gray-50); }
 .tl__row.is-past .tl__time, .tl__row.is-past .tl__cust { color: var(--gray-600); }
 .tl__row.is-past:not(.is-closed) .tl__meta { color: var(--gray-600); }
-.tl__time { width: 50px; flex: none; font: 500 15px var(--font-mono); letter-spacing: -0.02em; }
-.tl__main { flex: 1; min-width: 0; display: grid; padding: 2px 4px; border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; border-radius: 6px; }
+.tl__time { width: 50px; flex: none; font: 600 var(--text-body) var(--font); }
+.tl__main { flex: 1; min-width: 0; display: grid; padding: 2px 4px; border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; border-radius: var(--radius); }
 .tl__cust { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tl__meta { font-size: var(--text-label); color: var(--gray-600); }
 .tl__marks { display: inline-flex; flex: none; }
 .tl__now { position: relative; display: flex; align-items: center; gap: 8px; height: 26px; margin: 4px 0; color: var(--brand-700); font-size: var(--text-micro); font-weight: 600; }
 .tl__now::after { content: ""; flex: 1; height: 1px; background: var(--brand-600); }
-.tl__now::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-600); box-shadow: 0 0 0 3px rgba(0, 100, 145, 0.15); }
+.tl__now::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-600); }
 .tl__now bdi { font-family: var(--font-mono); }
 .tl__row.is-next { background: var(--brand-50); box-shadow: inset -2px 0 0 var(--brand-600); }
 .tl__row.is-next .tl__time { color: var(--brand-700); }
-.tl__next { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: 8px; padding: 1px 8px; border-radius: 10px; background: var(--white); border: 1px solid var(--brand-100); color: var(--brand-700); font-size: 11px; font-weight: 600; vertical-align: 1px; }
+.tl__next { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: 8px; padding: 1px 8px; border-radius: var(--radius-panel); background: var(--white); border: 1px solid var(--brand-100); color: var(--brand-700); font-size: var(--text-micro); font-weight: 600; vertical-align: 1px; }
 
 /* ---------- שורת מידע תחתונה ---------- */
 .info { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
@@ -114,7 +113,7 @@
 }
 button.info__item { cursor: pointer; }
 button.info__item:hover { border-color: var(--gray-300); color: var(--gray-900); }
-.info__item b { color: var(--gray-900); font-family: var(--font-mono); font-weight: 500; }
+.info__item b { color: var(--gray-900); font-weight: 600; }
 
 @media (max-width: 1200px) {
   .morning__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -136,9 +135,19 @@ button.info__item:hover { border-color: var(--gray-300); color: var(--gray-900);
 .otasks { list-style: none; margin: 0; padding: 4px 0 8px; }
 .otasks > li + li { border-top: 1px solid var(--gray-100); }
 .otasks .task { grid-template-columns: auto minmax(0, 1fr) auto auto; padding: 12px 18px; }
-.otasks .task__count { font-size: 24px; color: var(--brand-800); }
+.otasks .task__count { font-size: var(--text-screen-title); font-weight: 600; color: var(--gray-900); }
 .otasks .task--red .task__count { color: var(--danger-fg); }
-.otasks .task--red .task__icon { background: var(--danger-bg); color: var(--danger-fg); border-color: transparent; }
+.otasks .task--red .task__icon { color: var(--danger-fg); }
 .task__go { color: var(--gray-300); transition: color var(--dur-instant) var(--ease), transform var(--dur-instant) var(--ease); }
 .task:hover .task__go { color: var(--brand-700); transform: translateX(-2px); }
 .calm--quiet { color: var(--gray-600); }
+
+/* טלפון: ציר היום בשתי שורות – שם הלקוח מקבל את כל הרוחב, השלב יורד מתחתיו */
+@media (max-width: 700px) {
+  .tl { padding: 4px 4px 8px; }
+  .tl__row { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: start; gap: 2px 8px; padding: 10px 8px; }
+  .tl__time { width: auto; padding-top: 2px; }
+  .tl__cust { white-space: normal; }
+  .tl__row > :nth-child(4) { grid-column: 2 / -1; }
+  .tl__next { display: table; margin: 4px 0 0; }
+}

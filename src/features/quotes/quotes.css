@@ -30,7 +30,7 @@
 .qe-locked { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-100); color: var(--gray-900); font-size: var(--text-table); }
 .qe-sec { padding: 14px 16px; }
 .qe-sec__title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
-.qe-num { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--brand-600); color: var(--white); font-size: 13px; font-family: var(--font-mono); }
+.qe-num { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--brand-600); color: var(--white); font-size: var(--text-label); font-family: var(--font-mono); }
 .qe-opt { font-size: var(--text-label); font-weight: 400; color: var(--gray-600); }
 .qe-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .qe-plsel { width: auto; min-width: 220px; }
@@ -40,10 +40,10 @@
 
 .qe-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; }
 .qe-chips__label { font-size: var(--text-label); color: var(--gray-600); }
-.qe-chip { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px; border: 1px dashed var(--gray-300); border-radius: 15px; background: var(--white); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
+.qe-chip { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px; border: 1px dashed var(--gray-300); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
 .qe-chip:hover { border-color: var(--brand-600); color: var(--brand-800); background: var(--brand-50); }
 .qe-chip.is-in { border-style: solid; border-color: var(--brand-100); background: var(--brand-50); color: var(--brand-800); }
-.qe-sugtag { margin-inline-start: 6px; padding: 0 6px; border-radius: 8px; background: var(--ok-bg); color: var(--ok-fg); font-size: 11px; font-weight: 700; }
+.qe-sugtag { margin-inline-start: 6px; padding: 0 6px; border-radius: var(--radius-panel); background: var(--ok-bg); color: var(--ok-fg); font-size: var(--text-micro); font-weight: 700; }
 
 .qe-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 120px) 72px 96px 36px; gap: 6px; align-items: center; }
 .qe-r--head { padding: 2px 0 6px; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
@@ -84,7 +84,7 @@
 .qe-warn li svg { vertical-align: -3px; margin-inline-end: 4px; }
 .qe-warn li.is-err { color: var(--danger-fg); font-weight: 600; }
 .qe-total { margin-inline-end: auto; font-size: var(--text-body); }
-.qe-total b { font-family: var(--font-mono); font-size: 20px; }
+.qe-total b { font-family: var(--font-mono); font-size: var(--text-section); }
 
 /* תצוגה חיה */
 .qe-preview { position: sticky; top: calc(var(--topbar) + 12px); max-height: calc(100vh - var(--topbar) - 24px); overflow-y: auto; border-radius: var(--radius-panel); background: var(--gray-100); padding: 12px; }
@@ -108,7 +108,7 @@
 /* ---------- דף ההצעה (A4) – לפי הדוגמה שאושרה ---------- */
 .qs { --qs-blue: #143a59; --qs-sub: #4d6275; --qs-faint: #5b6d7e; --qs-line: #e3eaf0;
   box-sizing: border-box; width: 210mm; min-height: 297mm; padding: 16mm 16mm 14mm; display: flex; flex-direction: column;
-  background: #fff; color: #1b2733; font-family: var(--font); font-size: 13px; line-height: 1.5; text-align: right; }
+  background: #fff; color: #1b2733; font-family: var(--font); font-size: var(--text-label); line-height: 1.5; text-align: right; }
 .qs * { box-sizing: border-box; }
 .qs-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 14px; border-bottom: 3px solid var(--qs-blue); }
 .qs-head img { height: 44px; width: auto; display: block; margin-top: 4px; }
@@ -176,5 +176,5 @@
 }
 
 /* פחות טקסט על המסך: הסבר שמלמד איך לעבוד מופיע רק כשעובדים על החלק הזה */
-.qe-hint { font-size: 12px; }
+.qe-hint { font-size: var(--text-micro); }
 .qe-sec:not(:focus-within) .qe-hint--edit { visibility: hidden; } /* שומר מקום – שום דבר לא זז ברגע הלחיצה */

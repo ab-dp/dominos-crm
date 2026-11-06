@@ -304,15 +304,15 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
         await updateCustomer(c, {
           ...(saveContact && newContact ? { contacts: [...c.contacts, { id: newId(), name: contact.name.trim(), role: '', phone: contactPhoneClean, email: '', primary: c.contacts.length === 0 }] } : {}),
           ...(saveAddress && newAddress ? { addresses: [...c.addresses, { id: newId(), label: '', address: address.trim(), directions: '', preferredBranchId: branchObj?.id ?? '' }] } : {}),
-        }, `נוסף מתוך הזמנה ${n}`).catch(() => toast({ message: 'ההזמנה נשמרה, אבל השמירה בתיק הלקוח נכשלה – אפשר להוסיף שם ידנית' }));
+        }, `נוסף מתוך הזמנה ${n}`).catch(() => toast({ tone: 'error', message: 'ההזמנה נשמרה, אבל השמירה בתיק הלקוח נכשלה – אפשר להוסיף שם ידנית' }));
       }
       if (poFile) {
         // הקובץ נשמר אחרי ההזמנה; אם נכשל – ההזמנה כבר שמורה ואפשר לצרף שוב מהתיק
-        await uploadOrderDoc(n, poFile, input.customerId || '').catch(() => toast({ message: <>ההזמנה נשמרה, אבל צירוף תעודת הרכש נכשל – אפשר לצרף אותה מתיק ההזמנה <Ltr>{n}</Ltr></> }));
+        await uploadOrderDoc(n, poFile, input.customerId || '').catch(() => toast({ tone: 'error', message: <>ההזמנה נשמרה, אבל צירוף תעודת הרכש נכשל – אפשר לצרף אותה מתיק ההזמנה <Ltr>{n}</Ltr></> }));
       }
       if (fq) {
         // ההזמנה כבר נשמרה; אם סימון ההצעה נכשל – רק מודיעים
-        await setQuoteStatus(fq, 'ordered', '', { orderId: n }).catch(() => toast({ message: <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
+        await setQuoteStatus(fq, 'ordered', '', { orderId: n }).catch(() => toast({ tone: 'error', message: <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
       }
       toast({
         message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת באדום</b></>}</>,
@@ -588,7 +588,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                         <span>לקוח מזדמן שכבר הזמין בעבר – להפוך אותו ל"קבוע"?</span>
                         <button type="button" className="link" onClick={() => updateCustomer(c, { type: 'regular' }, 'הוצע בהזמנה חוזרת')
                           .then(() => toast({ message: <>{c.name} סומן כלקוח קבוע · כדאי להשלים בתיק: מחירון, כתובות והנחיות חיוב</>, action: { label: 'לתיק', run: () => { onClose(); window.location.hash = `#/customers/${c.id}`; } } }))
-                          .catch(() => toast({ message: 'העדכון נכשל – בדוק חיבור' }))}>הפוך לקבוע</button>
+                          .catch(() => toast({ tone: 'error', message: 'העדכון נכשל – בדוק חיבור' }))}>הפוך לקבוע</button>
                       </p>
                     )}
                   </Section>

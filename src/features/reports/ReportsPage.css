@@ -1,9 +1,11 @@
-/* מרכז הדוחות */
-.rhub { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.rhub__card { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); text-decoration: none; color: inherit; transition: box-shadow var(--dur-quick) var(--ease), transform var(--dur-quick) var(--ease); }
-.rhub__card:hover { box-shadow: 0 0 0 1px var(--brand-100), var(--shadow-float); transform: translateY(-1px); }
+/* מרכז הדוחות: רשימה אחת על משטח, שורה לכל דוח – בלי כרטיסים זהים */
+.rhub { display: grid; grid-template-columns: minmax(0, 1fr); background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); overflow: hidden; }
+.rhub > .rhub__card { border-radius: 0; box-shadow: none; }
+.rhub > .rhub__card + .rhub__card { border-top: 1px solid var(--line-soft); }
+.rhub__card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); text-decoration: none; color: inherit; transition: background var(--dur-instant) var(--ease); }
+.rhub__card:hover { background: var(--gray-50); }
 .rhub__card:hover b { color: var(--brand-700); }
-.rhub__icon { flex: none; width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--gray-25); border: 1px solid var(--gray-100); color: var(--navy); }
+.rhub__icon { flex: none; width: 24px; height: 24px; display: grid; place-items: center; color: var(--gray-600); }
 .rhub__text { display: grid; gap: 3px; }
 .rhub__text b { font-weight: 600; transition: color var(--dur-instant) var(--ease); }
 .rhub__text span { font-size: var(--text-label); color: var(--gray-600); line-height: 1.5; }
@@ -20,7 +22,7 @@
 .report__kpis > div { flex: 1 1 160px; display: grid; gap: 2px; padding: 12px 20px; }
 .report__kpis > div + div { border-inline-start: 1px solid var(--gray-100); }
 .report__kpis dt { font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
-.report__kpis dd { margin: 0; font: 500 22px/1.2 var(--font-mono); letter-spacing: -0.02em; }
+.report__kpis dd { margin: 0; font: 600 var(--text-section)/1.2 var(--font); }
 .report__kpis .is-alert dd { color: var(--danger-fg); }
 .report__kpis dd small { display: block; margin-top: 2px; font: 500 var(--text-label) var(--font); letter-spacing: 0; color: var(--gray-600); }
 .rtable td.rtable__wrap { white-space: normal; min-width: 180px; max-width: 260px; padding-block: 8px; line-height: 1.4; }
@@ -35,10 +37,10 @@
 .report__table-card { margin-bottom: 16px; }
 .report__scroll { overflow-x: auto; }
 .rtable { width: 100%; border-collapse: collapse; font-size: var(--text-table); }
-.rtable th { position: sticky; top: 0; height: 36px; padding: 0 10px; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); text-align: start; white-space: nowrap; }
+.rtable th { position: sticky; top: 0; height: 36px; padding: 0 10px; background: var(--white); border-bottom: 1px solid var(--line); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); text-align: start; white-space: nowrap; }
 .rtable td { height: 44px; padding: 0 10px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; }
 .rtable .num { text-align: end; }
-.rtable td bdi { font-family: var(--font-mono); font-size: 13.5px; }
+.rtable td bdi { font-family: var(--font-mono); font-size: var(--text-label); }
 .rtable tbody tr { cursor: pointer; outline: none; transition: background var(--dur-instant) var(--ease); }
 .rtable tbody tr:hover, .rtable tbody tr:focus-visible { background: var(--gray-50); }
 .rtable tbody tr.is-picked { background: var(--brand-50); box-shadow: inset -3px 0 0 var(--brand-600); }
@@ -46,11 +48,11 @@
 
 /* פירוט הזמנות */
 .report__drill { margin-bottom: 16px; animation: pop-in var(--dur-quick) var(--ease); }
-.report__drill .card__title .muted { font: 500 13px var(--font-mono); margin-inline-start: 6px; }
+.report__drill .card__title .muted { font: 500 var(--text-label) var(--font-mono); margin-inline-start: 6px; }
 .report__orders { list-style: none; margin: 0; padding: 4px 8px 8px; max-height: 360px; overflow: auto; }
 .report__orders button { width: 100%; display: grid; grid-template-columns: 70px 140px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 9px 10px; border: 0; border-radius: var(--radius); background: none; font: inherit; font-size: var(--text-table); text-align: start; cursor: pointer; }
 .report__orders button:hover { background: var(--gray-50); }
-.report__oid bdi, .report__odate bdi, .report__osum bdi { font-family: var(--font-mono); font-size: 13px; }
+.report__oid bdi, .report__odate bdi, .report__osum bdi { font-family: var(--font-mono); font-size: var(--text-label); }
 .report__oid { color: var(--brand-700); font-weight: 600; }
 .report__ocust { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 
@@ -63,28 +65,38 @@
 .bars__track { height: 14px; display: flex; }
 .bars__fill { height: 100%; border-radius: 4px 0 0 4px; background: var(--brand-600); transition: width var(--dur-standard) var(--ease); }
 .bars__row:not(:disabled):hover .bars__fill { background: var(--brand-700); }
-.bars__value { text-align: end; font: 500 13px var(--font-mono); }
+.bars__value { text-align: end; font: 500 var(--text-label) var(--font-mono); }
 
 /* גרף עמודות (זמן) */
 .cols { position: relative; height: 240px; margin: 14px 18px 34px; padding-inline-end: 64px; }
 .cols__grid { position: absolute; inset: 0 0 0 0; pointer-events: none; }
-.cols__grid span { position: absolute; inset-inline: 0; border-top: 1px solid var(--gray-100); font: 400 11px var(--font-mono); color: var(--gray-600); }
+.cols__grid span { position: absolute; inset-inline: 0; border-top: 1px solid var(--gray-100); font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .cols__grid span bdi { position: absolute; inset-inline-end: 0; top: -8px; background: var(--white); padding-inline-start: 6px; }
 .cols__plot { position: absolute; inset: 0 0 0 64px; display: flex; align-items: flex-end; gap: 2px; }
 .cols__col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; justify-content: center; padding: 0; border: 0; background: none; cursor: pointer; }
 .cols__bar { width: min(100%, 32px); border-radius: 4px 4px 0 0; background: var(--brand-600); transition: height var(--dur-standard) var(--ease), background var(--dur-instant) var(--ease); }
 .cols__col.is-hover .cols__bar, .cols__col:focus-visible .cols__bar { background: var(--brand-700); }
 .cols__col:focus-visible { box-shadow: none; outline: none; }
-.cols__tip { position: absolute; bottom: calc(100% + 6px); z-index: 2; display: grid; gap: 1px; padding: 6px 10px; border-radius: 6px; background: var(--gray-900); color: var(--white); font-size: 11px; white-space: nowrap; pointer-events: none; text-align: center; }
-.cols__tip b { font: 500 13px var(--font-mono); }
+.cols__tip { position: absolute; bottom: calc(100% + 6px); z-index: 2; display: grid; gap: 1px; padding: 6px 10px; border-radius: var(--radius); background: var(--gray-900); color: var(--white); font-size: var(--text-micro); white-space: nowrap; pointer-events: none; text-align: center; }
+.cols__tip b { font: 500 var(--text-label) var(--font-mono); }
 .cols__col.is-hover .cols__tip { bottom: auto; top: 0; transform: translateY(-110%); }
-.cols__x { position: absolute; top: calc(100% + 8px); font: 400 11px var(--font-mono); color: var(--gray-600); white-space: nowrap; }
+.cols__x { position: absolute; top: calc(100% + 8px); font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); white-space: nowrap; }
 
 @media (max-width: 700px) {
   .bars__row { grid-template-columns: minmax(80px, 120px) minmax(0, 1fr) 80px; }
   .report__orders button { grid-template-columns: 56px minmax(0, 1fr) auto; }
   .report__odate { display: none; }
-  .report__sel, .report__cust { flex: 1; min-width: 0; }
+  /* מסננים בשני טורים, טווח בשורה אחת שנגללת, ומספרים ברשת של שניים */
+  .report__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .report__filters > .seg, .report__filters > .report__dates, .report__filters > .chip { grid-column: 1 / -1; }
+  .report__filters > .seg { overflow-x: auto; scrollbar-width: none; justify-self: start; max-width: 100%; }
+  .report__filters > .seg button { flex: none; white-space: nowrap; }
+  .report__sel, .report__cust { width: 100%; min-width: 0; }
+  .report__kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report__kpis > div { padding: 10px 14px; border-top: 1px solid var(--line-soft); }
+  .report__kpis > div + div { border-inline-start: 0; }
+  .report__kpis > div:nth-child(-n+2) { border-top: 0; }
+  .report__kpis > div:nth-child(even) { border-inline-start: 1px solid var(--line-soft); }
 }
 @media (prefers-reduced-motion: reduce) { .report__drill { animation: none; } }
 .rhub__card--feature { margin-bottom: 12px; box-shadow: 0 0 0 1px var(--brand-100), var(--shadow-card); }

@@ -9,10 +9,10 @@
 
 /* לשוניות */
 .ib-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.ib-tab { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid var(--gray-200); border-radius: 17px; background: var(--white); font: inherit; font-size: var(--text-table); font-weight: 600; color: var(--gray-900); cursor: pointer; }
+.ib-tab { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-table); font-weight: 600; color: var(--gray-900); cursor: pointer; }
 .ib-tab:hover { border-color: var(--brand-600); color: var(--brand-800); }
 .ib-tab.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); box-shadow: inset 0 0 0 1px var(--brand-600); }
-.ib-tab__n { min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--gray-100); color: var(--gray-700); font-family: var(--font-mono); font-size: 12px; line-height: 20px; text-align: center; }
+.ib-tab__n { min-width: 20px; padding: 0 6px; border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-family: var(--font-mono); font-size: var(--text-micro); line-height: 20px; text-align: center; }
 .ib-tab.is-on .ib-tab__n { background: var(--brand-600); color: var(--white); }
 .ib-tab.is-bad { border-color: var(--danger-fg); }
 .ib-tab.is-bad::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--danger-fg); }
@@ -31,20 +31,20 @@
 .ib-r.is-draft .input:focus { background: var(--white); }
 .ib .is-invalid { border-color: var(--danger-fg); box-shadow: 0 0 0 1px var(--danger-fg); background: var(--danger-bg); }
 .ib-r__name { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.ib-r__old { flex: none; padding: 2px 8px; border-radius: 8px; background: var(--gray-100); color: var(--gray-700); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.ib-r__old { flex: none; padding: 2px 8px; border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 600; white-space: nowrap; }
 .ib-r__parts { display: grid; gap: 4px; }
 .ib-r__parts--2 { grid-template-columns: 1fr 1fr; }
 .ib-r__parts--4 { grid-template-columns: 1fr 1fr; }
 .ib-split { display: flex; height: 30px; border: 1px solid var(--gray-300); border-radius: var(--radius); overflow: hidden; }
-.ib-split button { flex: 1; border: 0; background: var(--white); font: inherit; font-size: 13px; color: var(--gray-700); cursor: pointer; }
+.ib-split button { flex: 1; border: 0; background: var(--white); font: inherit; font-size: var(--text-label); color: var(--gray-700); cursor: pointer; }
 .ib-split button + button { border-inline-start: 1px solid var(--gray-200); }
 .ib-split button.is-on { background: var(--brand-50); color: var(--brand-800); font-weight: 700; }
 .ib-r__note { margin: 2px 70px 0 0; font-size: var(--text-label); color: var(--gray-600); }
 .ib-sug { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin: 4px 70px 2px 0; font-size: var(--text-label); color: var(--gray-600); }
-.ib-sug__chip { height: 26px; padding: 0 10px; border: 1px solid var(--gray-200); border-radius: 13px; background: var(--gray-50); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
+.ib-sug__chip { height: 26px; padding: 0 10px; border: 1px solid var(--gray-200); border-radius: var(--radius-panel); background: var(--gray-50); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
 .ib-sug__chip:hover { border-color: var(--brand-600); color: var(--brand-800); }
 .ib-sug__chip.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); font-weight: 600; }
-.ib-addrow { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; height: 28px; padding: 0 10px; border: 1px dashed var(--gray-300); border-radius: 14px; background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 600; color: var(--brand-700); cursor: pointer; }
+.ib-addrow { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; height: 28px; padding: 0 10px; border: 1px dashed var(--gray-300); border-radius: var(--radius-panel); background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 600; color: var(--brand-700); cursor: pointer; }
 .ib-addrow:hover { border-color: var(--brand-600); background: var(--brand-50); }
 .ib-err { margin: 6px 0 0; font-size: var(--text-label); font-weight: 600; color: var(--danger-fg); }
 .ib-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin: 6px 2px 10px; font-size: var(--text-label); color: var(--gray-600); }
@@ -82,7 +82,7 @@
 .iview { display: grid; gap: 12px; margin-bottom: 10px; }
 .iview__cat { padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: var(--radius); }
 .iview__head { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: var(--text-body); font-weight: 700; color: var(--gray-900); }
-.iview__n { min-width: 22px; padding: 0 7px; border-radius: 11px; background: var(--brand-50); color: var(--brand-800); font-family: var(--font-mono); font-size: 13px; line-height: 22px; text-align: center; }
+.iview__n { min-width: 22px; padding: 0 7px; border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-800); font-family: var(--font-mono); font-size: var(--text-label); line-height: 22px; text-align: center; }
 .iview__list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: var(--text-table); line-height: 1.5; }
 .iview__list > li > b bdi { font-family: var(--font-mono); }
 .iview__rows { margin: 2px 0 0; padding: 0 18px 0 0; list-style: disc; color: var(--gray-800); }
@@ -135,4 +135,4 @@
 
 /* טיפים של מקלדת – רק כשעומדים בתוך הטבלה */
 :has(> .ib-foot):not(:focus-within) .ib-hint { visibility: hidden; } /* שומר מקום – כפתור מתחת לא זז ברגע הלחיצה */
-.ib-hint { font-size: 12px; }
+.ib-hint { font-size: var(--text-micro); }

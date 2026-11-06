@@ -57,7 +57,7 @@ export function UsersPage() {
       logAction({ entity: 'user', entityId: u.uid, action, before, after: { status, ...extra } });
       toast({ message });
     } catch {
-      toast({ message: 'הפעולה נכשלה – אין הרשאה או אין חיבור' });
+      toast({ tone: 'error', message: 'הפעולה נכשלה – אין הרשאה או אין חיבור' });
     }
   }
 
@@ -153,7 +153,7 @@ export function UsersPage() {
             await updateDoc(doc(db, 'users', u.uid), { name, role });
             logAction({ entity: 'user', entityId: u.uid, action: 'edit', before: { name: u.name, role: u.role }, after: { name, role } });
             toast({ message: 'פרטי המשתמש עודכנו' });
-          } catch { toast({ message: 'העדכון נכשל' }); }
+          } catch { toast({ tone: 'error', message: 'העדכון נכשל' }); }
         }}
         onDelete={async (u) => {
           await setStatus(u, 'deleted', {}, <>{u.name} נמחק מהמערכת</>, 'delete');

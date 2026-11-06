@@ -2,7 +2,7 @@
 .users__actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; height: 56px; }
 .ucell { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; }
 .ucell__avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: var(--white); font-weight: 600; font-size: var(--text-label); }
-.you { margin-inline-start: 6px; padding: 1px 6px; border-radius: 8px; background: var(--gray-100); color: var(--gray-600); font-size: 11px; font-weight: 500; }
+.you { margin-inline-start: 6px; padding: 1px 6px; border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-600); font-size: var(--text-micro); font-weight: 500; }
 .role { display: inline-flex; align-items: center; gap: 4px; }
 .role--admin { color: var(--brand-800); font-weight: 600; }
 .users-skel { display: grid; gap: 10px; padding: 16px; }
@@ -10,7 +10,7 @@
 .menu__item--danger { color: var(--danger-fg); }
 .menu__item--danger[data-highlighted] { background: var(--danger-bg); color: var(--danger-fg); }
 .menu__item[data-disabled] { opacity: 0.5; cursor: not-allowed; }
-.menu__hint { margin-inline-start: auto; font-size: 11px; color: var(--gray-600); }
+.menu__hint { margin-inline-start: auto; font-size: var(--text-micro); color: var(--gray-600); }
 .menu__sep { height: 1px; margin: 4px 6px; background: var(--gray-100); }
 
 .console-hint {

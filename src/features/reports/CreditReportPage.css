@@ -7,7 +7,7 @@
 .creport tfoot th { height: 46px; padding: 0 10px; text-align: start; border-top: 2px solid var(--gray-300); font-size: var(--text-table); }
 .creport__note { max-width: 260px; overflow: hidden; text-overflow: ellipsis; color: var(--gray-600); font-size: var(--text-label); }
 .orow.is-found td { background: var(--ok-bg); }
-.gap-tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: var(--radius-tag); background: var(--danger-bg); color: var(--danger-fg); font-size: 12px; font-weight: 600; }
+.gap-tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: var(--radius-tag); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-micro); font-weight: 600; }
 .paytag { padding: 2px 8px; border-radius: var(--radius-tag); font-size: var(--text-label); font-weight: 500; }
 .paytag--pending { background: var(--urgent-bg); color: var(--urgent-fg); }
 .paytag--paid { background: var(--ok-bg); color: var(--ok-fg); }
