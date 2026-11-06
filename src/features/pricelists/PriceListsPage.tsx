@@ -317,7 +317,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
                 <Link to={`/customers/${c.id}`}>{c.name}</Link>
                 <button type="button" aria-label={`הסר את ${c.name} מהמחירון`} onClick={async () => {
                   try { await assignPriceList([c], '', pl.name); toast({ message: <>{c.name} הוסר מהמחירון</>, onUndo: () => assignPriceList([{ ...c, priceListId: '' }], pl.id, pl.name) }); }
-                  catch { toast({ message: 'השמירה נכשלה – בדקו חיבור' }); }
+                  catch { toast({ tone: 'error', message: 'השמירה נכשלה – בדקו חיבור' }); }
                 }}><X size={13} /></button>
               </li>
             ))}

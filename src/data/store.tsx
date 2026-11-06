@@ -110,7 +110,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         const snaps = await Promise.all(missing.map((id) => getDoc(doc(db, 'orders', String(id)))));
         before = [...before, ...snaps.filter((s) => s.exists()).map((s) => fromDoc(s.id, s.data()!))];
-      } catch { toast({ message: 'השמירה נכשלה – בדוק חיבור ונסה שוב.' }); return; }
+      } catch { toast({ tone: 'error', message: 'השמירה נכשלה – בדוק חיבור ונסה שוב.' }); return; }
     }
     if (!before.length) return;
     // חודש נעול: שינוי סכום/תאריך/סטטוס/תשלום מחייב סיבה – קודם שואלים, ואז שומרים עם הסיבה
@@ -134,12 +134,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             // ביטול של תיקון בחודש נעול הוא גם תיקון – עם סיבה, אחרת השרת חוסם
             if (fixReason) back.postCloseFix = { reason: `ביטול תיקון: ${fixReason}`, by: auth.currentUser?.displayName ?? '', at: serverTimestamp() };
             return updateOrders([cur], back, source, 'ביטול פעולה');
-          })).catch(() => toast({ message: 'הביטול נכשל – בדוק חיבור' }));
+          })).catch(() => toast({ tone: 'error', message: 'הביטול נכשל – בדוק חיבור' }));
         },
       }))
       .catch((e) => {
         if (e instanceof ConflictError) { setConflict({ error: e, patch, message }); return; }
-        toast({ message: `${saveError(e)} – השינוי לא נשמר` });
+        toast({ tone: 'error', message: `${saveError(e)} – השינוי לא נשמר` });
       });
   }, [toast]);
 
@@ -149,7 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // נשמר על בסיס הערכים העדכניים, כך שרק השדות שבחרתי משתנים
         updateOrderSafe(c.error.current, c.patch, 'inline', 'נשמר אחרי התנגשות')
           .then(() => toast({ message: c.message }))
-          .catch(() => toast({ message: 'השמירה נכשלה שוב – פתח את התיק מחדש ונסה' }));
+          .catch(() => toast({ tone: 'error', message: 'השמירה נכשלה שוב – פתח את התיק מחדש ונסה' }));
       }
       return null;
     });

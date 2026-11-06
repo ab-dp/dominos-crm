@@ -39,7 +39,7 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
 
   const commit = async (next: ListItem[], msg: string) => {
     try { await saveList(k, next, items, lists); toast({ message: msg, onUndo: () => saveList(k, items, next, { ...lists, [k]: next }) }); }
-    catch { toast({ message: 'השמירה נכשלה – רק מנהל מערכת יכול לשנות רשימות' }); }
+    catch { toast({ tone: 'error', message: 'השמירה נכשלה – רק מנהל מערכת יכול לשנות רשימות' }); }
   };
 
   const add = async () => {

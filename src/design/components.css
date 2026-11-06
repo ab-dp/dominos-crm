@@ -184,6 +184,8 @@
 .roll__digit { display: inline-block; font-variant-numeric: tabular-nums; }
 
 /* ---------- Skeleton / Empty ---------- */
+.screen-loading { display: grid; gap: 10px; animation: fade-in var(--dur-standard) var(--ease) 180ms both; }
+.screen-loading__rows { display: grid; gap: 14px; margin-top: 10px; padding: 18px; }
 .skeleton {
   display: inline-block;
   border-radius: var(--radius);

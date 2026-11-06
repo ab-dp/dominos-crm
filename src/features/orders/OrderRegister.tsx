@@ -36,7 +36,7 @@ export function RegisterBlock({ o }: { o: OrderView }) {
   useEffect(() => setEditItems(false), [o.id]);
   const copy = async () => {
     try { await navigator.clipboard.writeText(registerText(o)); toast({ message: 'פרטי ההזמנה הועתקו' }); }
-    catch { toast({ message: 'ההעתקה לא הצליחה – אפשר לסמן ולהעתיק ידנית' }); }
+    catch { toast({ tone: 'error', message: 'ההעתקה לא הצליחה – אפשר לסמן ולהעתיק ידנית' }); }
   };
   return (
     <section className="reg" aria-labelledby="h-reg">

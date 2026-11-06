@@ -30,6 +30,8 @@
   display: grid; place-items: center;
   background: var(--ok-mark);
 }
+.toast__ok--error { background: var(--danger-fg); }
+.toast--error { box-shadow: var(--shadow-panel), inset -3px 0 0 var(--danger-fg); }
 .toast__msg { flex: 1; }
 .toast__undo, .toast__action {
   display: inline-flex;

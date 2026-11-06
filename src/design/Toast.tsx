@@ -1,10 +1,11 @@
 /* הודעה קצרה עם "בטל" (אפיון סעיף 2, תיקון 3): 10 שניות, נעצרת בריחוף או בפוקוס, נקראת לקורא מסך. */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Check, X } from 'lucide-react';
+import { Check, CircleAlert, X } from 'lucide-react';
 import './Toast.css';
 
-type ToastInput = { message: ReactNode; onUndo?: () => void; action?: { label: string; run: () => void } };
+/* tone: 'error' – אייקון אזהרה אדום במקום וי ירוק, ונקרא מיד לקורא מסך */
+type ToastInput = { message: ReactNode; tone?: 'error'; onUndo?: () => void; action?: { label: string; run: () => void } };
 type ToastItem = ToastInput & { id: number };
 
 const ToastCtx = createContext<(t: ToastInput) => void>(() => {});
@@ -55,7 +56,8 @@ function ToastView({ item, onDone }: { item: ToastItem; onDone: () => void }) {
   return (
     <motion.div
       layout={!reduce}
-      className="toast"
+      className={`toast ${item.tone === 'error' ? 'toast--error' : ''}`}
+      role={item.tone === 'error' ? 'alert' : undefined}
       initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8, transition: { duration: 0.16 } }}
@@ -65,7 +67,9 @@ function ToastView({ item, onDone }: { item: ToastItem; onDone: () => void }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      <span className="toast__ok" aria-hidden="true"><Check size={14} strokeWidth={3} /></span>
+      {item.tone === 'error'
+        ? <span className="toast__ok toast__ok--error" aria-hidden="true"><CircleAlert size={14} strokeWidth={2.5} /></span>
+        : <span className="toast__ok" aria-hidden="true"><Check size={14} strokeWidth={3} /></span>}
       <span className="toast__msg">{item.message}</span>
       {item.onUndo && (
         <button

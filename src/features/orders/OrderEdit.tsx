@@ -264,7 +264,7 @@ export function NotesSection({ o }: { o: OrderView }) {
     if (CARD_RE.test(text)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     setBusy(true);
     try { await addOrderNote(o.id, text); setText(''); }
-    catch { toast({ message: 'ההערה לא נשמרה – בדוק חיבור' }); }
+    catch { toast({ tone: 'error', message: 'ההערה לא נשמרה – בדוק חיבור' }); }
     setBusy(false);
   };
   const legacy = [

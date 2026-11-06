@@ -373,7 +373,7 @@ function ActiveSwitch({ active, label, onChange }: { active: boolean; label: str
   const toast = useToast();
   const click = async () => {
     setBusy(true);
-    try { await onChange(!active); } catch { toast({ message: 'הפעולה נכשלה' }); }
+    try { await onChange(!active); } catch { toast({ tone: 'error', message: 'הפעולה נכשלה' }); }
     setBusy(false);
   };
   return (

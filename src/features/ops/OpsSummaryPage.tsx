@@ -50,7 +50,7 @@ export function OpsSummaryPage() {
       const { downloadOpsPdf } = await import('./opsPdf');
       await downloadOpsPdf(els, `סיכום לתפעול ${name} ${fmtDate(from)}${from !== to ? ` עד ${fmtDate(to)}` : ''}.pdf`);
     } catch {
-      toast({ message: 'הורדת ה-PDF נכשלה. נסו שוב.' });
+      toast({ tone: 'error', message: 'הורדת ה-PDF נכשלה. נסו שוב.' });
     } finally { setBusy(''); }
   };
 
@@ -63,7 +63,7 @@ export function OpsSummaryPage() {
       if (ids.length) updateMany(ids, { branchApproval: { manager: '', at: new Date().toISOString() } }, <>עודכן בתפעול · {ids.length} הזמנות</>);
       toast({ message: <>סומן שהסיכום של {c.name} נשלח</> });
     } catch (e) {
-      toast({ message: saveError(e) });
+      toast({ tone: 'error', message: saveError(e) });
     } finally { setBusy(''); }
   };
 

@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from './auth/AuthContext';
 import { AuthScreens } from './auth/AuthScreens';
 import { InactivityGuard } from './auth/Inactivity';
 import { DominoTile } from './components/DominoTile';
+import { Skeleton } from './design/components';
 import { TodayPage } from './features/today/TodayPage';
 import { OrdersPage } from './features/orders/OrdersPage';
 
@@ -55,6 +56,17 @@ export function App() {
   );
 }
 
+/* שלד בזמן טעינת מסך עצל: כותרת ושורות. מופיע רק אם הטעינה לוקחת יותר מרגע, כדי שלא יהבהב */
+function ScreenLoading() {
+  return (
+    <div className="page screen-loading" aria-busy="true" aria-label="טוען מסך">
+      <Skeleton w={180} h={24} />
+      <Skeleton w={260} h={14} />
+      <div className="card screen-loading__rows">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} h={18} />)}</div>
+    </div>
+  );
+}
+
 /* אף אחד לא נכנס למערכת בלי אישור של מנהל המערכת */
 function Gate() {
   const { phase } = useAuth();
@@ -72,7 +84,7 @@ function Gate() {
         <HashRouter>
           <InactivityGuard />
           <AppShell>
-            <Suspense fallback={<div className="page" aria-busy="true" aria-label="טוען מסך" />}>
+            <Suspense fallback={<ScreenLoading />}>
             <Routes>
               <Route path="/" element={<Navigate to="/today" replace />} />
               <Route path="/today" element={<TodayPage />} />
