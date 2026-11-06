@@ -1,4 +1,4 @@
-/* טוקנים של מערכת העיצוב – שפת "חדר בקרה" (נובמבר 2026).
+/* טוקנים של מערכת העיצוב – "עמדת מוקד" (שדרוג נובמבר 2026): משטח שטוח, קווים במקום צללים, צבע רק כשצריך לפעול.
    כחול-לילה מעגן את המותג בתפריט, משטח עבודה לבן ושקט, וצבע רק איפה שצריך לפעול.
    השמות נשמרו מהגרסה הקודמת, כך שכל המסכים מקבלים את הערכים החדשים מכאן. */
 :root {
@@ -18,11 +18,13 @@
   --brand-red: #E31837;   /* לוגו וחריגה קריטית בלבד */
 
   /* ניטרליים – עם נטייה קלה לכחול */
-  --gray-25: #F3F5F8;     /* משטח העבודה */
+  --gray-25: #F5F7F9;     /* משטח העבודה */
   --gray-50: #F8FAFC;     /* כותרות טבלה, ריחוף */
-  --gray-100: #E4E9EF;    /* קווי הפרדה */
-  --gray-200: #D5DCE4;    /* גבולות כפתורים */
-  --gray-300: #C3CBD6;    /* גבולות שדות */
+  --gray-100: #E6EAEF;    /* קווי הפרדה */
+  --gray-200: #D6DCE3;    /* גבולות כפתורים */
+  --gray-300: #C2CAD4;    /* גבולות שדות */
+  --gray-400: #8A96A5;    /* placeholder, אייקונים כבויים */
+  --gray-700: #3A4756;
   --gray-600: #546272;    /* טקסט משני */
   --gray-900: #0F1B2A;    /* דיו */
   --white: #FFFFFF;
@@ -34,23 +36,31 @@
   --ok-bg: #E6F3EC;      --ok-fg: #16704A;
   --urgent-edge: #E08A3C;
   --missing-edge: #D8B53A;
+  --danger-line: #EDB3BC; /* גבול של כפתור/תג מסוכן */
+  --ok-mark: #2E9E62;     /* וי בהודעה על רקע כהה */
+  --line: var(--gray-100);
+  --line-soft: #EEF1F4;   /* קו בין שורות טבלה */
 
   /* טיפוגרפיה */
   --font: 'IBM Plex Sans Hebrew', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  /* מספרים באותו גופן עם ספרות טבלאיות. השם נשמר כדי שכל המסכים יקבלו את השינוי מכאן */
+  --font-mono: var(--font);
+  --text-badge: 10px;     /* מונים זעירים בלבד */
   --text-micro: 12px;
   --text-label: 13px;
   --text-table: 14px;
   --text-body: 15px;
   --text-card-title: 16px;
-  --text-screen-title: 24px;
+  --text-section: 20px;
+  --text-screen-title: 22px;
   --text-kpi: 28px;
 
   /* צורות */
   --radius-tag: 4px;
   --radius: 6px;
-  --radius-panel: 10px;
-  --shadow-card: 0 0 0 1px rgba(15, 27, 42, 0.065), 0 1px 2px rgba(15, 27, 42, 0.04), 0 2px 6px -2px rgba(15, 27, 42, 0.04);
+  --radius-panel: 8px;
+  /* שלוש רמות עומק: משטח דף שטוח עם קו, צף (תפריטים), חלון */
+  --shadow-card: 0 0 0 1px var(--line);
   --shadow-float: 0 0 0 1px rgba(15, 27, 42, 0.06), 0 4px 8px -2px rgba(15, 27, 42, 0.06), 0 12px 28px -6px rgba(15, 27, 42, 0.16);
   --shadow-panel: 0 0 0 1px rgba(15, 27, 42, 0.06), 0 24px 64px rgba(15, 27, 42, 0.22);
   --focus-ring: 0 0 0 2px var(--white), 0 0 0 4px var(--brand-600);

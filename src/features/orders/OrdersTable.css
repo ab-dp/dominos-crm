@@ -6,13 +6,13 @@
   height: 36px; padding: 0 10px;
   background: var(--gray-50);
   border-bottom: 1px solid var(--gray-100);
-  font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); letter-spacing: 0.02em;
+  font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); letter-spacing: 0;
   text-align: start; white-space: nowrap;
 }
 .otable td { height: 54px; padding: 4px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; white-space: nowrap; }
 .otable tbody tr:last-child td { border-bottom: 0; }
 .otable .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.otable .strong { font-weight: 500; font-size: 15px; color: var(--gray-900); }
+.otable .strong { font-weight: 500; font-size: var(--text-body); color: var(--gray-900); }
 .col-check { width: 36px; padding-inline-end: 0 !important; }
 .col-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }
 
@@ -82,7 +82,7 @@
   .orow--urgent { box-shadow: var(--shadow-card), inset -3px 0 0 var(--urgent-edge); }
   .orow--missing { box-shadow: var(--shadow-card), inset -3px 0 0 var(--missing-edge); }
   .otable--orders td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
-  .otable--orders td.c-time { display: block; grid-area: time; font-size: 17px; }
+  .otable--orders td.c-time { display: block; grid-area: time; font-size: var(--text-card-title); }
   .otable--orders td.c-cust { display: block; grid-area: cust; min-width: 0; }
   .otable--orders td.c-health { display: block; grid-area: health; }
   .otable--orders td.c-marks { display: flex; grid-area: marks; align-items: center; }
@@ -96,9 +96,9 @@
 /* ביטול / סופקה חלקית – ישירות בשורה */
 .c-act__in { display: inline-flex; align-items: center; gap: 8px; }
 .row-acts { display: inline-flex; gap: 4px; }
-.row-act { height: 28px; padding: 0 9px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: 12px; font-weight: 500; color: var(--gray-600); cursor: pointer; white-space: nowrap; transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
+.row-act { height: 28px; padding: 0 9px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); cursor: pointer; white-space: nowrap; transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
 .row-act:hover { border-color: var(--gray-300); color: var(--gray-900); }
-.row-act--danger { color: var(--danger-fg); border-color: #F3C9D0; }
+.row-act--danger { color: var(--danger-fg); border-color: var(--danger-line); }
 .row-act--danger:hover { border-color: var(--danger-fg); color: var(--danger-fg); background: var(--danger-bg); }
 @media (max-width: 700px) {
   /* בטלפון: שורת פעולות משלה מתחת לסימונים, כדי לא לדחוק את שם הלקוח */

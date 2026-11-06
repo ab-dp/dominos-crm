@@ -21,7 +21,7 @@
 .citem.is-on .citem__count { color: var(--brand-800); }
 .is-inactive .citem__name, .brow.is-inactive td:not(:nth-child(4)) { color: var(--gray-600); }
 .citem-skel { padding: 12px; }
-.tag-inactive { padding: 1px 6px; border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-600); font-size: 11px; font-weight: 500; }
+.tag-inactive { padding: 1px 6px; border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-600); font-size: var(--text-micro); font-weight: 500; }
 .icon-btn--sm { width: 32px; height: 32px; color: var(--gray-600); }
 .icon-btn--ok { color: var(--ok-fg); }
 
@@ -60,7 +60,7 @@
 /* ---------- מתג ---------- */
 .switch { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 4px; border: 0; background: none; font: inherit; font-size: var(--text-label); color: var(--gray-600); cursor: pointer; border-radius: var(--radius); }
 .switch:disabled { opacity: 0.6; cursor: wait; }
-.switch__track { position: relative; width: 34px; height: 20px; border-radius: 10px; background: var(--gray-300); transition: background var(--dur-quick) var(--ease); }
+.switch__track { position: relative; width: 34px; height: 20px; border-radius: var(--radius-panel); background: var(--gray-300); transition: background var(--dur-quick) var(--ease); }
 .switch__thumb { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--white); box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: transform var(--dur-quick) var(--ease); }
 .switch.is-on { color: var(--ok-fg); }
 .switch.is-on .switch__track { background: var(--ok-fg); }

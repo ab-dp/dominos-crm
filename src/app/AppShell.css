@@ -56,9 +56,9 @@
 .bell__count {
   position: absolute; top: 2px; inset-inline-end: 2px;
   min-width: 16px; height: 16px; padding: 0 4px;
-  border-radius: 8px;
+  border-radius: var(--radius-panel);
   background: var(--brand-red); color: var(--white);
-  font: 600 10px/16px var(--font-mono); text-align: center;
+  font: 600 var(--text-badge)/16px var(--font-mono); text-align: center;
   border: 2px solid var(--white);
   box-sizing: content-box;
 }
@@ -82,7 +82,7 @@
 }
 .user__name { font-weight: 600; font-size: var(--text-label); }
 .user__id { display: grid; line-height: 1.25; }
-.user__role { font-size: 11px; color: var(--gray-600); }
+.user__role { font-size: var(--text-micro); color: var(--gray-600); }
 .user .btn--ghost { color: var(--gray-600); }
 
 /* ---------- Sidebar (כחול-לילה) ---------- */
@@ -129,8 +129,8 @@
 .nav__label { flex: 1; overflow: hidden; text-overflow: ellipsis; transition: opacity var(--dur-quick) var(--ease); }
 .nav__count {
   min-width: 20px; height: 18px; padding: 0 6px;
-  border-radius: 9px; background: rgba(255, 255, 255, 0.12); color: var(--white);
-  font: 600 11px/18px var(--font-mono); text-align: center;
+  border-radius: var(--radius-panel); background: rgba(255, 255, 255, 0.12); color: var(--white);
+  font: 600 var(--text-micro)/18px var(--font-mono); text-align: center;
 }
 .nav__count--alert { background: var(--brand-red); color: var(--white); }
 .nav--quiet { color: var(--navy-muted); }
@@ -138,11 +138,11 @@
 .shell--collapsed .nav__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .shell--collapsed .nav__count {
   position: absolute; top: 3px; inset-inline-end: 8px;
-  min-width: 14px; height: 14px; line-height: 14px; font-size: 9px; padding: 0 3px;
+  min-width: 14px; height: 14px; line-height: 14px; font-size: var(--text-badge); padding: 0 3px;
 }
 .navgroup__title {
   margin: 0 0 6px; padding: 0 10px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  font-size: var(--text-micro); font-weight: 600; letter-spacing: 0;
   color: var(--navy-muted);
   white-space: nowrap; overflow: hidden;
 }
@@ -164,8 +164,8 @@
 }
 @keyframes cmd-in { from { opacity: 0; transform: translate(-50%, -8px) scale(0.98); } to { opacity: 1; transform: translate(-50%, 0); } }
 .cmd__input { display: flex; align-items: center; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--gray-100); color: var(--gray-600); }
-.cmd__input input { flex: 1; height: 56px; border: 0; outline: none; font: inherit; font-size: 17px; color: var(--gray-900); background: transparent; }
-.cmd__group { margin: 12px 18px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--gray-600); }
+.cmd__input input { flex: 1; height: 56px; border: 0; outline: none; font: inherit; font-size: var(--text-card-title); color: var(--gray-900); background: transparent; }
+.cmd__group { margin: 12px 18px 4px; font-size: var(--text-micro); font-weight: 600; letter-spacing: 0; color: var(--gray-600); }
 .cmd__list { list-style: none; margin: 0; padding: 4px 8px 8px; max-height: 50vh; overflow: auto; }
 .cmd__item {
   display: flex; align-items: center; gap: 12px;
@@ -197,7 +197,7 @@
   .sidebar__logo-tile { display: block; }
   .sidebar__logo { justify-content: center; padding: 0; }
   .nav { justify-content: center; padding: 0; }
-  .nav__count { position: absolute; top: 3px; inset-inline-end: 8px; min-width: 14px; height: 14px; line-height: 14px; font-size: 9px; padding: 0 3px; }
+  .nav__count { position: absolute; top: 3px; inset-inline-end: 8px; min-width: 14px; height: 14px; line-height: 14px; font-size: var(--text-badge); padding: 0 3px; }
   .navgroup + .navgroup { border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px; }
   .sidebar__foot button { display: none; }
   .user__id { display: none; }
@@ -226,7 +226,7 @@
   .sidebar li { flex: 1 1 0; min-width: 0; }
   .sidebar li.nav-li--more { display: none; }
   .sidebar .nav-more { display: flex; flex: 1 1 0; min-width: 0; }
-  .nav { flex-direction: column; gap: 2px; height: 52px; font-size: 10.5px; }
+  .nav { flex-direction: column; gap: 2px; height: 52px; font-size: var(--text-micro); }
   .nav__label { display: block; flex: none; max-width: 72px; position: static; width: auto; height: auto; clip: auto; overflow: hidden; }
   .nav.is-active::before { inset: auto 18px -6px 18px; width: auto; height: 3px; top: auto; border-radius: 3px 3px 0 0; }
   .nav__count { top: 2px; inset-inline-end: 10px; }
@@ -241,6 +241,13 @@
   .topbar__actions .btn--primary .btn__kbd { display: none; }
 }
 
+/* שם קצר – רק בתפריט התחתון של הטלפון */
+.nav__short { display: none; }
+@media (max-width: 700px) {
+  .nav__short { display: inline; }
+  .nav__full { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+
 /* "עוד" – רק בתפריט התחתון של הטלפון */
 .nav-more { display: none; }
 .nav__count--dot { min-width: 8px !important; width: 8px; height: 8px !important; padding: 0 !important; }
@@ -250,7 +257,7 @@
 .more-menu__label { flex: 1; }
 .more-menu .nav__count { background: var(--gray-100); color: var(--gray-900); }
 .more-menu .nav__count--alert { background: var(--brand-red); color: var(--white); }
-.more-menu .nav__count { position: static !important; min-width: 20px; height: 18px; line-height: 18px; font-size: 11px; padding: 0 6px; }
+.more-menu .nav__count { position: static !important; min-width: 20px; height: 18px; line-height: 18px; font-size: var(--text-micro); padding: 0 6px; }
 .cmd__list .cmd__group { margin: 10px 10px 4px; }
 /* שדה החיפוש: קו מודגש בתחתית במקום מסגרת הפוקוס הכללית, שנחתכה בפינות החלון */
 .cmd__input input:focus-visible { box-shadow: none; }
