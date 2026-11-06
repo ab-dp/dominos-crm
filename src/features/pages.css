@@ -90,6 +90,8 @@
    וטבלאות רשימה הופכות לרשימה אחת עם קווי הפרדה */
 @media (max-width: 700px) {
   .tabs { flex-wrap: nowrap; overflow-x: auto; gap: 0 18px; }
+  .subnav { gap: 18px; overflow-x: auto; scrollbar-width: none; }
+  .subnav a, .subnav__label { flex: none; white-space: nowrap; }
   .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
   .chip { flex: none; }
   .otable:not(.otable--orders) { display: block; }
