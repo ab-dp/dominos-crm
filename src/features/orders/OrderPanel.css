@@ -18,15 +18,18 @@
 .panel__marks { display: inline-flex; gap: 2px; flex-wrap: wrap; }
 .link { border: 0; background: none; padding: 0; font: inherit; color: var(--brand-700); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; text-decoration-color: rgba(0,100,145,0.3); }
 .link:hover { text-decoration-color: currentColor; }
-.missing { display: grid; gap: 6px; }
-.missing { gap: 0; border: 1px solid var(--gray-100); border-radius: var(--radius); overflow: hidden; }
+.missing { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .missing__item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px; padding-inline-start: 14px; font-size: var(--text-table); font-weight: 600; background: var(--white); }
 .missing__item + .missing__item { border-top: 1px solid var(--gray-100); }
 .missing__item span { display: inline-flex; align-items: center; gap: 8px; }
 .missing__item span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.missing__item--red { color: var(--danger-fg); box-shadow: inset -3px 0 0 var(--danger-fg); }
-.missing__item--orange { color: var(--urgent-fg); box-shadow: inset -3px 0 0 var(--urgent-edge); }
-.missing__item--yellow { color: var(--missing-fg); box-shadow: inset -3px 0 0 var(--missing-edge); }
+/* הבעיות בתיק: נקודה בצבע החומרה, טקסט רגיל; פס בקצה רק לחריגה */
+.missing__item { color: var(--gray-900); }
+.missing__item span::before { background: var(--gray-400); }
+.missing__item--red { box-shadow: inset -3px 0 0 var(--danger-fg); }
+.missing__item--red span::before { background: var(--danger-fg); }
+.missing__item--orange span::before { background: var(--urgent-edge); }
+.missing__item--yellow span::before { background: var(--missing-edge); }
 .panel__tabs { display: flex; gap: 18px; overflow-x: auto; margin: 0 -4px; padding: 0 4px; scrollbar-width: none; }
 .panel__tabs a, .panel__tabs button {
   flex: none; height: 40px; padding: 0;
@@ -39,7 +42,7 @@
 .panel__tab-history { margin-inline-start: auto; }
 .panel__body { flex: 1; overflow: auto; padding: 4px 24px 28px; scroll-padding-top: 8px; }
 .panel--full .panel__body > * { max-width: 920px; }
-.panel__foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; background: var(--gray-50); border-top: 1px solid var(--gray-100); font-size: var(--text-label); }
+.panel__foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 24px; background: var(--white); border-top: 1px solid var(--line); font-size: var(--text-label); }
 
 .sec { padding: 20px 0; border-bottom: 1px solid var(--gray-100); }
 .sec:last-child { border-bottom: 0; }
@@ -59,7 +62,7 @@
 .items td bdi { font-family: var(--font-mono); }
 .sums { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .sums > div { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--gray-100); border-radius: var(--radius); font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
-.sums b { font: 500 var(--text-section) var(--font-mono); color: var(--gray-900); letter-spacing: -0.02em; }
+.sums b { font: 600 var(--text-section) var(--font); color: var(--gray-900); }
 .sums .is-gap { background: var(--white); border-color: var(--danger-line); box-shadow: inset -3px 0 0 var(--danger-fg); }
 .sums .is-gap b, .sums em { color: var(--danger-fg); }
 .sums em { font-style: normal; font-weight: 600; }
@@ -156,92 +159,83 @@
 .changed-tag--sm { height: 18px; margin-inline-start: 6px; padding: 0 6px; vertical-align: 1px; }
 .del-order { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: auto; margin-inline-end: 16px; color: var(--danger-fg); font-size: var(--text-label); }
 
-/* ---------- "להעברה לקופה": הבלוק הראשון בתיק – ערכים גדולים, תווית מעל ערך ---------- */
-.reg { margin: 14px 0 6px; padding: 14px 16px 12px; border: 1.5px solid var(--brand-100); border-radius: var(--radius-panel, 12px); background: var(--white); box-shadow: inset 0 3px 0 var(--brand-600); }
-.reg__head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.reg__title { margin: 0; font-size: var(--text-table); font-weight: 700; color: var(--brand-800); }
+/* ---------- "להעברה לקופה": הבלוק הראשון בתיק – כל מה שמקלידים ל-Q.
+   משטח אחד עם קו, תווית מעל ערך, ערכים גדולים. מתי ואיפה (תאריך · שעה · סניף) הכי בולטים.
+   מספרים לא נשברים באמצע (טלפון, תאריך). ---------- */
+.reg { margin: 14px 0 6px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--white); }
+.reg__head { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; margin-bottom: 2px; border-bottom: 1px solid var(--line); }
+.reg__title { margin: 0; font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
 .reg__copy { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: auto; font-size: var(--text-label); }
-.reg__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 14px; }
-.reg__wide { grid-column: 1 / -1; }
+
+.reg__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 16px; }
+.reg__grid > * { padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.reg__wide { grid-column: 1 / -1; border-bottom: 0; }
 .reg .kv { grid-template-columns: 1fr; gap: 0; align-items: start; min-height: 0; }
-.reg .kv__k { font-size: var(--text-micro); }
-.reg .kv__v, .reg .kv__btn { font-size: var(--text-body); font-weight: 600; }
-.reg .kv__v bdi { font-size: var(--text-body); font-weight: 600; }
+.reg .kv__k, .reg__items-head .kv__k, .reg__sum .kv__k, .reg-q__f .kv__k { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+.reg .kv__v, .reg .kv__btn, .reg .kv__v bdi { font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
+.reg__grid > :nth-child(-n+3) .kv__v, .reg__grid > :nth-child(-n+3) .kv__btn, .reg__grid > :nth-child(-n+3) .kv__v bdi { font-weight: 700; }
+.reg .kv__v bdi, .reg .kv__btn bdi { white-space: nowrap; }
 .reg .kv__btn { margin: 0 -8px; }
 .reg .kv.is-editing .kv__k { padding-top: 0; }
 .reg .seg--inline { flex-wrap: wrap; }
-.reg__items { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+
+/* תכולת ההזמנה – הדבר שמקלידים הכי הרבה */
+.reg__items { margin-top: 12px; padding: 10px 12px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--gray-25); }
 .reg__items-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.reg__items-head .kv__k { font-size: var(--text-micro); }
 .reg__items-head .link { font-size: var(--text-label); }
+.regi { display: grid; gap: 6px; font-size: var(--text-body); line-height: 1.55; }
+.regi__cat { display: flex; gap: 12px; }
+.regi__cat + .regi__cat { padding-top: 6px; border-top: 1px solid var(--line); }
+.regi__name { flex: none; min-width: 96px; font-size: var(--text-body); font-weight: 700; color: var(--gray-900); }
+.regi__cat > span { font-weight: 600; color: var(--gray-900); }
+.regi__types { display: grid; gap: 6px; }
+.regi__type { display: block; }
+.regi__type + .regi__type { margin-top: 2px; }
+.regi__type b { font-weight: 700; }
+.regi__rows { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 3px; }
+.regi__tag { padding: 1px 8px; border-radius: var(--radius-tag); background: var(--white); border: 1px solid var(--line); font-size: var(--text-table); font-weight: 600; }
+.regi__tag bdi { font-weight: 700; color: var(--gray-900); }
+.regi__plain { margin: 0; font-size: var(--text-body); font-weight: 600; }
+
 .reg__note { margin-top: 6px; }
-.reg__sum { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
-.reg__sum .kv__k { font-size: var(--text-micro); }
-.reg__sum > b { font: 600 var(--text-screen-title) var(--font-mono); letter-spacing: -0.02em; }
+.reg__note .kv__v, .reg__note .kv__btn { font-size: var(--text-body); font-weight: 600; }
+
+.reg__sum { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-25); }
+.reg__sum .kv__k { order: -1; }
+.reg__sum > b { font: 700 var(--text-screen-title) var(--font); }
 .reg__sum .muted { font-size: var(--text-label); }
-.reg__tag { padding: 1px 8px; border-radius: var(--radius-panel); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 600; }
+.reg__tag { padding: 1px 8px; border-radius: var(--radius-tag); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 600; }
 
 /* שורת Q */
-.reg-q { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-50); border: 1px solid var(--gray-100); }
+.reg-q { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-25); border: 1px solid var(--line); }
 .reg-q__f { display: grid; gap: 2px; flex: 1 1 130px; }
 .reg-q__f--amt { flex: 0 1 110px; }
-.reg-q__f .kv__k { font-size: var(--text-micro); }
 .reg-q__ops { min-height: 36px; font-size: var(--text-label); font-weight: 500; }
 .reg-q__btns { display: flex; align-items: center; gap: 10px; }
 .reg-q__warn { flex-basis: 100%; display: flex; align-items: center; gap: 6px; margin: 0; color: var(--urgent-fg); font-size: var(--text-label); font-weight: 600; }
 .reg-q__err { flex-basis: 100%; margin: 0; }
 .reg-q--done { align-items: center; background: var(--ok-bg); border-color: transparent; }
 .reg-q__done { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ok-fg); }
-.reg-q__done bdi { font-family: var(--font-mono); }
-.reg-q__gap { padding: 1px 8px; border-radius: var(--radius-panel); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-micro); font-weight: 600; }
+.reg-q__done bdi { white-space: nowrap; }
+.reg-q__gap { padding: 1px 8px; border-radius: var(--radius-tag); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-micro); font-weight: 600; }
 .reg-q__edit { margin-inline-start: auto; font-size: var(--text-label); }
 
 /* מתחת לבלוק: ציר ההזמנה ושאר הבעיות, ואז לשוניות */
 .panel__flow { display: grid; gap: 10px; padding: 12px 0 4px; }
-.panel__tabs--body { position: sticky; top: -4px; z-index: 1; margin: 10px 0 0; padding-top: 4px; background: var(--white); border-bottom: 1px solid var(--gray-100); }
+.panel__tabs--body { position: sticky; top: -4px; z-index: 1; margin: 10px 0 0; padding-top: 4px; background: var(--white); border-bottom: 1px solid var(--line); }
 .panel__tabs--body button { white-space: nowrap; }
+
+/* טיפ העריכה בתחתית – רק בזמן עריכה (visibility, כדי שהכפתורים לא יזוזו) */
+.panel__foot .muted { visibility: hidden; }
+.panel:has(.kv.is-editing, .iedit) .panel__foot .muted { visibility: visible; }
 
 @media (max-width: 560px) {
   .reg { padding: 12px; }
-  .reg__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reg__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
   /* בחירה (אמצעי תשלום, משלוח/איסוף) – בשורה מלאה, שהכפתורים יישבו בשורה אחת */
   .reg .kv:has(.seg--inline) { grid-column: 1 / -1; }
   .reg .seg--inline { flex-wrap: nowrap; }
+  .regi__cat { flex-direction: column; gap: 2px; }
+  .regi__name { min-width: 0; }
   .panel__title { min-width: 0; font-size: var(--text-card-title); overflow-wrap: anywhere; }
 }
-.regi { display: grid; gap: 4px; font-size: var(--text-table); line-height: 1.5; }
-.regi__cat { display: flex; gap: 10px; }
-.regi__name { flex: none; min-width: 84px; color: var(--brand-800); }
-.regi__type { display: block; }
-.regi__plain { margin: 0; font-size: var(--text-table); }
-
-/* ---------- הדגשה: הערכים בבלוק "להעברה לקופה" גדולים וברורים, התכולה הכי בולטת ---------- */
-.reg .kv__k, .reg__items-head .kv__k, .reg__sum .kv__k, .reg-q__f .kv__k { font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
-.reg .kv__v, .reg .kv__btn, .reg .kv__v bdi { font-size: var(--text-card-title); font-weight: 700; color: var(--gray-900); }
-.reg__grid { gap: 8px 16px; }
-.reg__items { margin-top: 12px; padding: 10px 12px 12px; border: 1px solid var(--brand-100); border-radius: var(--radius); background: var(--brand-50, var(--gray-50)); }
-.regi { gap: 6px; font-size: var(--text-body); line-height: 1.55; }
-.regi__cat { gap: 12px; }
-.regi__cat + .regi__cat { padding-top: 6px; border-top: 1px solid var(--brand-100); }
-.regi__name { min-width: 96px; font-size: var(--text-body); font-weight: 800; color: var(--brand-800); }
-.regi__cat > span { font-weight: 600; color: var(--gray-900); }
-.regi__type + .regi__type { margin-top: 2px; }
-.regi__plain { font-size: var(--text-body); font-weight: 600; }
-.reg__note .kv__v, .reg__note .kv__btn { font-size: var(--text-body); font-weight: 600; }
-.reg__sum > b { font-size: var(--text-screen-title); font-weight: 700; }
-.reg__title { font-size: var(--text-body); }
-.regi__types { display: grid; gap: 6px; }
-.regi__type b { font-weight: 800; }
-.regi__rows { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 3px; }
-.regi__tag { padding: 1px 9px; border-radius: var(--radius-panel); background: var(--white); border: 1px solid var(--brand-100); font-size: var(--text-table); font-weight: 600; }
-.regi__tag bdi { font-weight: 800; color: var(--brand-800); }
-
-/* סידור הבלוק: כל ערך בתא עם קו מפריד, מתי ואיפה (תאריך · שעה · סניף) הכי בולטים */
-.reg__grid { gap: 0 16px; }
-.reg__grid > * { padding: 7px 0; border-bottom: 1px solid var(--gray-100); }
-.reg__grid > :nth-child(-n+3) .kv__v, .reg__grid > :nth-child(-n+3) .kv__btn, .reg__grid > :nth-child(-n+3) .kv__v bdi { font-size: var(--text-card-title); font-weight: 800; }
-.reg__grid > :nth-child(-n+3) { padding-top: 2px; }
-.reg__wide { border-bottom: 0; }
-.reg__head { padding-bottom: 6px; border-bottom: 2px solid var(--brand-100); margin-bottom: 2px; }
-.reg__sum { justify-content: space-between; padding: 10px 12px; margin-top: 10px; border: 0; border-radius: var(--radius); background: var(--gray-50); }
-.reg__sum .kv__k { order: -1; }
