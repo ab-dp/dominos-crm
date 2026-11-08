@@ -1,9 +1,9 @@
-/* חישובי הבורד – פונקציות טהורות, בלי תצוגה. כל המספרים מתוך ההזמנות שכבר נטענו (או טווח שנטען לפי דרישה). */
+/* חישובי הבורד – פונקציות טהורות, בלי תצוגה. סכומים לפי תאריך אספקה ובלי ביטולים (אלא אם נאמר אחרת). */
 import type { OrderView } from '../../data/store';
-import type { Quote } from '../../data/quotes';
+import { isExpired, type Quote } from '../../data/quotes';
 import { CLOSED, PIZZA, categoryOf } from '../../data/types';
-import { weekendRange } from '../../data/opsSummary';
-import { addDays, roundMoney, sameMoney, toISODate } from '../../lib/format';
+import { missingOf } from '../../rules-engine/health';
+import { addDays, roundMoney, toISODate } from '../../lib/format';
 
 export type Period = 'week' | 'month' | 'prevMonth' | 'd30' | 'custom';
 export const PERIOD_LABEL: Record<Period, string> = { week: 'השבוע', month: 'החודש', prevMonth: 'החודש הקודם', d30: '30 יום', custom: 'טווח' };
@@ -12,29 +12,30 @@ export type Range = { from: string; to: string };
 const iso = toISODate;
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const monthEnd = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
-const days = (r: Range) => Math.round((new Date(r.to + 'T12:00').getTime() - new Date(r.from + 'T12:00').getTime()) / 86400000) + 1;
+const dayDiff = (a: string, b: string) => Math.round((new Date(b + 'T12:00').getTime() - new Date(a + 'T12:00').getTime()) / 86400000);
+const daysIn = (r: Range) => dayDiff(r.from, r.to) + 1;
 
-/* הטווח של התקופה, והטווח להשוואה – אותו אורך ממש לפני (בחודש הנוכחי: אותם ימים בחודש הקודם) */
-export function periodRanges(p: Period, now: Date, custom: Range): { cur: Range; prev: Range; prevLabel: string } {
+/* התקופה, והתקופה להשוואה – אותו אורך ממש לפני (בחודש הנוכחי: אותם ימים בחודש הקודם) */
+export function periodRanges(p: Period, now: Date, custom: Range): { cur: Range; prev: Range; prevName: string } {
   if (p === 'month') {
     const from = monthStart(now);
     const prevFrom = monthStart(addDays(from, -1));
     const sameDay = Math.min(now.getDate(), monthEnd(prevFrom).getDate());
-    return { cur: { from: iso(from), to: iso(now) }, prev: { from: iso(prevFrom), to: iso(new Date(prevFrom.getFullYear(), prevFrom.getMonth(), sameDay)) }, prevLabel: `מול אותם ימים בחודש שעבר` };
+    return { cur: { from: iso(from), to: iso(now) }, prev: { from: iso(prevFrom), to: iso(new Date(prevFrom.getFullYear(), prevFrom.getMonth(), sameDay)) }, prevName: 'אותם ימים בחודש שעבר' };
   }
   if (p === 'prevMonth') {
     const from = monthStart(addDays(monthStart(now), -1));
     const prevFrom = monthStart(addDays(from, -1));
-    return { cur: { from: iso(from), to: iso(monthEnd(from)) }, prev: { from: iso(prevFrom), to: iso(monthEnd(prevFrom)) }, prevLabel: 'מול החודש שלפניו' };
+    return { cur: { from: iso(from), to: iso(monthEnd(from)) }, prev: { from: iso(prevFrom), to: iso(monthEnd(prevFrom)) }, prevName: 'החודש שלפניו' };
   }
   if (p === 'week') {
     const from = addDays(now, -now.getDay()); // ראשון
-    return { cur: { from: iso(from), to: iso(now) }, prev: { from: iso(addDays(from, -7)), to: iso(addDays(now, -7)) }, prevLabel: 'מול אותם ימים בשבוע שעבר' };
+    return { cur: { from: iso(from), to: iso(now) }, prev: { from: iso(addDays(from, -7)), to: iso(addDays(now, -7)) }, prevName: 'אותם ימים בשבוע שעבר' };
   }
   const cur = p === 'd30' ? { from: iso(addDays(now, -29)), to: iso(now) } : custom;
-  const n = days(cur);
+  const n = daysIn(cur);
   const prevTo = addDays(new Date(cur.from + 'T12:00'), -1);
-  return { cur, prev: { from: iso(addDays(prevTo, -(n - 1))), to: iso(prevTo) }, prevLabel: `מול ${n} הימים שלפני` };
+  return { cur, prev: { from: iso(addDays(prevTo, -(n - 1))), to: iso(prevTo) }, prevName: `${n} הימים שלפני` };
 }
 
 export type Filters = { cluster: string; branch: string; handler: string; method: string };
@@ -43,130 +44,144 @@ export const applyFilters = (orders: OrderView[], f: Filters) => orders.filter((
   (!f.cluster || o.cluster === f.cluster) && (!f.branch || o.branchName === f.branch) && (!f.handler || o.handler === f.handler) && (!f.method || o.method === f.method));
 
 const inRange = (o: { date: string }, r: Range) => o.date >= r.from && o.date <= r.to;
-const pizzasOf = (o: OrderView) => o.items.filter((i) => categoryOf(i) === PIZZA).reduce((t, i) => t + i.qty, 0);
-
-/* ---------- מה מגיע: היום, מחר, סופ"ש, כל העתידיות (לא תלוי בתקופה) ---------- */
-export type Bucket = { key: string; label: string; sub: string; count: number; sum: number; pizzas: number; unapproved: number; noOps: number; to: string };
-export function upcoming(orders: OrderView[], now: Date): Bucket[] {
-  const today = iso(now);
-  const tomorrow = iso(addDays(now, 1));
-  const wk = weekendRange(now);
-  const live = orders.filter((o) => o.status !== 'cancelled' && o.date >= today);
-  const make = (key: string, label: string, sub: string, pick: (o: OrderView) => boolean, to: string): Bucket => {
-    const list = live.filter(pick);
-    return {
-      key, label, sub, to,
-      count: list.length,
-      sum: roundMoney(list.reduce((t, o) => t + o.amount, 0)),
-      pizzas: list.reduce((t, o) => t + pizzasOf(o), 0),
-      unapproved: list.filter((o) => o.status === 'new' || o.status === 'pending_customer').length,
-      noOps: list.filter((o) => !o.branchApproval && !CLOSED.includes(o.status)).length,
-    };
-  };
-  return [
-    make('today', 'היום', '', (o) => o.date === today, '/orders?tab=today'),
-    make('tomorrow', 'מחר', '', (o) => o.date === tomorrow, '/orders?tab=tomorrow'),
-    make('weekend', 'סופ"ש', 'שישי–שבת', (o) => o.date >= wk.from && o.date <= wk.to, '/ops'),
-    make('future', 'כל העתידיות', 'מהיום והלאה', () => true, '/orders?tab=future'),
-  ];
-}
-
-/* ---------- התקופה: הזמנות, הכנסות, ממוצע, פיצות + השוואה ---------- */
-export type Totals = { count: number; sum: number; avg: number; pizzas: number };
-export function totals(orders: OrderView[], r: Range): Totals {
-  const list = orders.filter((o) => inRange(o, r) && o.status !== 'cancelled');
-  const sum = roundMoney(list.reduce((t, o) => t + o.amount, 0));
-  return { count: list.length, sum, avg: list.length ? roundMoney(sum / list.length) : 0, pizzas: list.reduce((t, o) => t + pizzasOf(o), 0) };
-}
+const live = (o: OrderView) => o.status !== 'cancelled';
+const sumOf = (list: OrderView[]) => roundMoney(list.reduce((t, o) => t + o.amount, 0));
+export const pizzasOf = (o: OrderView) => o.items.filter((i) => categoryOf(i) === PIZZA).reduce((t, i) => t + i.qty, 0);
+const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) * 100) : null);
 /* שינוי באחוזים; null כשאין בסיס להשוואה */
 export const delta = (cur: number, prev: number) => (prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null);
 
-/* הזמנות לפי יום (עמודות) */
-export type DayPoint = { date: string; count: number; sum: number };
-export function byDay(orders: OrderView[], r: Range): DayPoint[] {
+/* ---------- הזמנות קרובות: 7 הימים הקרובים, ומה מעבר. מוכנות = הלקוח אישר והתפעול עודכן ---------- */
+export type Readiness = 'ready' | 'customer' | 'ops';
+export const readinessOf = (o: OrderView): Readiness =>
+  (o.status === 'new' || o.status === 'pending_customer' ? 'customer' : !o.branchApproval ? 'ops' : 'ready');
+export type Day = { date: string; count: number; sum: number; pizzas: number; ready: number; customer: number; ops: number; weekend: boolean };
+export function horizon(orders: OrderView[], now: Date, days = 7) {
+  const today = iso(now);
+  const open = orders.filter((o) => live(o) && !CLOSED.includes(o.status) && o.date >= today);
+  const list: Day[] = Array.from({ length: days }, (_, i) => {
+    const d = addDays(now, i);
+    const date = iso(d);
+    const os = open.filter((o) => o.date === date);
+    const r = os.map(readinessOf);
+    return { date, weekend: d.getDay() === 5 || d.getDay() === 6, count: os.length, sum: sumOf(os), pizzas: os.reduce((t, o) => t + pizzasOf(o), 0),
+      ready: r.filter((x) => x === 'ready').length, customer: r.filter((x) => x === 'customer').length, ops: r.filter((x) => x === 'ops').length };
+  });
+  const last = list[list.length - 1].date;
+  const later = open.filter((o) => o.date > last);
+  const week = open.filter((o) => o.date <= last);
+  return {
+    days: list,
+    later: { count: later.length, sum: sumOf(later) },
+    week: { count: week.length, sum: sumOf(week), pizzas: list.reduce((t, d) => t + d.pizzas, 0), customer: list.reduce((t, d) => t + d.customer, 0), ops: list.reduce((t, d) => t + d.ops, 0) },
+  };
+}
+
+/* ---------- מכירות ---------- */
+export type Sales = { count: number; sum: number; avg: number; pizzas: number; customers: number };
+export function sales(orders: OrderView[], r: Range): Sales {
+  const list = orders.filter((o) => inRange(o, r) && live(o));
+  const sum = sumOf(list);
+  return { count: list.length, sum, avg: list.length ? roundMoney(sum / list.length) : 0, pizzas: list.reduce((t, o) => t + pizzasOf(o), 0), customers: new Set(list.map((o) => o.customerId)).size };
+}
+/* לפי יום – התקופה, ולצידה היום המקביל בתקופה הקודמת */
+export type DayPoint = { date: string; count: number; sum: number; prevCount: number; prevSum: number };
+export function byDay(orders: OrderView[], cur: Range, prev: Range): DayPoint[] {
   const out: DayPoint[] = [];
-  for (let d = new Date(r.from + 'T12:00'); iso(d) <= r.to; d = addDays(d, 1)) out.push({ date: iso(d), count: 0, sum: 0 });
-  const at = new Map(out.map((p, i) => [p.date, i]));
+  for (let i = 0, d = new Date(cur.from + 'T12:00'); iso(d) <= cur.to; i += 1, d = addDays(d, 1)) out.push({ date: iso(d), count: 0, sum: 0, prevCount: 0, prevSum: 0 });
+  const curIdx = new Map(out.map((p, i) => [p.date, i]));
   orders.forEach((o) => {
-    const i = at.get(o.date);
-    if (i === undefined || o.status === 'cancelled') return;
-    out[i].count += 1; out[i].sum = roundMoney(out[i].sum + o.amount);
+    if (!live(o)) return;
+    const i = curIdx.get(o.date);
+    if (i !== undefined) { out[i].count += 1; out[i].sum = roundMoney(out[i].sum + o.amount); return; }
+    if (inRange(o, prev)) {
+      const j = dayDiff(prev.from, o.date);
+      if (j >= 0 && j < out.length) { out[j].prevCount += 1; out[j].prevSum = roundMoney(out[j].prevSum + o.amount); }
+    }
   });
   return out;
 }
 
-/* ---------- איכות אספקה: מתוך ההזמנות שנסגרו בתקופה. "באיחור" = כל הזמנה שסומנה סופקה באיחור ---------- */
-export type Quality = { onTime: number; late: number; partial: number; cancelled: number; closed: number; delivered: number; onTimePct: number | null; stillOpen: number };
-export function quality(orders: OrderView[], r: Range, now: Date): Quality {
+/* ---------- עמידה בזמנים: "באיחור" = כל הזמנה שסומנה סופקה באיחור ---------- */
+export type Service = { onTime: number; late: number; partial: number; cancelled: number; delivered: number; closed: number; onTimePct: number | null; overdue: number; lateBranches: { name: string; late: number; delivered: number }[] };
+export function service(orders: OrderView[], r: Range, now: Date): Service {
   const list = orders.filter((o) => inRange(o, r));
-  const late = list.filter((o) => (o.status === 'delivered' || o.status === 'partial') && !!o.late).length;
+  const done = list.filter((o) => o.status === 'delivered' || o.status === 'partial');
+  const late = done.filter((o) => !!o.late);
   const onTime = list.filter((o) => o.status === 'delivered' && !o.late).length;
   const partial = list.filter((o) => o.status === 'partial' && !o.late).length;
   const cancelled = list.filter((o) => o.status === 'cancelled').length;
-  const delivered = onTime + late + partial;
-  const today = iso(now);
+  const by = new Map<string, { name: string; late: number; delivered: number }>();
+  done.forEach((o) => { const k = o.branchName || '—'; const e = by.get(k) ?? { name: k, late: 0, delivered: 0 }; e.delivered += 1; if (o.late) e.late += 1; by.set(k, e); });
   return {
-    onTime, late, partial, cancelled, delivered, closed: delivered + cancelled,
-    onTimePct: delivered ? Math.round((onTime / delivered) * 100) : null,
-    stillOpen: list.filter((o) => !CLOSED.includes(o.status) && o.date < today).length,
+    onTime, late: late.length, partial, cancelled, delivered: done.length, closed: done.length + cancelled,
+    onTimePct: pct(done.length - late.length, done.length),
+    overdue: list.filter((o) => !CLOSED.includes(o.status) && o.date < iso(now)).length,
+    lateBranches: [...by.values()].filter((b) => b.late > 0).sort((a, b) => b.late - a.late || b.late / b.delivered - a.late / a.delivered).slice(0, 3),
   };
 }
 
-/* ---------- כסף ---------- */
-export type Money = { creditOpen: { count: number; sum: number }; qGaps: { count: number; sum: number }; failed: number };
-export function money(orders: OrderView[]): Money {
-  const credit = orders.filter((o) => o.method === 'account' && o.payment === 'pending' && o.status !== 'cancelled');
+/* ---------- גבייה ובקרת קופה (מצב נוכחי, לא תלוי בתקופה) ---------- */
+export type Aging = { label: string; count: number; sum: number };
+export function collections(orders: OrderView[], now: Date) {
+  const today = iso(now);
+  const open = orders.filter((o) => o.method === 'account' && o.payment === 'pending' && live(o) && o.date <= today);
+  const bucket = (min: number, max: number) => open.filter((o) => { const d = dayDiff(o.date, today); return d >= min && d <= max; });
+  const aging: Aging[] = [
+    { label: 'עד 30 יום', ...pack(bucket(0, 30)) },
+    { label: '31–60 יום', ...pack(bucket(31, 60)) },
+    { label: 'מעל 60 יום', ...pack(bucket(61, 100000)) },
+  ];
   const gaps = orders.filter((o) => o.issues.some((i) => i.rule === 2));
   return {
-    creditOpen: { count: credit.length, sum: roundMoney(credit.reduce((t, o) => t + o.amount, 0)) },
-    qGaps: { count: gaps.length, sum: roundMoney(gaps.reduce((t, o) => t + Math.abs((o.qAmount ?? o.amount) - o.amount), 0)) },
-    failed: orders.filter((o) => o.payment === 'failed' && o.status !== 'cancelled').length,
+    open: pack(open), aging,
+    gaps: { count: gaps.length, sum: roundMoney(gaps.reduce((t, o) => t + Math.abs((o.qAmount ?? o.amount) - o.amount), 0)) },
+    failed: pack(orders.filter((o) => o.payment === 'failed' && live(o))),
   };
 }
+function pack(list: OrderView[]) { return { count: list.length, sum: sumOf(list) }; }
 
-/* ---------- דירוגים: לקוחות, סניפים / אשכולות, נציגים ---------- */
-export type Ranked = { name: string; count: number; sum: number; latePct?: number | null };
-function rank(list: OrderView[], key: (o: OrderView) => string, n: number): Ranked[] {
-  const m = new Map<string, Ranked & { lateN: number; deliveredN: number }>();
+/* ---------- דירוגים ---------- */
+export type Ranked = { name: string; count: number; sum: number; share: number; onTimePct: number | null; missing: number };
+function rank(list: OrderView[], key: (o: OrderView) => string): Ranked[] {
+  const total = sumOf(list);
+  const m = new Map<string, { name: string; count: number; sum: number; done: number; late: number; missing: number }>();
   list.forEach((o) => {
     const k = key(o) || '—';
-    const e = m.get(k) ?? { name: k, count: 0, sum: 0, lateN: 0, deliveredN: 0 };
+    const e = m.get(k) ?? { name: k, count: 0, sum: 0, done: 0, late: 0, missing: 0 };
     e.count += 1; e.sum = roundMoney(e.sum + o.amount);
-    if (o.status === 'delivered' || o.status === 'partial') { e.deliveredN += 1; if (o.late) e.lateN += 1; }
+    if (o.status === 'delivered' || o.status === 'partial') { e.done += 1; if (o.late) e.late += 1; }
+    if (missingOf(o).length) e.missing += 1;
     m.set(k, e);
   });
-  return [...m.values()].sort((a, b) => b.sum - a.sum || b.count - a.count).slice(0, n)
-    .map(({ lateN, deliveredN, ...e }) => ({ ...e, latePct: deliveredN ? Math.round((lateN / deliveredN) * 100) : null }));
+  return [...m.values()].sort((a, b) => b.sum - a.sum || b.count - a.count)
+    .map((e) => ({ name: e.name, count: e.count, sum: e.sum, missing: e.missing, share: total ? Math.round((e.sum / total) * 100) : 0, onTimePct: pct(e.done - e.late, e.done) }));
 }
 export function rankings(orders: OrderView[], r: Range) {
-  const list = orders.filter((o) => inRange(o, r) && o.status !== 'cancelled');
-  return {
-    customers: rank(list, (o) => o.customerName, 6),
-    clusters: rank(list, (o) => o.cluster, 6),
-    branches: rank(list, (o) => o.branchName, 6),
-    handlers: rank(list, (o) => o.handler, 8),
-  };
+  const list = orders.filter((o) => inRange(o, r) && live(o));
+  return { customers: rank(list, (o) => o.customerName), clusters: rank(list, (o) => o.cluster), branches: rank(list, (o) => o.branchName), team: rank(list, (o) => o.handler) };
 }
 
 /* ---------- הצעות מחיר ---------- */
-export function quotesSummary(quotes: Quote[], r: Range) {
-  const open = quotes.filter((q) => q.status === 'sent' || q.status === 'noanswer' || q.status === 'approved');
-  const issued = quotes.filter((q) => q.issueDate >= r.from && q.issueDate <= r.to && q.status !== 'draft');
-  const ordered = issued.filter((q) => q.status === 'ordered').length;
+export function quotesSummary(quotes: Quote[], r: Range, now: Date, followups: number) {
+  const today = iso(now);
+  const soon = iso(addDays(now, 3));
+  const open = quotes.filter((q) => (q.status === 'sent' || q.status === 'noanswer' || q.status === 'approved') && !isExpired(q, today));
+  const sent = quotes.filter((q) => q.issueDate >= r.from && q.issueDate <= r.to && q.status !== 'draft');
+  const ordered = sent.filter((q) => q.status === 'ordered').length;
   return {
     open: open.length, openSum: roundMoney(open.reduce((t, q) => t + q.total, 0)),
-    issued: issued.length, ordered,
-    conversion: issued.length ? Math.round((ordered / issued.length) * 100) : null,
+    approved: open.filter((q) => q.status === 'approved').length,
+    expiring: open.filter((q) => q.status !== 'approved' && q.validUntil && q.validUntil >= today && q.validUntil <= soon).length,
+    followups,
+    sent: sent.length, ordered, conversion: pct(ordered, sent.length),
   };
 }
 
 /* יעד: כמה הושג, ובקצב הנוכחי – לאן מגיעים בסוף החודש (רק בחודש הנוכחי) */
 export function goalPace(value: number, goal: number, r: Range, now: Date, current: boolean) {
-  const pct = Math.round((value / goal) * 100);
-  if (!current) return { pct, projected: null as number | null };
+  const p = Math.round((value / goal) * 100);
+  if (!current) return { pct: p, projected: null as number | null };
   const total = monthEnd(new Date(r.from + 'T12:00')).getDate();
-  const elapsed = now.getDate();
-  return { pct, projected: elapsed ? roundMoney((value / elapsed) * total) : null };
+  return { pct: p, projected: roundMoney((value / Math.max(1, now.getDate())) * total) };
 }
-
-export const near = sameMoney;
