@@ -236,7 +236,9 @@ function LockStep({ ym, orders, month, done, fixes, onGo }: { ym: string; orders
             {ready ? <span className="muted">כל ההזמנות נסגרו וכל ההקפות שולמו. הסיכומים יישמרו כעותק קפוא.{!done[3] && ' שים לב: החודש עוד לא יוצא להנהלת חשבונות.'}</span>
               : <span className="mclose__need">כדי לנעול צריך: {!done[1] && <button className="link" onClick={() => onGo(1)}>להשלים חוסרים</button>}{!done[1] && !done[2] && ' · '}{!done[2] && <button className="link" onClick={() => onGo(2)}>לסמן את כל ההקפות כשולמו</button>}</span>}
           </div>
-          <Button variant="primary" icon={<Lock size={16} />} loading={busy} disabled={!ready} onClick={lock}>סגור חודש</Button>
+          {isAdmin
+            ? <Button variant="primary" icon={<Lock size={16} />} loading={busy} disabled={!ready} onClick={lock}>סגור חודש</Button>
+            : <span className="muted mclose__admin">נעילת חודש – מנהל מערכת</span>}
         </div>
       )}
 

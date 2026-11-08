@@ -191,6 +191,7 @@ service cloud.firestore {
         && noCard(opt(d, 'partialNote')) && noCard(opt(d, 'cancelReason')) && noCard(opt(d, 'cancelNote'))
         && noCard(opt(d, 'contactName')) && noCard(opt(d, 'instructions'))
         && (!('calcAmount' in d) || (d.calcAmount is number && d.calcAmount >= 0))
+        && (!('qAmount' in d) || (d.qAmount is number && d.qAmount >= 0 && d.qAmount < 1000000))
         && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee < 10000))
         && d.keys().size() <= 70;
     }
@@ -207,12 +208,15 @@ service cloud.firestore {
     match /months/{ym} {
       allow read: if isActive();
       allow create: if isActive() && ym.matches('^[0-9]{4}-[0-9]{2}$')
-        && request.resource.data.status in ['open', 'locked'] && request.resource.data.updatedBy == request.auth.uid;
+        && request.resource.data.status in ['open', 'locked'] && request.resource.data.updatedBy == request.auth.uid
+        && (request.resource.data.status == 'open' || isAdmin());
       // חודש נעול לא משתנה; פתיחה מחדש – רק מנהל, עם סיבה
       allow update: if isActive() && request.resource.data.status in ['open', 'locked'] && request.resource.data.updatedBy == request.auth.uid
         && (resource.data.status != 'locked'
             || (request.resource.data.status == 'open' && isAdmin()
-                && request.resource.data.reopenReason is string && request.resource.data.reopenReason.size() >= 3));
+                && request.resource.data.reopenReason is string && request.resource.data.reopenReason.size() >= 3))
+        // נעילה – רק מנהל
+        && (request.resource.data.status != 'locked' || resource.data.status == 'locked' || isAdmin());
       allow delete: if false;
     }
 
@@ -232,10 +236,17 @@ service cloud.firestore {
         && validOrder(request.resource.data)
         && request.resource.data.updatedBy == request.auth.uid
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['number', 'createdAt', 'createdBy', 'createdByUid'])
-        // חודש נעול: שינוי סכום/תאריך/סטטוס/תשלום רק עם סיבה טרייה (אפיון 7)
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['amount', 'qAmount', 'calcAmount', 'deliveryFee', 'date', 'status', 'payment'])
+        // שינוי המטפל בהזמנה – רק מנהל מערכת (לא רק בממשק)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['handler', 'handlerUid']) || isAdmin())
+        // חודש נעול: שינוי סכום/תאריך/סטטוס/תשלום/אמצעי תשלום/פריטים רק עם סיבה טרייה (אפיון 7)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['amount', 'qAmount', 'calcAmount', 'deliveryFee', 'date', 'status', 'payment', 'method', 'items'])
             || (!monthLocked(resource.data.date) && !monthLocked(request.resource.data.date))
-            || lockFixOk(request.resource.data));
+            || lockFixOk(request.resource.data))
+        // חודש נעול: העברה ללקוח אחר – עם סיבה, או במיזוג לקוחות (הלקוח הקודם מסומן באותה פעולה כממוזג אל החדש)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['customerId', 'customerName'])
+            || (!monthLocked(resource.data.date) && !monthLocked(request.resource.data.date))
+            || lockFixOk(request.resource.data)
+            || getAfter(/databases/$(database)/documents/customers/$(resource.data.customerId)).data.get('mergedInto', '') == request.resource.data.customerId);
       // מחיקה לגמרי – רק מנהל מערכת, ולא בחודש נעול (ביומן נשארת רשומה עם הסיבה)
       allow delete: if isAdmin() && !monthLocked(resource.data.date);
 
@@ -290,7 +301,8 @@ service cloud.firestore {
         && request.resource.data.name is string && request.resource.data.name.size() <= 200
         && request.resource.data.type in ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
         && request.resource.data.size is int && request.resource.data.size <= 2097152
-        && request.resource.data.chunks is int && request.resource.data.chunks >= 1 && request.resource.data.chunks <= 4;
+        && request.resource.data.chunks is int && request.resource.data.chunks >= 1 && request.resource.data.chunks <= 4
+        && request.resource.data.keys().hasOnly(['orderId', 'customerId', 'kind', 'kindLabel', 'name', 'type', 'size', 'chunks', 'by', 'byName', 'at']);
       allow update: if false;
       allow delete: if isAdmin();
 
@@ -298,6 +310,9 @@ service cloud.firestore {
         allow read: if isActive();
         allow create: if isActive()
           && getAfter(/databases/$(database)/documents/orderDocs/$(did)).data.by == request.auth.uid
+          // רק חלקים 0..chunks-1 של הקובץ (בלי להעלות חלקים בלי סוף ולמלא את נפח האחסון החינמי)
+          && ci.matches('^[0-9]$') && int(ci) < getAfter(/databases/$(database)/documents/orderDocs/$(did)).data.chunks
+          && request.resource.data.keys().hasOnly(['i', 'data']) && request.resource.data.i == int(ci)
           && request.resource.data.data is bytes && request.resource.data.data.size() <= 720000;
         allow update: if false;
         allow delete: if isAdmin();
