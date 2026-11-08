@@ -7,7 +7,7 @@ import {
   collection, doc, onSnapshot, query, runTransaction, serverTimestamp, where, writeBatch, type DocumentData, type Timestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { toISODate } from '../lib/format';
+import { roundMoney, toISODate } from '../lib/format';
 import { CATEGORIES } from './types';
 
 export const FIRST_QUOTE_NUMBER = 1001;
@@ -53,7 +53,7 @@ export type Quote = {
 export type QuoteNote = { id: string; text: string; kind: 'note' | 'status'; status?: QuoteStatus; by: string; byName: string; at?: Timestamp };
 
 export const EMPTY_QUOTE_CUSTOMER: QuoteCustomer = { name: '', contact: '', phone: '', email: '', taxId: '' };
-export const linesTotal = (lines: QuoteLine[]) => lines.reduce((t, l) => t + l.qty * l.unitPrice, 0);
+export const linesTotal = (lines: QuoteLine[]) => roundMoney(lines.reduce((t, l) => t + l.qty * l.unitPrice, 0));
 export const addDays = (iso: string, n: number) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return toISODate(d); };
 /* שורות לפי סדר הקטגוריות (כך גם בדף ההצעה) */
 export const sortLines = (lines: QuoteLine[]) => [...lines].sort((a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category));

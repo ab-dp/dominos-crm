@@ -1,6 +1,6 @@
 /* מנוע החריגים (אפיון סעיפים 5 ו-9). פונקציות טהורות: הזמנה + עכשיו + ספים → רשימת בעיות.
    הסטטוס לא משתנה כאן לעולם; המערכת רק מתריעה. מסך "היום", מסך החריגים, הפעמון והתפריט נשענים על אותה פונקציה. */
-import { toISODate } from '../lib/format';
+import { sameMoney, toISODate } from '../lib/format';
 import { CLOSED, type Order } from '../data/types';
 import { DEFAULT_THRESHOLDS, type Thresholds } from '../data/thresholds';
 
@@ -58,8 +58,8 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
   const minutesLeft = (orderDateTime(o).getTime() - now.getTime()) / 60000;
 
   // פער מול Q – אלא אם אושר שהפער מוסבר, ומאז הסכומים לא השתנו
-  const gapAcked = o.qGapAck && o.qGapAck.amount === o.amount && o.qGapAck.qAmount === o.qAmount;
-  if (o.qAmount !== undefined && o.status !== 'cancelled' && o.qAmount !== o.amount && !gapAcked) {
+  const gapAcked = o.qGapAck && sameMoney(o.qGapAck.amount, o.amount) && o.qAmount !== undefined && sameMoney(o.qGapAck.qAmount, o.qAmount);
+  if (o.qAmount !== undefined && o.status !== 'cancelled' && !sameMoney(o.qAmount, o.amount) && !gapAcked) {
     out.push({ rule: 2, severity: 'red', label: 'פער מול Q', action: 'ackGap', actionLabel: 'בדוק פער' });
   }
   // חיוב אשראי שנכשל – אדום עד שמסמנים שטופל (שולם או בוטל)

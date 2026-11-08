@@ -6,12 +6,12 @@ import { CircleAlert, X } from 'lucide-react';
 import { useLists } from '../../data/lists';
 import { useStore } from '../../data/store';
 import { Button } from '../../design/components';
-import { Ltr, fmtMoney } from '../../lib/format';
+import { Ltr, fmtMoney, roundMoney } from '../../lib/format';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import './StatusDialogs.css';
 
 const CARD_RE = /\d{13,}/;
-const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
+const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
 
 export function StatusDialogs() {
   const { closing, endClosing } = useStore();

@@ -20,7 +20,7 @@ import { setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, type OrderStatus } from '../../data/types';
 import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
+import { Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday } from '../../lib/format';
 import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
@@ -43,7 +43,7 @@ const MISS_LABEL: Record<string, string> = {
   channel: 'ערוץ / מספר פניה', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש',
 };
 
-const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
+const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
 
 export function NewOrderDialog() {
   const { newOrder, closeNewOrder } = useStore();
@@ -71,7 +71,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   }, []);
 
   const today = toISODate(now);
-  const tomorrow = toISODate(new Date(now.getTime() + 86400000));
+  const tomorrow = toISODate(addDays(now, 1));
   /* מהצעת מחיר: הלקוח, המועד, המשלוח והשורות (כמות ומחיר) עוברים לטופס. נשאר לפרט סוגים ותוספות */
   const fq = initial.fromQuote;
   const prefill = useRef(!!fq);
@@ -156,11 +156,11 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   useRepriceOnDelivery(delivery, catalog, setLines, (n) => { if (n) toast({ message: <>המחירים עודכנו ל{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</> }); });
   const past = !!date && date < today; // תאריך שעבר – הזמנה לתיעוד בלבד
   const real = lines.filter((l) => !isBlank(l)); // השורה הריקה שבסוף הטבלה לא נחשבת
-  const linesTotal = real.reduce((t, l) => t + l.qty * l.unitPrice, 0);
+  const linesTotal = roundMoney(real.reduce((t, l) => t + l.qty * l.unitPrice, 0));
   const useLines = real.length > 0;
   // דמי המשלוח נוספים לסכום הפריטים
   const feeValue = delivery === 'delivery' ? money(fee) : 0;
-  const total = linesTotal + feeValue;
+  const total = roundMoney(linesTotal + feeValue);
   const canOverride = real.length > 0 || feeValue > 0;
   // פריטים בלי מחיר: הסכום הכולל להזמנה נכתב ישירות (כמו היום), בלי "שונה ידנית"
   const totalOnly = real.length > 0 && linesTotal === 0;

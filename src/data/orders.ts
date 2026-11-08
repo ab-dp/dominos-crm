@@ -213,21 +213,23 @@ export async function updateOrderSafe(o: Order, patch: Partial<Order>, source: '
 }
 
 /* ---------- "פותח כרגע" (אפיון 8): מי עוד צופה בתיק ההזמנה ----------
-   מסמך לכל צופה: orders/{מספר}/viewers/{uid}, מתעדכן כל 40 שניות ונמחק בסגירה. צופה שלא עדכן 90 שניות נחשב כמי שעזב. */
+   מסמך לכל צופה: orders/{מספר}/viewers/{uid}, מתעדכן כל 2 דקות – רק כשהלשונית גלויה – ונמחק בסגירה.
+   צופה שלא עדכן 5 דקות נחשב כמי שעזב. (קודם: כל 40 שניות גם בלשונית מוסתרת – כתיבות וקריאות מיותרות במכסה החינמית) */
 export function useOrderViewers(orderId: number) {
   const [others, setOthers] = useState<{ uid: string; name: string }[]>([]);
   useEffect(() => {
     const u = auth.currentUser;
     if (!u) return;
     const mine = doc(db, 'orders', String(orderId), 'viewers', u.uid);
-    const beat = () => setDoc(mine, { name: u.displayName ?? u.email ?? '', at: serverTimestamp() }).catch(() => undefined);
+    const beat = () => { if (document.visibilityState === 'visible') setDoc(mine, { name: u.displayName ?? u.email ?? '', at: serverTimestamp() }).catch(() => undefined); };
     beat();
-    const t = setInterval(beat, 40000);
+    const t = setInterval(beat, 120000);
+    document.addEventListener('visibilitychange', beat); // חזרה ללשונית – מעדכנים מיד
     const unsub = onSnapshot(collection(db, 'orders', String(orderId), 'viewers'), (s) => {
       const now = Date.now() / 1000;
-      setOthers(s.docs.filter((d) => d.id !== u.uid && (d.data().at?.seconds ?? now) > now - 90).map((d) => ({ uid: d.id, name: d.data().name as string })));
+      setOthers(s.docs.filter((d) => d.id !== u.uid && (d.data().at?.seconds ?? now) > now - 300).map((d) => ({ uid: d.id, name: d.data().name as string })));
     }, () => setOthers([]));
-    return () => { clearInterval(t); unsub(); deleteDoc(mine).catch(() => undefined); };
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', beat); unsub(); deleteDoc(mine).catch(() => undefined); };
   }, [orderId]);
   return others;
 }

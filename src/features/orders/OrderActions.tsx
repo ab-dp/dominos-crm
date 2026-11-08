@@ -5,7 +5,7 @@ import { TriangleAlert } from 'lucide-react';
 import { Button, Field, MarkAction } from '../../design/components';
 import { useStore, type OrderView } from '../../data/store';
 import { PAYMENT_LABEL, type PaymentState } from '../../data/types';
-import { Ltr, fmtMoney } from '../../lib/format';
+import { Ltr, fmtMoney, roundMoney } from '../../lib/format';
 import type { Issue } from '../../rules-engine/health';
 import { useAuth } from '../../auth/AuthContext';
 import { CloseForm } from './OrderTimeline';
@@ -47,7 +47,7 @@ export function QForm({ o, done }: { o: OrderView; done: () => void }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!num.trim()) { setErr('חובה: מספר ההזמנה ב-Q, למשל cs669'); return; }
-    const qAmount = Number(amt.replace(/[^\d.]/g, ''));
+    const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')));
     // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
     const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
     const cust = o.status === 'new' || o.status === 'pending_customer' ? { status: 'approved' as const } : {};
@@ -212,7 +212,7 @@ function QUpdateForm({ o, done }: { o: OrderView; done: () => void }) {
   const [amt, setAmt] = useState(String(o.qAmount ?? o.amount));
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const qAmount = Number(amt.replace(/[^d.]/g, '')) || o.amount;
+    const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')) || o.amount);
     update(o.id, { qNeedsUpdate: undefined, qAmount }, <>השינוי עודכן ב-Q · הזמנה <Ltr>{o.id}</Ltr></>);
     done();
   };

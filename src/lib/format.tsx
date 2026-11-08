@@ -8,6 +8,13 @@ export function Ltr({ children, className = '' }: { children: ReactNode; classNa
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
+/* כסף: עיגול לאגורות, בלי שאריות חישוב (3 × 54.90 = 164.70 ולא 164.70000000000002) */
+export const roundMoney = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+/* שני סכומים שווים עד חצי אגורה */
+export const sameMoney = (a: number, b: number) => Math.abs(a - b) < 0.005;
+/* בעוד n ימים לפי לוח השנה (setDate) – לא +24 שעות, שטועה בשעה סביב מעבר שעון */
+export function addDays(d: Date, n: number): Date { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
 export function toISODate(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }

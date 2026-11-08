@@ -15,7 +15,7 @@ import { useStore } from '../../data/store';
 import { CATEGORIES } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
+import { Ltr, fmtMoney, fmtPhone, roundMoney, toISODate } from '../../lib/format';
 import { isSimilar } from '../../lib/names';
 import { saveError } from '../../lib/saveError';
 import { Shell } from '../leads/LeadDialogs';
@@ -31,7 +31,7 @@ type Fee = { itemId?: string; name: string; price: string };
 const CARD_RE = /\d{13,}/;
 const VALID: number[] = [7, 14, 30];
 const DRAFT_KEY = 'quoteDraft';
-const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
+const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
 const blankLine = (l: QuoteLine) => !l.name.trim() && !l.qty && !l.unitPrice;
 const lineErr = (l: QuoteLine) => (blankLine(l) ? '' : !l.name.trim() ? 'חסר שם מוצר' : l.qty <= 0 ? 'חסרה כמות' : '');
 // פריטים לחישוב מדרגת המשלוח: הכל חוץ משתייה

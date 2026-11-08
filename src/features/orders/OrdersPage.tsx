@@ -6,7 +6,7 @@ import { usePref } from '../../lib/prefs';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
 import { HEALTH_RANK } from '../../rules-engine/health';
-import { Ltr, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
+import { Ltr, addDays, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { OrdersTable } from './OrdersTable';
 import '../pages.css';
 
@@ -33,8 +33,8 @@ export function OrdersPage() {
   const filter = filterKey ? FILTERS[filterKey] : undefined;
 
   const today = toISODate(now);
-  const tomorrow = toISODate(new Date(now.getTime() + 86400000));
-  const rangeEnd = range ? toISODate(new Date(now.getTime() + range * 86400000)) : '9999';
+  const tomorrow = toISODate(addDays(now, 1));
+  const rangeEnd = range ? toISODate(addDays(now, range)) : '9999';
 
   const lists = useMemo(() => {
     const open = orders.filter((o) => !CLOSED.includes(o.status));

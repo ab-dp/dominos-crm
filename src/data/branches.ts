@@ -1,22 +1,16 @@
 /* סניפים ואשכולות (אפיון 6.10): נבנים ידנית, כל משתמש פעיל יכול להוסיף. אין מחיקה – רק "לא פעיל".
    כל כתיבה ורשומת היומן שלה נשמרות יחד (batch) – אין שינוי בלי יומן. */
-import { useEffect, useState } from 'react';
-import { collection, doc, onSnapshot, serverTimestamp, writeBatch, type Timestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch, type DocumentData, type Timestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { byName, useLiveCollection, type Live } from './live';
 
 export type Cluster = { id: string; name: string; active: boolean; createdAt?: Timestamp; createdBy?: string };
 export type Branch = { id: string; name: string; clusterId: string; number?: string; phone: string; active: boolean; createdAt?: Timestamp; createdBy?: string };
 
-type Live<T> = { items: T[]; loading: boolean; error: string };
-
-function useCollection<T>(name: string): Live<T> {
-  const [state, setState] = useState<Live<T>>({ items: [], loading: true, error: '' });
-  useEffect(() => onSnapshot(
-    collection(db, name),
-    (s) => setState({ items: s.docs.map((d) => ({ id: d.id, ...d.data() }) as T).sort((a, b) => String((a as { name: string }).name).localeCompare(String((b as { name: string }).name), 'he')), loading: false, error: '' }),
-    () => setState({ items: [], loading: false, error: 'אין הרשאה או אין חיבור' }),
-  ), [name]);
-  return state;
+/* האזנה משותפת אחת לכל אוסף (live.ts) – בחלון הזמנה חדשה כמה רכיבים צריכים סניפים, וכולם מקבלים מאותה האזנה */
+const toItem = <T,>(id: string, d: DocumentData) => ({ id, ...d }) as T;
+function useCollection<T extends { name: string }>(name: string): Live<T> {
+  return useLiveCollection<T>(name, toItem, byName);
 }
 
 export const useClusters = () => useCollection<Cluster>('clusters');

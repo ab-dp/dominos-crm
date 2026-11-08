@@ -6,7 +6,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, groupItems, itemsText, typeText, OTHER, categoryOf } from '../../data/types';
 import { Button, Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, weekday } from '../../lib/format';
+import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, roundMoney, weekday } from '../../lib/format';
 import { phoneError } from '../../lib/names';
 import { PriceRows } from './ItemsBuilder';
 import { BranchEdit, DeliveryTypeEdit, EditKv, ItemsEditor, MethodEdit, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
@@ -103,7 +103,7 @@ function QRow({ o }: { o: OrderView }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!num.trim()) { setErr("חובה: מס' ההזמנה ב-Q, למשל cs669"); return; }
-    const qAmount = Number(amt.replace(/[^\d.]/g, '')) || o.amount;
+    const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')) || o.amount);
     // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
     const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
     update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...(custPending ? { status: 'approved' as const } : {}) }, qAmount !== o.amount

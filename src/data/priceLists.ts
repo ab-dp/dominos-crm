@@ -1,10 +1,10 @@
 /* מחירונים (אפיון 6.7): מוצרים לפי הקטגוריות של ההזמנה (פיצות / ליד הפיצה / כריכים / קינוחים / משקאות) ועוד מדרגות משלוח.
    המחירים מוקלדים ידנית וכולם כוללים מע"מ. מוצר בלי מחיר מותר – את המחיר ממלאים בהצעה או בהזמנה.
    המחיר נשמר בתוך כל הזמנה והצעה – שינוי מחירון לא משנה אותן. כל עריכה נרשמת ביומן. */
-import { useEffect, useState } from 'react';
-import { collection, doc, serverTimestamp, onSnapshot, writeBatch, type Timestamp, type WriteBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch, type Timestamp, type WriteBatch } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { CATEGORIES } from './types';
+import { byName, useLiveCollection } from './live';
 
 /* category – אחת הקטגוריות של ההזמנה, או "משלוח". price – משלוח, pickupPrice – איסוף עצמי (חסר = כמו משלוח).
    במשלוח: price = דמי המשלוח, upTo = עד כמה פריטים המדרגה מתאימה (להצעה אוטומטית).
@@ -38,12 +38,9 @@ const fromDoc = (id: string, d: Record<string, unknown>): PriceList => {
   return { active: true, ...d, items, id, name: String(d.name ?? '') } as PriceList;
 };
 
+/* האזנה משותפת אחת לכל המערכת (live.ts) */
 export function usePriceLists() {
-  const [state, setState] = useState<{ items: PriceList[]; loading: boolean; error: string }>({ items: [], loading: true, error: '' });
-  useEffect(() => onSnapshot(collection(db, 'priceLists'),
-    (s) => setState({ items: s.docs.map((d) => fromDoc(d.id, d.data())).sort((a, b) => a.name.localeCompare(b.name, 'he')), loading: false, error: '' }),
-    () => setState({ items: [], loading: false, error: 'אין הרשאה או אין חיבור' })), []);
-  return state;
+  return useLiveCollection<PriceList>('priceLists', fromDoc, byName);
 }
 
 /* Firestore לא מקבל undefined – מוצר נשמר בלי שדות ריקים, ובלי השדה הישן group */
