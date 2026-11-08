@@ -41,6 +41,7 @@ const ReportView = named(() => import('./features/reports/ReportsPage'), 'Report
 const QuotesPage = named(() => import('./features/quotes/QuotesPage'), 'QuotesPage');
 const QuotePage = named(() => import('./features/quotes/QuoteEditor'), 'QuotePage');
 const OpsSummaryPage = named(() => import('./features/ops/OpsSummaryPage'), 'OpsSummaryPage');
+const BoardPage = named(() => import('./features/board/BoardPage'), 'BoardPage');
 
 export function App() {
   return (
@@ -104,6 +105,7 @@ function Gate() {
               <Route path="/quotes/new" element={<QuotePage />} />
               <Route path="/quotes/:id" element={<QuotePage />} />
               <Route path="/ops" element={<OpsSummaryPage />} />
+              <Route path="/board" element={<BoardPage />} />
               <Route path="/exceptions" element={<ExceptionsPage />} />
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="*" element={<Navigate to="/today" replace />} />
