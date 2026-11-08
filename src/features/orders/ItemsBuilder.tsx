@@ -22,7 +22,10 @@ const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
 
 /* שורה שלא הוקלד בה כלום (גם אם סוג הפיצה הועתק מהשורה הקודמת) – לא נשמרת ולא נבדקת.
    מוצר שנכתב בלי כמות אינו ריק – הוא מסומן כחסר, ולא נעלם בשקט */
-export const isBlank = (l: OrderItem & { autoName?: boolean }) => !l.qty && !l.toppings?.length && !l.parts?.some((p) => p.trim()) && !l.unitPrice && (!l.name.trim() || !!l.autoName);
+/* שורה ריקה. בשורת פיצה בתוך סוג (autoName) גם המחיר מגיע מהסוג ולא נכתב בשורה – לכן שורה בלי תוספת ובלי כמות
+   נחשבת ריקה גם כשיש לסוג מחיר: לא מסומנת באדום, לא חוסמת שמירה ולא נשמרת */
+export const isBlank = (l: OrderItem & { autoName?: boolean }) => !l.qty && !l.toppings?.length && !l.parts?.some((p) => p.trim())
+  && (!l.unitPrice || (l.group === PIZZA && !!l.autoName)) && (!l.name.trim() || !!l.autoName);
 /* שורה שהתחילו למלא בלי כמות או בלי סוג / מוצר */
 export const lineProblem = (l: OrderItem) => !isBlank(l) && (!l.name.trim() || l.qty <= 0);
 export const lineText = (l: OrderItem) => `${l.name} ${l.detail ?? ''} ${(l.toppings ?? []).join(' ')} ${(l.parts ?? []).join(' ')}`;
