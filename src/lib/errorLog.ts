@@ -6,6 +6,8 @@ import { auth, db } from './firebase';
 const MAX_PER_SESSION = 5;
 let sent = 0;
 const seen = new Set<string>();
+/* ResizeObserver: הדפדפן דוחה עדכון מידות לפריים הבא (קורה עם חלונות קופצים של Radix). המשתמש לא רואה כלום */
+const NOISE = /ResizeObserver loop/;
 
 export function logError(where: string, e: unknown) {
   try {
@@ -13,6 +15,7 @@ export function logError(where: string, e: unknown) {
     if (!u || sent >= MAX_PER_SESSION) return;
     const err = e instanceof Error ? e : new Error(typeof e === 'string' ? e : JSON.stringify(e) ?? 'unknown');
     const message = `${err.name}: ${err.message}`.slice(0, 500);
+    if (NOISE.test(message)) return; // אזהרות דפדפן לא מזיקות – לא תקלה
     if (seen.has(message)) return; // אותה תקלה פעם אחת בכל כניסה
     seen.add(message);
     sent += 1;
