@@ -16,7 +16,7 @@ export function LockFixDialog() {
   const [reason, setReason] = useState('');
   const [err, setErr] = useState('');
   if (!lockFix) return null;
-  const fields = Object.keys(lockFix.patch).filter((k) => (LOCKED_FIELDS as string[]).includes(k)).map((k) => FIELD[k] ?? k).join(', ');
+  const fields = [...new Set(Object.keys(lockFix.patch).filter((k) => (LOCKED_FIELDS as string[]).includes(k)).map((k) => FIELD[k] ?? k))].join(', ');
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (reason.trim().length < 3) { setErr('חובה: סיבת התיקון (לפחות 3 תווים)'); return; }

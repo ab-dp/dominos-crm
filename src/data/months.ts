@@ -24,7 +24,7 @@ export type MonthDoc = {
 };
 
 /* שדות שננעלים בחודש סגור – תיקון שלהם דורש סיבה */
-export const LOCKED_FIELDS: (keyof Order)[] = ['amount', 'qAmount', 'calcAmount', 'deliveryFee', 'date', 'status', 'payment'];
+export const LOCKED_FIELDS: (keyof Order)[] = ['amount', 'qAmount', 'calcAmount', 'deliveryFee', 'date', 'status', 'payment', 'method', 'items', 'customerId', 'customerName'];
 
 export const monthOf = (date: string) => date.slice(0, 7);
 export const monthLabel = (ym: string) => `${ym.slice(5)}.${ym.slice(0, 4)}`;
