@@ -42,6 +42,25 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
   // כרטיסים מקופלים: בהזמנה עם הרבה סוגים – כולם מקופלים חוץ מהאחרון
   const [closed, setClosed] = useState<Set<string>>(() => new Set(groups.length > 2 ? groups.slice(0, -1).map((g) => g.id) : []));
   const [focus, setFocus] = useState<{ key: string; field: string } | null>(null);
+  /* יציאה מכרטיס בלחיצת עכבר: שורת "מחיר מוצע" נעלמת רק אחרי שהלחיצה הסתיימה – אחרת כל מה שמתחתיה קופץ למעלה,
+     הכפתור זז מתחת לעכבר והלחיצה הולכת לאיבוד (למשל "+ סוג פיצה" אחרי עריכת שם הסוג) */
+  const pointerDown = useRef(false);
+  useEffect(() => {
+    const down = () => { pointerDown.current = true; };
+    const up = () => { pointerDown.current = false; };
+    document.addEventListener('pointerdown', down, true);
+    document.addEventListener('pointerup', up, true);
+    document.addEventListener('pointercancel', up, true);
+    return () => {
+      document.removeEventListener('pointerdown', down, true);
+      document.removeEventListener('pointerup', up, true);
+      document.removeEventListener('pointercancel', up, true);
+    };
+  }, []);
+  const leaveCard = () => {
+    if (!pointerDown.current) { setFocus(null); return; }
+    document.addEventListener('pointerup', () => setTimeout(() => setFocus((f) => (f && document.activeElement?.closest('.pg') ? f : null))), { once: true });
+  };
   // מפתח השורה הריקה בכל כרטיס: חדש בכל פעם שהיא נכתבת – נגזר מהשורות, כך שלא חוזר גם אחרי מעבר לשונית
   const draftKey = (g: Group) => `d:${g.id}:${lines.filter((l) => l.key.startsWith(`d:${g.id}:`)).reduce((m, l) => Math.max(m, Number(l.key.split(':').pop()) + 1), 0)}`;
   const touch = () => onTouched?.();
@@ -124,7 +143,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
         const rows: (Line | null)[] = hasBlank ? g.lines : [...g.lines, null];
         return (
           <section key={g.id} className="pg" aria-label={`סוג פיצה: ${g.name || 'חדש'}`}
-            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus(null); }}>
+            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leaveCard(); }}>
             <div className="pg__head">
               <input className={`input input--sm pg__name ${nameBad ? 'is-invalid' : ''}`} list="ib-names-0" value={g.raw} placeholder="סוג פיצה, למשל: משפחתית" data-gname={g.id}
                 aria-label="סוג פיצה" aria-invalid={nameBad || undefined}
