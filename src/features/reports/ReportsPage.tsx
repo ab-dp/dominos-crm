@@ -9,7 +9,7 @@ import { useStore } from '../../data/store';
 import { METHOD_LABEL, OUTCOME_LABEL, outcomeOf, type Order, type Outcome } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtDate, fmtMoney, toISODate } from '../../lib/format';
+import { Ltr, addDays, fmtDate, fmtMoney, toISODate } from '../../lib/format';
 import { REPORTS, qVal, type Col, type ReportDef, type ReportResult, type Row } from './defs';
 import { BarChart } from './BarChart';
 import '../pages.css';
@@ -50,7 +50,7 @@ function rangeOf(p: Preset, now: Date): [string, string] {
   if (p === 'prev') return [day(new Date(y, m - 1, 1)), day(new Date(y, m, 0))];
   // שבוע: ראשון עד שבת של השבוע הנוכחי
   if (p === 'week') { const s = new Date(y, m, now.getDate() - now.getDay()); return [day(s), day(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6))]; }
-  if (p === 'd30') return [day(new Date(now.getTime() - 29 * 86400000)), day(now)];
+  if (p === 'd30') return [day(addDays(now, -29)), day(now)];
   if (p === 'm3') return [day(new Date(y, m - 2, 1)), day(new Date(y, m + 1, 0))];
   return [day(new Date(y, m, 1)), day(new Date(y, m + 1, 0))];
 }

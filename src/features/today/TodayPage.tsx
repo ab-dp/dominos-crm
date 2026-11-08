@@ -10,7 +10,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { CLOSED, itemsText } from '../../data/types';
 import { Button, HealthBadge, Missing, Skeleton } from '../../design/components';
 import { missingOf, orderDateTime } from '../../rules-engine/health';
-import { Ltr, Money, fmtDate, toISODate, weekday } from '../../lib/format';
+import { Ltr, Money, addDays, fmtDate, toISODate, weekday } from '../../lib/format';
 import { NextStep, StageTrack } from '../orders/OrderTimeline';
 import { downloadCsv } from '../../lib/csv';
 import { PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
@@ -18,8 +18,8 @@ import { fmtPhone } from '../../lib/format';
 import '../pages.css';
 import './TodayPage.css';
 
-// כללים שיש להם משימה משלה ברשימה
-const COVERED = [6, 4, 0, 1, 12, 8];
+// כללים שיש להם משימה משלה ברשימה (3 – מועד עבר: "לסגור הזמנות שעברו")
+const COVERED = [6, 4, 0, 1, 3, 12, 8];
 
 export function TodayPage() {
   const { orders, now, dueTasks, loading, quoteFollowups } = useStore();
@@ -32,7 +32,7 @@ export function TodayPage() {
   const firstName = (profile?.name ?? '').split(' ')[0];
 
   const today = toISODate(now);
-  const tomorrow = toISODate(new Date(now.getTime() + 86400000));
+  const tomorrow = toISODate(addDays(now, 1));
   const scope = mine ? orders.filter((o) => (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name)) : orders;
   const open = scope.filter((o) => !CLOSED.includes(o.status));
 

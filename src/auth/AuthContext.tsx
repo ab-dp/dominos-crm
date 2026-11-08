@@ -5,7 +5,7 @@ import {
   setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User,
 } from 'firebase/auth';
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth, clearLocalData, db } from '../lib/firebase';
 import { BOOT_ADMIN, STATUS_MESSAGE, type UserDoc } from './types';
 
 type Phase = 'loading' | 'signedOut' | 'pending' | 'active';
@@ -30,6 +30,10 @@ export function useAuth() {
   return c;
 }
 
+const NOTICE_KEY = 'authNotice';
+/* נקרא פעם אחת בטעינת הדף (לא בתוך הרכיב – שם React עלול להריץ פעמיים ולמחוק לפני שמוצג) */
+const initialNotice = (() => { try { const n = sessionStorage.getItem(NOTICE_KEY) ?? ''; sessionStorage.removeItem(NOTICE_KEY); return n; } catch { return ''; } })();
+
 // אין "זכור אותי": המחשבים במוקד משותפים, אז ההתחברות נמחקת כשסוגרים את הדפדפן
 const ready = setPersistence(auth, browserSessionPersistence).catch(() => undefined);
 
@@ -37,13 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserDoc | null>(null);
-  const [notice, setNotice] = useState('');
+  // הודעת היציאה (למשל ניתוק אחרי חוסר פעילות) עוברת את טעינת הדף מחדש דרך sessionStorage
+  const [notice, setNotice] = useState(initialNotice);
   const pendingName = useRef('');
   const loggedThisSession = useRef(false);
 
   const logout = async (msg?: string) => {
-    if (msg) setNotice(msg);
+    try { if (msg) sessionStorage.setItem(NOTICE_KEY, msg); } catch { /* מצב פרטי */ }
     await signOut(auth);
+    await clearLocalData();
+    window.location.reload();
   };
 
   useEffect(() => {

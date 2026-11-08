@@ -2,11 +2,12 @@
    ח.פ ייחודי נאכף בשרת דרך אוסף taxIds/{ח.פ} שנוצר יחד עם הלקוח (batch). */
 import { useEffect, useState } from 'react';
 import {
-  collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch, type Timestamp, type WriteBatch,
+  collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch, type DocumentData, type Timestamp, type WriteBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { cleanTaxId } from '../lib/taxid';
 import { addTaskTo } from './tasks';
+import { byName, useLiveCollection } from './live';
 
 export type Contact = { id: string; name: string; role: string; phone: string; email: string; emails?: string[]; primary: boolean }; // emails – מיילים נוספים
 export type Address = { id: string; label: string; address: string; directions: string; preferredBranchId: string };
@@ -53,12 +54,10 @@ export function primaryContact(c: Pick<Customer, 'contacts'>): Contact | undefin
 }
 
 /* ---------- קריאה חיה ---------- */
+/* האזנה משותפת אחת לכל המערכת (live.ts) – פתיחה חוזרת של מסך לא קוראת שוב את כל הלקוחות */
+const toCustomer = (id: string, d: DocumentData) => ({ ...EMPTY_CUSTOMER, id, ...d }) as Customer;
 export function useCustomers() {
-  const [state, setState] = useState<{ items: Customer[]; loading: boolean; error: string }>({ items: [], loading: true, error: '' });
-  useEffect(() => onSnapshot(collection(db, 'customers'),
-    (s) => setState({ items: s.docs.map((d) => ({ ...EMPTY_CUSTOMER, id: d.id, ...d.data() }) as Customer).sort((a, b) => a.name.localeCompare(b.name, 'he')), loading: false, error: '' }),
-    () => setState({ items: [], loading: false, error: 'אין הרשאה או אין חיבור' })), []);
-  return state;
+  return useLiveCollection<Customer>('customers', toCustomer, byName);
 }
 
 export function useActivity(customerId: string) {

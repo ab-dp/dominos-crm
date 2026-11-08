@@ -8,7 +8,7 @@ import type { Customer } from '../../data/customers';
 import { DELIVERY_CAT, priceOf, type PriceItem, type PriceList } from '../../data/priceLists';
 import { useStore } from '../../data/store';
 import { CATEGORIES, OTHER, PIZZA, categoryOf, groupItems, splitPart, type OrderItem } from '../../data/types';
-import { Ltr, fmtMoney } from '../../lib/format';
+import { Ltr, fmtMoney, roundMoney } from '../../lib/format';
 import { newId } from '../../data/customers';
 import { PizzaGroups } from './PizzaGroups';
 import './ItemsBuilder.css';
@@ -18,7 +18,7 @@ export type Line = OrderItem & { key: string; tText?: string; pText?: string; au
 export type CatalogItem = PriceItem & { unit?: number; custom: boolean };
 type Delivery = 'delivery' | 'pickup';
 const NO_LIST = '__none';
-const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
+const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
 
 /* שורה שלא הוקלד בה כלום (גם אם סוג הפיצה הועתק מהשורה הקודמת) – לא נשמרת ולא נבדקת.
    מוצר שנכתב בלי כמות אינו ריק – הוא מסומן כחסר, ולא נעלם בשקט */

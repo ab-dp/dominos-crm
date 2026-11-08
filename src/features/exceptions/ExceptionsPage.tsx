@@ -10,7 +10,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { setTaskDone, type Task } from '../../data/tasks';
 import { useToast } from '../../design/Toast';
 import { Skeleton } from '../../design/components';
-import { Ltr, fmtDate, toISODate } from '../../lib/format';
+import { Ltr, addDays, fmtDate, toISODate } from '../../lib/format';
 import { RULE_LABEL, type Issue, type Severity } from '../../rules-engine/health';
 import { FixButton } from '../orders/OrderActions';
 import '../pages.css';
@@ -28,7 +28,7 @@ export function ExceptionsPage() {
   const [mine, setMine] = useState(false);
   const rule = params.get('rule');
   const today = toISODate(now);
-  const tomorrow = toISODate(new Date(now.getTime() + 86400000));
+  const tomorrow = toISODate(addDays(now, 1));
 
   const all = useMemo<Row[]>(() => orders
     .filter((o) => !mine || (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name))

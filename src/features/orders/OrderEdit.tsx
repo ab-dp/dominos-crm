@@ -12,12 +12,12 @@ import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, type Order } from '../../data/types';
 import { Button, Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
+import { Ltr, fmtDate, fmtMoney, fmtPhone, roundMoney, sameMoney, toISODate } from '../../lib/format';
 import { cleanPhone, phoneError } from '../../lib/names';
 import { BranchPicker } from '../branches/BranchPicker';
 
 const CARD_RE = /\d{13,}/;
-const money = (s: string) => Number(s.replace(/[^\d.]/g, '')) || 0;
+const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
 
 /* ---------- שדה אחד שנערך במקום ---------- */
 type Kind = 'text' | 'textarea' | 'date' | 'time' | 'phone' | 'money';
@@ -187,15 +187,15 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
   const [contents, setContents] = useState(o.contents ?? '');
   const [fee, setFee] = useState(o.deliveryFee ? String(o.deliveryFee) : '');
   const real = lines.filter((l) => !isBlank(l));
-  const linesTotal = real.reduce((t, l) => t + l.qty * l.unitPrice, 0);
-  const calc = linesTotal + (o.delivery === 'delivery' ? money(fee) : 0);
+  const linesTotal = roundMoney(real.reduce((t, l) => t + l.qty * l.unitPrice, 0));
+  const calc = roundMoney(linesTotal + (o.delivery === 'delivery' ? money(fee) : 0));
   const hasLines = real.length > 0;
   // פריטים בלי מחיר – הסכום הכולל נכתב ידנית, בלי "שונה ידנית / מחושב"
   const totalOnly = hasLines && linesTotal === 0;
   const [amount, setAmount] = useState(String(o.amount));
   // סכום קיים ששונה מסכום הפריטים נשמר כמו שהוא (שונה ידנית) – פתיחת העריכה לא משנה אותו בשקט
   const [manual, setManual] = useState(() => !hasLines || o.calcAmount !== undefined
-    || o.amount !== o.items.reduce((t, l) => t + l.qty * l.unitPrice, 0) + (o.delivery === 'delivery' ? o.deliveryFee ?? 0 : 0));
+    || !sameMoney(o.amount, o.items.reduce((t, l) => t + l.qty * l.unitPrice, 0) + (o.delivery === 'delivery' ? o.deliveryFee ?? 0 : 0)));
   const final = manual || totalOnly ? money(amount) : calc;
   const [err, setErr] = useState('');
 

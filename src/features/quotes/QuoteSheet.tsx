@@ -1,7 +1,7 @@
 /* דף ההצעה (A4) – מה שהלקוח מקבל. אותו דף מוצג חי בזמן העריכה ויוצא ל-PDF.
    המבנה לפי הדוגמה שאושרה: לוגו וכותרת, לכבוד / פרטי האספקה, טבלת פריטים, סיכום, הערות ותנאים. שדה ריק לא מופיע. */
 import { forwardRef, type ReactNode } from 'react';
-import { fmtDate, fmtMoney, fmtPhone, weekday } from '../../lib/format';
+import { fmtDate, fmtMoney, fmtPhone, roundMoney, weekday } from '../../lib/format';
 import { sortLines, type QuoteCustomer, type QuoteFee, type QuoteLine } from '../../data/quotes';
 
 export type SheetData = {
@@ -16,7 +16,7 @@ const ils = (n: number) => fmtMoney(n);
 export const QuoteSheet = forwardRef<HTMLElement, { d: SheetData }>(function QuoteSheet({ d }, ref) {
   const c = d.customer;
   const lines = sortLines(d.lines.filter((l) => l.name.trim() && l.qty > 0));
-  const items = lines.reduce((t, l) => t + l.qty * l.unitPrice, 0);
+  const items = roundMoney(lines.reduce((t, l) => t + l.qty * l.unitPrice, 0));
   const fee = d.delivery === 'delivery' && d.fee && d.fee.price > 0 ? d.fee : undefined;
   const contactLine = [c.contact.trim(), c.phone.trim() ? fmtPhone(c.phone.trim()) : ''].filter(Boolean);
   const who: ReactNode[] = [
