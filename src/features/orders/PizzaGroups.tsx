@@ -254,7 +254,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
         <button type="button" className="btn btn--secondary btn--sm" onClick={() => addGroup()}><Plus size={15} aria-hidden="true" /><span className="btn__label">סוג פיצה</span></button>
         {quick.length > 0 && (
           <span className="pgs__quick">
-            <span>מהיר:</span>
+            <span>או בחירה מהירה:</span>
             {quick.map((t) => <button type="button" key={t} className="ib-sug__chip" onClick={() => addGroup(t)}>{t}</button>)}
           </span>
         )}

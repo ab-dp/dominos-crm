@@ -136,3 +136,15 @@
 /* טיפים של מקלדת – רק כשעומדים בתוך הטבלה */
 :has(> .ib-foot):not(:focus-within) .ib-hint { visibility: hidden; } /* שומר מקום – כפתור מתחת לא זז ברגע הלחיצה */
 .ib-hint { font-size: var(--text-micro); }
+
+/* ---------- השלב הבא בהכנסת פריטים – מודגש בכחול של הפעולה, רק כל עוד הוא באמת הצעד הבא ---------- */
+/* פיצות בלי אף סוג: "+ סוג פיצה" הוא הכפתור הראשי. אחרי שנוסף סוג – חוזר להיות כפתור רגיל */
+.pgs:not(:has(.pg)) .pgs__foot > .btn { height: 36px; padding: 0 16px; background: var(--brand-600); border-color: var(--brand-600); color: var(--white); font-size: var(--text-table); }
+.pgs:not(:has(.pg)) .pgs__foot > .btn:hover:not(:disabled) { background: var(--brand-700); border-color: var(--brand-700); }
+/* הקיצורים – אופציה, לא חובה: מסגרת מקווקוות ושקטה */
+.pgs__quick .ib-sug__chip { background: transparent; border-style: dashed; color: var(--gray-700); }
+.pgs__quick .ib-sug__chip:hover { border-style: solid; background: var(--brand-50); }
+/* קטגוריה אחרת עם טבלה ריקה: השלב הבא הוא לכתוב בשדה "מוצר" ("+ שורה" רק קופץ אליו – מוסתר עד השורה הראשונה, המקום נשמר) */
+.ib-table:not(:has([data-row])) [data-draft] input[data-col="name"]:not(:focus) { border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0, 100, 145, 0.12); }
+.ib-table:not(:has([data-row])) [data-draft] input[data-col="name"]::placeholder { color: var(--brand-700); }
+.ib-table:not(:has([data-row])) .ib-addrow { visibility: hidden; }
