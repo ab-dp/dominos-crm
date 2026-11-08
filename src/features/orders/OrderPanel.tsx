@@ -115,9 +115,9 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           )}
           <span className="panel__spacer" />
           <Tip label={full ? 'חזרה לפאנל' : 'מסך מלא'}>
-            <button className="icon-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
+            <button className="icon-btn panel__full-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
           </Tip>
-          <Dialog.Close asChild><button className="icon-btn" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
+          <Dialog.Close asChild><button className="icon-btn panel__close" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
         </div>
         <AnimatePresence initial={false}>
           {remoteNote && (
@@ -214,6 +214,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           )}
           {tab === 'history' && <History o={o} />}
         </div>
+        {/* בטלפון אין שורה תחתונה – מחיקה בסוף התיק, רחוק מהאגודל */}
+        <div className="panel__del-m"><DeleteOrder o={o} /></div>
       </div>
       <div className="panel__foot">
         <span className="muted">לחיצה על ערך פותחת עריכה · נשמר אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>

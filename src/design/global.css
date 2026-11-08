@@ -1,6 +1,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }
+/* בלי "קפיצה" של כל הדף בקצה הגלילה (אייפון) – הפסים העליון והתחתון לא נמשכים איתה */
+html, body { overscroll-behavior-y: none; }
+html { -webkit-text-size-adjust: 100%; }
+@media (pointer: coarse) { * { -webkit-tap-highlight-color: transparent; } a, button, [role=tab], input, select, label { touch-action: manipulation; } }
 
 /* מקום קבוע לפס הגלילה – הדף לא זז הצידה במעבר בין מסך קצר לארוך. פס דק בכל מקום */
 @media (hover: hover) and (pointer: fine) { html { scrollbar-gutter: stable; } }

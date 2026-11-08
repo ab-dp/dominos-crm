@@ -29,7 +29,8 @@ import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
 
-const MOBILE_MAIN = ['/today', '/orders', '/exceptions', '/customers'];
+/* בטלפון: לצפייה ולמעקב – היום, הזמנות, בורד, חריגים. כל השאר תחת "עוד" */
+const MOBILE_MAIN = ['/today', '/orders', '/board', '/exceptions'];
 
 type NavDef = { to: string; label: string; short?: string; icon: ReactNode; count?: number; alert?: boolean };
 
@@ -64,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       title: 'עבודה יומית',
       items: [
-        { to: '/today', label: 'היום', icon: <House size={20} />, count: todayCount, alert: critical.length > 0 },
+        { to: '/today', label: 'היום', icon: <House size={20} />, count: todayCount },
         { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
         { to: '/board', label: 'בורד', icon: <LayoutDashboard size={20} /> },
         { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length },
@@ -112,7 +113,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <button className="search-trigger" onClick={() => setSearchOpen(true)} aria-label="חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון (/)">
           <Search size={18} aria-hidden="true" />
-          <span>חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון…</span>
+          <span className="search-trigger__full">חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון…</span>
+          <span className="search-trigger__short" aria-hidden="true">חיפוש הזמנה או לקוח</span>
           <kbd className="kbd">/</kbd>
         </button>
 
@@ -168,6 +170,22 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <Button variant="ghost" size="sm" icon={<LogOut size={16} />} onClick={() => logout()}>התנתק</Button>
           </div>
+
+          {/* טלפון: האות הראשונה של השם פותחת תפריט משתמש – ההתנתקות בפנים, לא ליד הפעמון */}
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <button className="user-m" aria-label={`${profile?.name ?? 'משתמש'} – תפריט משתמש`}>{firstName[0] ?? '?'}</button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content className="menu user-m__menu" align="end" sideOffset={8} dir="rtl" aria-label="תפריט משתמש">
+                <div className="user-m__id">
+                  <b>{profile?.name}</b>
+                  <span>{profile ? ROLE_LABEL[profile.role] : ''}</span>
+                </div>
+                <button className="menu__item" onClick={() => logout()}><LogOut size={16} aria-hidden="true" /> התנתק</button>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
         </div>
       </header>
 

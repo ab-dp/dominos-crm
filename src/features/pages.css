@@ -92,7 +92,10 @@
   .tabs { flex-wrap: nowrap; overflow-x: auto; gap: 0 18px; }
   .subnav { gap: 18px; overflow-x: auto; scrollbar-width: none; }
   .subnav a, .subnav__label { flex: none; white-space: nowrap; }
-  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+  /* שורת מסננים נגללת עד קצה המסך, ודהייה בקצה מסמנת שיש עוד */
+  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: none; margin-inline-end: -16px; padding-inline-end: 16px;
+    -webkit-mask-image: linear-gradient(to left, transparent 0, #000 32px); mask-image: linear-gradient(to left, transparent 0, #000 32px); }
+  .chips .chip { min-height: 40px; }
   .chip { flex: none; }
   .otable:not(.otable--orders) { display: block; }
   .otable:not(.otable--orders) thead { display: none; }
