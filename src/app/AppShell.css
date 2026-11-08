@@ -202,11 +202,24 @@
 
 /* ---------- טלפון: תפריט תחתון ---------- */
 @media (max-width: 700px) {
-  .shell, .shell--collapsed { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "main"; --gutter: 16px; }
-  .topbar { gap: 8px; padding: 0 12px; }
+  .shell, .shell--collapsed { grid-template-columns: minmax(0, 1fr); grid-template-rows: calc(var(--topbar) + env(safe-area-inset-top, 0px)) minmax(0, 1fr); grid-template-areas: "top" "main"; --gutter: 16px; }
+  /* פס עליון קבוע (לא "נדבק"): לא זז בגלילה ולא נמשך בקצה הדף. השורה בגריד נשארת כמרווח */
+  .topbar {
+    position: fixed; top: 0; inset-inline: 0; z-index: 40;
+    height: calc(var(--topbar) + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
+    gap: 8px;
+  }
   .topbar__logo { display: block; }
-  .search-trigger { max-width: none; }
-  .search-trigger span, .search-trigger .kbd, .topbar__actions .btn__kbd, .user__avatar { display: none; }
+  .search-trigger { max-width: none; height: 40px; }
+  .search-trigger .search-trigger__full, .search-trigger .kbd, .topbar__actions .btn__kbd { display: none; }
+  .search-trigger .search-trigger__short { display: block; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* בטלפון לא מקלידים הזמנות – "+" שקט, לא הכפתור הבולט במסך */
+  .topbar__actions .btn--primary { width: 40px; height: 40px; padding: 0; justify-content: center; background: transparent; border: 1px solid var(--gray-200); color: var(--gray-700); box-shadow: none; }
+  .topbar__actions .icon-btn { width: 40px; height: 40px; }
+  .topbar__actions { gap: 4px; }
+  .user { display: none; }
+  .topbar .user-m { display: grid; }
   /* בטלפון הכפתורים למעלה הם אייקון בלבד – השם נשאר לקורא מסך */
   .topbar__actions .btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .user { padding-inline-start: 4px; margin: 0; border: 0; }
@@ -239,6 +252,17 @@
 @media (max-width: 860px) {
   .topbar__actions .btn--primary .btn__kbd { display: none; }
 }
+
+/* חיפוש: טקסט קצר בטלפון; תפריט משתמש – רק בטלפון */
+.search-trigger__short { display: none; }
+.user-m { display: none; place-items: center; width: 34px; height: 34px; margin-inline-start: 2px; border: 0; border-radius: 50%; background: var(--navy); color: var(--white); font: inherit; font-size: var(--text-label); font-weight: 600; cursor: pointer; }
+.user-m:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }
+.user-m__menu { min-width: 200px; padding: 6px; }
+.user-m__id { display: grid; gap: 1px; padding: 8px 10px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--gray-100); }
+.user-m__id b { font-size: var(--text-table); font-weight: 600; }
+.user-m__id span { font-size: var(--text-label); color: var(--gray-600); }
+.user-m__menu .menu__item { width: 100%; height: 44px; gap: 10px; border: 0; background: none; font: inherit; color: var(--gray-900); text-align: start; }
+.user-m__menu .menu__item:hover, .user-m__menu .menu__item:focus-visible { background: var(--gray-25); }
 
 /* שם קצר – רק בתפריט התחתון של הטלפון */
 .nav__short { display: none; }

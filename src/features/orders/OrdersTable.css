@@ -32,6 +32,8 @@
 .orow__sub { display: inline-flex; align-items: center; gap: 4px; font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .orow__sub svg { display: none; }
 .orow__marks { padding-inline: 2px !important; }
+/* כותרת יום ושורת סניף+סכום – רק בכרטיסים של הטלפון */
+.oday, .orow__m { display: none; }
 
 .bulkbar {
   position: sticky; top: 0; z-index: 3;
@@ -66,7 +68,16 @@
 
 /* ---------- טלפון: כל שורה הופכת לכרטיס ---------- */
 @media (max-width: 700px) {
-  .otable-wrap { overflow: hidden; }
+  /* clip ולא hidden – כדי שכותרת היום תוכל להיצמד למעלה בגלילה */
+  .otable-wrap { overflow: clip; }
+  .otable--orders tr.oday { display: block; position: sticky; top: calc(var(--topbar) + env(safe-area-inset-top, 0px)); z-index: 2; }
+  .otable--orders tr.oday th { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 14px 8px; background: var(--gray-50); border-bottom: 1px solid var(--line); text-align: start; }
+  .otable--orders tr.oday + .orow { border-top: 0; }
+  .oday__name { font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
+  .oday__meta { font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
+  .orow__m { display: flex; justify-content: space-between; gap: 12px; margin-top: 3px; font-size: var(--text-label); color: var(--gray-700); }
+  .orow__m > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .orow__m-sum { flex: none; font-weight: 600; color: var(--gray-900); }
   .otable--orders, .otable--orders tbody { display: block; }
   .otable--orders thead { display: none; }
   .otable--orders .orow {
@@ -100,5 +111,8 @@
   /* בטלפון: שורת פעולות משלה מתחת לסימונים, כדי לא לדחוק את שם הלקוח */
   .otable--orders tr.orow { grid-template-areas: "time cust health" "marks marks marks" "act act act" !important; }
   .otable--orders td.c-act { justify-self: stretch; }
+  /* ביטול עובר לכרטיס ההזמנה – לא ליד האגודל ברשימה */
+  .otable--orders .row-act--danger { display: none; }
+  .otable--orders .row-act { height: 40px; padding: 0 14px; }
   .c-act__in { display: flex; justify-content: flex-end; flex-wrap: wrap; }
 }

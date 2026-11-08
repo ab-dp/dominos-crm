@@ -1,6 +1,6 @@
 .cform {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 48px);
+  width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px);
   display: flex; flex-direction: column;
   background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-panel);
   z-index: 61;
@@ -48,3 +48,14 @@
 .cform__more { clear: both; margin-bottom: 10px; padding: 8px 12px 2px; border-radius: var(--radius); background: var(--gray-50); }
 .cform__more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 @media (max-width: 640px) { .cform__extra .cform__field { max-width: none; } }
+
+/* טלפון: טופס (הזמנה חדשה, לקוח חדש) במסך מלא – בלי שוליים, ושורת השמירה מעל פס הבית */
+@keyframes sheet-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (max-width: 640px) {
+  .cform { inset: 0; top: 0; left: 0; transform: none; width: 100vw; max-height: none; height: 100%; border-radius: 0; padding-top: env(safe-area-inset-top, 0px); animation-name: sheet-in; }
+  .cform__head { padding: 10px 8px 6px 16px; }
+  .cform__head .udialog__title { font-size: var(--text-section); }
+  .cform__head .icon-btn { width: 44px; height: 44px; }
+  .cform__body { padding: 0 16px 12px; overscroll-behavior: contain; }
+  .cform__foot { padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); }
+}

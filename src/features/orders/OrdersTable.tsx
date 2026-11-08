@@ -1,11 +1,11 @@
 /* הטבלה המרכזית (אפיון 6.2). היום · מחר · עתידיות · ארכיון הם אותה טבלה עם מסנן שונה.
    חיצים מעבר בין שורות, Enter פתיחה. כל פעולה נפוצה – ישירות בשורה. */
-import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { Fragment, memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { ClipboardList, Phone as PhoneIcon } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { EmptyState, HealthBadge, Missing } from '../../design/components';
-import { Ltr, Money, fmtDate } from '../../lib/format';
+import { Ltr, Money, fmtDate, fmtMoney, weekday } from '../../lib/format';
 import { METHOD_LABEL } from '../../data/types';
 import { FixButton } from './OrderActions';
 import { NextStep, StageTrack } from './OrderTimeline';
@@ -83,8 +83,12 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
           </tr>
         </thead>
         <tbody ref={body}>
-          {rows.slice(0, limit).map((o) => (
-            <OrderRow key={o.id} o={o} showDate={showDate} flash={flash === o.id} selected={selected.includes(o.id)} toggle={toggle} />
+          {rows.slice(0, limit).map((o, i, shown) => (
+            <Fragment key={o.id}>
+              {/* בטלפון: כותרת יום בכל פעם שהתאריך מתחלף (עתידיות, ארכיון) – נשארת למעלה בגלילה */}
+              {showDate && (i === 0 || shown[i - 1].date !== o.date) && <DayRow date={o.date} rows={rows} />}
+              <OrderRow o={o} showDate={showDate} flash={flash === o.id} selected={selected.includes(o.id)} toggle={toggle} />
+            </Fragment>
           ))}
         </tbody>
       </table>
@@ -97,6 +101,20 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
   );
 }
 
+/* כותרת יום – רק בתצוגת הכרטיסים של הטלפון */
+function DayRow({ date, rows }: { date: string; rows: OrderView[] }) {
+  const day = rows.filter((r) => r.date === date && r.status !== 'cancelled');
+  const sum = day.reduce((t, r) => t + r.amount, 0);
+  return (
+    <tr className="oday" aria-hidden="true">
+      <th colSpan={11}>
+        <span className="oday__name">{weekday(date)} <Ltr>{fmtDate(date)}</Ltr></span>
+        <span className="oday__meta">{day.length === 1 ? 'הזמנה אחת' : <><Ltr>{day.length}</Ltr> הזמנות</>}{sum > 0 && <> · <Ltr>{fmtMoney(sum)}</Ltr></>}</span>
+      </th>
+    </tr>
+  );
+}
+
 /* שורה ממוזכרת: מתרנדרת מחדש רק כשההזמנה שלה, הסימון או ההבהוב משתנים */
 const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }: { o: OrderView; showDate: boolean; flash: boolean; selected: boolean; toggle: (id: number) => void }) {
   const panel = usePanel();
@@ -105,8 +123,9 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
   const onRowKey = (e: KeyboardEvent<HTMLTableRowElement>) => {
     if (e.target !== e.currentTarget) return;
     const tr = e.currentTarget;
-    if (e.key === 'ArrowDown') { e.preventDefault(); (tr.nextElementSibling as HTMLElement | null)?.focus(); }
-    if (e.key === 'ArrowUp') { e.preventDefault(); (tr.previousElementSibling as HTMLElement | null)?.focus(); }
+    const step = (dir: 'nextElementSibling' | 'previousElementSibling') => { let el = tr[dir] as HTMLElement | null; while (el && !el.classList.contains('orow')) el = el[dir] as HTMLElement | null; el?.focus(); };
+    if (e.key === 'ArrowDown') { e.preventDefault(); step('nextElementSibling'); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); step('previousElementSibling'); }
     if (e.key === 'Enter') { e.preventDefault(); panel.open(o.id, tr); }
   };
   return (
@@ -115,7 +134,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       className={`orow orow--${o.health} ${flash ? 'is-flash' : ''} ${selected ? 'is-selected' : ''}`}
       onClick={(e) => panel.open(o.id, e.currentTarget)}
       onKeyDown={onRowKey}
-      aria-label={`הזמנה ${o.id}, ${o.customerName}, ${o.time}${top ? `, ${top.label}` : ''}`}
+      aria-label={`הזמנה ${o.id}, ${o.customerName}, ${showDate ? `${fmtDate(o.date)} ` : ''}${o.time}${top ? `, ${top.label}` : ''}`}
     >
       <td className="col-check" onClick={(e) => e.stopPropagation()}>
         <input type="checkbox" aria-label={`בחר הזמנה ${o.id}`} checked={selected} onChange={() => toggle(o.id)} />
@@ -126,6 +145,11 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       <td className="c-cust">
         <span className="orow__cust">{o.customerName}{o.changedAfterApproval && <span className="changed-tag changed-tag--sm" title="שונתה לאחר אישור">שונתה</span>}</span>
         {top && o.health !== 'ok' && <span className={`orow__why orow__why--${o.health}`}>{top.label}</span>}
+        {/* בטלפון העמודות מוסתרות – סניף וסכום בשורה אחת מתחת לשם */}
+        <span className="orow__m">
+          <span>{o.branchName || <Missing>ללא סניף</Missing>}</span>
+          <span className="orow__m-sum">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</span>
+        </span>
       </td>
       <td>
         <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}</span>

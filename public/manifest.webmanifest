@@ -1,0 +1,19 @@
+{
+  "name": "Domino's CRM – הזמנות עסקיות",
+  "short_name": "Domino's CRM",
+  "description": "CRM לקוחות עסקיים והזמנות גדולות",
+  "lang": "he",
+  "dir": "rtl",
+  "id": "./",
+  "start_url": "./#/today",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F5F7F9",
+  "theme_color": "#0B2340",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

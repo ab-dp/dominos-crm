@@ -239,3 +239,21 @@
   .regi__name { min-width: 0; }
   .panel__title { min-width: 0; font-size: var(--text-card-title); overflow-wrap: anywhere; }
 }
+
+/* ---------- טלפון: התיק במסך מלא, כותרת בשורה אחת, בלי שורה תחתונה ---------- */
+.panel__del-m { display: none; }
+@media (max-width: 700px) {
+  .panel { width: 100vw; padding-top: env(safe-area-inset-top, 0px); }
+  .panel__head { padding: 10px 12px 0 16px; gap: 8px; }
+  .panel__row { flex-wrap: nowrap; gap: 8px; }
+  .panel__title { flex: 1; min-width: 0; font-size: var(--text-card-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .panel__spacer, .panel .panel__full-btn { display: none; }
+  .panel__close { width: 44px; height: 44px; flex: none; color: var(--gray-900); }
+  .panel__row .viewers { display: none; }
+  .panel__body { padding: 4px 16px calc(24px + env(safe-area-inset-bottom, 0px)); overscroll-behavior: contain; }
+  .panel__foot { display: none; }
+  .panel__del-m { display: flex; justify-content: flex-start; padding: 20px 0 4px; border-top: 1px solid var(--gray-100); margin-top: 12px; }
+  .panel__del-m:empty { display: none; }
+  .panel__tabs--body { top: -4px; }
+  .panel__tabs button { height: 44px; }
+}
