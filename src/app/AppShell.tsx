@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   Bell, CalendarClock, FileText, Target, ChartColumn, Ellipsis, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
   Truck,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Button, Tip, useHotkey } from '../design/components';
 import { useStore } from '../data/store';
@@ -65,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       items: [
         { to: '/today', label: 'היום', icon: <House size={20} />, count: todayCount, alert: critical.length > 0 },
         { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
+        { to: '/board', label: 'בורד', icon: <LayoutDashboard size={20} /> },
         { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length },
         { to: '/ops', label: 'סיכום לתפעול', icon: <Truck size={20} /> },
         { to: '/exceptions', label: 'חריגים ומשימות', short: 'חריגים', icon: <TriangleAlert size={20} />, count: redCount, alert: redCount > 0 },

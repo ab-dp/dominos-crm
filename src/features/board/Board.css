@@ -1,0 +1,153 @@
+/* בורד: חלקים על משטח שטוח עם קו; "מה מגיע" כטבלת תפעול של ארבעה טורים, ולא כאריחים זהים.
+   צבע רק לסטטוס (איכות אספקה, סיכון) ולסדרה אחת בגרפים – בכחול הפעולה. */
+.board__filters { margin-bottom: 16px; }
+.board__sel { width: auto; min-width: 140px; }
+.board__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.board__slot--upcoming, .board__slot--period, .board__slot--daily, .board__slot--ranks, .board__slot--quotes { grid-column: 1 / -1; }
+.board__loading { display: grid; gap: 14px; padding: 20px; }
+
+.bsec { background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); padding: 16px 20px 18px; }
+.bsec__title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; font-size: var(--text-body); font-weight: 600; }
+.bsec__sub { font-size: var(--text-micro); font-weight: 400; color: var(--gray-600); }
+.bsec__empty { margin: 0; color: var(--gray-600); font-size: var(--text-label); }
+
+/* ---------- מה מגיע ---------- */
+.bup { padding-bottom: 6px; }
+.bup__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bup__col { display: grid; align-content: start; gap: 2px; padding: 4px 18px 14px; }
+.bup__col:first-child { padding-inline-start: 0; }
+.bup__col + .bup__col { border-inline-start: 1px solid var(--line); }
+.bup__head { display: flex; align-items: baseline; gap: 8px; padding: 0; border: 0; background: none; font: inherit; text-align: start; cursor: pointer; color: var(--gray-900); }
+.bup__head b { font-size: var(--text-table); font-weight: 600; }
+.bup__head span { font-size: var(--text-micro); color: var(--gray-600); }
+.bup__head:hover b { color: var(--brand-700); text-decoration: underline; text-underline-offset: 3px; }
+.bup__main { margin-top: 6px; font-size: var(--text-section); font-weight: 600; color: var(--gray-900); }
+.bup__main span { font-size: var(--text-label); font-weight: 400; color: var(--gray-600); }
+.bup__meta { font-size: var(--text-label); color: var(--gray-700); }
+.bup__risk { display: grid; justify-items: start; gap: 2px; margin-top: 6px; min-height: 20px; }
+.bup__warn { color: var(--danger-fg); font-weight: 500; font-size: var(--text-label); text-decoration-color: currentColor; }
+.bup__ok { font-size: var(--text-label); color: var(--ok-fg); }
+
+/* ---------- התקופה: מספרים בשורה, שינוי מול תקופה קודמת, יעד רק כשהוגדר ---------- */
+.bfig { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+.bfig--small { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bfig__item { display: grid; align-content: start; gap: 2px; padding: 2px 18px 4px; margin: 0; }
+.bfig__item:first-child { padding-inline-start: 0; }
+.bfig__item + .bfig__item { border-inline-start: 1px solid var(--line); }
+.bfig__item dt { font-size: var(--text-label); color: var(--gray-600); }
+.bfig__item dd { margin: 0; }
+.bfig__val { font-size: var(--text-screen-title); font-weight: 600; color: var(--gray-900); line-height: 1.25; }
+.bfig--small .bfig__val { font-size: var(--text-section); }
+.bfig__delta { display: inline-flex; align-items: center; gap: 2px; font-size: var(--text-micro); color: var(--gray-600); }
+.bfig__delta.is-up { color: var(--ok-fg); font-weight: 600; }
+.bfig__delta.is-down { color: var(--danger-fg); font-weight: 600; }
+.bgoal { display: grid; gap: 4px; margin-top: 8px !important; }
+.bgoal__track { display: block; height: 6px; border-radius: 3px; background: var(--brand-50); overflow: hidden; }
+.bgoal__fill { display: block; height: 100%; border-radius: 3px; background: var(--brand-600); }
+.bgoal__text { font-size: var(--text-micro); color: var(--gray-700); }
+
+/* ---------- הזמנות לפי יום: סדרה אחת, עמודות דקות מבסיס אחד ---------- */
+.bchart { position: relative; height: 200px; margin: 4px 0 28px; }
+.bchart__grid { position: absolute; inset: 0 0 0 0; pointer-events: none; }
+.bchart__grid span { position: absolute; inset-inline: 0; border-top: 1px solid var(--line-soft); font-size: var(--text-micro); color: var(--gray-600); }
+/* תוויות הציר בצד שמאל (מחוץ לאזור העמודות), ללא תלות בכיוון הטקסט */
+.bchart__grid span bdi { position: absolute; left: 0; top: -9px; padding-right: 6px; background: var(--white); }
+.bchart__plot { position: absolute; top: 0; bottom: 0; right: 0; left: 34px; display: flex; align-items: flex-end; }
+.bchart__col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.bchart__bar { width: min(70%, 24px); min-height: 0; border-radius: 4px 4px 0 0; background: var(--brand-600); transition: background var(--dur-instant) var(--ease); }
+.bchart__col.is-hover .bchart__bar { background: var(--brand-800); }
+.bchart__x { position: absolute; top: calc(100% + 6px); font-size: var(--text-micro); color: var(--gray-600); white-space: nowrap; }
+.bchart__tip { position: absolute; top: 0; transform: translate(50%, -6px); z-index: 2; display: grid; gap: 1px; padding: 6px 10px; border-radius: var(--radius); background: var(--gray-900); color: var(--white); font-size: var(--text-micro); white-space: nowrap; pointer-events: none; text-align: center; }
+.bchart__tip b { font-weight: 600; }
+.bchart__table summary { font-size: var(--text-micro); color: var(--brand-700); cursor: pointer; }
+.bchart__table table { margin-top: 8px; }
+
+/* ---------- איכות אספקה: פס מפולח, מקרא עם מספרים (הצבע לא נושא את המידע לבד) ---------- */
+.bq__head { margin: 0 0 10px; font-size: var(--text-table); color: var(--gray-700); }
+.bq__head b { font-size: var(--text-screen-title); font-weight: 600; color: var(--gray-900); margin-inline-end: 4px; }
+.bq__goal.is-up { color: var(--ok-fg); }
+.bq__goal.is-down { color: var(--danger-fg); }
+.bq__bar { display: flex; gap: 2px; height: 14px; }
+.bq__seg { min-width: 4px; border-radius: 3px; }
+.bq__seg.is-ok, .bq__dot.is-ok { background: var(--ok-fg); }
+.bq__seg.is-late, .bq__dot.is-late { background: var(--urgent-edge); }
+.bq__seg.is-partial, .bq__dot.is-partial { background: var(--missing-fg); }
+.bq__seg.is-cancel, .bq__dot.is-cancel { background: var(--gray-300); }
+.bq__legend { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; font-size: var(--text-label); color: var(--gray-700); }
+.bq__legend li { display: flex; align-items: center; gap: 6px; }
+.bq__legend b { color: var(--gray-900); font-weight: 600; }
+.bq__dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.bq__open { margin-top: 10px; font-size: var(--text-label); color: var(--danger-fg); }
+
+/* ---------- כסף ---------- */
+.bmoney { list-style: none; margin: 0; padding: 0; display: grid; }
+.bmoney li + li { border-top: 1px solid var(--line-soft); }
+.bmoney button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label val" "sub sub"; align-items: baseline; gap: 0 12px; padding: 10px 0; border: 0; background: none; font: inherit; text-align: start; cursor: pointer; }
+.bmoney button span { grid-area: label; font-size: var(--text-table); color: var(--gray-900); }
+.bmoney button b { grid-area: val; font-size: var(--text-section); font-weight: 600; color: var(--gray-900); }
+.bmoney button small { grid-area: sub; font-size: var(--text-micro); color: var(--gray-600); }
+.bmoney button.is-alert b, .bmoney button.is-alert small { color: var(--danger-fg); }
+.bmoney button:hover span { color: var(--brand-700); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- מי ומה: דירוג בפס אחד בצבע אחד ---------- */
+.branks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+.brank { padding: 0 18px; min-width: 0; }
+.brank:first-child { padding-inline-start: 0; }
+.brank + .brank { border-inline-start: 1px solid var(--line); }
+.brank__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; margin-bottom: 6px; }
+.brank__head h3 { margin: 0; font-size: var(--text-label); font-weight: 600; color: var(--gray-700); }
+.brank__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.brank__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name val" "track track" "meta meta"; gap: 3px 10px; }
+.brank__name { grid-area: name; font-size: var(--text-label); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brank__val { grid-area: val; font-size: var(--text-label); font-weight: 600; }
+.brank__track { grid-area: track; display: block; height: 6px; border-radius: 3px; background: var(--gray-25); }
+.brank__bar { display: block; height: 100%; border-radius: 3px; background: var(--brand-600); }
+.brank__meta { grid-area: meta; font-size: var(--text-micro); color: var(--gray-600); }
+
+/* ---------- התאמה אישית ---------- */
+.blayout { width: 290px; }
+.blayout__list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; }
+.blayout__list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+.blayout__list li + li { border-top: 1px solid var(--line-soft); }
+.blayout .check-inline { display: inline-flex; align-items: center; gap: 8px; font-size: var(--text-table); color: var(--gray-900); cursor: pointer; }
+.blayout .check-inline input { width: 16px; height: 16px; accent-color: var(--brand-600); }
+.blayout__move { display: inline-flex; gap: 2px; }
+.blayout .link { font-size: var(--text-label); }
+
+@media (max-width: 1100px) {
+  .bup__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bup__col:nth-child(3) { padding-inline-start: 0; border-inline-start: 0; }
+  .bup__col:nth-child(n+3) { border-top: 1px solid var(--line); padding-top: 12px; }
+  .branks { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .brank, .brank:first-child { padding: 0; }
+  .brank + .brank { border-inline-start: 0; border-top: 1px solid var(--line); padding-top: 14px; }
+}
+@media (max-width: 760px) {
+  .board__grid { grid-template-columns: minmax(0, 1fr); }
+  .board__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .board__filters > .seg, .board__filters > .report__dates, .board__filters > .chip, .board__filters > .btn { grid-column: 1 / -1; }
+  .board__filters > .seg { overflow-x: auto; scrollbar-width: none; justify-self: start; max-width: 100%; }
+  .board__filters > .seg button { flex: none; white-space: nowrap; }
+  .board__sel { width: 100%; min-width: 0; }
+  .bsec { padding: 14px 14px 16px; }
+  .bfig { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bfig__item, .bfig__item:first-child { padding: 10px 12px 10px 0; }
+  .bfig__item:nth-child(odd) { padding-inline-start: 0; border-inline-start: 0; }
+  .bfig__item:nth-child(even) { padding-inline-start: 12px; }
+  .bfig__item:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .bfig--small { grid-template-columns: minmax(0, 1fr); }
+  .bfig--small .bfig__item { padding-inline-start: 0 !important; border-inline-start: 0 !important; border-top: 0; }
+  .bfig--small .bfig__item + .bfig__item { border-top: 1px solid var(--line); }
+  .bfig__val { font-size: var(--text-section); }
+  .bup__col { padding: 4px 10px 12px; }
+  .bup__main { font-size: var(--text-card-title); }
+  .bchart { height: 170px; }
+}
+@media (prefers-reduced-motion: reduce) { .bchart__bar { transition: none; } }
+@media (max-width: 760px) {
+  /* כותרת הטור: התווית המשנית בשורה משלה, בלי שבירה באמצע */
+  .bup__head { flex-direction: column; align-items: flex-start; gap: 0; }
+  .bup__head b { white-space: nowrap; }
+  /* תאריכים מתחת לעמודות – כל שני כשצפוף */
+  .bchart__col:nth-child(even) .bchart__x { visibility: hidden; }
+}
