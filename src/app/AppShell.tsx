@@ -9,6 +9,7 @@ import {
 import { Button, Tip, useHotkey } from '../design/components';
 import { useStore } from '../data/store';
 import { useAuth } from '../auth/AuthContext';
+import { openTaskCount, todayTaskCounts } from '../features/today/todayTasks';
 import { usePendingRequests } from '../auth/usePendingRequests';
 import { ROLE_LABEL } from '../auth/types';
 import { Ltr, fmtDate } from '../lib/format';
@@ -32,7 +33,7 @@ const MOBILE_MAIN = ['/today', '/orders', '/exceptions', '/customers'];
 type NavDef = { to: string; label: string; short?: string; icon: ReactNode; count?: number; alert?: boolean };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { orders, openNewOrder, closeNewOrder, dueTasks, quoteFollowups } = useStore();
+  const { orders, now, openNewOrder, closeNewOrder, dueTasks, quoteFollowups } = useStore();
   const panel = usePanel();
   const location = useLocation();
   const reduce = useReducedMotion();
@@ -50,7 +51,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   // בפעמון: רק חריגות שדורשות טיפול עכשיו (פרט חסר בהזמנה רחוקה אדום, אבל לא קופץ עד שמתקרב)
   const critical = orders.filter((o) => o.issues.some(isAlert));
   const dueLeadSteps = dueTasks.filter((t) => t.leadId).length;
-  const urgentCount = orders.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
+  /* מספרים בתפריט = המספר הראשי של המסך: "היום" – מספר המשימות הפתוחות במסך; "חריגים" – מספר החריגות (אדום) */
+  const todayCount = openTaskCount(todayTaskCounts(orders, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 }));
+  const redCount = orders.reduce((n, o) => n + o.issues.filter((i) => i.severity === 'red').length, 0);
 
   function newOrder() {
     openNewOrder();
@@ -60,11 +63,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       title: 'עבודה יומית',
       items: [
-        { to: '/today', label: 'היום', icon: <House size={20} />, count: urgentCount, alert: critical.length > 0 },
+        { to: '/today', label: 'היום', icon: <House size={20} />, count: todayCount, alert: critical.length > 0 },
         { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
         { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length },
         { to: '/ops', label: 'סיכום לתפעול', icon: <Truck size={20} /> },
-        { to: '/exceptions', label: 'חריגים ומשימות', short: 'חריגים', icon: <TriangleAlert size={20} />, count: urgentCount + dueTasks.length, alert: critical.length > 0 },
+        { to: '/exceptions', label: 'חריגים ומשימות', short: 'חריגים', icon: <TriangleAlert size={20} />, count: redCount, alert: redCount > 0 },
       ],
     },
     {

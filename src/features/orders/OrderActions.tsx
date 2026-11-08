@@ -5,7 +5,7 @@ import { TriangleAlert } from 'lucide-react';
 import { Button, Field, MarkAction } from '../../design/components';
 import { useStore, type OrderView } from '../../data/store';
 import { PAYMENT_LABEL, type PaymentState } from '../../data/types';
-import { Ltr, fmtMoney, roundMoney } from '../../lib/format';
+import { Ltr, fmtMoney, roundMoney, sameMoney } from '../../lib/format';
 import type { Issue } from '../../rules-engine/health';
 import { useAuth } from '../../auth/AuthContext';
 import { CloseForm } from './OrderTimeline';
@@ -39,7 +39,8 @@ export function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
 export function QForm({ o, done }: { o: OrderView; done: () => void }) {
   const { update } = useStore();
   const [num, setNum] = useState(o.qNumber ?? '');
-  const [amt, setAmt] = useState(String(o.qAmount ?? o.amount));
+  // סכום Q – בקרה: ריק עד שמקלידים את הסכום שירד בקופה
+  const [amt, setAmt] = useState(o.qAmount !== undefined ? String(o.qAmount) : '');
   const [ops, setOps] = useState(o.opsNotified !== false && !!o.qNumber);
   const [err, setErr] = useState('');
   // כלל 15: העברה ל-Q לפני אישור – אזהרה, לא חסימה
@@ -48,10 +49,11 @@ export function QForm({ o, done }: { o: OrderView; done: () => void }) {
     e.preventDefault();
     if (!num.trim()) { setErr('חובה: מספר ההזמנה ב-Q, למשל cs669'); return; }
     const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')));
+    if (!(qAmount > 0)) { setErr('חובה: הסכום שירד בקופה'); return; }
     // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
     const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
     const cust = o.status === 'new' || o.status === 'pending_customer' ? { status: 'approved' as const } : {};
-    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...cust }, qAmount !== o.amount
+    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...cust }, !sameMoney(qAmount, o.amount)
       ? <>הועברה ל-Q · <b>פער מול Q</b>: <Ltr>{fmtMoney(qAmount)}</Ltr> מול <Ltr>{fmtMoney(o.amount)}</Ltr></>
       : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם</>);
     done();
@@ -62,10 +64,10 @@ export function QForm({ o, done }: { o: OrderView; done: () => void }) {
         <p className="pop__warn"><TriangleAlert size={14} aria-hidden="true" /> {o.status !== 'approved' ? 'הלקוח עוד לא אישר' : 'התפעול עוד לא עודכן'}. אפשר להמשיך.</p>
       )}
       <Field label="מס' הזמנה ב-Q (חובה)">
-        <input className="input input--ltr" autoFocus value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} placeholder="cs000" aria-invalid={!!err} />
+        <input className="input input--ltr" autoFocus value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} placeholder="cs669" aria-invalid={!!err && !num.trim()} />
       </Field>
-      <Field label="סכום Q (₪)" hint={`סכום ההזמנה: ${fmtMoney(o.amount)}`}>
-        <input className="input input--ltr" inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.value)} />
+      <Field label="הסכום שירד ב-Q (₪, חובה)">
+        <input className="input input--ltr" inputMode="decimal" value={amt} onChange={(e) => { setAmt(e.target.value); setErr(''); }} aria-invalid={!!err && !!num.trim()} />
       </Field>
       <label className="check-inline q-ops">
         <input type="checkbox" checked={ops} onChange={(e) => setOps(e.target.checked)} /> נשלח בקבוצת תפעול
@@ -198,9 +200,9 @@ function CancelAckForm({ o, done }: { o: OrderView; done: () => void }) {
   const { profile } = useAuth();
   return (
     <>
-      <p className="pop__text">ההזמנה בוטלה במערכת אחרי שהועברה לקופה (<Ltr>{o.qNumber}</Ltr>). צריך לוודא שהיא בוטלה גם ב-Q.</p>
+      <p className="pop__text">ההזמנה בוטלה במערכת אחרי שהועברה לקופה (<Ltr>{o.qNumber}</Ltr>). צריך לוודא שהיא בוטלה גם ב-Q{o.payment === 'paid' ? ' ושהחיוב הוחזר' : ''}.</p>
       <div className="pop__row">
-        <Button variant="primary" size="sm" onClick={() => { update(o.id, { qCancelAck: { by: profile?.name ?? '', at: new Date().toISOString() } }, <>אושר שהזמנה <Ltr>{o.id}</Ltr> בוטלה גם ב-Q</>); done(); }}>בוטלה גם ב-Q</Button>
+        <Button variant="primary" size="sm" onClick={() => { update(o.id, { qCancelAck: { by: profile?.name ?? '', at: new Date().toISOString() }, ...(o.payment === 'paid' ? { payment: 'cancelled' as const } : {}) }, <>אושר שהזמנה <Ltr>{o.id}</Ltr> בוטלה גם ב-Q</>); done(); }}>בוטלה גם ב-Q</Button>
       </div>
     </>
   );
@@ -209,19 +211,22 @@ function CancelAckForm({ o, done }: { o: OrderView; done: () => void }) {
 /* שינוי אחרי אישור שעוד לא עודכן בקופה: מסמנים שעודכן, ואם הסכום ב-Q השתנה – רושמים אותו */
 function QUpdateForm({ o, done }: { o: OrderView; done: () => void }) {
   const { update } = useStore();
-  const [amt, setAmt] = useState(String(o.qAmount ?? o.amount));
+  const [amt, setAmt] = useState('');
+  const [err, setErr] = useState('');
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')) || o.amount);
+    const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')));
+    if (!(qAmount > 0)) { setErr('חובה: הסכום שירד בקופה'); return; }
     update(o.id, { qNeedsUpdate: undefined, qAmount }, <>השינוי עודכן ב-Q · הזמנה <Ltr>{o.id}</Ltr></>);
     done();
   };
   return (
     <form onSubmit={submit}>
       <p className="pop__text">ההזמנה שונתה אחרי שהועברה לקופה (<Ltr>{o.qNumber}</Ltr>).</p>
-      <Field label="סכום ב-Q אחרי העדכון (₪)" hint={`לחיוב: ${fmtMoney(o.amount)}`}>
-        <input className="input input--ltr" inputMode="decimal" autoFocus value={amt} onChange={(e) => setAmt(e.target.value)} />
+      <Field label="הסכום ב-Q אחרי העדכון (₪, חובה)">
+        <input className="input input--ltr" inputMode="decimal" autoFocus value={amt} onChange={(e) => { setAmt(e.target.value); setErr(''); }} aria-invalid={!!err} />
       </Field>
+      {err && <p className="pop__err" role="alert">{err}</p>}
       <div className="pop__row"><Button variant="primary" size="sm" type="submit">עודכן ב-Q</Button></div>
     </form>
   );

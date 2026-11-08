@@ -99,3 +99,9 @@
 /* שאלה לפני סגירה בלי שמירה – במקום שורת הכפתורים, באותו מקום */
 .no-confirm { flex-wrap: wrap; background: var(--urgent-bg); }
 .no-confirm__q { display: inline-flex; align-items: center; gap: 6px; margin-inline-end: auto; font-weight: 600; color: var(--urgent-fg); }
+
+/* פרט חסר (אפשר לשמור בלעדיו) – אותה מסגרת אדומה כמו קודם; aria-invalid נשאר רק לשגיאה שחוסמת */
+.norder .input[data-miss] { border-color: var(--danger-fg); box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12); }
+/* שורה לא שלמה בפריטים – חוסמת שמירה */
+.no-missing__block { color: var(--danger-fg); }
+.no-missing__block b { color: var(--danger-fg); }

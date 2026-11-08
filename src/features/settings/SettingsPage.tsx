@@ -5,6 +5,7 @@ import { UsersPage } from './UsersPage';
 import { ListsPage } from './ListsPage';
 import { ThresholdsPage } from './ThresholdsPage';
 import { QuoteTermsPage } from './QuoteTermsPage';
+import { ErrorsPage } from './ErrorsPage';
 
 export function SettingsPage() {
   const { isAdmin } = useAuth();
@@ -18,6 +19,7 @@ export function SettingsPage() {
         <NavLink to="/settings/lists" className={({ isActive }) => (isActive ? 'is-on' : '')}>רשימות</NavLink>
         <NavLink to="/settings/thresholds" className={({ isActive }) => (isActive ? 'is-on' : '')}>ספי התראות</NavLink>
         <NavLink to="/settings/quotes" className={({ isActive }) => (isActive ? 'is-on' : '')}>הצעות מחיר</NavLink>
+        <NavLink to="/settings/errors" className={({ isActive }) => (isActive ? 'is-on' : '')}>תקלות</NavLink>
       </nav>
       <Routes>
         <Route index element={<Navigate to="users" replace />} />
@@ -25,6 +27,7 @@ export function SettingsPage() {
         <Route path="lists" element={<ListsPage />} />
         <Route path="thresholds" element={<ThresholdsPage />} />
         <Route path="quotes" element={<QuoteTermsPage />} />
+        <Route path="errors" element={<ErrorsPage />} />
       </Routes>
     </>
   );

@@ -11,6 +11,9 @@ import '@fontsource/ibm-plex-sans-hebrew/latin-700.css';
 import './design/tokens.css';
 import './design/global.css';
 import { App } from './App';
+import { installGlobalErrorLog } from './lib/errorLog';
+
+installGlobalErrorLog();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -71,7 +71,9 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
     out.push({ rule: 11, severity: 'orange', label: 'שונתה – לעדכן ב-Q', action: 'ackQUpdate', actionLabel: 'עודכן ב-Q' });
   }
   if (closed) {
-    if (o.status === 'cancelled' && o.qNumber && !o.qCancelAck) out.push({ rule: 10, severity: 'orange', label: 'בוטלה אחרי Q', action: 'ackCancel', actionLabel: 'אשר שבוטלה ב-Q' });
+    if (o.status === 'cancelled' && o.qNumber && !o.qCancelAck) out.push({ rule: 10, severity: 'orange', label: 'בוטלה אחרי Q', action: 'ackCancel', actionLabel: 'אשר שבוטלה ב-Q' })
+    // בוטלה אחרי שסומנה "שולם" בלי Q (למשל אשראי שסומן ידנית) – לבדוק החזר ולעדכן את מצב התשלום
+    else if (o.status === 'cancelled' && !o.qNumber && o.payment === 'paid') out.push({ rule: 10, severity: 'orange', label: 'בוטלה אחרי חיוב – לבדוק החזר', action: 'pay', actionLabel: 'עדכן תשלום' });;
     return out.sort(bySeverity);
   }
 

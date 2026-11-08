@@ -3,6 +3,7 @@
 import { Component, type ReactNode } from 'react';
 import { TriangleAlert } from 'lucide-react';
 import { EmptyState } from '../design/components';
+import { logError } from '../lib/errorLog';
 
 type Props = { children: ReactNode; resetKey: string };
 type State = { failed: boolean; key: string };
@@ -12,7 +13,7 @@ export class ScreenBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError() { return { failed: true }; }
   static getDerivedStateFromProps(p: Props, s: State) { return p.resetKey !== s.key ? { failed: false, key: p.resetKey } : null; }
-  componentDidCatch(e: unknown) { console.error('screen error', e); }
+  componentDidCatch(e: unknown) { console.error('screen error', e); logError('screen', e); }
 
   render() {
     if (!this.state.failed) return this.props.children;
