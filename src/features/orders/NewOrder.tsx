@@ -106,6 +106,13 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const [saveContact, setSaveContact] = useState(false); // לשמור איש קשר חדש גם בתיק הלקוח
   const [saveAddress, setSaveAddress] = useState(false);
   const [busy, setBusy] = useState(false);
+  /* הגנה מאובדן: ברגע שהוקלד משהו, סגירה (לחיצה בחוץ, Escape, X, ביטול) שואלת קודם. חלון שלא נגעו בו נסגר מיד */
+  const dirty = useRef(false);
+  const markDirty = () => { dirty.current = true; };
+  const [askClose, setAskClose] = useState(false);
+  const stayRef = useRef<HTMLButtonElement>(null);
+  const requestClose = () => { if (dirty.current && !busy) setAskClose(true); else onClose(); };
+  useEffect(() => { if (askClose) stayRef.current?.focus(); }, [askClose]);
   const formRef = useRef<HTMLFormElement>(null);
 
   const isNew = mode === 'newCustomer';
@@ -238,7 +245,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     const root = formRef.current; if (!root) return;
     const el = k === 'branch' ? root.querySelector<HTMLElement>('.bpick__trigger')
       : k === 'amount' && totalOnly ? root.querySelector<HTMLElement>('[data-field="final"]')
-      : k === 'contents' || k === 'amount' ? root.querySelector<HTMLElement>('.ib [data-draft] input')
+      /* פריטים: שורת הטיוטה בטבלה הפתוחה; בלשונית הפיצות – שורת התוספת הריקה בסוג הפתוח, ואם אין סוג עדיין – "+ סוג פיצה" */
+      : k === 'contents' || k === 'amount' ? root.querySelector<HTMLElement>('.ib [data-draft] input, .pgs section.pg [data-line].is-draft input[data-col="tops"], .pgs__foot .btn')
       : root.querySelector<HTMLElement>(`[data-field="${k}"]`);
     el?.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
     el?.focus({ preventScroll: true });
@@ -518,10 +526,14 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   );
 
   return (
-    <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
+    <Dialog.Root open onOpenChange={(o) => !o && requestClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
-        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table, .pgs')) e.preventDefault(); }}
+        <Dialog.Content className={`cform norder norder--${mode}`} dir="rtl" aria-describedby={undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => {
+            if (askClose) { e.preventDefault(); setAskClose(false); return; } // Escape בשאלה – חוזרים לעריכה
+            if ((document.activeElement as HTMLElement | null)?.closest('.ib-table, .pgs')) e.preventDefault();
+          }}
+          onChangeCapture={markDirty} onInputCapture={markDirty}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
           <div className="cform__head norder__head">
             <Dialog.Title className="udialog__title">{fq ? <>הזמנה מהצעה <Ltr>{fq.id}</Ltr></> : 'הזמנה חדשה'}</Dialog.Title>
@@ -580,7 +592,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                 ) : (
                   <Section title="לקוח">
                     <CustomerPicker customers={customers} value={customerId} invalid={!!errors.customer}
-                      onChange={(id) => { setCustomerId(id); clearErr('customer'); }}
+                      onChange={(id) => { setCustomerId(id); clearErr('customer'); markDirty(); }}
                       onNew={(name) => { setNc((x) => ({ ...x, name })); setMode('newCustomer'); setErrors({}); }} />
                     {err('customer')}
                     {c && c.type === 'occasional' && orders.some((o) => o.customerId === c.id && o.status !== 'cancelled') && (
@@ -655,13 +667,21 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
               {similar.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>לקוח דומה כבר קיים</b> ({similar[0].c.name}) – השמירה תפתח לקוח חדש.</span></li>}
             </ul>
           )}
+          {askClose ? (
+            <div className="cform__foot no-confirm" role="alertdialog" aria-labelledby="no-confirm-q">
+              <span id="no-confirm-q" className="no-confirm__q"><CircleAlert size={16} aria-hidden="true" /> ההזמנה עוד לא נשמרה. לסגור בלי לשמור?</span>
+              <Button ref={stayRef} variant="secondary" onClick={() => setAskClose(false)}>המשך לערוך</Button>
+              <Button variant="danger" onClick={onClose}>סגור בלי לשמור</Button>
+            </div>
+          ) : (
           <div className="cform__foot">
             <Button variant="primary" loading={busy} onClick={submit} kbd="Ctrl+Enter">{saveLabel}</Button>
-            <Button variant="ghost" onClick={onClose}>ביטול</Button>
+            <Button variant="ghost" onClick={requestClose}>ביטול</Button>
             <span className="norder__sum" aria-live="polite">
               {finalAmount > 0 && <><Ltr>{fmtMoney(finalAmount)}</Ltr>{time && <> · <Ltr>{time}</Ltr></>}{branchObj && <> · {branchObj.name}</>}</>}
             </span>
           </div>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
