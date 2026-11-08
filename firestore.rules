@@ -46,6 +46,22 @@ service cloud.firestore {
     }
 
     // יומן פעולות: אפשר רק להוסיף. אף אחד, כולל מנהל, לא עורך ולא מוחק.
+    // ---------- יומן תקלות (הגדרות ← תקלות): משתמש פעיל רושם תקלה שלו; רק מנהל קורא ומוחק ----------
+    match /clientErrors/{id} {
+      allow create: if isActive()
+        && request.resource.data.keys().hasOnly(['where', 'message', 'stack', 'page', 'ua', 'by', 'byName', 'at'])
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.at == request.time
+        && request.resource.data.where is string && request.resource.data.where.size() <= 40
+        && request.resource.data.message is string && request.resource.data.message.size() <= 500
+        && request.resource.data.stack is string && request.resource.data.stack.size() <= 2000
+        && request.resource.data.page is string && request.resource.data.page.size() <= 200
+        && request.resource.data.ua is string && request.resource.data.ua.size() <= 200
+        && request.resource.data.byName is string && request.resource.data.byName.size() <= 80;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
     match /auditLog/{id} {
       allow create: if isActive() && request.resource.data.by == request.auth.uid;
       allow read: if isActive();

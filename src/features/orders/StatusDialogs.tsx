@@ -105,7 +105,8 @@ function CancelDialog({ onClose }: { onClose: () => void }) {
     if (isOther && !note.trim()) return setErr('בסיבה "אחר" צריך לפרט');
     if (CARD_RE.test(note)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     const label = reasons.find((r) => r.id === reason)?.label ?? reason;
-    update(o.id, { status: 'cancelled', payment: 'cancelled', cancelReason: label, ...(note.trim() ? { cancelNote: note.trim() } : {}) },
+    // הזמנה שכבר חויבה (שולם) נשארת "שולם" עד שמאשרים שבוטלה ב-Q – כך פתיחה מחדש לא מחייבת שוב, ורואים שצריך החזר
+    update(o.id, { status: 'cancelled', payment: o.payment === 'paid' ? 'paid' : 'cancelled', cancelReason: label, ...(note.trim() ? { cancelNote: note.trim() } : {}) },
       <>הזמנה <Ltr>{o.id}</Ltr> בוטלה · {label}</>);
     onClose();
   };

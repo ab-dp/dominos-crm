@@ -9,7 +9,8 @@ import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore, type OrderView } from '../../data/store';
 import { CLOSED, itemsText } from '../../data/types';
 import { Button, HealthBadge, Missing, Skeleton } from '../../design/components';
-import { missingOf, orderDateTime } from '../../rules-engine/health';
+import { orderDateTime } from '../../rules-engine/health';
+import { todayTaskCounts } from './todayTasks';
 import { Ltr, Money, addDays, fmtDate, toISODate, weekday } from '../../lib/format';
 import { NextStep, StageTrack } from '../orders/OrderTimeline';
 import { downloadCsv } from '../../lib/csv';
@@ -18,8 +19,6 @@ import { fmtPhone } from '../../lib/format';
 import '../pages.css';
 import './TodayPage.css';
 
-// כללים שיש להם משימה משלה ברשימה (3 – מועד עבר: "לסגור הזמנות שעברו")
-const COVERED = [6, 4, 0, 1, 3, 12, 8];
 
 export function TodayPage() {
   const { orders, now, dueTasks, loading, quoteFollowups } = useStore();
@@ -34,21 +33,22 @@ export function TodayPage() {
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
   const scope = mine ? orders.filter((o) => (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name)) : orders;
-  const open = scope.filter((o) => !CLOSED.includes(o.status));
 
-  /* משימות לפי ציר ההזמנה: לקוח ← תפעול ← Q ← קבוצת תפעול ← סגירה. מופיעה רק משימה שיש בה מה לעשות */
+  /* משימות לפי ציר ההזמנה: לקוח ← תפעול ← Q ← קבוצת תפעול ← סגירה. מופיעה רק משימה שיש בה מה לעשות.
+     הספירה משותפת לתפריט (todayTasks.ts) – המספר ליד "היום" הוא בדיוק מספר המשימות כאן */
+  const c = todayTaskCounts(scope, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 });
   const tasks: { key: string; title: string; sub?: string; icon: ReactNode; count: number; to: string; red?: boolean }[] = [
-    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'הזמנות של היום ומחר', icon: <UserCheck size={20} />, count: open.filter((o) => (o.date === today || o.date === tomorrow) && (o.status === 'new' || o.status === 'pending_customer')).length, to: '/exceptions?rule=6', red: true },
-    { key: 'branch', title: 'לעדכן בתפעול', sub: 'הזמנות של היום ומחר', icon: <Store size={20} />, count: open.filter((o) => (o.date === today || o.date === tomorrow) && !o.branchApproval).length, to: '/orders?tab=today&filter=branch' },
-    { key: 'q', title: 'להקליד ל-Q', sub: 'הזמנות של היום', icon: <Send size={20} />, count: open.filter((o) => o.date === today && !o.qNumber).length, to: '/orders?tab=today&filter=q' },
-    { key: 'ops', title: 'לשלוח בקבוצת תפעול', sub: 'הוקלדו ל-Q ועוד לא נשלחו', icon: <BellRing size={20} />, count: open.filter((o) => !!o.qNumber && o.opsNotified === false).length, to: '/exceptions?rule=12' },
-    { key: 'yesterday', title: 'לסגור הזמנות שעברו', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, count: open.filter((o) => o.date < today).length, to: '/orders?tab=overdue', red: true },
+    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'הזמנות של היום ומחר', icon: <UserCheck size={20} />, count: c.customer, to: '/exceptions?rule=6', red: true },
+    { key: 'branch', title: 'לעדכן בתפעול', sub: 'הזמנות של היום ומחר', icon: <Store size={20} />, count: c.branch, to: '/orders?tab=today&filter=branch' },
+    { key: 'q', title: 'להקליד ל-Q', sub: 'הזמנות של היום', icon: <Send size={20} />, count: c.q, to: '/orders?tab=today&filter=q' },
+    { key: 'ops', title: 'לשלוח בקבוצת תפעול', sub: 'הוקלדו ל-Q ועוד לא נשלחו', icon: <BellRing size={20} />, count: c.ops, to: '/exceptions?rule=12' },
+    { key: 'yesterday', title: 'לסגור הזמנות שעברו', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, count: c.yesterday, to: '/orders?tab=overdue', red: true },
     // חריגים אדומים שאין להם משימה משלה למעלה (אשראי שלא חויב, פער מול Q, שעה שעברה היום, שינוי לעדכן ב-Q)
-    { key: 'urgent', title: 'חריגים דחופים', sub: 'במסך חריגים ומשימות', icon: <TriangleAlert size={20} />, count: open.filter((o) => o.health === 'critical' && !COVERED.includes(o.issues[0]?.rule)).length, to: '/exceptions', red: true },
-    { key: 'missing', title: 'להשלים פרטים חסרים', icon: <ClipboardX size={20} />, count: open.filter((o) => missingOf(o).length > 0).length, to: '/exceptions?rule=8' },
-    { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, count: quoteFollowups.length, to: '/quotes?tab=waiting' },
-    { key: 'followups', title: 'משימות מעקב להיום', icon: <ListChecks size={20} />, count: dueTasks.length, to: '/exceptions' },
-    { key: 'users', title: 'בקשות הצטרפות לאישור', icon: <UserPlus size={20} />, count: isAdmin ? pendingUsers : 0, to: '/settings/users' },
+    { key: 'urgent', title: 'חריגים דחופים', sub: 'במסך חריגים ומשימות', icon: <TriangleAlert size={20} />, count: c.urgent, to: '/exceptions', red: true },
+    { key: 'missing', title: 'להשלים פרטים חסרים', icon: <ClipboardX size={20} />, count: c.missing, to: '/exceptions?rule=8' },
+    { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, count: c.quotes, to: '/quotes?tab=waiting' },
+    { key: 'followups', title: 'משימות מעקב להיום', icon: <ListChecks size={20} />, count: c.followups, to: '/exceptions' },
+    { key: 'users', title: 'בקשות הצטרפות לאישור', icon: <UserPlus size={20} />, count: c.users, to: '/settings/users' },
   ];
   const openTasks = tasks.filter((t) => t.count > 0);
 

@@ -135,10 +135,28 @@ const SPLITS: { n: Split; label: string; aria: string }[] = [{ n: 1, label: 'ש�
 const PART_PH: Record<number, string[]> = { 2: ['חצי 1', 'חצי 2'], 4: ['רבע 1', 'רבע 2', 'רבע 3', 'רבע 4'] };
 type Field = 'qty' | 'name' | 'tops' | 'price' | `part${number}`;
 
-export function ItemsBuilder({ lines, setLines, catalog, onTouched }: { lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[]; onTouched?: () => void }) {
+/* revealProblems: מונה – כל הגדלה (שמירה שנחסמה, "הצג") עוברת ללשונית של השורה הלא שלמה הראשונה ומעמידה עליה את הסמן */
+export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProblems = 0 }: { lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[]; onTouched?: () => void; revealProblems?: number }) {
   const hints = useHints();
   const rootRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState(() => (lines.length ? categoryOf(lines[0]) : PIZZA));
+  useEffect(() => {
+    if (!revealProblems) return;
+    const bad = lines.find((l) => lineProblem(l));
+    if (!bad) return;
+    setTab(categoryOf(bad));
+    setFocus(null);
+    // אחרי שהלשונית מצוירת: סוג פיצה מקופל עם בעיה נפתח, ואז הסמן לשדה הראשון שמסומן באדום
+    const go = (tries: number) => requestAnimationFrame(() => {
+      const root = rootRef.current; if (!root) return;
+      const closed = root.querySelector<HTMLButtonElement>('.pg--closed.is-bad');
+      if (closed && tries > 0) { closed.click(); go(tries - 1); return; }
+      const el = root.querySelector<HTMLElement>('input.is-invalid, [aria-invalid="true"]');
+      el?.scrollIntoView({ block: 'center' });
+      el?.focus({ preventScroll: true });
+    });
+    go(2);
+  }, [revealProblems]); // eslint-disable-line react-hooks/exhaustive-deps
   const [draftKey, setDraftKey] = useState(newId);
   const [focus, setFocus] = useState<{ key: string; field: Field } | null>(null);
 
