@@ -10,6 +10,11 @@ ui-debug.log
 # מסמכי אפיון ותכנון נשמרים מחוץ לריפו הציבורי
 PLAN.md
 *.docx
+# תיאור המוצר (impeccable) – משתמשים ותהליכי המוקד, לא לריפו הציבורי
+PRODUCT.md
+# impeccable: הגדרות אישיות וקבצי עבודה זמניים
+.impeccable/config.local.json
+.impeccable/live/
 
 # הגדרות מקומיות
 .claude/*
