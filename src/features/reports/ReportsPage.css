@@ -13,11 +13,15 @@
 /* דף דוח */
 .report { display: flex; flex-direction: column; }
 .report > .auth__back { align-self: flex-start; margin: 0 -8px 2px; }
-.report__filters { flex-wrap: wrap; }
+/* מסננים ברשת אחידה: התקופה בשורה משלה, ומתחתיה כל המסננים באותו רוחב */
+.report__filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; align-items: center; margin-bottom: 16px; }
+.report__filters > .seg { grid-column: 1 / -1; justify-self: start; }
+.report__filters > .report__dates { grid-column: 1 / -1; justify-self: start; }
+.report__filters > .chip { justify-self: start; }
 .report__dates { display: inline-flex; align-items: center; gap: 6px; }
 .report__dates .input { width: 150px; }
-.report__sel { width: auto; min-width: 140px; }
-.report__cust { width: 160px; }
+.report__sel, .report__cust { width: 100%; min-width: 0; }
+.report__count { margin-inline-start: auto; font-size: var(--text-label); color: var(--gray-600); }
 .report__kpis { margin: 0 0 16px; display: flex; flex-wrap: wrap; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); }
 .report__kpis > div { flex: 1 1 160px; display: grid; gap: 2px; padding: 12px 20px; }
 .report__kpis > div + div { border-inline-start: 1px solid var(--gray-100); }

@@ -12,6 +12,8 @@ import { useToast } from '../../design/Toast';
 import { Ltr, addDays, fmtDate, fmtMoney, toISODate } from '../../lib/format';
 import { REPORTS, qVal, type Col, type ReportDef, type ReportResult, type Row } from './defs';
 import { BarChart } from './BarChart';
+import { reportName, reportSheet } from './reportExcel';
+import { downloadXlsx } from '../../lib/xlsx';
 import '../pages.css';
 import './ReportsPage.css';
 
@@ -107,22 +109,19 @@ function Report({ def }: { def: ReportDef }) {
   const filtered = !!(cluster || branch || cust.trim() || method || outcome || handler);
   const panel = usePanel();
 
-  const exportCsv = async () => {
-    const esc = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
-    const lines = [
-      [def.title, `${fmtDate(from)} – ${fmtDate(to)}`, filtered ? `מסונן: ${[cluster, branch, cust, method && (METHOD_LABEL[method] ?? method), outcome && OUTCOME_LABEL[outcome], handler].filter(Boolean).join(' · ')}` : ''].map(esc).join(','),
-      res.cols.map((c) => esc(c.label)).join(','),
-      ...res.rows.map((r) => res.cols.map((c) => esc(c.kind === 'money' || c.kind === 'num' ? String(r.cells[c.key] ?? '') : fmtCell(c, r.cells[c.key]))).join(',')),
-      ...(res.totals ? [res.cols.map((c) => esc(c.kind === 'money' || c.kind === 'num' ? String(res.totals![c.key] ?? '') : fmtCell(c, res.totals![c.key]))).join(',')] : []),
-    ];
-    // BOM כדי שאקסל יקרא עברית נכון
-    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `דוח ${def.title} ${from} עד ${to}.csv`; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
-    logReportExport(def.id, { from, to, rows: res.rows.length, filters: { cluster, branch, customer: cust.trim(), method, outcome, handler } }).catch(() => undefined);
-    toast({ message: <>הדוח יוצא לאקסל · <Ltr>{res.rows.length}</Ltr> שורות</> });
+  const [exporting, setExporting] = useState(false);
+  const exportXlsx = async () => {
+    setExporting(true);
+    try {
+      const filterText = filtered ? `מסונן: ${[cluster, branch, cust.trim(), method && (METHOD_LABEL[method] ?? method), outcome && OUTCOME_LABEL[outcome], handler].filter(Boolean).join(' · ')}` : '';
+      await downloadXlsx(`${reportName(def)} ${fmtDate(from)}-${fmtDate(to)}`, [reportSheet(def, res, `${fmtDate(from)} – ${fmtDate(to)}`, filterText)]);
+      logReportExport(def.id, { from, to, rows: res.rows.length, filters: { cluster, branch, customer: cust.trim(), method, outcome, handler } }).catch(() => undefined);
+      toast({ message: <>הדוח יוצא לאקסל · <Ltr>{res.rows.length}</Ltr> שורות</> });
+    } catch {
+      toast({ tone: 'error', message: 'הייצוא נכשל – נסה שוב' });
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -135,7 +134,7 @@ function Report({ def }: { def: ReportDef }) {
         </div>
         <div className="page__head-end">
           <Button variant="ghost" size="sm" icon={<RefreshCw size={15} />} onClick={reload} disabled={loading}>רענן</Button>
-          <Button variant="secondary" icon={<Download size={16} />} onClick={exportCsv} disabled={loading || !res.rows.length}>ייצוא לאקסל</Button>
+          <Button variant="primary" icon={<Download size={16} />} onClick={exportXlsx} loading={exporting} disabled={loading || !res.rows.length}>ייצוא לאקסל</Button>
         </div>
       </header>
 
@@ -208,7 +207,13 @@ function Report({ def }: { def: ReportDef }) {
             </section>
           )}
 
-          <section className="card report__table-card">
+          <section className="card report__table-card" aria-labelledby="report-table-title">
+            {res.rows.length > 0 && (
+              <div className="card__head">
+                <h2 id="report-table-title" className="card__title">{def.perOrder ? 'הזמנות' : 'פירוט'}</h2>
+                <span className="report__count"><Ltr>{res.rows.length}</Ltr> {def.perOrder ? 'הזמנות' : 'שורות'}</span>
+              </div>
+            )}
             {res.rows.length === 0 ? (
               <EmptyState icon={<ChartColumn size={24} />} title="אין נתונים בטווח הזה">נסה טווח תאריכים אחר או נקה את הסינון.</EmptyState>
             ) : (

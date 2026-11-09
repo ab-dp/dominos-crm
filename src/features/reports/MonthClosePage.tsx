@@ -12,7 +12,6 @@ import { CLOSED, METHOD_LABEL, OUTCOME_LABEL, PAYMENT_LABEL, STAGE_LABEL, closeL
 import { Button, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone } from '../../lib/format';
-import { downloadCsv } from '../../lib/csv';
 import { healthOf, issuesFor, type Issue } from '../../rules-engine/health';
 import { FixButton } from '../orders/OrderActions';
 import { CreditCheck, creditOrders } from './CreditCheck';
@@ -170,14 +169,30 @@ function Export({ ym, orders, month, locked }: { ym: string; orders: Order[]; mo
   const [busy, setBusy] = useState(false);
   const run = async () => {
     const sorted = [...orders].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    downloadCsv(`הנהלת חשבונות ${monthLabel(ym)}.csv`, [
-      ['חודש', monthLabel(ym), `${orders.length} הזמנות`],
-      ['הזמנה', 'תאריך', 'לקוח', 'סניף', 'אשכול', 'סטטוס', 'אמצעי תשלום', 'טלפון הקפה', 'מצב תשלום', "מס' Q", 'סכום הזמנה', 'סכום Q', 'תעודת רכש', 'הערות לחיוב', 'תיקון לאחר סגירה'],
-      ...sorted.map((o) => [o.id, fmtDate(o.date), o.customerName, o.branchName, o.cluster, closeLabel(o), o.methodLabel || METHOD_LABEL[o.method] || o.method,
-        o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment], o.qNumber ?? '', o.amount, o.qAmount ?? '', o.poNumber ?? '', o.billingNote ?? '', o.postCloseFix?.reason ?? '']),
-    ]);
-    if (locked) return;
     setBusy(true);
+    try {
+      const { downloadXlsx } = await import('../../lib/xlsx');
+      await downloadXlsx(`הנהלת חשבונות ${monthLabel(ym)}`, [{
+        name: 'הנהלת חשבונות', title: 'הנהלת חשבונות', period: `${monthLabel(ym)} · ${orders.length} הזמנות`,
+        tables: [{
+          main: true,
+          cols: [
+            { label: 'הזמנה', kind: 'id', width: 10 }, { label: 'תאריך', kind: 'date', width: 12 }, { label: 'לקוח', kind: 'text', width: 26 }, { label: 'סניף', kind: 'text', width: 22 },
+            { label: 'אשכול', kind: 'text', width: 14 }, { label: 'סטטוס', kind: 'text', width: 20 }, { label: 'אמצעי תשלום', kind: 'text', width: 13 }, { label: 'טלפון הקפה', kind: 'code', width: 14 },
+            { label: 'מצב תשלום', kind: 'text', width: 14 }, { label: "מס' Q", kind: 'code', width: 11 }, { label: 'סכום הזמנה', kind: 'money', width: 13 }, { label: 'סכום Q', kind: 'money', width: 12 },
+            { label: 'תעודת רכש', kind: 'code', width: 13 }, { label: 'הערות לחיוב', kind: 'text', width: 30 }, { label: 'תיקון לאחר סגירה', kind: 'text', width: 24 },
+          ],
+          rows: sorted.map((o) => [o.id, o.date, o.customerName, o.branchName, o.cluster, closeLabel(o), o.methodLabel || METHOD_LABEL[o.method] || o.method,
+            o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment], o.qNumber ?? '', o.amount, o.qAmount ?? '', o.poNumber ?? '', o.billingNote ?? '', o.postCloseFix?.reason ?? '']),
+          rowStyle: sorted.map((o) => (o.status === 'cancelled' ? 'muted' : undefined)),
+        }],
+      }]);
+    } catch {
+      toast({ tone: 'error', message: 'הייצוא נכשל – נסה שוב' });
+      setBusy(false);
+      return;
+    }
+    if (locked) { setBusy(false); return; }
     try { await markExported(ym, month, orders.length); toast({ message: <>החודש סומן "הועבר להנהלת חשבונות" · <Ltr>{orders.length}</Ltr> הזמנות</> }); }
     catch { toast({ tone: 'error', message: 'הקובץ ירד, אבל הסימון לא נשמר – בדוק חיבור ונסה שוב' }); }
     setBusy(false);
