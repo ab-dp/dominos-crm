@@ -34,8 +34,9 @@ const orderItemsText = (o: Order) => (o.items.length ? itemsText(o.items) : o.co
 const avgLate = (list: Order[]) => { const l = list.filter((o) => o.late?.minutes); return l.length ? Math.round(l.reduce((t, o) => t + (o.late?.minutes ?? 0), 0) / l.length) : 0; };
 
 export const REPORTS: ReportDef[] = [
+  { id: 'period', title: 'סיכום תקופה', desc: 'כל ההזמנות בתקופה וסיכום לפי יום, עמידה בזמנים, לקוח וסניף – עם ייצוא לאקסל מוכן להנהלה', compute: () => ({ cols: [], rows: [] }), link: '/reports/period' },
   {
-    id: 'summary', perOrder: true, title: 'סיכום תקופה', desc: 'כל ההזמנות בתקופה – שורה לכל הזמנה עם כל הפרטים, ולמעלה כמה סופקו, באיחור, חלקית ובוטלו',
+    id: 'summary', perOrder: true, title: 'דוח מפורט', desc: 'כל ההזמנות בתקופה – שורה לכל הזמנה עם כל הפרטים, ולמעלה כמה סופקו, באיחור, חלקית ובוטלו',
     compute: (all) => {
       const l = live(all);
       const on = outcomeCount(all, 'ontime'); const late = outcomeCount(all, 'late'); const part = outcomeCount(all, 'partial');
