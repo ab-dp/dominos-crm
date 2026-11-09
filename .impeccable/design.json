@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-09T15:00:00.000Z",
+  "title": "Design System: Domino's CRM",
+  "extensions": {
+    "colorMeta": {
+      "brand-600": {
+        "role": "primary",
+        "displayName": "כחול דומינוס",
+        "canonical": "#006491",
+        "tonalRamp": [
+          "#002536",
+          "#003F5C",
+          "#00567D",
+          "#006491",
+          "#3A8DB3",
+          "#8CBFD8",
+          "#CFE4EF",
+          "#E8F2F7"
+        ]
+      },
+      "navy": {
+        "role": "secondary",
+        "displayName": "כחול-לילה",
+        "canonical": "#0B2340",
+        "tonalRamp": [
+          "#05111F",
+          "#081A31",
+          "#0B2340",
+          "#143462",
+          "#1B3D6B",
+          "#8DA2BA",
+          "#C3D1E0",
+          "#E7EDF4"
+        ]
+      },
+      "brand-red": {
+        "role": "tertiary",
+        "displayName": "אדום דומינוס",
+        "canonical": "#E31837",
+        "tonalRamp": [
+          "#5C0A16",
+          "#8F0F22",
+          "#C0102C",
+          "#E31837",
+          "#EC5A70",
+          "#F39AA7",
+          "#F8C9D0",
+          "#FCEBEE"
+        ]
+      },
+      "gray-900": {
+        "role": "neutral",
+        "displayName": "דיו",
+        "canonical": "#0F1B2A",
+        "tonalRamp": [
+          "#0F1B2A",
+          "#3A4756",
+          "#546272",
+          "#8A96A5",
+          "#C2CAD4",
+          "#D6DCE3",
+          "#E6EAEF",
+          "#F5F7F9"
+        ]
+      },
+      "gray-25": {
+        "role": "neutral",
+        "displayName": "משטח העבודה",
+        "canonical": "#F5F7F9"
+      },
+      "danger-fg": {
+        "role": "status",
+        "displayName": "קריטי",
+        "canonical": "#C0102C"
+      },
+      "urgent-fg": {
+        "role": "status",
+        "displayName": "דחוף",
+        "canonical": "#A34A05"
+      },
+      "missing-fg": {
+        "role": "status",
+        "displayName": "חסר",
+        "canonical": "#7A5D00"
+      },
+      "ok-fg": {
+        "role": "status",
+        "displayName": "תקין",
+        "canonical": "#16704A"
+      }
+    },
+    "typographyMeta": {
+      "kpi": {
+        "displayName": "KPI",
+        "purpose": "מספר מרכזי בבורד ובמדדים."
+      },
+      "screen-title": {
+        "displayName": "כותרת מסך",
+        "purpose": "כותרת אחת לכל דף."
+      },
+      "card-title": {
+        "displayName": "כותרת כרטיס",
+        "purpose": "ראש כרטיס (15px בתוך card__head)."
+      },
+      "body": {
+        "displayName": "גוף",
+        "purpose": "טקסט רגיל ושדות."
+      },
+      "table": {
+        "displayName": "טבלה",
+        "purpose": "תוכן טבלאות וכפתורים."
+      },
+      "label": {
+        "displayName": "תווית",
+        "purpose": "תוויות שדות, כותרת משנה, צ'יפים."
+      },
+      "micro": {
+        "displayName": "מיקרו",
+        "purpose": "כותרות עמודות ושורות משנה."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 0 0 1px #E6EAEF",
+        "purpose": "כל משטח בדף – קו בלבד."
+      },
+      {
+        "name": "float",
+        "value": "0 0 0 1px rgba(15,27,42,.06), 0 4px 8px -2px rgba(15,27,42,.06), 0 12px 28px -6px rgba(15,27,42,.16)",
+        "purpose": "תפריטים, פופאובר, טוסט."
+      },
+      {
+        "name": "panel",
+        "value": "0 0 0 1px rgba(15,27,42,.06), 0 24px 64px rgba(15,27,42,.22)",
+        "purpose": "כרטיס הזמנה ודיאלוגים."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 2px #FFFFFF, 0 0 0 4px #006491",
+        "purpose": "פוקוס מקלדת."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "כל מעברי המצב."
+      },
+      {
+        "name": "dur-instant",
+        "value": "90ms",
+        "purpose": "ריחוף, צבע, גבול."
+      },
+      {
+        "name": "dur-quick",
+        "value": "150ms",
+        "purpose": "הופעת תוכן, תוויות."
+      },
+      {
+        "name": "dur-standard",
+        "value": "220ms",
+        "purpose": "פאנלים וגרפים. כולם 0ms ב-prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "700px"
+      },
+      {
+        "name": "narrow",
+        "value": "640px"
+      },
+      {
+        "name": "tablet",
+        "value": "860px"
+      },
+      {
+        "name": "compact",
+        "value": "1100px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "פעולה ראשית אחת במסך.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">שמור הזמנה</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 16px; border:1px solid transparent; border-radius:6px; font:600 14px 'IBM Plex Sans Hebrew', system-ui, sans-serif; cursor:pointer; transition:background 90ms cubic-bezier(.2,0,0,1), border-color 90ms cubic-bezier(.2,0,0,1); } .ds-btn-primary { background:#006491; color:#fff; } .ds-btn-primary:hover { background:#00567D; } .ds-btn-primary:active { background:#003F5C; transform:translateY(1px); } .ds-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 2px #fff, 0 0 0 4px #006491; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "פעולות משניות ליד הראשית.",
+      "html": "<button class=\"ds-btn2\">ייצוא לאקסל</button>",
+      "css": ".ds-btn2 { display:inline-flex; align-items:center; height:38px; padding:0 16px; background:#fff; color:#0F1B2A; border:1px solid #D6DCE3; border-radius:6px; font:600 14px 'IBM Plex Sans Hebrew', system-ui, sans-serif; cursor:pointer; transition:background 90ms, border-color 90ms; } .ds-btn2:hover { background:#F8FAFC; border-color:#C2CAD4; } .ds-btn2:focus-visible { outline:none; box-shadow:0 0 0 2px #fff, 0 0 0 4px #006491; }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "שדה טקסט סטנדרטי.",
+      "html": "<input class=\"ds-input\" placeholder=\"שם הלקוח\" dir=\"rtl\">",
+      "css": ".ds-input { height:38px; width:260px; padding:0 12px; border:1px solid #D6DCE3; border-radius:6px; background:#fff; color:#0F1B2A; font:400 15px 'IBM Plex Sans Hebrew', system-ui, sans-serif; transition:border-color 90ms, box-shadow 90ms; } .ds-input::placeholder { color:#8A96A5; } .ds-input:hover { border-color:#C2CAD4; } .ds-input:focus { outline:none; border-color:#006491; box-shadow:0 0 0 3px rgba(0,100,145,.16); }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "custom",
+      "refersTo": "segmented",
+      "description": "בחירת תקופה או תצוגה.",
+      "html": "<div class=\"ds-seg\" dir=\"rtl\"><button class=\"is-on\">החודש</button><button>חודש קודם</button><button>תאריכים</button></div>",
+      "css": ".ds-seg { display:inline-flex; padding:2px; border-radius:8px; background:#E6EAEF; } .ds-seg button { height:30px; padding:0 12px; border:0; border-radius:6px; background:transparent; font:500 13px 'IBM Plex Sans Hebrew', system-ui, sans-serif; color:#546272; cursor:pointer; } .ds-seg button:hover { color:#0F1B2A; } .ds-seg button.is-on { background:#fff; color:#0F1B2A; font-weight:600; box-shadow:0 0 0 1px #D6DCE3; }"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "מסנן מהיר.",
+      "html": "<button class=\"ds-chip is-on\">ממתין לאישור</button>",
+      "css": ".ds-chip { display:inline-flex; align-items:center; height:30px; padding:0 12px; border:1px solid #D6DCE3; border-radius:6px; background:#fff; font:500 13px 'IBM Plex Sans Hebrew', system-ui, sans-serif; color:#0F1B2A; cursor:pointer; } .ds-chip:hover { border-color:#C2CAD4; } .ds-chip.is-on { background:#E8F2F7; border-color:#006491; color:#003F5C; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "משטח שטוח עם קו וראש כרטיס.",
+      "html": "<section class=\"ds-card\" dir=\"rtl\"><div class=\"ds-card__head\">לפי יום</div><div class=\"ds-card__body\">תוכן</div></section>",
+      "css": ".ds-card { width:320px; background:#fff; border-radius:8px; box-shadow:0 0 0 1px #E6EAEF; font-family:'IBM Plex Sans Hebrew', system-ui, sans-serif; } .ds-card__head { display:flex; align-items:center; min-height:52px; padding:0 18px; border-bottom:1px solid #E6EAEF; font-weight:600; font-size:15px; color:#0F1B2A; } .ds-card__body { padding:14px 18px; font-size:14px; color:#546272; }"
+    },
+    {
+      "name": "Navigation Rail Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "פריט בתפריט הצד הכהה.",
+      "html": "<div class=\"ds-rail\" dir=\"rtl\"><a class=\"ds-nav is-active\">היום</a><a class=\"ds-nav\">הזמנות</a></div>",
+      "css": ".ds-rail { width:232px; padding:8px 10px; background:#0B2340; } .ds-nav { position:relative; display:flex; align-items:center; height:36px; padding:0 10px; border-radius:6px; color:#C3D1E0; font:500 14px 'IBM Plex Sans Hebrew', system-ui, sans-serif; text-decoration:none; cursor:pointer; transition:background 90ms, color 90ms; } .ds-nav:hover { background:rgba(255,255,255,.06); color:#fff; } .ds-nav.is-active { background:rgba(255,255,255,.09); color:#fff; } .ds-nav.is-active::before { content:''; position:absolute; inset-inline-start:-10px; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:#4FB0DC; }"
+    },
+    {
+      "name": "Health Dot",
+      "kind": "custom",
+      "refersTo": "health",
+      "description": "מצב הזמנה: נקודה + טקסט באותו צבע.",
+      "html": "<span class=\"ds-health ds-health--critical\">חסר מספר Q</span>",
+      "css": ".ds-health { display:inline-flex; align-items:center; gap:6px; font:500 13px 'IBM Plex Sans Hebrew', system-ui, sans-serif; } .ds-health::before { content:''; width:8px; height:8px; border-radius:50%; background:currentColor; } .ds-health--critical { color:#C0102C; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "עמדת מוקד",
+    "overview": "כלי עבודה של משמרת שלמה, לא מצגת. כחול-לילה מעגן את המותג בתפריט הצד ובמסך הכניסה; משטח העבודה לבן ושקט, וצבע מופיע רק איפה שצריך לפעול. הדף שטוח – קווים דקים מפרידים במקום צללים, וצל שמור לדברים שצפים מעל הדף. הצפיפות היא של כלי מקצועי, עם ספרות טבלאיות, כותרת משנה של שורה אחת וטיפים רק בזמן עריכה.",
+    "keyCharacteristics": [
+      "משטח שטוח: כרטיס = רקע לבן + קו של 1px, בלי צל.",
+      "צבע אחד לפעולה (כחול דומינוס), אדום רק לחריגה קריטית וללוגו.",
+      "סטטוסים כזוג רקע/טקסט עדין – נקודה, טקסט ופס דק, לא משטחים צבעוניים.",
+      "גופן אחד לכל המערכת (IBM Plex Sans Hebrew) עם ספרות טבלאיות.",
+      "RTL מלא; מספרים מבודדים בכיוון שמאל-ימין."
+    ],
+    "rules": [
+      {
+        "name": "The Color-Means-Act Rule",
+        "body": "צבע מופיע רק כשהוא אומר למשתמש לפעול או מסמן מצב. אין צבע לקישוט, אין רקעים צבעוניים למקטעים.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red-Is-Rare Rule",
+        "body": "אדום מותג רק ללוגו ולמונה קריטי; אדום מצב רק לחריגה קריטית ולשגיאה.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Line Subtitle Rule",
+        "body": "מתחת לכותרת מסך – שורה אחת של 13px באפור משני. הסברים נוספים רק בזמן עריכה.",
+        "section": "typography"
+      },
+      {
+        "name": "The Isolated Number Rule",
+        "body": "כל מספר, תאריך, שעה, סכום וטלפון בתוך טקסט עברי עטוף בבידוד כיוון עם ספרות טבלאיות.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "מה שיושב בדף – שטוח עם קו. צל רק למה שצף מעליו.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do להשתמש רק בטוקנים מ-src/design/tokens.css – צבע, גודל, פינה וצל.",
+      "Do לשמור את כל מה שיושב בדף שטוח עם קו של 1px (#E6EAEF), וצל רק למה שצף.",
+      "Do לעטוף כל מספר, תאריך, סכום וטלפון ב-<Ltr> עם ספרות טבלאיות.",
+      "Do לסמן מצב בזוג רקע/טקסט עדין או בנקודה – לא במשטח צבעוני מלא.",
+      "Do להסתיר טיפים ב-visibility: hidden ולא ב-display: none, כדי שכפתורים לא יזוזו מתחת ליד.",
+      "Do לכבד prefers-reduced-motion – כל משכי התנועה מתאפסים."
+    ],
+    "donts": [
+      "Don't להשתמש באדום מותג (#E31837) לשום דבר מלבד הלוגו ומונה קריטי.",
+      "Don't להוסיף צללים, גרדיאנטים או רקעים צבעוניים לכרטיסים ולמקטעים. (גרדיאנט קיים רק ברקע מסך הכניסה ובאנימציית הטעינה.)",
+      "Don't להוסיף גופן נוסף.",
+      "Don't לכתוב פסקאות הסבר על המסך – כותרת משנה של שורה אחת.",
+      "Don't להציג מחירי דוגמה בהצעות ובמוקאפים (₪—)."
+    ]
+  }
+}
