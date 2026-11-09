@@ -105,3 +105,6 @@
 @media (prefers-reduced-motion: reduce) { .report__drill { animation: none; } }
 .rhub__card--feature { margin-bottom: 12px; box-shadow: 0 0 0 1px var(--brand-100), var(--shadow-card); }
 .rhub__card--feature .rhub__icon { background: var(--brand-50); border-color: var(--brand-100); color: var(--brand-700); }
+
+/* דוח ארוך: "הצג עוד" מתחת לטבלה */
+.report__more { display: flex; justify-content: center; padding: 14px 16px; border-top: 1px solid var(--gray-100); font-size: var(--text-label); }

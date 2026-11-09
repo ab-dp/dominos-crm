@@ -14,6 +14,7 @@ import { REPORTS, qVal, type Col, type ReportDef, type ReportResult, type Row } 
 import { BarChart } from './BarChart';
 import { reportName, reportSheet } from './reportExcel';
 import { downloadXlsx } from '../../lib/xlsx';
+import { useProgressive } from '../../lib/useProgressive';
 import '../pages.css';
 import './ReportsPage.css';
 
@@ -104,6 +105,7 @@ function Report({ def }: { def: ReportDef }) {
   const orders = useMemo(() => raw.filter((o) => (!cluster || o.cluster === cluster) && (!branch || o.branchName === branch) && (!cust.trim() || o.customerName.includes(cust.trim()))
     && (!method || o.method === method) && (!outcome || outcomeOf(o) === outcome) && (!handler || (o.handler || o.createdBy) === handler)), [raw, cluster, branch, cust, method, outcome, handler]);
   const res: ReportResult = useMemo(() => def.compute(orders), [def, orders]);
+  const prog = useProgressive(res.rows.length, res);
   const [picked, setPicked] = useState<Row | null>(null);
   const [view, setView] = useState<'chart' | 'table'>('chart');
   const filtered = !!(cluster || branch || cust.trim() || method || outcome || handler);
@@ -222,7 +224,7 @@ function Report({ def }: { def: ReportDef }) {
                   <caption className="sr-only">{def.title}</caption>
                   <thead><tr>{res.cols.map((c) => <th key={c.key} className={c.kind === 'money' || c.kind === 'num' || c.kind === 'pct' ? 'num' : ''}>{c.label}</th>)}</tr></thead>
                   <tbody>
-                    {res.rows.map((r) => (
+                    {res.rows.slice(0, prog.limit).map((r) => (
                       <tr key={r.id} className={picked?.id === r.id ? 'is-picked' : ''} tabIndex={0} onClick={(e) => (def.perOrder ? panel.open(r.orders[0].id, e.currentTarget) : setPicked(picked?.id === r.id ? null : r))}
                         onKeyDown={(e) => { if (e.key === 'Enter') { if (def.perOrder) panel.open(r.orders[0].id, e.currentTarget); else setPicked(picked?.id === r.id ? null : r); } }} aria-label={def.perOrder ? `הזמנה ${r.id} – פתח את תיק ההזמנה` : `${r.cells[res.cols[0].key]} – הצג את ההזמנות`}>
                         {res.cols.map((c) => <td key={c.key} className={c.kind === 'money' || c.kind === 'num' || c.kind === 'pct' ? 'num' : c.key === 'items' ? 'rtable__wrap' : ''}>{c.kind && c.kind !== 'text' ? <Ltr>{fmtCell(c, r.cells[c.key])}</Ltr> : fmtCell(c, r.cells[c.key])}</td>)}
@@ -233,6 +235,11 @@ function Report({ def }: { def: ReportDef }) {
                     <tfoot><tr>{res.cols.map((c) => <td key={c.key} className={c.kind === 'money' || c.kind === 'num' || c.kind === 'pct' ? 'num' : ''}>{c.kind && c.kind !== 'text' ? <Ltr>{fmtCell(c, res.totals![c.key])}</Ltr> : fmtCell(c, res.totals![c.key])}</td>)}</tr></tfoot>
                   )}
                 </table>
+              </div>
+            )}
+            {prog.hasMore && (
+              <div ref={prog.moreRef} className="report__more">
+                <button className="link" onClick={prog.showMore}>הצג עוד (<Ltr>{prog.rest}</Ltr> נוספות) · הסה"כ כולל את כל השורות</button>
               </div>
             )}
           </section>
