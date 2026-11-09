@@ -26,6 +26,7 @@ const named = <K extends string>(load: () => Promise<Record<K, ComponentType>>, 
   throw e;
 }));
 const CreditReportPage = named(() => import('./features/reports/CreditReportPage'), 'CreditReportPage');
+const PeriodReport = named(() => import('./features/reports/PeriodReport'), 'PeriodReport');
 const MonthClosePage = named(() => import('./features/reports/MonthClosePage'), 'MonthClosePage');
 const StyleGuidePage = named(() => import('./features/styleguide/StyleGuidePage'), 'StyleGuidePage');
 const SettingsPage = named(() => import('./features/settings/SettingsPage'), 'SettingsPage');
@@ -93,6 +94,7 @@ function Gate() {
               <Route path="/reports" element={<ReportsHub />} />
               <Route path="/reports/credit" element={<CreditReportPage />} />
               <Route path="/reports/close" element={<MonthClosePage />} />
+              <Route path="/reports/period" element={<PeriodReport />} />
               <Route path="/reports/:id" element={<ReportView />} />
               <Route path="/styleguide" element={<StyleGuidePage />} />
               <Route path="/settings/*" element={<SettingsPage />} />

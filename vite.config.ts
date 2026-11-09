@@ -19,6 +19,8 @@ export default defineConfig({
           if (id.includes('firebase')) return 'firebase';
           // יצירת PDF להצעת מחיר – נטען רק בלחיצה על "הורדת PDF". לא תלוי ב-react
           if (/[\\/]node_modules[\\/](jspdf|html-to-image|html2canvas|canvg|dompurify|core-js|fflate|rgbcolor|stackblur-canvas|svg-pathdata)[\\/]/.test(id)) return 'pdf';
+          // ייצוא לאקסל מעוצב (סיכום תקופה) – נטען רק בלחיצה על "ייצוא לאקסל". קובץ מוכן מראש, לא תלוי ב-react
+          if (/[\\/]node_modules[\\/]exceljs[\\/]/.test(id)) return 'xlsx';
           return 'vendor';
         },
       },
