@@ -11,7 +11,6 @@ import { PAYMENT_LABEL, STATUS_LABEL, type Order } from '../../data/types';
 import { Button, Missing, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, Money, Phone, fmtDate, fmtMoney, fmtPhone } from '../../lib/format';
-import { downloadCsv } from '../../lib/csv';
 import './CreditReportPage.css';
 
 export const creditOrders = (orders: Order[]) => orders.filter((o) => o.method === 'account' && o.status !== 'cancelled');
@@ -40,15 +39,32 @@ export function CreditCheck({ ym, orders, month, loading, locked }: { ym: string
   const found = rows.filter((o) => checked[o.id]).length;
   const toggle = (o: Order) => setChecked(ym, month, o.id, !checked[o.id]).catch(() => toast({ tone: 'error', message: 'הסימון לא נשמר – בדוק חיבור' }));
 
-  const exportCsv = () => {
-    downloadCsv(`דוח הקפות ${monthLabel(ym)}${customer ? ` - ${customer}` : ''}.csv`, [
-      ['דוח הקפות', monthLabel(ym), customer || phone ? `מסונן: ${[customer, phone && fmtPhone(phone)].filter(Boolean).join(' · ')}` : ''],
-      ['לקוח', 'טלפון הקפה', 'הזמנה', 'תאריך', 'סניף', "מס' Q", 'סכום', 'סטטוס', 'תשלום', 'תעודת רכש', 'הערות לחיוב', 'נמצא בדוח הקופה'],
-      ...groups.flatMap(([, list]) => list.map((o) => [o.customerName, o.accountPhone ? fmtPhone(o.accountPhone) : '', o.id, fmtDate(o.date), o.branchName, o.qNumber ?? '', o.qAmount ?? o.amount, STATUS_LABEL[o.status], PAYMENT_LABEL[o.payment], o.poNumber ?? '', o.billingNote ?? '', checked[o.id] ? '✓' : ''])),
-      ['סה"כ', '', rows.length, '', '', '', sum(rows)],
-    ]);
-    logReportExport('credit', { month: ym, rows: rows.length, customer, phone }).catch(() => undefined);
-    toast({ message: <>דוח ההקפות יוצא לאקסל · <Ltr>{rows.length}</Ltr> שורות</> });
+  const [exporting, setExporting] = useState(false);
+  const exportXlsx = async () => {
+    setExporting(true);
+    try {
+      const { downloadXlsx } = await import('../../lib/xlsx');
+      await downloadXlsx(`דוח הקפות ${monthLabel(ym)}${customer ? ` - ${customer}` : ''}`, [{
+        name: 'הקפות', title: 'דוח הקפות', period: monthLabel(ym),
+        notes: [customer || phone ? `מסונן: ${[customer, phone && fmtPhone(phone)].filter(Boolean).join(' · ')}` : ''],
+        tables: [{
+          main: true,
+          cols: [
+            { label: 'לקוח', kind: 'text', width: 26 }, { label: 'טלפון הקפה', kind: 'code', width: 14 }, { label: 'הזמנה', kind: 'id', width: 10 }, { label: 'תאריך', kind: 'date', width: 12 },
+            { label: 'סניף', kind: 'text', width: 22 }, { label: "מס' Q", kind: 'code', width: 11 }, { label: 'סכום', kind: 'money', width: 12 }, { label: 'סטטוס', kind: 'text', width: 14 },
+            { label: 'תשלום', kind: 'text', width: 14 }, { label: 'תעודת רכש', kind: 'code', width: 13 }, { label: 'הערות לחיוב', kind: 'text', width: 30 }, { label: 'נמצא בדוח הקופה', kind: 'text', width: 12 },
+          ],
+          rows: groups.flatMap(([, list]) => list.map((o) => [o.customerName, o.accountPhone ? fmtPhone(o.accountPhone) : '', o.id, o.date, o.branchName, o.qNumber ?? '', o.qAmount ?? o.amount, STATUS_LABEL[o.status], PAYMENT_LABEL[o.payment], o.poNumber ?? '', o.billingNote ?? '', checked[o.id] ? '✓' : ''])),
+          total: ['סה"כ', '', rows.length, '', '', '', sum(rows)],
+        }],
+      }]);
+      logReportExport('credit', { month: ym, rows: rows.length, customer, phone }).catch(() => undefined);
+      toast({ message: <>דוח ההקפות יוצא לאקסל · <Ltr>{rows.length}</Ltr> שורות</> });
+    } catch {
+      toast({ tone: 'error', message: 'הייצוא נכשל – נסה שוב' });
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -74,7 +90,7 @@ export function CreditCheck({ ym, orders, month, loading, locked }: { ym: string
           <span className="muted">נמצאו בדוח הקופה: <Ltr>{`${found}/${rows.length}`}</Ltr></span>
         </div>
         <div className="ccheck__actions">
-          <Button icon={<Download size={16} />} onClick={exportCsv} disabled={!rows.length}>ייצוא לאקסל</Button>
+          <Button icon={<Download size={16} />} onClick={exportXlsx} loading={exporting} disabled={!rows.length}>ייצוא לאקסל</Button>
           {!locked && (
             <Button variant="primary" icon={<CheckCheck size={18} />} disabled={unpaid.length === 0}
               onClick={() => updateMany(unpaid.map((o) => o.id), { payment: 'paid' }, <><Ltr>{unpaid.length}</Ltr> הזמנות הקפה סומנו כשולמו</>)}>
