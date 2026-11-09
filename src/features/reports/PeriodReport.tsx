@@ -10,6 +10,7 @@ import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney } from '../../lib/format';
 import { PERIOD_PRESETS, missingQ, ordersTable, periodRange, summary, type Cell, type Kind, type PeriodPreset, type STable } from './periodData';
+import { useProgressive } from '../../lib/useProgressive';
 import '../pages.css';
 import './ReportsPage.css';
 import './PeriodReport.css';
@@ -26,13 +27,15 @@ function show(v: Cell, kind: Kind) {
 /* טבלה אחת – משמשת גם לרשימת ההזמנות וגם לטבלאות הסיכום */
 function Table({ t, onRow }: { t: STable; onRow?: (i: number, el: HTMLElement) => void }) {
   const cls = (k: Kind) => (NUMERIC.includes(k) ? 'num' : '');
+  const prog = useProgressive(t.rows.length, t);
   return (
+    <>
     <div className="report__scroll">
       <table className={`rtable ${onRow ? '' : 'rtable--static'}`}>
         <caption className="sr-only">{t.title}</caption>
         <thead><tr>{t.cols.map((c) => <th key={c.label} className={cls(c.kind)}>{c.label}</th>)}</tr></thead>
         <tbody>
-          {t.rows.map((r, i) => (
+          {t.rows.slice(0, prog.limit).map((r, i) => (
             <tr key={t.ids?.[i] ?? i} className={r.includes('בוטלה') ? 'is-cancelled' : ''}
               {...(onRow ? { tabIndex: 0, onClick: (e) => onRow(i, e.currentTarget), onKeyDown: (e) => { if (e.key === 'Enter') onRow(i, e.currentTarget); }, 'aria-label': `הזמנה ${t.ids?.[i]} – פתח את תיק ההזמנה` } : {})}>
               {r.map((v, j) => <td key={j} className={cls(t.cols[j].kind)}>{show(v, t.cols[j].kind)}</td>)}
@@ -42,6 +45,12 @@ function Table({ t, onRow }: { t: STable; onRow?: (i: number, el: HTMLElement) =
         {t.total && <tfoot><tr>{t.total.map((v, j) => <td key={j} className={cls(t.cols[j].kind)}>{show(v, j === 0 || typeof v === 'string' ? 'text' : t.cols[j].kind)}</td>)}</tr></tfoot>}
       </table>
     </div>
+    {prog.hasMore && (
+      <div ref={prog.moreRef} className="report__more">
+        <button className="link" onClick={prog.showMore}>הצג עוד (<Ltr>{prog.rest}</Ltr> נוספות) · הסה"כ כולל את כל השורות</button>
+      </div>
+    )}
+    </>
   );
 }
 
