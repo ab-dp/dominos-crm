@@ -130,8 +130,9 @@ export function OrderDocsSection({ orderId, customerId }: { orderId: number; cus
 }
 
 /* בתיק הלקוח: מסמכים קבועים של הלקוח וכל מסמכי ההזמנות שלו */
-export function CustomerDocsSection({ customerId }: { customerId: string }) {
-  const docs = useCustomerDocs(customerId);
+export function CustomerDocsSection({ customerId, mergedFrom = [] }: { customerId: string; mergedFrom?: string[] }) {
+  // כולל מסמכים של לקוחות שמוזגו לתוך הלקוח הזה
+  const docs = useCustomerDocs([customerId, ...mergedFrom].slice(0, 30));
   const [view, setView] = useState<'all' | 'customer' | 'orders'>('all');
   const list = (docs ?? []).filter((d) => view === 'all' || (view === 'customer' ? !d.orderId : !!d.orderId));
   return (
