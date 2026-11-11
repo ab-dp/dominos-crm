@@ -160,7 +160,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
               </label>
               <span className="pg__count" aria-label={`${count} פיצות`}><Ltr>{count}</Ltr> פיצות</span>
               {groups.length > 1 && <button type="button" className="icon-btn icon-btn--sm" aria-label={`קפל – ${g.name || 'סוג פיצה'}`} onClick={toggle}><ChevronUp size={16} /></button>}
-              <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר את הסוג ${g.name || ''} וכל השורות שלו`} onClick={() => removeGroup(g)}><Trash2 size={15} /></button>
+              <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר את הסוג ${g.name || ''} וכל השורות שלו`} onClick={() => removeGroup(g)}><Trash2 size={16} /></button>
             </div>
             {(levels.length > 0 || (last !== undefined && last !== g.price)) && (
               <p className="ib-sug ib-sug--price pg__sug">
@@ -228,12 +228,12 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
                       <input className={`input input--sm input--ltr ${own ? 'is-own' : ''}`} inputMode="decimal" value={priceText} placeholder={g.price ? fmtMoney(g.price) : '—'} aria-label={`מחיר לשורה (אם שונה ממחיר הסוג) – ${label}`}
                         onChange={(e) => { const v = money(e.target.value); set({ pText: e.target.value, unitPrice: v || g.price, manualPrice: v > 0 || undefined, itemId: v ? undefined : line.itemId }); }}
                         onBlur={() => { if (l && line.pText !== undefined) patchLine(key, { pText: undefined }); }} {...on('price')} />
-                      {own && <button type="button" className="pg__reset" aria-label="חזרה למחיר הסוג" title="חזרה למחיר הסוג" onClick={() => set({ unitPrice: g.price, manualPrice: undefined, pText: undefined })}><X size={12} /></button>}
+                      {own && <button type="button" className="pg__reset" aria-label="חזרה למחיר הסוג" title="חזרה למחיר הסוג" onClick={() => set({ unitPrice: g.price, manualPrice: undefined, pText: undefined })}><X size={14} /></button>}
                     </span>
                     <input className={`input input--sm input--ltr ${bad && line.qty <= 0 ? 'is-invalid' : ''}`} inputMode="numeric" value={line.qty || ''} aria-label={`כמות – ${label}`}
                       aria-invalid={bad && line.qty <= 0 ? true : undefined}
                       onChange={(e) => set({ qty: Number(e.target.value.replace(/\D/g, '')) || 0 })} {...on('qty')} />
-                    {l && !(isDraft && g.lines.length === 1) ? <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(key)}><Trash2 size={15} /></button> : <span />}
+                    {l && !(isDraft && g.lines.length === 1) ? <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(key)}><Trash2 size={16} /></button> : <span />}
                   </div>
                   {line.detail && <p className="ib-r__note">הערה: {line.detail}</p>}
                   {topSug.length > 0 && (
@@ -251,7 +251,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
         );
       })}
       <div className="pgs__foot">
-        <button type="button" className="btn btn--secondary btn--sm" onClick={() => addGroup()}><Plus size={15} aria-hidden="true" /><span className="btn__label">סוג פיצה</span></button>
+        <button type="button" className="btn btn--secondary btn--sm" onClick={() => addGroup()}><Plus size={16} aria-hidden="true" /><span className="btn__label">סוג פיצה</span></button>
         {quick.length > 0 && (
           <span className="pgs__quick">
             <span>או בחירה מהירה:</span>

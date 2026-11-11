@@ -20,7 +20,7 @@ export class ScreenBoundary extends Component<Props, State> {
     return (
       <div className="page">
         <div className="card">
-          <EmptyState icon={<TriangleAlert size={24} />} title="משהו השתבש בהצגת המסך"
+          <EmptyState icon={<TriangleAlert size={20} />} title="משהו השתבש בהצגת המסך"
             action={<button className="btn btn--primary btn--md" onClick={() => location.reload()}><span className="btn__label">רענן את הדף</span></button>}>
             הנתונים שמורים. אפשר לעבור למסך אחר מהתפריט, או לרענן.
           </EmptyState>

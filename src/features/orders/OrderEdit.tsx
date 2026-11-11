@@ -83,7 +83,7 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
       ) : (
         <button ref={btn} type="button" className="kv__v kv__btn" onClick={() => setEditing(true)} aria-label={`${k}: ${value || 'ריק'}. לחץ לעריכה`}>
           <span className="kv__val">{display ?? (value || <span className="muted">{placeholder ?? '—'}</span>)}</span>
-          <Pencil size={13} className="kv__pen" aria-hidden="true" />
+          <Pencil size={14} className="kv__pen" aria-hidden="true" />
         </button>
       )}
     </div>
@@ -107,7 +107,7 @@ export function BranchEdit({ o }: { o: OrderView }) {
         <span className="kv__k">סניף</span>
         <button type="button" className="kv__v kv__btn" onClick={() => setOpen(true)} aria-label={`סניף: ${o.branchName || "חסר"}. לחץ לשינוי`}>
           <span className="kv__val">{o.branchId ? <>{o.branchName} <span className="muted">· אשכול {o.cluster}</span></> : <Missing />}</span>
-          <Pencil size={13} className="kv__pen" aria-hidden="true" />
+          <Pencil size={14} className="kv__pen" aria-hidden="true" />
         </button>
       </div>
     );
@@ -245,7 +245,7 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
       </div>
       {err && <p className="cform__err" role="alert">{err}</p>}
       <div className="iedit__actions">
-        <Button variant="primary" size="sm" icon={<Check size={15} />} onClick={submit}>שמור</Button>
+        <Button variant="primary" size="sm" icon={<Check size={16} />} onClick={submit}>שמור</Button>
         <Button variant="ghost" size="sm" onClick={onDone}>ביטול</Button>
       </div>
     </div>

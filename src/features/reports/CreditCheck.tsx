@@ -92,7 +92,7 @@ export function CreditCheck({ ym, orders, month, loading, locked }: { ym: string
         <div className="ccheck__actions">
           <Button icon={<Download size={16} />} onClick={exportXlsx} loading={exporting} disabled={!rows.length}>ייצוא לאקסל</Button>
           {!locked && (
-            <Button variant="primary" icon={<CheckCheck size={18} />} disabled={unpaid.length === 0}
+            <Button variant="primary" icon={<CheckCheck size={16} />} disabled={unpaid.length === 0}
               onClick={() => updateMany(unpaid.map((o) => o.id), { payment: 'paid' }, <><Ltr>{unpaid.length}</Ltr> הזמנות הקפה סומנו כשולמו</>)}>
               סמן כשולם (<Ltr>{unpaid.length}</Ltr>)
             </Button>

@@ -1,43 +1,43 @@
 .sdialog { width: min(480px, calc(100vw - 32px)); }
-.sdialog__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sdialog__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .sdialog__head .udialog__title { margin: 0; }
-.sdialog__sub { margin: 2px 0 16px; color: var(--gray-600); font-size: var(--text-table); }
-.sdialog__form { display: grid; gap: 14px; }
+.sdialog__sub { margin: 2px 0 var(--space-4); color: var(--gray-600); font-size: var(--text-table); }
+.sdialog__form { display: grid; gap: var(--space-4); }
 .sdialog__form .field + .field { margin-top: 0; }
 .sdialog__money { max-width: 180px; }
-.sdialog__warn { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-table); font-weight: 500; }
+.sdialog__warn { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-3); border-radius: var(--radius); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-table); font-weight: 500; }
 .sdialog__warn svg { flex: none; margin-top: 2px; }
 .sdialog__warn--strong { background: var(--danger-bg); color: var(--danger-fg); }
 .sdialog__reasons { margin: 0; padding: 0; border: 0; min-width: 0; }
-.sdialog__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-.sdialog__reasons legend { margin-bottom: 6px; padding: 0; }
-.sdialog__reason { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 1px solid var(--gray-100); border-radius: var(--radius); font-size: var(--text-table); cursor: pointer; transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease); }
+.sdialog__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.sdialog__reasons legend { margin-bottom: var(--space-2); padding: 0; }
+.sdialog__reason { display: flex; align-items: center; gap: var(--space-2); min-height: 40px; padding: 0 var(--space-3); border: 1px solid var(--gray-100); border-radius: var(--radius); font-size: var(--text-table); cursor: pointer; transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease); }
 .sdialog__reason:hover { border-color: var(--gray-300); }
-.sdialog__reason.is-on { border-color: var(--brand-600); background: var(--brand-50); box-shadow: inset 0 0 0 1px var(--brand-600); font-weight: 600; }
+.sdialog__reason.is-on { border-color: var(--brand-600); background: var(--brand-50); box-shadow: inset 0 0 0 1px var(--brand-600); font-weight: 500; }
 .sdialog__reason input { accent-color: var(--brand-600); margin: 0; }
 @media (max-width: 480px) { .sdialog__grid { grid-template-columns: 1fr; } }
 /* חלון התנגשות */
 .cdialog { width: min(600px, calc(100vw - 32px)); }
-.cdialog__table { width: 100%; border-collapse: collapse; font-size: var(--text-table); margin-bottom: 4px; }
-.cdialog__table th, .cdialog__table td { padding: 9px 10px; border-bottom: 1px solid var(--gray-100); text-align: start; vertical-align: top; }
+.cdialog__table { width: 100%; border-collapse: collapse; font-size: var(--text-table); margin-bottom: var(--space-1); }
+.cdialog__table th, .cdialog__table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--gray-100); text-align: start; vertical-align: top; }
 .cdialog__table thead th { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); background: var(--white); }
 .cdialog__table tbody th { font-weight: 600; white-space: nowrap; }
 .cdialog__base { color: var(--gray-600); text-decoration: line-through; text-decoration-color: var(--gray-300); }
-.cdialog__theirs { font-weight: 600; color: var(--brand-800); background: var(--brand-50); }
-.cdialog__mine { font-weight: 600; }
+.cdialog__theirs { font-weight: 500; color: var(--brand-800); background: var(--brand-50); }
+.cdialog__mine { font-weight: 500; }
 
 /* שינוי אחרי אישור */
 .chdialog { width: min(540px, calc(100vw - 32px)); }
-.chdialog__diff { list-style: none; margin: 0 0 14px; padding: 0; border: 1px solid var(--gray-100); border-radius: var(--radius); }
-.chdialog__diff li { display: flex; align-items: baseline; gap: 10px; padding: 9px 12px; font-size: var(--text-table); }
+.chdialog__diff { list-style: none; margin: 0 0 var(--space-4); padding: 0; border: 1px solid var(--gray-100); border-radius: var(--radius); }
+.chdialog__diff li { display: flex; align-items: baseline; gap: var(--space-3); padding: var(--space-2) var(--space-3); font-size: var(--text-table); }
 .chdialog__diff li + li { border-top: 1px solid var(--gray-100); }
-.chdialog__diff li > span:first-child { min-width: 90px; color: var(--gray-600); font-size: var(--text-label); font-weight: 600; }
+.chdialog__diff li > span:first-child { min-width: 90px; color: var(--gray-600); font-size: var(--text-label); font-weight: 500; }
 .chdialog__from { color: var(--gray-600); text-decoration: line-through; text-decoration-color: var(--gray-300); }
-.chdialog__opts { margin: 0 0 12px; padding: 0; border: 0; display: grid; gap: 6px; }
-.chdialog__opts legend { margin-bottom: 6px; padding: 0; }
-.chdialog__opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: var(--radius); cursor: pointer; }
+.chdialog__opts { margin: 0 0 var(--space-3); padding: 0; border: 0; display: grid; gap: var(--space-2); }
+.chdialog__opts legend { margin-bottom: var(--space-2); padding: 0; }
+.chdialog__opt { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-3); border: 1px solid var(--gray-100); border-radius: var(--radius); cursor: pointer; }
 .chdialog__opt:has(input:checked) { border-color: var(--brand-600); background: var(--brand-50); }
-.chdialog__opt input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--brand-600); flex: none; }
+.chdialog__opt input { margin-top: var(--space-1); width: 16px; height: 16px; accent-color: var(--brand-600); flex: none; }
 .chdialog__opt span { display: grid; gap: 2px; }
-.chdialog__opt b { font-size: var(--text-table); font-weight: 600; }
+.chdialog__opt b { font-size: var(--text-table); font-weight: 500; }
 .chdialog__opt small { font-size: var(--text-label); color: var(--gray-600); }

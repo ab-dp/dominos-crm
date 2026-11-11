@@ -157,7 +157,6 @@ export function MarkAction({
         <Popover.Content className="pop" aria-label={title} sideOffset={6} align="start" dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <p className="pop__title">{title}</p>
           {children}
-          <Popover.Arrow className="pop__arrow" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

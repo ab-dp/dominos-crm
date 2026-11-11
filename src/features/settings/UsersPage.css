@@ -1,21 +1,21 @@
 .users td { height: 56px; }
-.users__actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; height: 56px; }
-.ucell { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; }
+.users__actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); height: 56px; }
+.ucell { display: inline-flex; align-items: center; gap: var(--space-3); font-weight: 500; }
 .ucell__avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: var(--white); font-weight: 600; font-size: var(--text-label); }
-.you { margin-inline-start: 6px; padding: 1px 6px; border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-600); font-size: var(--text-micro); font-weight: 500; }
-.role { display: inline-flex; align-items: center; gap: 4px; }
-.role--admin { color: var(--brand-800); font-weight: 600; }
-.users-skel { display: grid; gap: 10px; padding: 16px; }
+.you { margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-600); font-size: var(--text-micro); font-weight: 500; }
+.role { display: inline-flex; align-items: center; gap: var(--space-1); }
+.role--admin { color: var(--brand-800); font-weight: 500; }
+.users-skel { display: grid; gap: var(--space-3); padding: var(--space-4); }
 
 .menu__item--danger { color: var(--danger-fg); }
 .menu__item--danger[data-highlighted] { background: var(--danger-bg); color: var(--danger-fg); }
 .menu__item[data-disabled] { opacity: 0.5; cursor: not-allowed; }
 .menu__hint { margin-inline-start: auto; font-size: var(--text-micro); color: var(--gray-600); }
-.menu__sep { height: 1px; margin: 4px 6px; background: var(--gray-100); }
+.menu__sep { height: 1px; margin: var(--space-1) var(--space-2); background: var(--gray-100); }
 
 .console-hint {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 14px; padding: 12px 14px;
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4);
   border: 1px solid var(--brand-100); border-radius: var(--radius); background: var(--brand-50);
   font-size: var(--text-table); color: var(--brand-800);
   animation: pop-in var(--dur-standard) var(--ease);
@@ -23,15 +23,15 @@
 .console-hint span { flex: 1 1 320px; }
 a.btn { text-decoration: none; }
 
-.rolepick { border: 0; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; }
+.rolepick { border: 0; padding: 0; margin: var(--space-4) 0 0; display: grid; gap: var(--space-2); }
 .rolepick__opt {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); cursor: pointer;
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-3); border: 1px solid var(--gray-300); border-radius: var(--radius); cursor: pointer;
   transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease);
 }
 .rolepick__opt:hover { border-color: var(--gray-600); }
 .rolepick__opt.is-on { border-color: var(--brand-600); background: var(--brand-50); }
-.rolepick__opt input { margin-top: 3px; accent-color: var(--brand-600); }
+.rolepick__opt input { margin-top: var(--space-1); accent-color: var(--brand-600); }
 .rolepick__opt span { display: grid; gap: 2px; }
 .rolepick__opt small { color: var(--gray-600); font-size: var(--text-label); }
 .rolepick:disabled { opacity: 0.6; }

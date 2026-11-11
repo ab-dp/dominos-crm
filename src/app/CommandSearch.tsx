@@ -39,7 +39,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
     const digits = s.replace(/\D/g, '');
     const phoneHit = (p?: string) => digits.length >= 3 && !!p && p.includes(digits);
     const orderItem = (o: (typeof orders)[number]): Item => ({
-      key: `o${o.id}`, group: s ? 'הזמנות' : 'דורש טיפול עכשיו', icon: <FileText size={18} aria-hidden="true" />, title: o.customerName,
+      key: `o${o.id}`, group: s ? 'הזמנות' : 'דורש טיפול עכשיו', icon: <FileText size={16} aria-hidden="true" />, title: o.customerName,
       meta: <>הזמנה <Ltr>{o.id}</Ltr> · <Ltr>{fmtDate(o.date)}</Ltr> <Ltr>{o.time}</Ltr> · {o.branchName}{o.qNumber && <> · <Ltr>{o.qNumber}</Ltr></>}</>,
       tag: ORDER_STAGE[stageOf(o)], run: () => onPick(o.id),
     });
@@ -50,13 +50,13 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
     const cs = customers.filter((c) => c.status !== 'merged' && (c.name.toLowerCase().includes(s) || (digits.length >= 5 && c.taxId.includes(digits))
       || phoneHit(c.accountPhone) || c.contacts.some((x) => phoneHit(x.phone) || (s.length >= 2 && x.name.toLowerCase().includes(s)))))
       .slice(0, 4).map<Item>((c) => ({
-        key: `c${c.id}`, group: 'לקוחות', icon: <UserRound size={18} aria-hidden="true" />, title: c.name,
+        key: `c${c.id}`, group: 'לקוחות', icon: <UserRound size={16} aria-hidden="true" />, title: c.name,
         meta: <>{c.type === 'regular' ? 'לקוח קבוע' : 'לקוח מזדמן'}{c.taxId && <> · ח.פ <Ltr>{c.taxId}</Ltr></>}{c.status === 'inactive' && ' · לא פעיל'}</>,
         run: () => { close(); nav(`/customers/${c.id}`); },
       }));
     const ls = leads.filter((l) => l.stage !== 'won' && (l.name.toLowerCase().includes(s) || l.contacts.some((x) => phoneHit(x.phone) || (s.length >= 2 && x.name.toLowerCase().includes(s)))))
       .slice(0, 3).map<Item>((l) => ({
-        key: `l${l.id}`, group: 'לקוחות פוטנציאליים', icon: <Target size={18} aria-hidden="true" />, title: l.name,
+        key: `l${l.id}`, group: 'לקוחות פוטנציאליים', icon: <Target size={16} aria-hidden="true" />, title: l.name,
         meta: <>{l.nextStep ? <>צעד הבא: {l.nextStep.text}</> : STAGE_LABEL[l.stage]}</>, tag: STAGE_LABEL[l.stage],
         run: () => { close(); nav(`/leads/${l.id}`); },
       }));
@@ -112,7 +112,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
           <div id={`cmd-${results.length}`} role="option" aria-selected={active === results.length}
             className={`cmd__item cmd__item--new ${active === results.length ? 'is-active' : ''}`}
             onMouseEnter={() => setActive(results.length)} onClick={() => pick(results.length)}>
-            <UserPlus size={18} aria-hidden="true" />
+            <UserPlus size={16} aria-hidden="true" />
             <span className="cmd__main"><span>הזמנה ללקוח חדש{q && !/\d{3}/.test(q) && <> · "{q}"</>}</span></span>
           </div>
         </li>

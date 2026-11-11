@@ -89,10 +89,10 @@ export function UsersPage() {
         </div>
       )}
 
-      {error ? <div className="card"><EmptyState icon={<Users size={24} />} title="לא ניתן לטעון משתמשים">{error}</EmptyState></div>
+      {error ? <div className="card"><EmptyState icon={<Users size={20} />} title="לא ניתן לטעון משתמשים">{error}</EmptyState></div>
         : users === null ? <div className="card users-skel">{[0, 1, 2].map((i) => <Skeleton key={i} h={44} />)}</div>
         : by[current].length === 0 ? (
-          <div className="card"><EmptyState icon={<UserCheck size={24} />} title={current === 'pending' ? 'אין בקשות הצטרפות ממתינות' : 'אין משתמשים בתצוגה הזו'} /></div>
+          <div className="card"><EmptyState icon={<UserCheck size={20} />} title={current === 'pending' ? 'אין בקשות הצטרפות ממתינות' : 'אין משתמשים בתצוגה הזו'} /></div>
         ) : (
           <div className="otable-wrap">
             <table className="otable otable--dense users">
@@ -169,7 +169,7 @@ function UserMenu({ u, protectedUser, onEdit, onDisable, onDelete }: { u: UserDo
   return (
     <Dropdown.Root dir="rtl">
       <Dropdown.Trigger asChild>
-        <button className="icon-btn" aria-label={`פעולות עבור ${u.name}`}><MoreHorizontal size={18} /></button>
+        <button className="icon-btn" aria-label={`פעולות עבור ${u.name}`}><MoreHorizontal size={16} /></button>
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content className="menu" align="end" sideOffset={4}>

@@ -113,7 +113,7 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
         <Dialog.Content className="cform" dir="rtl" aria-describedby={undefined}>
           <div className="cform__head">
             <Dialog.Title className="udialog__title">{editing ? `עריכת ${editing.name}` : 'לקוח חדש'}</Dialog.Title>
-            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
+            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>
           </div>
 
           <form className="cform__body" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
@@ -155,13 +155,13 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                     <input className="input input--ltr" type="email" value={m} onChange={(e) => { setEmails((xs) => xs.map((x, j) => (j === i ? e.target.value : x))); setErrors((x) => ({ ...x, [`email${i}`]: '' })); }} {...inv(`email${i}`)} />
                     {err(`email${i}`)}
                   </L>
-                  <button type="button" className="icon-btn icon-btn--sm" aria-label="הסר מייל נוסף" onClick={() => setEmails((xs) => xs.filter((_, j) => j !== i))}><X size={15} /></button>
+                  <button type="button" className="icon-btn icon-btn--sm" aria-label="הסר מייל נוסף" onClick={() => setEmails((xs) => xs.filter((_, j) => j !== i))}><X size={16} /></button>
                 </div>
               ))}
               {more.map((m, i) => (
                 <div key={m.id} className="cform__more">
                   <div className="cform__more-head"><span className="field__label">איש קשר נוסף</span>
-                    <button type="button" className="icon-btn icon-btn--sm" aria-label="הסר איש קשר נוסף" onClick={() => setMore((xs) => xs.filter((x) => x.id !== m.id))}><X size={15} /></button></div>
+                    <button type="button" className="icon-btn icon-btn--sm" aria-label="הסר איש קשר נוסף" onClick={() => setMore((xs) => xs.filter((x) => x.id !== m.id))}><X size={16} /></button></div>
                   <Row>
                     <L label="שם"><input className="input" value={m.name} onChange={(e) => setMore((xs) => xs.map((x) => (x.id === m.id ? { ...x, name: e.target.value } : x)))} /></L>
                     <L label="תפקיד"><input className="input" value={m.role} onChange={(e) => setMore((xs) => xs.map((x) => (x.id === m.id ? { ...x, role: e.target.value } : x)))} /></L>
@@ -229,7 +229,7 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
 
             {ackWarn && warnings.length > 0 && (
               <div className="cform__warn" role="alert">
-                <CircleAlert size={18} aria-hidden="true" />
+                <CircleAlert size={16} aria-hidden="true" />
                 <div>
                   <b>יכול להיות שהלקוח כבר קיים:</b>
                   <ul>

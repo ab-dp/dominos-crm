@@ -95,7 +95,7 @@ export function LeadForm({ onClose, leads, editing, initialName = '' }: { onClos
         <Dialog.Content className="cform lform" dir="rtl" aria-describedby={undefined}>
           <div className="cform__head">
             <Dialog.Title className="udialog__title">{editing ? `עריכת ${editing.name}` : 'ליד חדש'}</Dialog.Title>
-            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
+            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>
           </div>
 
           <form className="cform__body" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
@@ -151,7 +151,7 @@ export function LeadForm({ onClose, leads, editing, initialName = '' }: { onClos
                     <L label="מייל"><input className="input input--ltr" type="email" value={c.email} onChange={(e) => setContact(i, { email: e.target.value })} {...inv(`email${i}`)} />{err(`email${i}`)}</L>
                   </div>
                   <div className="lform__contact-foot">
-                    <button type="button" className={`chip ${c.decider ? 'is-on' : ''}`} aria-pressed={c.decider} onClick={() => setContact(i, { decider: !c.decider })}><Star size={13} aria-hidden="true" /> מקבל החלטות</button>
+                    <button type="button" className={`chip ${c.decider ? 'is-on' : ''}`} aria-pressed={c.decider} onClick={() => setContact(i, { decider: !c.decider })}><Star size={14} aria-hidden="true" /> מקבל החלטות</button>
                     {contacts.length > 1 && <button type="button" className="link lform__remove" onClick={() => setContacts((cs) => cs.filter((_, j) => j !== i))}><Trash2 size={14} aria-hidden="true" /> הסר</button>}
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export function LeadForm({ onClose, leads, editing, initialName = '' }: { onClos
 
             {ackWarn && warns.length > 0 && (
               <div className="cform__warn" role="alert">
-                <CircleAlert size={18} aria-hidden="true" />
+                <CircleAlert size={16} aria-hidden="true" />
                 <div>
                   <b>יכול להיות שהעסק כבר קיים:</b>
                   <ul>{warns.map((w) => <li key={w.id}>{w.why}: <button type="button" className="link" onClick={() => open(w)}>{w.name}</button></li>)}</ul>

@@ -53,7 +53,7 @@ export function LeadsPage() {
         </div>
         <dl className="head-stats">
           <div><dt>לידים פתוחים</dt><dd><Ltr>{open.length}</Ltr></dd></div>
-          <div className={due.length ? 'is-alert' : ''}><dt>צעדים להיום</dt><dd><Ltr>{due.length}</Ltr></dd></div>
+          <div><dt>צעדים להיום</dt><dd><Ltr>{due.length}</Ltr></dd></div>
           <div><dt>פוטנציאל בחודש</dt><dd><Ltr>{fmtMoney(potential)}</Ltr></dd></div>
           <div><dt>הפכו ללקוח החודש</dt><dd><Ltr>{wonThisMonth.length}</Ltr></dd></div>
         </dl>
@@ -61,20 +61,20 @@ export function LeadsPage() {
 
       <div className="tablebar">
         <div className="seg" role="group" aria-label="תצוגה">
-          <button className={view === 'board' ? 'is-on' : ''} aria-pressed={view === 'board'} onClick={() => setView('board')}><Kanban size={15} aria-hidden="true" /> לוח</button>
-          <button className={view === 'table' ? 'is-on' : ''} aria-pressed={view === 'table'} onClick={() => setView('table')}><Table2 size={15} aria-hidden="true" /> טבלה</button>
-          <button className={view === 'today' ? 'is-on' : ''} aria-pressed={view === 'today'} onClick={() => setView('today')}><ListChecks size={15} aria-hidden="true" /> המשימות שלי היום</button>
+          <button className={view === 'board' ? 'is-on' : ''} aria-pressed={view === 'board'} onClick={() => setView('board')}><Kanban size={16} aria-hidden="true" /> לוח</button>
+          <button className={view === 'table' ? 'is-on' : ''} aria-pressed={view === 'table'} onClick={() => setView('table')}><Table2 size={16} aria-hidden="true" /> טבלה</button>
+          <button className={view === 'today' ? 'is-on' : ''} aria-pressed={view === 'today'} onClick={() => setView('today')}><ListChecks size={16} aria-hidden="true" /> המשימות שלי היום</button>
         </div>
         <div className="page__head-end">
-          <Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>ליד חדש</Button>
+          <Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>ליד חדש</Button>
         </div>
       </div>
 
-      {error ? <div className="card"><EmptyState icon={<Target size={24} />} title="לא ניתן לטעון לידים">{error}. ודא שכללי האבטחה פורסמו.</EmptyState></div>
+      {error ? <div className="card"><EmptyState icon={<Target size={20} />} title="לא ניתן לטעון לידים">{error}. ודא שכללי האבטחה פורסמו.</EmptyState></div>
         : loading ? <div className="card loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={40} />)}</div>
         : items.length === 0 ? (
           <div className="card">
-            <EmptyState icon={<Target size={24} />} title="עוד אין לידים" action={<Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>ליד חדש</Button>}>
+            <EmptyState icon={<Target size={20} />} title="עוד אין לידים" action={<Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>ליד חדש</Button>}>
               כל עסק שאנחנו רוצים לצרף נכנס כאן: מי איש הקשר, מה הפוטנציאל, ומה הצעד הבא.
             </EmptyState>
           </div>
@@ -98,7 +98,7 @@ export function StepLine({ lead, today }: { lead: Lead; today: string }) {
   const when = s.due < today ? <>באיחור · <Ltr>{fmtDate(s.due)}</Ltr></> : s.due === today ? 'היום' : <Ltr>{fmtDate(s.due)}</Ltr>;
   return (
     <span className={`lstepline lstepline--${tone}`}>
-      <CalendarClock size={13} aria-hidden="true" />
+      <CalendarClock size={14} aria-hidden="true" />
       <span className="lstepline__text">{s.text}</span>
       <span className="lstepline__when">{when}</span>
     </span>
@@ -159,8 +159,8 @@ function Board({ leads, today, onMove, onOpen }: { leads: Lead[]; today: string;
         );
       })}
       <div className="lboard__ends">
-        <div className={`lend lend--won ${over === 'won' ? 'is-over' : ''}`} {...zone('won')}><UserCheck size={18} aria-hidden="true" /> לקוח פעיל<small>גרירה לכאן פותחת "הפיכה ללקוח"</small></div>
-        <div className={`lend lend--lost ${over === 'lost' ? 'is-over' : ''}`} {...zone('lost')}><XCircle size={18} aria-hidden="true" /> לא רלוונטי<small>עם סיבה</small></div>
+        <div className={`lend lend--won ${over === 'won' ? 'is-over' : ''}`} {...zone('won')}><UserCheck size={16} aria-hidden="true" /> לקוח פעיל<small>גרירה לכאן פותחת "הפיכה ללקוח"</small></div>
+        <div className={`lend lend--lost ${over === 'lost' ? 'is-over' : ''}`} {...zone('lost')}><XCircle size={16} aria-hidden="true" /> לא רלוונטי<small>עם סיבה</small></div>
       </div>
     </div>
   );
@@ -237,7 +237,7 @@ function LeadTable({ leads, today, onOpen }: { leads: Lead[]; today: string; onO
           {q && <button onClick={() => setQ('')} aria-label="נקה חיפוש"><X size={14} /></button>}
         </label>
       </div>
-      {rows.length === 0 ? <div className="card"><EmptyState icon={<Target size={24} />} title="אין לידים בתצוגה הזו" /></div> : (
+      {rows.length === 0 ? <div className="card"><EmptyState icon={<Target size={20} />} title="אין לידים בתצוגה הזו" /></div> : (
         <div className="otable-wrap">
           <table className="otable otable--dense ltable">
             <caption className="sr-only">לקוחות פוטנציאליים</caption>
@@ -315,7 +315,7 @@ function TodayList({ leads, today, meUid, onOpen }: { leads: Lead[]; today: stri
         </div>
       </div>
       <div className="card__body">
-        {list.length === 0 ? <p className="calm"><CircleCheckBig size={18} aria-hidden="true" /> אין צעדים להיום. כל הלידים מתוזמנים לימים הבאים</p> : <>
+        {list.length === 0 ? <p className="calm"><CircleCheckBig size={16} aria-hidden="true" /> אין צעדים להיום. כל הלידים מתוזמנים לימים הבאים</p> : <>
           {group('באיחור', 'red', late)}
           {group('היום', 'brand', now)}
         </>}

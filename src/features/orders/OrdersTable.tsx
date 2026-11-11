@@ -1,14 +1,15 @@
 /* הטבלה המרכזית (אפיון 6.2). היום · מחר · עתידיות · ארכיון הם אותה טבלה עם מסנן שונה.
    חיצים מעבר בין שורות, Enter פתיחה. כל פעולה נפוצה – ישירות בשורה. */
 import { Fragment, memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { ClipboardList, Phone as PhoneIcon } from 'lucide-react';
+import * as Dropdown from '@radix-ui/react-dropdown-menu';
+import { ClipboardList, Ellipsis, Phone as PhoneIcon } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { EmptyState, HealthBadge, Missing } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, weekday } from '../../lib/format';
 import { METHOD_LABEL } from '../../data/types';
 import { FixButton } from './OrderActions';
-import { NextStep, StageTrack } from './OrderTimeline';
+import { NextStep, StageTrack, nextStepLabel } from './OrderTimeline';
 import './OrdersTable.css';
 
 const PAGE = 150;
@@ -50,7 +51,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
   const toggle = useCallback((id: number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]), []);
 
   if (rows.length === 0) {
-    return <EmptyState icon={<ClipboardList size={24} />} title={emptyText}>אפשר ליצור הזמנה חדשה מהכפתור למעלה או בלחיצה על <kbd className="kbd">N</kbd></EmptyState>;
+    return <EmptyState icon={<ClipboardList size={20} />} title={emptyText}>אפשר ליצור הזמנה חדשה מהכפתור למעלה או בלחיצה על <kbd className="kbd">N</kbd></EmptyState>;
   }
 
   const allOn = selected.length === rows.length;
@@ -115,11 +116,32 @@ function DayRow({ date, rows }: { date: string; rows: OrderView[] }) {
   );
 }
 
+/* תפריט "⋯" בשורה: הצעד הבא (כשהכפתור בשורה תפוס בתיקון), פתיחת ההזמנה, וביטול – רחוק מהפעולה הראשית */
+function RowMenu({ o, next, onOpen, onCancel }: { o: OrderView; next: string | null; onOpen: () => void; onCancel: () => void }) {
+  const open = o.status !== 'cancelled' && o.status !== 'delivered' && o.status !== 'partial';
+  return (
+    <Dropdown.Root dir="rtl">
+      <Dropdown.Trigger asChild>
+        <button className="row-more" aria-label={`פעולות נוספות – הזמנה ${o.id}`}><Ellipsis size={16} aria-hidden="true" /></button>
+      </Dropdown.Trigger>
+      <Dropdown.Portal>
+        <Dropdown.Content className="menu" align="end" sideOffset={4} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+          {next && <Dropdown.Item className="menu__item" onSelect={onOpen}>{next} – בכרטיס ההזמנה</Dropdown.Item>}
+          <Dropdown.Item className="menu__item" onSelect={onOpen}>פתח את ההזמנה</Dropdown.Item>
+          {open && <Dropdown.Separator className="menu__sep" />}
+          {open && <Dropdown.Item className="menu__item menu__item--danger" onSelect={onCancel}>ביטול הזמנה</Dropdown.Item>}
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
+  );
+}
+
 /* שורה ממוזכרת: מתרנדרת מחדש רק כשההזמנה שלה, הסימון או ההבהוב משתנים */
 const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }: { o: OrderView; showDate: boolean; flash: boolean; selected: boolean; toggle: (id: number) => void }) {
   const panel = usePanel();
   const { requestStatus } = useStore();
   const top = o.issues[0];
+  const fix = !!top && !STEP_ACTIONS.includes(top.action) && (o.health === 'critical' || o.health === 'urgent' || top.action === 'po');
   const onRowKey = (e: KeyboardEvent<HTMLTableRowElement>) => {
     if (e.target !== e.currentTarget) return;
     const tr = e.currentTarget;
@@ -153,7 +175,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       </td>
       <td>
         <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}</span>
-        {o.branchPhone && <span className="orow__sub"><PhoneIcon size={12} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>}
+        {o.branchPhone && <span className="orow__sub"><PhoneIcon size={14} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>}
       </td>
       <td className="num">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</td>
       <td className="orow__marks c-marks"><StageTrack o={o} /></td>
@@ -161,12 +183,9 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       <td>{o.handler}</td>
       <td className="c-act" onClick={(e) => e.stopPropagation()}>
         <span className="c-act__in">
-          {/* בעיה שהפתרון שלה הוא לא הצעד הבא בציר – כפתור משלה */}
-          {top && !STEP_ACTIONS.includes(top.action) && (o.health === 'critical' || o.health === 'urgent' || top.action === 'po') && <FixButton key={top.rule} o={o} issue={top} onOpen={() => panel.open(o.id)} />}
-          <NextStep o={o} />
-          {o.status !== 'cancelled' && o.status !== 'delivered' && o.status !== 'partial' && (
-            <button className="row-act row-act--danger" onClick={() => requestStatus(o, 'cancelled')} aria-label={`ביטול הזמנה ${o.id}`}>ביטול</button>
-          )}
+          {/* פעולה ראשית אחת בשורה: תיקון הבעיה (כשהפתרון שלה הוא לא הצעד הבא בציר), אחרת הצעד הבא. השאר בתפריט "⋯" */}
+          {fix ? <FixButton key={top.rule} o={o} issue={top} onOpen={() => panel.open(o.id)} /> : <NextStep o={o} />}
+          <RowMenu o={o} next={fix ? nextStepLabel(o) : null} onOpen={() => panel.open(o.id)} onCancel={() => requestStatus(o, 'cancelled')} />
         </span>
       </td>
     </tr>

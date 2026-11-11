@@ -54,7 +54,7 @@ function ChangeForm({ onClose }: { onClose: () => void }) {
         <Dialog.Content className="udialog sdialog chdialog" dir="rtl" aria-describedby="chdialog-sub" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}>
           <div className="sdialog__head">
             <Dialog.Title className="udialog__title">ההזמנה כבר אושרה – מה צריך לעדכן?</Dialog.Title>
-            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור בלי לשמור"><X size={18} /></button></Dialog.Close>
+            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור בלי לשמור"><X size={16} /></button></Dialog.Close>
           </div>
           <p id="chdialog-sub" className="sdialog__sub">הזמנה <Ltr>{o.id}</Ltr> · {o.customerName}</p>
 

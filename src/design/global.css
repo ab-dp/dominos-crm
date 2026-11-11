@@ -42,3 +42,6 @@ h1, h2, h3, h4 { letter-spacing: -0.005em; }
 .boot .dpz-tile { animation: boot-pulse 1.2s ease-in-out infinite; }
 @keyframes boot-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.94); opacity: 0.85; } }
 @media (prefers-reduced-motion: reduce) { .boot .dpz-tile { animation: none; } }
+
+/* <b> ו-<strong> לפי הסולם (ברירת המחדל של הדפדפן היא 700) */
+b, strong { font-weight: var(--weight-strong); }

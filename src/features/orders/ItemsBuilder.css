@@ -1,53 +1,53 @@
 /* בונה הפריטים: מקור מחיר, לשוניות קטגוריה, טבלת שורות ותצוגה בתיק ההזמנה */
-.ib-source { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--gray-50); box-shadow: inset 0 0 0 1px var(--gray-100); }
-.ib-source__pick { display: inline-flex; align-items: center; gap: 8px; }
-.ib-source__label { font-size: var(--text-label); font-weight: 600; color: var(--gray-600); }
+.ib-source { display: flex; align-items: center; gap: var(--space-3) var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--gray-50); box-shadow: inset 0 0 0 1px var(--gray-100); }
+.ib-source__pick { display: inline-flex; align-items: center; gap: var(--space-2); }
+.ib-source__label { font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
 .ib-source__pick select { width: auto; min-width: 220px; }
 .ib-source__note { font-size: var(--text-label); color: var(--urgent-fg); }
 .ib-source__mode { font-size: var(--text-label); color: var(--gray-600); }
 .ib-source__cond { flex-basis: 100%; font-size: var(--text-label); color: var(--missing-fg); }
 
 /* לשוניות */
-.ib-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-.ib-tab { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-table); font-weight: 600; color: var(--gray-900); cursor: pointer; }
+.ib-tabs { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.ib-tab { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--control-md); padding: 0 var(--space-4); border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-table); font-weight: 500; color: var(--gray-900); cursor: pointer; }
 .ib-tab:hover { border-color: var(--brand-600); color: var(--brand-800); }
 .ib-tab.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); box-shadow: inset 0 0 0 1px var(--brand-600); }
-.ib-tab__n { min-width: 20px; padding: 0 6px; border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-family: var(--font-mono); font-size: var(--text-micro); line-height: 20px; text-align: center; }
+.ib-tab__n { min-width: 20px; padding: 0 var(--space-2); border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-family: var(--font-mono); font-size: var(--text-micro); line-height: 20px; text-align: center; }
 .ib-tab.is-on .ib-tab__n { background: var(--brand-600); color: var(--white); }
-.ib-tab.is-bad { border-color: var(--danger-fg); }
-.ib-tab.is-bad::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--danger-fg); }
+.ib-tab.is-bad { border-color: var(--missing-edge); }
+.ib-tab.is-bad::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--missing-edge); }
 
 /* הטבלה */
-.ib-table { border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 6px 8px 8px; background: var(--white); }
+.ib-table { border: 1px solid var(--gray-100); border-radius: var(--radius); padding: var(--space-2) var(--space-2) var(--space-2); background: var(--white); }
 /* סדר העמודות מימין לשמאל: סוג / מוצר · תוספות · חלוקה · מחיר · כמות (הכי שמאל) · הסרה */
-.ib-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 104px) 64px 36px; gap: 6px; align-items: center; }
+.ib-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 104px) 64px 36px; gap: var(--space-2); align-items: center; }
 .ib-table--pizza .ib-r { grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr) 112px minmax(0, 96px) 64px 36px; }
-.ib-r--head { padding: 2px 0 6px; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
+.ib-r--head { padding: 2px 0 var(--space-2); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 .ib-r--head small { font-weight: 500; color: var(--gray-500); }
-.ib-rgroup { padding: 3px 0; }
+.ib-rgroup { padding: var(--space-1) 0; }
 .ib-rgroup + .ib-rgroup { border-top: 1px dashed var(--gray-100); }
 .ib-r .input { width: 100%; min-width: 0; }
 .ib-r.is-draft .input { background: var(--gray-50); }
 .ib-r.is-draft .input:focus { background: var(--white); }
 .ib .is-invalid { border-color: var(--danger-fg); box-shadow: 0 0 0 1px var(--danger-fg); background: var(--danger-bg); }
-.ib-r__name { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.ib-r__old { flex: none; padding: 2px 8px; border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 600; white-space: nowrap; }
-.ib-r__parts { display: grid; gap: 4px; }
+.ib-r__name { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.ib-r__old { flex: none; padding: 2px var(--space-2); border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
+.ib-r__parts { display: grid; gap: var(--space-1); }
 .ib-r__parts--2 { grid-template-columns: 1fr 1fr; }
 .ib-r__parts--4 { grid-template-columns: 1fr 1fr; }
-.ib-split { display: flex; height: 30px; border: 1px solid var(--gray-300); border-radius: var(--radius); overflow: hidden; }
+.ib-split { display: flex; height: var(--control-sm); border: 1px solid var(--gray-300); border-radius: var(--radius); overflow: hidden; }
 .ib-split button { flex: 1; border: 0; background: var(--white); font: inherit; font-size: var(--text-label); color: var(--gray-700); cursor: pointer; }
 .ib-split button + button { border-inline-start: 1px solid var(--gray-200); }
-.ib-split button.is-on { background: var(--brand-50); color: var(--brand-800); font-weight: 700; }
+.ib-split button.is-on { background: var(--brand-50); color: var(--brand-800); font-weight: 500; }
 .ib-r__note { margin: 2px 70px 0 0; font-size: var(--text-label); color: var(--gray-600); }
-.ib-sug { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin: 4px 70px 2px 0; font-size: var(--text-label); color: var(--gray-600); }
-.ib-sug__chip { height: 26px; padding: 0 10px; border: 1px solid var(--gray-200); border-radius: var(--radius-panel); background: var(--gray-50); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
+.ib-sug { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; margin: var(--space-1) 70px 2px 0; font-size: var(--text-label); color: var(--gray-600); }
+.ib-sug__chip { height: var(--control-sm); padding: 0 var(--space-3); border: 1px solid var(--gray-200); border-radius: var(--radius-panel); background: var(--gray-50); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
 .ib-sug__chip:hover { border-color: var(--brand-600); color: var(--brand-800); }
-.ib-sug__chip.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); font-weight: 600; }
-.ib-addrow { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; height: 28px; padding: 0 10px; border: 1px dashed var(--gray-300); border-radius: var(--radius-panel); background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 600; color: var(--brand-700); cursor: pointer; }
+.ib-sug__chip.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); font-weight: 500; }
+.ib-addrow { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); height: 28px; padding: 0 var(--space-3); border: 1px dashed var(--gray-300); border-radius: var(--radius-panel); background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--brand-700); cursor: pointer; }
 .ib-addrow:hover { border-color: var(--brand-600); background: var(--brand-50); }
-.ib-err { margin: 6px 0 0; font-size: var(--text-label); font-weight: 600; color: var(--danger-fg); }
-.ib-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin: 6px 2px 10px; font-size: var(--text-label); color: var(--gray-600); }
+.ib-err { margin: var(--space-2) 0 0; font-size: var(--text-label); font-weight: 500; color: var(--danger-fg); }
+.ib-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; margin: var(--space-2) 2px var(--space-3); font-size: var(--text-label); color: var(--gray-600); }
 .ib-foot b { color: var(--gray-900); font-size: var(--text-table); }
 
 @media (max-width: 640px) {
@@ -63,45 +63,45 @@
   .ib-table--pizza .ib-r > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
   .ib-table--pizza .ib-r > :nth-child(3) { grid-column: 1 / 3; grid-row: 3; }
   .ib-table--pizza .ib-r > :nth-child(6) { grid-column: 3; grid-row: 3; justify-self: end; }
-  .ib-rgroup { padding: 8px 0; }
+  .ib-rgroup { padding: var(--space-2) 0; }
   .ib-r__note, .ib-sug { margin-inline-start: 0; margin-right: 0; }
 }
 
 /* שורת הסיכום */
-.ib-sum { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-50); font-size: var(--text-table); }
+.ib-sum { display: flex; align-items: center; gap: var(--space-2) var(--space-4); flex-wrap: wrap; padding: var(--space-3) var(--space-3); border-radius: var(--radius); background: var(--gray-50); font-size: var(--text-table); }
 .ib-sum b { font-family: var(--font-mono); }
-.ib-sum__fee { display: inline-flex; align-items: center; gap: 6px; color: var(--gray-600); }
+.ib-sum__fee { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--gray-600); }
 .ib-sum__fee input { width: 80px; }
 .ib-sum__total { margin-inline-start: auto; font-weight: 600; }
 .ib-sum__total b { font-size: var(--text-body); }
-.ib-sum__override { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ib-sum__override { display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .ib-sum__override input { width: 100px; }
 .ib-sum.is-manual { box-shadow: inset 0 0 0 1px var(--urgent-edge); }
 
 /* תצוגה בתיק ההזמנה */
-.iview { display: grid; gap: 12px; margin-bottom: 10px; }
-.iview__cat { padding: 10px 12px; border: 1px solid var(--gray-100); border-radius: var(--radius); }
-.iview__head { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: var(--text-body); font-weight: 700; color: var(--gray-900); }
-.iview__n { min-width: 22px; padding: 0 7px; border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-800); font-family: var(--font-mono); font-size: var(--text-label); line-height: 22px; text-align: center; }
-.iview__list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: var(--text-table); line-height: 1.5; }
+.iview { display: grid; gap: var(--space-3); margin-bottom: var(--space-3); }
+.iview__cat { padding: var(--space-3) var(--space-3); border: 1px solid var(--gray-100); border-radius: var(--radius); }
+.iview__head { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--text-body); font-weight: 600; color: var(--gray-900); }
+.iview__n { min-width: 22px; padding: 0 var(--space-2); border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-800); font-family: var(--font-mono); font-size: var(--text-label); line-height: 22px; text-align: center; }
+.iview__list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-2); font-size: var(--text-table); line-height: 1.5; }
 .iview__list > li > b bdi { font-family: var(--font-mono); }
-.iview__rows { margin: 2px 0 0; padding: 0 18px 0 0; list-style: disc; color: var(--gray-800); }
-.iview__rows bdi { font-family: var(--font-mono); font-weight: 700; }
-.iview__prices summary { cursor: pointer; font-size: var(--text-label); font-weight: 600; color: var(--brand-700); }
-.iview__prices .items { margin-top: 6px; }
+.iview__rows { margin: 2px 0 0; padding: 0 var(--space-4) 0 0; list-style: disc; color: var(--gray-800); }
+.iview__rows bdi { font-family: var(--font-mono); font-weight: 500; }
+.iview__prices summary { cursor: pointer; font-size: var(--text-label); font-weight: 500; color: var(--brand-700); }
+.iview__prices .items { margin-top: var(--space-2); }
 
 /* ---------- פיצות לפי סוג: כרטיס לכל סוג, שורה לכל תוספת ---------- */
-.pgs { display: grid; gap: 8px; }
-.pg { border: 1px solid var(--gray-100); border-radius: var(--radius); background: var(--white); padding: 8px 10px 8px; }
+.pgs { display: grid; gap: var(--space-2); }
+.pg { border: 1px solid var(--gray-100); border-radius: var(--radius); background: var(--white); padding: var(--space-2) var(--space-3) var(--space-2); }
 .pg:focus-within { border-color: var(--brand-100); box-shadow: 0 0 0 1px var(--brand-100); }
-.pg__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 6px; border-bottom: 1px solid var(--gray-100); margin-bottom: 4px; }
-.pg__name { flex: 1 1 200px; max-width: 280px; font-weight: 700; font-size: var(--text-table); }
-.pg__gprice { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-label); color: var(--gray-600); }
+.pg__head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding-bottom: var(--space-2); border-bottom: 1px solid var(--gray-100); margin-bottom: var(--space-1); }
+.pg__name { flex: 1 1 200px; max-width: 280px; font-weight: 600; font-size: var(--text-table); }
+.pg__gprice { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-label); color: var(--gray-600); }
 .pg__gprice .input { width: 84px; }
-.pg__count { margin-inline-start: auto; font-size: var(--text-label); font-weight: 600; color: var(--brand-800); white-space: nowrap; }
-.pg__sug { margin: 4px 0 2px; }
-.pg__cols, .pg__r { display: grid; grid-template-columns: minmax(0, 1fr) 112px 92px 64px 32px; gap: 6px; align-items: center; }
-.pg__cols { padding: 2px 0 2px; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
+.pg__count { margin-inline-start: auto; font-size: var(--text-label); font-weight: 500; color: var(--brand-800); white-space: nowrap; }
+.pg__sug { margin: var(--space-1) 0 2px; }
+.pg__cols, .pg__r { display: grid; grid-template-columns: minmax(0, 1fr) 112px 92px 64px 32px; gap: var(--space-2); align-items: center; }
+.pg__cols { padding: 2px 0 2px; font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 .pg__cols small { font-weight: 500; color: var(--gray-500); }
 .pg__row { padding: 2px 0; }
 .pg__r .input { width: 100%; min-width: 0; }
@@ -112,23 +112,23 @@
 .pg__reset { position: absolute; inset-inline-end: 4px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 18px; height: 18px; border: 0; border-radius: 50%; background: var(--white); color: var(--gray-600); cursor: pointer; }
 .pg__reset:hover { color: var(--danger-fg); }
 .pg .ib-sug, .pg .ib-r__note { margin-inline-start: 0; margin-right: 0; }
-.pg__addtop { margin-top: 4px; }
-.pg--closed { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; font: inherit; text-align: start; cursor: pointer; }
+.pg__addtop { margin-top: var(--space-1); }
+.pg--closed { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-3) var(--space-3); font: inherit; text-align: start; cursor: pointer; }
 .pg--closed:hover { border-color: var(--brand-600); }
 .pg--closed b { flex: none; font-size: var(--text-table); }
-.pg--closed.is-bad { border-color: var(--danger-fg); }
+.pg--closed.is-bad { border-color: var(--missing-edge); }
 .pg__sum { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-label); color: var(--gray-600); }
 .pg__price { font: 500 var(--text-label) var(--font-mono); color: var(--gray-600); }
 .pg--closed .pg__count { margin-inline-start: 0; }
-.pgs__foot { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
-.pgs__quick { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: var(--text-label); color: var(--gray-600); }
+.pgs__foot { display: flex; align-items: center; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
+.pgs__quick { display: inline-flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; font-size: var(--text-label); color: var(--gray-600); }
 .pgs__total { margin-inline-start: auto; font-size: var(--text-table); }
 @media (max-width: 640px) {
   .pg__cols { display: none; }
   /* בטלפון: תוספות בשורה מלאה, מתחת חלוקה · מחיר · כמות · הסרה */
   .pg__r { grid-template-columns: minmax(0, 1fr) 80px 56px 32px; }
   .pg__r > :first-child { grid-column: 1 / -1; }
-  .pg__row { padding: 6px 0; }
+  .pg__row { padding: var(--space-2) 0; }
   .pg__row + .pg__row { border-top: 1px dashed var(--gray-100); }
   .pg__name { max-width: none; }
 }
@@ -139,7 +139,7 @@
 
 /* ---------- השלב הבא בהכנסת פריטים – מודגש בכחול של הפעולה, רק כל עוד הוא באמת הצעד הבא ---------- */
 /* פיצות בלי אף סוג: "+ סוג פיצה" הוא הכפתור הראשי. אחרי שנוסף סוג – חוזר להיות כפתור רגיל */
-.pgs:not(:has(.pg)) .pgs__foot > .btn { height: 36px; padding: 0 16px; background: var(--brand-600); border-color: var(--brand-600); color: var(--white); font-size: var(--text-table); }
+.pgs:not(:has(.pg)) .pgs__foot > .btn { height: 36px; padding: 0 var(--space-4); background: var(--brand-600); border-color: var(--brand-600); color: var(--white); font-size: var(--text-table); }
 .pgs:not(:has(.pg)) .pgs__foot > .btn:hover:not(:disabled) { background: var(--brand-700); border-color: var(--brand-700); }
 /* הקיצורים – אופציה, לא חובה: מסגרת מקווקוות ושקטה */
 .pgs__quick .ib-sug__chip { background: transparent; border-style: dashed; color: var(--gray-700); }

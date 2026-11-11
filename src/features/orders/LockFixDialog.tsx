@@ -32,8 +32,8 @@ export function LockFixDialog() {
         <Dialog.Content className="udialog sdialog" dir="rtl" aria-describedby="lfix-sub" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}>
           <form onSubmit={submit}>
             <div className="sdialog__head">
-              <Dialog.Title className="udialog__title"><Lock size={17} aria-hidden="true" style={{ verticalAlign: -2 }} /> תיקון בחודש סגור</Dialog.Title>
-              <Dialog.Close asChild><button type="button" className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
+              <Dialog.Title className="udialog__title"><Lock size={16} aria-hidden="true" style={{ verticalAlign: -2 }} /> תיקון בחודש סגור</Dialog.Title>
+              <Dialog.Close asChild><button type="button" className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>
             </div>
             <p id="lfix-sub" className="sdialog__sub">
               {lockFix.ids.length === 1 ? <>הזמנה <Ltr>{lockFix.ids[0]}</Ltr></> : <><Ltr>{lockFix.ids.length}</Ltr> הזמנות</>} שייכת לחודש <Ltr>{lockFix.months.map(monthLabel).join(', ')}</Ltr>, שכבר נסגר.

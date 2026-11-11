@@ -65,7 +65,6 @@ function Pop({ trigger, title, children, open, setOpen, align = 'start' }: { tri
         <Popover.Content className="pop" aria-label={title} sideOffset={6} align={align} dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <p className="pop__title">{title}</p>
           {children}
-          <Popover.Arrow className="pop__arrow" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
@@ -73,6 +72,16 @@ function Pop({ trigger, title, children, open, setOpen, align = 'start' }: { tri
 }
 
 /* הצעד הבא – כפתור אחד שמתאים לשלב */
+/* שם הצעד הבא בציר – לתפריט "⋯" בשורה, כשהכפתור בשורה תפוס בפעולת תיקון */
+export function nextStepLabel(o: OrderView): string | null {
+  const stage = stageOf(o);
+  if (stage === 'pending_customer') return 'הלקוח אישר';
+  if (stage === 'pending_branch') return 'סמן עודכן בתפעול';
+  if (stage === 'approved') return 'הקלד ל-Q';
+  if (stage === 'in_q') return 'סמן סופקה';
+  return null;
+}
+
 export function NextStep({ o, size = 'sm' }: { o: OrderView; size?: 'sm' | 'md' }) {
   const { update } = useStore();
   const [open, setOpen] = useState(false);

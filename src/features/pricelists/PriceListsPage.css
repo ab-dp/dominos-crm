@@ -1,50 +1,50 @@
-.pl-new { display: grid; gap: 8px; margin-bottom: 6px; }
-.pl-new__actions { display: flex; gap: 6px; }
-.pl-item { height: auto; min-height: 48px; flex-wrap: wrap; padding: 8px 12px; }
+.pl-new { display: grid; gap: var(--space-2); margin-bottom: var(--space-2); }
+.pl-new__actions { display: flex; gap: var(--space-2); }
+.pl-item { height: auto; min-height: 48px; flex-wrap: wrap; padding: var(--space-2) var(--space-3); }
 .pl-item .citem__count { flex-basis: 100%; margin: 0; text-align: start; }
 .pl-rename { flex: 1; max-width: 360px; }
 .pl-rename .input { flex: 1; }
 .pl-nameerr { flex-basis: 100%; }
-.pl-head-actions { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pl-head-actions { display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .pl-delete { color: var(--danger-fg); }
-.pl-state { display: inline-flex; align-items: center; gap: 4px; min-width: 60px; font-size: var(--text-label); color: var(--gray-600); }
+.pl-state { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 60px; font-size: var(--text-label); color: var(--gray-600); }
 .pl-state--saved { color: var(--ok-fg); }
-.pl-state--error { color: var(--danger-fg); font-weight: 600; }
+.pl-state--error { color: var(--danger-fg); font-weight: 500; }
 
 /* תנאי המחירון */
-.pl-terms { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 6px 12px; padding: 12px 16px; border-bottom: 1px solid var(--gray-100); background: var(--gray-50); }
-.pl-terms label { display: grid; gap: 4px; }
+.pl-terms { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--gray-100); background: var(--gray-50); }
+.pl-terms label { display: grid; gap: var(--space-1); }
 .pl-terms__hint { grid-column: 1 / -1; margin: 0; font-size: var(--text-micro); color: var(--gray-600); }
 
 /* טבלת המוצרים – כמו בבונה הפריטים של ההזמנה */
-.pl-body { padding: 12px 16px 4px; }
-.pl-tab--dlv { margin-inline-start: 10px; }
-.plt-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 120px) minmax(0, 120px) 36px; gap: 6px; align-items: center; }
-.plt-r--head { padding: 2px 0 6px; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
+.pl-body { padding: var(--space-3) var(--space-4) var(--space-1); }
+.pl-tab--dlv { margin-inline-start: var(--space-3); }
+.plt-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 120px) minmax(0, 120px) 36px; gap: var(--space-2); align-items: center; }
+.plt-r--head { padding: 2px 0 var(--space-2); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 .plt-r--head small { display: block; font-weight: 500; color: var(--gray-600); }
-.plt-g { padding: 3px 0; }
+.plt-g { padding: var(--space-1) 0; }
 .plt-g + .plt-g { border-top: 1px dashed var(--gray-100); }
 .plt-r .input { width: 100%; min-width: 0; }
 .plt-r.is-draft .input { background: var(--gray-50); }
 .plt-r.is-draft .input:focus { background: var(--white); }
 .plt .is-invalid { border-color: var(--danger-fg); box-shadow: 0 0 0 1px var(--danger-fg); background: var(--danger-bg); }
-.plt-err { margin: 4px 0 2px; }
+.plt-err { margin: var(--space-1) 0 2px; }
 
 /* לקוחות משויכים */
-.pl-customers { padding: 14px 16px 16px; border-top: 1px solid var(--gray-100); }
-.pl-customers__title { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: var(--text-table); font-weight: 600; }
+.pl-customers { padding: var(--space-4) var(--space-4) var(--space-4); border-top: 1px solid var(--gray-100); }
+.pl-customers__title { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--text-table); font-weight: 600; }
 .pl-customers__add { margin-inline-start: auto; }
-.pl-customers__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pl-customers__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .pl-cchip { display: inline-flex; align-items: center; height: 28px; border-radius: var(--radius-panel); background: var(--gray-100); font-size: var(--text-label); }
-.pl-cchip a { padding: 0 4px 0 10px; color: var(--gray-900); text-decoration: none; }
+.pl-cchip a { padding: 0 var(--space-1) 0 var(--space-3); color: var(--gray-900); text-decoration: none; }
 .pl-cchip a:hover { color: var(--brand-800); text-decoration: underline; }
-.pl-cchip button { display: grid; place-items: center; width: 24px; height: 24px; margin-inline-end: 2px; border: 0; border-radius: 50%; background: transparent; color: var(--gray-600); cursor: pointer; }
+.pl-cchip button { display: grid; place-items: center; width: 24px; height: var(--control-sm); margin-inline-end: 2px; border: 0; border-radius: 50%; background: transparent; color: var(--gray-600); cursor: pointer; }
 .pl-cchip button:hover { background: var(--white); color: var(--danger-fg); }
 .pl-customers .muted { margin: 0; font-size: var(--text-label); }
 
 .pl-assign__search { width: 100%; }
-.pl-assign { list-style: none; margin: 0; padding: 4px; max-height: 320px; overflow-y: auto; border: 1px solid var(--gray-100); border-radius: var(--radius); display: grid; gap: 2px; }
-.pl-assign__row { display: flex; width: 100%; padding: 6px 8px; border-radius: var(--radius); color: var(--gray-900); }
+.pl-assign { list-style: none; margin: 0; padding: var(--space-1); max-height: 320px; overflow-y: auto; border: 1px solid var(--gray-100); border-radius: var(--radius); display: grid; gap: 2px; }
+.pl-assign__row { display: flex; width: 100%; padding: var(--space-2) var(--space-2); border-radius: var(--radius); color: var(--gray-900); }
 .pl-assign__row:hover { background: var(--gray-50); }
 .pl-assign__name { font-weight: 500; }
 .pl-assign__row .muted { margin-inline-start: auto; font-size: var(--text-micro); }
@@ -57,5 +57,5 @@
   .plt-r > :first-child { grid-column: 1 / -1; }
   .plt-r--head > :first-child { display: none; }
   .plt-r--head small { display: none; }
-  .plt-g { padding: 8px 0; }
+  .plt-g { padding: var(--space-2) 0; }
 }

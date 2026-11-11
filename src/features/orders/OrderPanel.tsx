@@ -115,14 +115,14 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           )}
           <span className="panel__spacer" />
           <Tip label={full ? 'חזרה לפאנל' : 'מסך מלא'}>
-            <button className="icon-btn panel__full-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
+            <button className="icon-btn panel__full-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
           </Tip>
           <Dialog.Close asChild><button className="icon-btn panel__close" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
         </div>
         <AnimatePresence initial={false}>
           {remoteNote && (
             <motion.div className="remote-note" role="status" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-              <RefreshCw size={15} aria-hidden="true" />
+              <RefreshCw size={16} aria-hidden="true" />
               <span><b>{remoteNote.by}</b> עדכן עכשיו: {remoteNote.fields.join(', ')}. הערכים בתיק מעודכנים.</span>
               <button className="icon-btn icon-btn--sm" aria-label="סגור הודעה" onClick={() => setRemoteNote(null)}><X size={14} /></button>
             </motion.div>

@@ -1,14 +1,14 @@
-.filter { display: grid; gap: 4px; min-width: min(200px, 100%); flex: 1 1 200px; font-size: var(--text-label); color: var(--gray-600); font-weight: 500; }
+.filter { display: grid; gap: var(--space-1); min-width: min(200px, 100%); flex: 1 1 200px; font-size: var(--text-label); color: var(--gray-600); font-weight: 500; }
 .filter .input { height: 36px; }
-.report-sum { margin-inline-start: auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; font-size: var(--text-table); }
+.report-sum { margin-inline-start: auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3); font-size: var(--text-table); }
 .report-sum b { font-size: var(--text-card-title); }
-.creport__group th { background: var(--gray-25); text-align: start; font-weight: 600; height: 42px; padding: 0 10px; border-bottom: 1px solid var(--gray-100); position: static; font-size: var(--text-table); color: var(--gray-900); }
+.creport__group th { background: var(--gray-25); text-align: start; font-weight: 600; height: 42px; padding: 0 var(--space-3); border-bottom: 1px solid var(--gray-100); position: static; font-size: var(--text-table); color: var(--gray-900); }
 .creport__group th.muted { font-weight: 400; color: var(--gray-600); }
-.creport tfoot th { height: 46px; padding: 0 10px; text-align: start; border-top: 2px solid var(--gray-300); font-size: var(--text-table); }
+.creport tfoot th { height: 46px; padding: 0 var(--space-3); text-align: start; border-top: 2px solid var(--gray-300); font-size: var(--text-table); }
 .creport__note { max-width: 260px; overflow: hidden; text-overflow: ellipsis; color: var(--gray-600); font-size: var(--text-label); }
 .orow.is-found td { background: var(--ok-bg); }
-.gap-tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: var(--radius-tag); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-micro); font-weight: 600; }
-.paytag { padding: 2px 8px; border-radius: var(--radius-tag); font-size: var(--text-label); font-weight: 500; }
+.gap-tag { margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-tag); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 500; }
+.paytag { padding: 2px var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-label); font-weight: 500; }
 .paytag--pending { background: var(--urgent-bg); color: var(--urgent-fg); }
 .paytag--paid { background: var(--ok-bg); color: var(--ok-fg); }
 .paytag--cancelled { background: var(--gray-100); color: var(--gray-600); }

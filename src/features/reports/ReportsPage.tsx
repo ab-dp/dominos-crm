@@ -35,7 +35,7 @@ export function ReportsHub() {
       <div className="rhub">
         {REPORTS.map((r) => (
           <Link key={r.id} to={r.link ?? `/reports/${r.id}`} className="rhub__card">
-            <span className="rhub__icon" aria-hidden="true"><ChartColumn size={18} /></span>
+            <span className="rhub__icon" aria-hidden="true"><ChartColumn size={16} /></span>
             <span className="rhub__text"><b>{r.title}</b><span>{r.desc}</span></span>
           </Link>
         ))}
@@ -72,7 +72,7 @@ export function ReportView() {
   const def = REPORTS.find((r) => r.id === id);
   // דוח שהוסר (קישור ישן) – חוזרים למרכז הדוחות
   if (!def) return <Navigate to="/reports" replace />;
-  if (!def || def.link) return <div className="page"><div className="card"><EmptyState icon={<ChartColumn size={24} />} title="הדוח לא נמצא" action={<Link className="btn btn--primary btn--md" to="/reports"><span className="btn__label">לכל הדוחות</span></Link>} /></div></div>;
+  if (!def || def.link) return <div className="page"><div className="card"><EmptyState icon={<ChartColumn size={20} />} title="הדוח לא נמצא" action={<Link className="btn btn--primary btn--md" to="/reports"><span className="btn__label">לכל הדוחות</span></Link>} /></div></div>;
   return <Report key={def.id} def={def} />;
 }
 
@@ -135,7 +135,7 @@ function Report({ def }: { def: ReportDef }) {
           <p className="page__sub">{def.desc} · <Ltr>{fmtDate(from)}</Ltr> עד <Ltr>{fmtDate(to)}</Ltr></p>
         </div>
         <div className="page__head-end">
-          <Button variant="ghost" size="sm" icon={<RefreshCw size={15} />} onClick={reload} disabled={loading}>רענן</Button>
+          <Button variant="ghost" size="sm" icon={<RefreshCw size={16} />} onClick={reload} disabled={loading}>רענן</Button>
           <Button variant="primary" icon={<Download size={16} />} onClick={exportXlsx} loading={exporting} disabled={loading || !res.rows.length}>ייצוא לאקסל</Button>
         </div>
       </header>
@@ -173,7 +173,7 @@ function Report({ def }: { def: ReportDef }) {
           {handlers.map((h) => <option key={h} value={h}>{h}</option>)}
         </select>
         <input className="input input--sm report__cust" value={cust} onChange={(e) => setCust(e.target.value)} placeholder="לקוח" aria-label="סינון לפי לקוח" />
-        {filtered && <button className="chip is-on" onClick={() => { setCust(''); set({ cluster: null, branch: null, method: null, outcome: null, handler: null }); }}>נקה סינון <X size={13} aria-hidden="true" /></button>}
+        {filtered && <button className="chip is-on" onClick={() => { setCust(''); set({ cluster: null, branch: null, method: null, outcome: null, handler: null }); }}>נקה סינון <X size={14} aria-hidden="true" /></button>}
       </div>
 
       {error && <p className="cform__formerr" role="alert">{error} – הדוח לא נטען.</p>}
@@ -217,7 +217,7 @@ function Report({ def }: { def: ReportDef }) {
               </div>
             )}
             {res.rows.length === 0 ? (
-              <EmptyState icon={<ChartColumn size={24} />} title="אין נתונים בטווח הזה">נסה טווח תאריכים אחר או נקה את הסינון.</EmptyState>
+              <EmptyState icon={<ChartColumn size={20} />} title="אין נתונים בטווח הזה">נסה טווח תאריכים אחר או נקה את הסינון.</EmptyState>
             ) : (
               <div className="report__scroll">
                 <table className="rtable">

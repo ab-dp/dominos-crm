@@ -46,7 +46,7 @@ export function QuotePage() {
   const { q, loading } = useQuote(isNew ? fromId : Number(id));
   if (loading) return <div className="page"><Skeleton h={28} w="30%" /><div style={{ height: 16 }} /><Skeleton h={320} /></div>;
   if (!isNew && !q) {
-    return <div className="page"><div className="card"><EmptyState icon={<FileText size={24} />} title="ההצעה לא נמצאה" action={<Link className="btn btn--secondary btn--md" to="/quotes"><span className="btn__label">להצעות המחיר</span></Link>} /></div></div>;
+    return <div className="page"><div className="card"><EmptyState icon={<FileText size={20} />} title="ההצעה לא נמצאה" action={<Link className="btn btn--secondary btn--md" to="/quotes"><span className="btn__label">להצעות המחיר</span></Link>} /></div></div>;
   }
   return <QuoteEditor key={id ?? `new-${fromId ?? ''}-${params.get('customer') ?? ''}`} quote={isNew ? undefined : q!} seed={isNew ? q ?? undefined : undefined} customerParam={params.get('customer') ?? ''} />;
 }
@@ -321,7 +321,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
           {quote && <Button icon={<Copy size={16} />} onClick={() => nav(`/quotes/new?from=${quote.id}`)}>שכפל</Button>}
         </div>
       </header>
-      {restored && <p className="qe-restored" role="status"><RotateCcw size={15} aria-hidden="true" /> שוחזרה הצעה שהתחלתם ולא נשמרה. <button className="link" onClick={() => { try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* */ } setF(initialForm()); setSavedJson(sig(initialForm())); }}>התחל מחדש</button></p>}
+      {restored && <p className="qe-restored" role="status"><RotateCcw size={16} aria-hidden="true" /> שוחזרה הצעה שהתחלתם ולא נשמרה. <button className="link" onClick={() => { try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* */ } setF(initialForm()); setSavedJson(sig(initialForm())); }}>התחל מחדש</button></p>}
 
       <div className={`qe-grid qe-grid--${view}`}>
         <div className="qe-main">
@@ -350,7 +350,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
               <p className="qe-hint qe-hint--edit">
                 {plId ? <>המחיר של כל מוצר מהמחירון נכנס לבד, ואפשר לשנות אותו בשורה – להצעה הזו בלבד.{linked && linked.priceListId === plId && ' המחירים המיוחדים של הלקוח כלולים.'}</> : 'מקלידים מחיר לכל שורה. מחיר שכבר הוצע בעבר למוצר מוצע בלחיצה.'}
               </p>
-              {priceList?.note && <p className="qe-cond"><CircleAlert size={15} aria-hidden="true" /> תנאי המחירון: {priceList.note}</p>}
+              {priceList?.note && <p className="qe-cond"><CircleAlert size={16} aria-hidden="true" /> תנאי המחירון: {priceList.note}</p>}
             </section>
 
             {/* 2. פריטים */}
@@ -368,7 +368,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
                   <span className="qe-chips__label">מהמחירון:</span>
                   {catalog.filter((i) => i.category === tab).map((it) => (
                     <button type="button" key={it.id} className={`qe-chip ${catLines.some((l) => normName(l.name) === normName(it.name)) ? 'is-in' : ''}`} onClick={() => pick(it)}>
-                      <Plus size={13} aria-hidden="true" /> {it.name}{it.unit ? <> · <Ltr>{fmtMoney(it.unit)}</Ltr></> : null}
+                      <Plus size={14} aria-hidden="true" /> {it.name}{it.unit ? <> · <Ltr>{fmtMoney(it.unit)}</Ltr></> : null}
                     </button>
                   ))}
                 </div>
@@ -402,12 +402,12 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
                         <span className="qe-price">
                           <input className={`input input--sm input--ltr ${changed ? 'is-changed' : ''}`} inputMode="decimal" value={l.pText ?? (l.unitPrice ? String(l.unitPrice) : '')} placeholder="₪"
                             onChange={(ev) => setPrice(l, ev.target.value)} aria-label={`מחיר ליחידה – ${label}`} {...on('price')} />
-                          {changed && <button type="button" className="qe-revert" title={`חזרה למחיר המחירון ${fmtMoney(m!.unit!)}`} aria-label={`חזרה למחיר המחירון ${fmtMoney(m!.unit!)} – ${label}`} onMouseDown={(ev) => ev.preventDefault()} onClick={() => change(l.key, { unitPrice: m!.unit!, manual: undefined, pText: undefined })}><RotateCcw size={13} /></button>}
+                          {changed && <button type="button" className="qe-revert" title={`חזרה למחיר המחירון ${fmtMoney(m!.unit!)}`} aria-label={`חזרה למחיר המחירון ${fmtMoney(m!.unit!)} – ${label}`} onMouseDown={(ev) => ev.preventDefault()} onClick={() => change(l.key, { unitPrice: m!.unit!, manual: undefined, pText: undefined })}><RotateCcw size={14} /></button>}
                         </span>
                         <input className={`input input--sm input--ltr ${e && l.name.trim() && l.qty <= 0 ? 'is-invalid' : ''}`} inputMode="numeric" value={l.qty || ''}
                           onChange={(ev) => change(l.key, { qty: Number(ev.target.value.replace(/\D/g, '')) || 0 })} aria-label={`כמות – ${label}`} {...on('qty')} />
                         <span className="qe-sum">{l.qty && l.unitPrice ? <Ltr>{fmtMoney(l.qty * l.unitPrice)}</Ltr> : <span className="muted">—</span>}</span>
-                        {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(l.key)}><Trash2 size={15} /></button>}
+                        {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(l.key)}><Trash2 size={16} /></button>}
                       </div>
                       {(changed || (m && !m.unit && !l.unitPrice)) && !active && <p className="qe-tag">{changed ? <>שונה מהמחירון (<Ltr>{fmtMoney(m!.unit!)}</Ltr>) – להצעה הזו בלבד</> : 'במחירון אין מחיר למוצר הזה – הקלידו מחיר'}</p>}
                       {(sug.length > 0 || (last && last !== l.unitPrice)) && (
@@ -470,8 +470,8 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
             <section className="card qe-sec" aria-labelledby="qe-h-cust">
               <h2 id="qe-h-cust" className="qe-sec__title"><span className="qe-num">4</span> לקוח ואספקה <span className="qe-opt">הכל לא חובה – מה שתמלאו יופיע בהצעה</span></h2>
               {linked ? (
-                <p className="qe-linked"><Link2 size={15} aria-hidden="true" /> מקושר ללקוח <Link to={`/customers/${linked.id}`}>{linked.name}</Link>{linked.priceListId && priceLists.find((p) => p.id === linked.priceListId) && <> · מחירון: {priceLists.find((p) => p.id === linked.priceListId)!.name}</>}
-                  <button type="button" className="link" onClick={() => set({ customerId: '' })}><Unlink size={13} aria-hidden="true" /> נתק</button></p>
+                <p className="qe-linked"><Link2 size={16} aria-hidden="true" /> מקושר ללקוח <Link to={`/customers/${linked.id}`}>{linked.name}</Link>{linked.priceListId && priceLists.find((p) => p.id === linked.priceListId) && <> · מחירון: {priceLists.find((p) => p.id === linked.priceListId)!.name}</>}
+                  <button type="button" className="link" onClick={() => set({ customerId: '' })}><Unlink size={14} aria-hidden="true" /> נתק</button></p>
               ) : twins.length > 0 && (
                 <p className="qe-twins"><span>לקוח קיים ב-CRM?</span>{twins.map((c) => <button type="button" key={c.id} className="chip" onClick={() => linkCustomer(c)}>{c.name}</button>)}</p>
               )}
@@ -516,9 +516,9 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
           {/* סיכום ופעולות – תמיד בתחתית */}
           <div className="qe-bar">
             <ul className="qe-warn" aria-live="polite">
-              {err && <li className="is-err"><CircleAlert size={15} aria-hidden="true" /> {err}</li>}
-              {minWarn > 0 && <li><CircleAlert size={15} aria-hidden="true" /> המחירון "{priceList!.name}" תקף מ-<Ltr>{minWarn}</Ltr> פיצות – בהצעה יש <Ltr>{pizzas}</Ltr></li>}
-              {unpriced.length > 0 && <li><CircleAlert size={15} aria-hidden="true" /> <Ltr>{unpriced.length}</Ltr> {unpriced.length === 1 ? 'שורה' : 'שורות'} בלי מחיר ({unpriced.slice(0, 2).map((l) => l.name).join(', ')}{unpriced.length > 2 ? '…' : ''}) – בדף יופיע "—"</li>}
+              {err && <li className="is-err"><CircleAlert size={16} aria-hidden="true" /> {err}</li>}
+              {minWarn > 0 && <li><CircleAlert size={16} aria-hidden="true" /> המחירון "{priceList!.name}" תקף מ-<Ltr>{minWarn}</Ltr> פיצות – בהצעה יש <Ltr>{pizzas}</Ltr></li>}
+              {unpriced.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /> <Ltr>{unpriced.length}</Ltr> {unpriced.length === 1 ? 'שורה' : 'שורות'} בלי מחיר ({unpriced.slice(0, 2).map((l) => l.name).join(', ')}{unpriced.length > 2 ? '…' : ''}) – בדף יופיע "—"</li>}
             </ul>
             <span className="qe-total">סה"כ לתשלום <b><Ltr>{fmtMoney(total)}</Ltr></b> <span className="muted">כולל מע"מ</span></span>
             {!locked && <Button icon={<Save size={16} />} loading={busy === 'save'} onClick={() => save()}>{quote ? (dirty ? 'שמור שינויים' : 'נשמר') : 'שמירה'}</Button>}

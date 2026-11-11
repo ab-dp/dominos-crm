@@ -9,7 +9,7 @@ export function Placeholder({ title, stage, children }: { title: string; stage: 
     <div className="page">
       <header className="page__head"><h1 className="page__title">{title}</h1></header>
       <div className="card">
-        <EmptyState icon={<Construction size={24} />} title={`ייבנה בשלב ${stage}`}>
+        <EmptyState icon={<Construction size={20} />} title={`ייבנה בשלב ${stage}`}>
           {children ?? 'המסך הזה לא חלק מהאב-טיפוס של שלב 1.'}
         </EmptyState>
       </div>

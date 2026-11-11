@@ -4,7 +4,7 @@
   bottom: 24px;
   transform: translateX(50%);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   z-index: 80;
   pointer-events: none;
 }
@@ -12,11 +12,11 @@
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-width: 320px;
   max-width: min(92vw, 520px);
-  padding: 10px 10px 10px 14px;
-  padding-inline-start: 14px;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  padding-inline-start: var(--space-4);
   background: var(--gray-900);
   color: var(--white);
   border-radius: var(--radius-panel);
@@ -36,15 +36,15 @@
 .toast__undo, .toast__action {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px 0 8px;
+  gap: var(--space-2);
+  height: var(--control-sm);
+  padding: 0 var(--space-3) 0 var(--space-2);
   border: 0;
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.12);
   color: var(--brand-sky);
   font: inherit;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 }
 .toast__undo:hover, .toast__action:hover { background: rgba(255, 255, 255, 0.2); }
@@ -62,7 +62,7 @@
 @keyframes ring-drain { from { stroke-dashoffset: 0; } to { stroke-dashoffset: var(--c); } }
 .toast__close {
   flex: none;
-  width: 32px; height: 32px;
+  width: var(--control-sm); height: var(--control-sm);
   display: grid; place-items: center;
   border: 0; border-radius: var(--radius);
   background: transparent;
@@ -71,7 +71,7 @@
 }
 .toast__close:hover { background: rgba(255, 255, 255, 0.12); color: var(--white); }
 @media (prefers-reduced-motion: reduce) { .toast__ring-bar { animation: none; } }
-.toast__action { padding: 0 12px; }
+.toast__action { padding: 0 var(--space-3); }
 
 /* במחשב: בפינה, לא במרכז – כדי שהודעה לא תסתיר את כפתורי השמירה של חלון פתוח */
 @media (min-width: 701px) {

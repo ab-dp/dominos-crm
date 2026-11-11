@@ -33,22 +33,22 @@ export function QuoteActions({ q, compact }: { q: Quote; compact?: boolean }) {
   const size = compact ? 'sm' : 'md';
   return (
     <span className="qact">
-      {q.status === 'draft' && <Button size={size} icon={<Send size={15} />} onClick={() => go('sent', `הצעה ${q.id} סומנה כנשלחה`)}>סמן שנשלחה</Button>}
+      {q.status === 'draft' && <Button size={size} icon={<Send size={16} />} onClick={() => go('sent', `הצעה ${q.id} סומנה כנשלחה`)}>סמן שנשלחה</Button>}
       {(q.status === 'sent' || q.status === 'noanswer') && (
         <>
-          <Button size={size} variant="primary" icon={<Check size={15} />} onClick={() => go('approved', `הצעה ${q.id}: הלקוח אישר`)}>הלקוח אישר</Button>
-          {q.status === 'sent' && <Button size={size} icon={<PhoneOff size={15} />} onClick={() => go('noanswer', `הצעה ${q.id}: אין מענה`)}>אין מענה</Button>}
-          <Button size={size} variant="ghost" icon={<X size={15} />} onClick={() => setReject(true)}>נדחתה</Button>
+          <Button size={size} variant="primary" icon={<Check size={16} />} onClick={() => go('approved', `הצעה ${q.id}: הלקוח אישר`)}>הלקוח אישר</Button>
+          {q.status === 'sent' && <Button size={size} icon={<PhoneOff size={16} />} onClick={() => go('noanswer', `הצעה ${q.id}: אין מענה`)}>אין מענה</Button>}
+          <Button size={size} variant="ghost" icon={<X size={16} />} onClick={() => setReject(true)}>נדחתה</Button>
         </>
       )}
       {q.status === 'approved' && (
         <>
-          <Button size={size} variant="primary" icon={<ClipboardList size={15} />} onClick={() => openNewOrder({ fromQuote: q })}>הפוך להזמנה</Button>
-          {!compact && <Button size={size} variant="ghost" icon={<RotateCcw size={15} />} onClick={() => go('sent', `הצעה ${q.id} חזרה לממתינה לתשובה`)}>בטל אישור</Button>}
+          <Button size={size} variant="primary" icon={<ClipboardList size={16} />} onClick={() => openNewOrder({ fromQuote: q })}>הפוך להזמנה</Button>
+          {!compact && <Button size={size} variant="ghost" icon={<RotateCcw size={16} />} onClick={() => go('sent', `הצעה ${q.id} חזרה לממתינה לתשובה`)}>בטל אישור</Button>}
         </>
       )}
-      {q.status === 'rejected' && <Button size={size} icon={<RotateCcw size={15} />} onClick={() => go('sent', `הצעה ${q.id} חזרה לטיפול`)}>החזר לטיפול</Button>}
-      {q.status === 'ordered' && q.orderId && <Button size={size} icon={<ClipboardList size={15} />} onClick={(e) => panel.open(q.orderId!, e.currentTarget)}>הזמנה <Ltr>{q.orderId}</Ltr></Button>}
+      {q.status === 'rejected' && <Button size={size} icon={<RotateCcw size={16} />} onClick={() => go('sent', `הצעה ${q.id} חזרה לטיפול`)}>החזר לטיפול</Button>}
+      {q.status === 'ordered' && q.orderId && <Button size={size} icon={<ClipboardList size={16} />} onClick={(e) => panel.open(q.orderId!, e.currentTarget)}>הזמנה <Ltr>{q.orderId}</Ltr></Button>}
       {reject && <RejectDialog q={q} onClose={() => setReject(false)} />}
     </span>
   );
@@ -83,7 +83,7 @@ export function QuoteTrack({ q }: { q: Quote }) {
       <div className="qtrack__add">
         <textarea className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setErr(''); }} placeholder="הערת מעקב: למשל &quot;דיברתי עם מיכל, תחזור מחר עם תשובה&quot;" aria-label="הערת מעקב"
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); add(); } }} />
-        <Button icon={<MessageSquarePlus size={15} />} loading={busy} onClick={add}>הוסף הערה</Button>
+        <Button icon={<MessageSquarePlus size={16} />} loading={busy} onClick={add}>הוסף הערה</Button>
       </div>
       {err && <p className="cform__err" role="alert">{err}</p>}
       {notes.length > 0 && (

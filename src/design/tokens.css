@@ -23,7 +23,8 @@
   --gray-100: #E6EAEF;    /* קווי הפרדה */
   --gray-200: #D6DCE3;    /* גבולות כפתורים */
   --gray-300: #C2CAD4;    /* גבולות שדות */
-  --gray-400: #8A96A5;    /* placeholder, אייקונים כבויים */
+  --gray-400: #8A96A5;    /* אייקונים כבויים, קווים מודגשים (לא לטקסט – ניגודיות 3:1) */
+  --gray-500: #677585;    /* placeholder – ניגודיות 4.7:1 על לבן */
   --gray-700: #3A4756;
   --gray-600: #546272;    /* טקסט משני */
   --gray-900: #0F1B2A;    /* דיו */
@@ -45,8 +46,7 @@
   --font: 'IBM Plex Sans Hebrew', 'Segoe UI', system-ui, sans-serif;
   /* מספרים באותו גופן עם ספרות טבלאיות. השם נשמר כדי שכל המסכים יקבלו את השינוי מכאן */
   --font-mono: var(--font);
-  --text-badge: 10px;     /* מונים זעירים בלבד */
-  --text-micro: 12px;
+  --text-micro: 12px;     /* גם מונים ותגים – אין טקסט קטן מ-12px */
   --text-label: 13px;
   --text-table: 14px;
   --text-body: 15px;
@@ -65,10 +65,33 @@
   --shadow-panel: 0 0 0 1px rgba(15, 27, 42, 0.06), 0 24px 64px rgba(15, 27, 42, 0.22);
   --focus-ring: 0 0 0 2px var(--white), 0 0 0 4px var(--brand-600);
 
+  /* משקלים: 600 רק לכותרות ולערך המרכזי בשורה; 500 לתוויות ולפקדים; 400 לגוף. אין 700/800 */
+  --weight-body: 400;
+  --weight-label: 500;
+  --weight-strong: 600;
+
+  /* סולם מרווחים – כל padding / margin / gap בא מכאן. 0–2px נשארים רק לתיקון אופטי */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* שלושה גובהי פקדים: בתוך שורה / רגיל / ראשי ומגע. כפתור, שדה, צ'יפ, לשונית ובקר מפולח – אותו סולם */
+  --control-sm: 28px;
+  --control-md: 36px;
+  --control-lg: 44px;
+
+  /* שלושה גדלי אייקון (lucide): בתוך טקסט ותגים / כפתורים ושדות / ניווט ומשימות */
+  --icon-sm: 14px;
+  --icon-md: 16px;
+  --icon-lg: 20px;
+
   /* פריסה */
   --rail: 232px;
   --topbar: 56px;
-  --gutter: 28px;
+  --gutter: 24px;
 
   /* תנועה */
   --ease: cubic-bezier(0.2, 0, 0, 1);

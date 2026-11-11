@@ -18,7 +18,7 @@ export function ListsPage() {
           <p className="page__sub">פריט שהושבת לא יופיע בבחירה חדשה.</p>
         </div>
       </header>
-      {error ? <div className="card"><EmptyState icon={<Lock size={24} />} title="לא ניתן לטעון">{error}</EmptyState></div>
+      {error ? <div className="card"><EmptyState icon={<Lock size={20} />} title="לא ניתן לטעון">{error}</EmptyState></div>
         : !lists ? <div className="lists-grid">{[0, 1, 2, 3].map((i) => <div key={i} className="card lcard"><Skeleton h={120} /></div>)}</div>
         : (
           <div className="lists-grid">
@@ -78,7 +78,7 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
             ) : (
               <>
                 <span className="litem__label">{it.label}</span>
-                {it.locked && <Tip label="פריט מערכת – לא ניתן להשבית"><span className="litem__lock" role="img" tabIndex={0} aria-label="פריט מערכת"><Lock size={13} /></span></Tip>}
+                {it.locked && <Tip label="פריט מערכת – לא ניתן להשבית"><span className="litem__lock" role="img" tabIndex={0} aria-label="פריט מערכת"><Lock size={14} /></span></Tip>}
                 {!it.active && <span className="tag-inactive">לא פעיל</span>}
                 <span className="litem__actions">
                   <button className="icon-btn icon-btn--sm" aria-label={`שנה שם: ${it.label}`} onClick={() => { setEditing(it.id); setDraft(it.label); }}><Pencil size={14} /></button>
@@ -95,7 +95,7 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
       </ul>
       <form className="ladd" onSubmit={(e) => { e.preventDefault(); add(); }}>
         <input className="input input--sm" value={newLabel} onChange={(e) => { setNewLabel(e.target.value); setErr(''); }} placeholder="פריט חדש" aria-label={`פריט חדש ב${LIST_META[k].title}`} />
-        <Button size="sm" type="submit" icon={<Plus size={15} />} disabled={!newLabel.trim()}>הוסף</Button>
+        <Button size="sm" type="submit" icon={<Plus size={16} />} disabled={!newLabel.trim()}>הוסף</Button>
       </form>
       {err && <p className="pop__err ladd__err" role="alert">{err}</p>}
     </section>

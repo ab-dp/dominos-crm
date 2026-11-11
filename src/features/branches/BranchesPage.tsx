@@ -40,7 +40,7 @@ export function BranchesPage() {
         </div>
       </header>
 
-      {error ? <div className="card"><EmptyState icon={<Store size={24} />} title="לא ניתן לטעון">{error}. ודא שכללי האבטחה פורסמו.</EmptyState></div> : (
+      {error ? <div className="card"><EmptyState icon={<Store size={20} />} title="לא ניתן לטעון">{error}. ודא שכללי האבטחה פורסמו.</EmptyState></div> : (
         <div className="br-grid">
           <ClustersCard
             clusters={clusters.items}
@@ -87,7 +87,7 @@ function ClustersCard({ clusters, loading, countBy, selected, onSelect }: {
   return (
     <section className="card br-clusters" aria-labelledby="h-clusters">
       <div className="card__head">
-        <Layers size={18} aria-hidden="true" className="muted" />
+        <Layers size={16} aria-hidden="true" className="muted" />
         <h2 id="h-clusters" className="card__title">אשכולות</h2>
         <span className="muted"><Ltr>{clusters.filter((c) => c.active).length}</Ltr></span>
         <Button size="sm" variant="secondary" icon={<Plus size={16} />} className="card__head-end" onClick={() => setAdding(true)} disabled={adding}>אשכול</Button>
@@ -133,7 +133,7 @@ function ClustersCard({ clusters, loading, countBy, selected, onSelect }: {
                   <span className="citem__count"><Ltr>{countBy[c.id] ?? 0}</Ltr> סניפים</span>
                 </button>
                 <Tip label="שנה שם">
-                  <button className="icon-btn icon-btn--sm" aria-label={`שנה שם לאשכול ${c.name}`} onClick={() => setEditing(c.id)}><Pencil size={15} /></button>
+                  <button className="icon-btn icon-btn--sm" aria-label={`שנה שם לאשכול ${c.name}`} onClick={() => setEditing(c.id)}><Pencil size={16} /></button>
                 </Tip>
                 <ActiveSwitch
                   active={c.active}
@@ -172,7 +172,7 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
   return (
     <section className="card br-branches" aria-labelledby="h-branches">
       <div className="card__head br-branches__head">
-        <Store size={18} aria-hidden="true" className="muted" />
+        <Store size={16} aria-hidden="true" className="muted" />
         <h2 id="h-branches" className="card__title">סניפים</h2>
         {selected && (
           <button className="chip is-on" onClick={onClearSelected} aria-label={`הסר סינון אשכול ${selectedName}`}>אשכול {selectedName} <X size={14} aria-hidden="true" /></button>
@@ -248,7 +248,7 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
                     }} />
                   </td>
                   <td className="br-actions">
-                    <Button size="sm" variant="ghost" icon={<Pencil size={15} />} onClick={() => { setEditing(b.id); setAdding(false); }} aria-label={`ערוך את ${b.name}`}>ערוך</Button>
+                    <Button size="sm" variant="ghost" icon={<Pencil size={16} />} onClick={() => { setEditing(b.id); setAdding(false); }} aria-label={`ערוך את ${b.name}`}>ערוך</Button>
                   </td>
                 </tr>
               )
@@ -256,8 +256,8 @@ function BranchesCard({ clusters, allBranches, branches, loading, selected, onCl
           </tbody>
         </table>
         {!loading && branches.length === 0 && !adding && (
-          <EmptyState icon={<Store size={24} />} title={query ? 'לא נמצא סניף מתאים' : selected ? `אין עדיין סניפים באשכול ${selectedName}` : 'עוד אין סניפים'}
-            action={activeClusters.length > 0 ? <Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>הוסף סניף</Button> : undefined}>
+          <EmptyState icon={<Store size={20} />} title={query ? 'לא נמצא סניף מתאים' : selected ? `אין עדיין סניפים באשכול ${selectedName}` : 'עוד אין סניפים'}
+            action={activeClusters.length > 0 ? <Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>הוסף סניף</Button> : undefined}>
             {activeClusters.length === 0 ? 'מתחילים מהוספת אשכול ברשימה מימין, ואז מוסיפים לו סניפים.' : 'סניף חדש דורש שם ואשכול; מספר סניף – לא חובה.'}
           </EmptyState>
         )}
@@ -309,7 +309,7 @@ function BranchEditRow({ clusters, allBranches, excludeId, initial, onSave, onCa
           </select>
         </td>
         <td colSpan={2} className="br-actions">
-          <Button size="sm" variant="primary" icon={<Check size={15} />} loading={busy} onClick={() => submit()}>שמור</Button>
+          <Button size="sm" variant="primary" icon={<Check size={16} />} loading={busy} onClick={() => submit()}>שמור</Button>
           <Button size="sm" variant="ghost" onClick={onCancel}>ביטול</Button>
         </td>
       </tr>

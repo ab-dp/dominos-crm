@@ -97,7 +97,7 @@ export function OpsSummaryPage() {
 
       {waiting.length > 0 && (
         <div className="ops-waiting" role="alert">
-          <p className="ops-waiting__title"><AlertTriangle size={18} aria-hidden="true" />
+          <p className="ops-waiting__title"><AlertTriangle size={16} aria-hidden="true" />
             שים לב: {waiting.length === 1 ? 'יש הזמנה אחת' : `יש ${waiting.length} הזמנות`} בתאריכים שנבחרו שעוד לא אושרו על ידי הלקוח. הן לא נכנסות לסיכום – יש לבדוק אותן קודם.
           </p>
           <ul>
@@ -113,7 +113,7 @@ export function OpsSummaryPage() {
       )}
 
       {bad ? <p className="ops-err">תאריך הסיום לפני תאריך ההתחלה.</p> : !clusters.length ? (
-        <EmptyState icon={<Send size={28} />} title="אין הזמנות מאושרות בתאריכים האלה">
+        <EmptyState icon={<Send size={20} />} title="אין הזמנות מאושרות בתאריכים האלה">
           {waiting.length ? 'יש הזמנות שממתינות לאישור הלקוח – הן מופיעות למעלה.' : 'בחרו תאריכים אחרים.'}
         </EmptyState>
       ) : clusters.map((c) => {
@@ -128,8 +128,8 @@ export function OpsSummaryPage() {
                 {!send ? 'עוד לא נשלח' : dirty ? <>נשלח {sentAt(send)} · יש שינויים מאז – לשלוח שוב</> : <><Check size={14} aria-hidden="true" /> נשלח {sentAt(send)}{send.byName && ` · ${send.byName}`}</>}
               </span>
               <div className="ops-card__actions">
-                <Button size="sm" icon={<Download size={15} />} loading={busy === `pdf:${c.name}`} onClick={() => pdf([c], c.name)}>PDF</Button>
-                <Button size="sm" variant={send && !dirty ? 'secondary' : 'primary'} icon={<Check size={15} />} loading={busy === `sent:${c.name}`} onClick={() => markSent(c)}>
+                <Button size="sm" icon={<Download size={16} />} loading={busy === `pdf:${c.name}`} onClick={() => pdf([c], c.name)}>PDF</Button>
+                <Button size="sm" variant={send && !dirty ? 'secondary' : 'primary'} icon={<Check size={16} />} loading={busy === `sent:${c.name}`} onClick={() => markSent(c)}>
                   {send ? 'סמן שנשלח שוב' : 'סמן שנשלח'}
                 </Button>
               </div>

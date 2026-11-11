@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useMatch } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
-  Bell, CalendarClock, FileText, Target, ChartColumn, Ellipsis, UserPlus, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
+  FileText, Target, ChartColumn, Ellipsis, ClipboardList, House, LogOut, PanelRightClose, PanelRightOpen, Palette, Plus, Search, Settings, Store, Tags, TriangleAlert, Users,
   Truck,
   LayoutDashboard,
 } from 'lucide-react';
@@ -13,8 +13,7 @@ import { useAuth } from '../auth/AuthContext';
 import { openTaskCount, todayTaskCounts } from '../features/today/todayTasks';
 import { usePendingRequests } from '../auth/usePendingRequests';
 import { ROLE_LABEL } from '../auth/types';
-import { Ltr, fmtDate } from '../lib/format';
-import { isAlert } from '../rules-engine/health';
+import { Ltr } from '../lib/format';
 import { usePref } from '../lib/prefs';
 import { CommandSearch } from './CommandSearch';
 import { usePanel } from './PanelContext';
@@ -44,16 +43,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { profile, isAdmin, logout } = useAuth();
   const pendingUsers = usePendingRequests();
-  const nav = useNavigate();
   const firstName = (profile?.name ?? '').split(' ')[0];
 
   useHotkey('/', () => setSearchOpen(true));
   useHotkey('n', () => newOrder());
 
-  // בפעמון: רק חריגות שדורשות טיפול עכשיו (פרט חסר בהזמנה רחוקה אדום, אבל לא קופץ עד שמתקרב)
-  const critical = orders.filter((o) => o.issues.some(isAlert));
+  /* אין פעמון: מסך "היום" הוא המקום שמראה מה לעשות. המספרים בתפריט = המספר הראשי של המסך.
+     אדום בתפריט רק לקטגוריה שיש בה משהו קריטי שלא טופל: חריגות (אדום) והצעות מחיר שלא חזרו אליהן */
   const dueLeadSteps = dueTasks.filter((t) => t.leadId).length;
-  /* מספרים בתפריט = המספר הראשי של המסך: "היום" – מספר המשימות הפתוחות במסך; "חריגים" – מספר החריגות (אדום) */
   const todayCount = openTaskCount(todayTaskCounts(orders, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 }));
   const redCount = orders.reduce((n, o) => n + o.issues.filter((i) => i.severity === 'red').length, 0);
 
@@ -68,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         { to: '/today', label: 'היום', icon: <House size={20} />, count: todayCount },
         { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
         { to: '/board', label: 'בורד', icon: <LayoutDashboard size={20} /> },
-        { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length },
+        { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length, alert: quoteFollowups.length > 0 },
         { to: '/ops', label: 'סיכום לתפעול', icon: <Truck size={20} /> },
         { to: '/exceptions', label: 'חריגים ומשימות', short: 'חריגים', icon: <TriangleAlert size={20} />, count: redCount, alert: redCount > 0 },
       ],
@@ -86,7 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       title: 'ניהול',
       items: [
         { to: '/reports', label: 'דוחות', icon: <ChartColumn size={20} /> },
-        ...(isAdmin ? [{ to: '/settings', label: 'הגדרות', icon: <Settings size={20} />, count: pendingUsers, alert: pendingUsers > 0 }] : []),
+        ...(isAdmin ? [{ to: '/settings', label: 'הגדרות', icon: <Settings size={20} />, count: pendingUsers }] : []),
       ],
     },
   ];
@@ -112,55 +109,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           <img src={`${BASE}logo-tile.svg`} alt="" />
         </Link>
         <button className="search-trigger" onClick={() => setSearchOpen(true)} aria-label="חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון (/)">
-          <Search size={18} aria-hidden="true" />
+          <Search size={16} aria-hidden="true" />
           <span className="search-trigger__full">חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון…</span>
           <span className="search-trigger__short" aria-hidden="true">חיפוש הזמנה או לקוח</span>
           <kbd className="kbd">/</kbd>
         </button>
 
         <div className="topbar__actions">
-          <Button variant="primary" icon={<Plus size={18} />} kbd="N" onClick={newOrder}>הזמנה חדשה</Button>
-
-          <Popover.Root>
-            <Popover.Trigger asChild>
-              <button className="icon-btn bell" aria-label={`התראות: ${critical.length + pendingUsers + dueTasks.length + quoteFollowups.length} חדשות`}>
-                <Bell size={20} />
-                {critical.length + pendingUsers + dueTasks.length + quoteFollowups.length > 0 && <span className="bell__count"><Ltr>{critical.length + pendingUsers + dueTasks.length + quoteFollowups.length}</Ltr></span>}
-              </button>
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content className="pop bell-pop" aria-label="התראות" align="end" sideOffset={8} dir="rtl">
-                {pendingUsers > 0 && (
-                  <button className="bell-join" onClick={() => nav('/settings/users')}>
-                    <UserPlus size={18} aria-hidden="true" /> <span><b><Ltr>{pendingUsers}</Ltr></b> בקשות הצטרפות ממתינות</span>
-                  </button>
-                )}
-                {dueTasks.length > 0 && (
-                  <button className="bell-join" onClick={() => nav('/exceptions')}>
-                    <CalendarClock size={18} aria-hidden="true" /> <span><b><Ltr>{dueTasks.length}</Ltr></b> משימות מעקב להיום</span>
-                  </button>
-                )}
-                {quoteFollowups.length > 0 && (
-                  <button className="bell-join" onClick={() => nav('/quotes')}>
-                    <FileText size={18} aria-hidden="true" /> <span><b><Ltr>{quoteFollowups.length}</Ltr></b> הצעות מחיר מחכות לעדכון מהלקוח</span>
-                  </button>
-                )}
-                <p className="pop__title">חריגות שדורשות טיפול</p>
-                {critical.length === 0 ? <p className="pop__text">אין חריגות כרגע ✓</p> : (
-                  <ul className="bell-list">
-                    {critical.map((o) => (
-                      <li key={o.id}>
-                        <button onClick={(e) => panel.open(o.id, e.currentTarget)}>
-                          <span className="bell-list__issue">{(o.issues.find(isAlert) ?? o.issues[0]).label}</span>
-                          <span className="bell-list__meta">{o.customerName} · <Ltr>{fmtDate(o.date)}</Ltr> {o.time && <Ltr>{o.time}</Ltr>}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover.Root>
+          <Button variant="primary" icon={<Plus size={16} />} kbd="N" onClick={newOrder}>הזמנה חדשה</Button>
 
           <div className="user">
             <span className="user__avatar" aria-hidden="true">{firstName[0] ?? '?'}</span>
@@ -201,7 +157,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <ul>
                 {g.items.map((it) => (
                   <li key={it.to} className={MOBILE_MAIN.includes(it.to) ? '' : 'nav-li--more'}>
-                    <NavItem to={it.to} label={it.label} collapsed={collapsed}>
+                    <NavItem to={it.to} label={it.count ? `${it.label} · ${it.count}` : it.label} collapsed={collapsed}>
                       <span className="nav__icon" aria-hidden="true">{it.icon}</span>
                       {/* בתפריט התחתון של הטלפון מוצג שם קצר; השם המלא נשאר לקורא מסך */}
                       <span className="nav__label"><span className={it.short ? "nav__full" : undefined}>{it.label}</span>{it.short && <span className="nav__short" aria-hidden="true">{it.short}</span>}</span>
@@ -249,18 +205,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <main id="main" className="content" tabIndex={-1}>
-        {/* מעבר רך בין מסכים: הופעה הדרגתית ותזוזה קטנה, בלי לעכב את העבודה */}
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={location.pathname}
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, transition: { duration: 0.08 } }}
-            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
-          >
-            <ScreenBoundary resetKey={location.pathname}>{children}</ScreenBoundary>
-          </motion.div>
-        </AnimatePresence>
+        {/* מעבר מסך בלי המתנה: המסך החדש מופיע מיד, בדהייה קצרה (בלי יציאה של הישן) */}
+        <motion.div
+          key={location.pathname}
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.12, ease: [0.2, 0, 0, 1] }}
+        >
+          <ScreenBoundary resetKey={location.pathname}>{children}</ScreenBoundary>
+        </motion.div>
       </main>
 
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} onPick={(id) => { setSearchOpen(false); panel.open(id, null); }} />

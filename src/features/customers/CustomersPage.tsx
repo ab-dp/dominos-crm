@@ -54,7 +54,7 @@ export function CustomersPage() {
           <p className="page__sub">לחיצה על לקוח פותחת את התיק שלו.</p>
         </div>
         <div className="page__head-end">
-          <Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>לקוח חדש</Button>
+          <Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>לקוח חדש</Button>
         </div>
       </header>
 
@@ -73,12 +73,12 @@ export function CustomersPage() {
         </label>
       </div>
 
-      {error ? <div className="card"><EmptyState icon={<Users size={24} />} title="לא ניתן לטעון לקוחות">{error}. ודא שכללי האבטחה פורסמו.</EmptyState></div>
+      {error ? <div className="card"><EmptyState icon={<Users size={20} />} title="לא ניתן לטעון לקוחות">{error}. ודא שכללי האבטחה פורסמו.</EmptyState></div>
         : loading ? <div className="card cust-skel">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={36} />)}</div>
         : rows.length === 0 ? (
           <div className="card">
-            <EmptyState icon={<Users size={24} />} title={q ? 'לא נמצא לקוח מתאים' : live.length === 0 ? 'עוד אין לקוחות' : 'אין לקוחות בתצוגה הזו'}
-              action={<Button variant="primary" icon={<Plus size={18} />} onClick={() => setAdding(true)}>{q ? `לקוח חדש: "${q}"` : 'לקוח חדש'}</Button>}>
+            <EmptyState icon={<Users size={20} />} title={q ? 'לא נמצא לקוח מתאים' : live.length === 0 ? 'עוד אין לקוחות' : 'אין לקוחות בתצוגה הזו'}
+              action={<Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>{q ? `לקוח חדש: "${q}"` : 'לקוח חדש'}</Button>}>
               {live.length === 0 ? 'מוסיפים כאן את לקוחות ההקפה הקבועים. לקוח אחר נוצר בהזמנה הראשונה שלו (במסך ההזמנה ← "לקוח חדש").' : gapsOnly ? 'לכל הלקוחות בתצוגה הזו יש תיק מלא.' : undefined}
             </EmptyState>
           </div>
@@ -120,7 +120,7 @@ function CustomerRow({ c, methodLabel, plName, shared, gaps, onOpen }: { c: Cust
       <td>{methodLabel(c.paymentMethod)}</td>
       <td className="num">{c.accountPhone ? <><Ltr>{fmtPhone(c.accountPhone)}</Ltr>{shared && <span className="shared-tag">כללי</span>}</> : <span className="muted">—</span>}</td>
       <td>{plName(c.priceListId) || <span className="muted">—</span>}</td>
-      <td>{c.poRequired && <Tip label="נדרשת תעודת רכש"><span className="po-tag" role="img" tabIndex={0} aria-label="נדרשת תעודת רכש"><FileCheck2 size={15} /></span></Tip>}</td>
+      <td>{c.poRequired && <Tip label="נדרשת תעודת רכש"><span className="po-tag" role="img" tabIndex={0} aria-label="נדרשת תעודת רכש"><FileCheck2 size={16} /></span></Tip>}</td>
       {gaps && <td className="cust-gaps">{customerGaps(c).map((g) => <span key={g.label} className="mgaps__tag">{g.label}</span>)}</td>}
     </tr>
   );

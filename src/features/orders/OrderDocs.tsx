@@ -26,7 +26,7 @@ export function FileDrop({ file, onFile, label = 'צרף תעודת רכש', bus
   if (file) {
     return (
       <div className="fdrop fdrop--file">
-        <FileText size={18} aria-hidden="true" />
+        <FileText size={16} aria-hidden="true" />
         <span className="fdrop__name">{file.name}</span>
         <span className="muted"><Ltr>{kb(file.size)}</Ltr></span>
         {busy ? <span className="muted">מעלה…</span> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר את ${file.name}`} onClick={() => onFile(null)}><X size={16} /></button>}
@@ -36,7 +36,7 @@ export function FileDrop({ file, onFile, label = 'צרף תעודת רכש', bus
   return (
     <>
       <div className={`fdrop ${over ? 'is-over' : ''}`} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={drop}>
-        <Paperclip size={18} aria-hidden="true" />
+        <Paperclip size={16} aria-hidden="true" />
         <span>גרור לכאן קובץ, או</span>
         <Button size="sm" type="button" onClick={() => input.current?.click()}>{label}</Button>
         <span className="muted fdrop__hint">PDF או תמונה, עד 2MB</span>
@@ -65,7 +65,7 @@ function DocList({ docs, showOrder }: { docs: OrderDoc[]; showOrder?: boolean })
         const old = isOlderVersion(d, docs);
         return (
           <li key={d.id} className={old ? 'is-old' : ''}>
-            <FileText size={18} aria-hidden="true" />
+            <FileText size={16} aria-hidden="true" />
             <span className="odocs__main">
               <b>{d.name}</b>
               <span className="muted">

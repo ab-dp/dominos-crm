@@ -20,8 +20,8 @@ export function ConflictDialog() {
         <Dialog.Overlay className="cmd-overlay" />
         <Dialog.Content className="udialog sdialog cdialog" dir="rtl" aria-describedby="cdialog-sub" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}>
           <div className="sdialog__head">
-            <Dialog.Title className="udialog__title"><GitCompareArrows size={18} aria-hidden="true" style={{ verticalAlign: -3 }} /> {who} שינה את ההזמנה בינתיים</Dialog.Title>
-            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
+            <Dialog.Title className="udialog__title"><GitCompareArrows size={16} aria-hidden="true" style={{ verticalAlign: -3 }} /> {who} שינה את ההזמנה בינתיים</Dialog.Title>
+            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>
           </div>
           <p id="cdialog-sub" className="sdialog__sub">הזמנה <Ltr>{error.current.id}</Ltr> · השינוי שלך עוד לא נשמר. בחר מה להשאיר:</p>
           <table className="cdialog__table">

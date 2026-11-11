@@ -45,10 +45,10 @@ export function CustomerFile() {
   const { items, loading } = useCustomers();
   const c = items.find((x) => x.id === id);
   if (loading) return <div className="page"><Skeleton h={28} w="40%" /><div style={{ height: 16 }} /><Skeleton h={160} /></div>;
-  if (!c) return <div className="page"><div className="card"><EmptyState icon={<UserRound size={24} />} title="הלקוח לא נמצא" action={<Link className="btn btn--secondary btn--md" to="/customers"><span className="btn__label">חזרה ללקוחות</span></Link>} /></div></div>;
+  if (!c) return <div className="page"><div className="card"><EmptyState icon={<UserRound size={20} />} title="הלקוח לא נמצא" action={<Link className="btn btn--secondary btn--md" to="/customers"><span className="btn__label">חזרה ללקוחות</span></Link>} /></div></div>;
   if (c.status === 'merged') {
     const target = items.find((x) => x.id === c.mergedInto);
-    return <div className="page"><div className="card"><EmptyState icon={<GitMerge size={24} />} title={`"${c.name}" מוזג`} action={target && <Link className="btn btn--primary btn--md" to={`/customers/${target.id}`}><span className="btn__label">פתח את {target.name}</span></Link>}>ההזמנות, הצעות המחיר, המשימות, אנשי הקשר והכתובות עברו ללקוח "{target?.name ?? '—'}". הפעילות, ההיסטוריה והמסמכים מוצגים בתיק שלו.</EmptyState></div></div>;
+    return <div className="page"><div className="card"><EmptyState icon={<GitMerge size={20} />} title={`"${c.name}" מוזג`} action={target && <Link className="btn btn--primary btn--md" to={`/customers/${target.id}`}><span className="btn__label">פתח את {target.name}</span></Link>}>ההזמנות, הצעות המחיר, המשימות, אנשי הקשר והכתובות עברו ללקוח "{target?.name ?? '—'}". הפעילות, ההיסטוריה והמסמכים מוצגים בתיק שלו.</EmptyState></div></div>;
   }
   return <FileBody c={c} all={items} />;
 }
@@ -92,7 +92,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
             </p>
           </div>
           <div className="cfile__actions">
-            <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })} disabled={c.status !== 'active'}>הזמנה</Button>
+            <Button variant="primary" icon={<Plus size={16} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })} disabled={c.status !== 'active'}>הזמנה</Button>
             <Button icon={<MessageSquarePlus size={16} />} onClick={openNote}>הערה</Button>
             <Button icon={<Pencil size={16} />} onClick={() => setEditing(true)}>עריכה</Button>
             <Dropdown.Root dir="rtl">
@@ -118,7 +118,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
         <div className="cfile__facts">
           {pc && (
             <span className="fact">
-              <UserRound size={15} aria-hidden="true" /> {pc.name}{pc.role && <span className="muted"> · {pc.role}</span>}
+              <UserRound size={16} aria-hidden="true" /> {pc.name}{pc.role && <span className="muted"> · {pc.role}</span>}
               {pc.phone && <a className="fact__link" href={`tel:${pc.phone}`}><PhoneIcon size={14} aria-hidden="true" /> <Ltr>{fmtPhone(pc.phone)}</Ltr></a>}
               {pc.email && <a className="fact__link" href={`mailto:${pc.email}`}><Mail size={14} aria-hidden="true" /> <bdi dir="ltr">{pc.email}</bdi></a>}
             </span>
@@ -322,8 +322,8 @@ function OrdersTab({ c, orders, loading }: { c: Customer; orders: OrderView[]; l
   if (!orders.length) {
     return (
       <div className="card">
-        <EmptyState icon={<ClipboardList size={24} />} title="אין עדיין הזמנות ללקוח"
-          action={c.status === 'active' && <Button variant="primary" icon={<Plus size={18} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })}>הזמנה ראשונה</Button>}>
+        <EmptyState icon={<ClipboardList size={20} />} title="אין עדיין הזמנות ללקוח"
+          action={c.status === 'active' && <Button variant="primary" icon={<Plus size={16} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })}>הזמנה ראשונה</Button>}>
           הפרטים הקבועים של {c.name} ימולאו בהזמנה אוטומטית.
         </EmptyState>
       </div>
@@ -356,7 +356,7 @@ function QuotesTab({ c }: { c: Customer }) {
       <div className="card__head">
         <h2 className="card__title">הצעות מחיר</h2>
         <span className="muted"><Ltr>{items.length}</Ltr></span>
-        <Button size="sm" className="card__head-end" icon={<Plus size={15} />} onClick={() => nav(`/quotes/new?customer=${c.id}`)}>הצעה חדשה</Button>
+        <Button size="sm" className="card__head-end" icon={<Plus size={16} />} onClick={() => nav(`/quotes/new?customer=${c.id}`)}>הצעה חדשה</Button>
       </div>
       {loading ? <div className="loading-rows"><Skeleton h={30} /></div> : items.length === 0 ? <p className="muted cfile__plhint">עוד אין הצעות מחיר ללקוח. הצעה חדשה מכאן כבר מקושרת ללקוח ולמחירון שלו.</p> : (
         <table className="items">
@@ -393,7 +393,7 @@ function PricesTab({ c }: { c: Customer }) {
     return (
       <div className="card">
         <PriceNote c={c} />
-        <EmptyState icon={<Wallet size={24} />} title="אין מחירון משויך" action={
+        <EmptyState icon={<Wallet size={20} />} title="אין מחירון משויך" action={
           <select className="input cfile__plsel" value="" onChange={async (e) => { await updateCustomer(c, { priceListId: e.target.value }); toast({ message: 'המחירון שויך ללקוח' }); }} aria-label="שייך מחירון">
             <option value="">בחר מחירון…</option>
             {priceLists.filter((p) => p.active).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -434,7 +434,7 @@ function PricesTab({ c }: { c: Customer }) {
     ) : (
       <button className={`pricecell ${special !== undefined ? 'is-custom' : ''}`} onClick={() => { setEditing(key); setDraft(special !== undefined ? String(special) : ''); }} aria-label={`${it.name}, ${label}: ${special !== undefined ? `מחיר ייחודי ${fmtMoney(special)}` : base ? `מחיר מחירון ${fmtMoney(base)}` : 'אין מחיר במחירון'}. לחץ לשינוי`}>
         {special !== undefined ? <><Ltr>{fmtMoney(special)}</Ltr><span className="pricecell__tag">ייחודי</span></> : <span className="muted">{base ? <Ltr>{fmtMoney(base)}</Ltr> : 'אין מחיר'}</span>}
-        <Pencil size={13} aria-hidden="true" />
+        <Pencil size={14} aria-hidden="true" />
       </button>
     );
   };
@@ -481,7 +481,7 @@ function PricesTab({ c }: { c: Customer }) {
 function PaymentTab({ c, sharing, method, onEdit }: { c: Customer; sharing: Customer[]; method: string; onEdit: () => void }) {
   return (
     <div className="card cfile__kv">
-      <div className="card__head"><h2 className="card__title">תשלום והקפה</h2><Button size="sm" className="card__head-end" icon={<Pencil size={15} />} onClick={onEdit}>עריכה</Button></div>
+      <div className="card__head"><h2 className="card__title">תשלום והקפה</h2><Button size="sm" className="card__head-end" icon={<Pencil size={16} />} onClick={onEdit}>עריכה</Button></div>
       <div className="card__body">
         <div className="kv"><span className="kv__k">אמצעי תשלום</span><span className="kv__v">{method}</span></div>
         <div className="kv"><span className="kv__k">טלפון הקפה</span><span className="kv__v">{c.accountPhone ? <><Ltr>{fmtPhone(c.accountPhone)}</Ltr> · {sharing.length ? <>כללי – משמש גם את {sharing.map((s, i) => <span key={s.id}>{i > 0 && ', '}<Link to={`/customers/${s.id}`}>{s.name}</Link></span>)}</> : 'ייעודי ללקוח הזה'}</> : '—'}</span></div>
@@ -508,7 +508,7 @@ function ContactsTab({ c }: { c: Customer }) {
   return (
     <div className="cgrid">
       <section className="card">
-        <div className="card__head"><h2 className="card__title">אנשי קשר</h2><Button size="sm" className="card__head-end" icon={<Plus size={15} />} onClick={() => setContactEdit({ id: newId(), name: '', role: '', phone: '', email: '', primary: c.contacts.length === 0 })}>איש קשר</Button></div>
+        <div className="card__head"><h2 className="card__title">אנשי קשר</h2><Button size="sm" className="card__head-end" icon={<Plus size={16} />} onClick={() => setContactEdit({ id: newId(), name: '', role: '', phone: '', email: '', primary: c.contacts.length === 0 })}>איש קשר</Button></div>
         <ul className="plist">
           {c.contacts.length === 0 && <li className="muted plist__empty">אין עדיין אנשי קשר</li>}
           {c.contacts.map((x) => (
@@ -522,8 +522,8 @@ function ContactsTab({ c }: { c: Customer }) {
                 </span>
               </div>
               {!x.primary && <Button size="sm" variant="ghost" onClick={() => saveContacts(c.contacts.map((y) => ({ ...y, primary: y.id === x.id })), `${x.name} הוא עכשיו איש הקשר הראשי`)}>הפוך לראשי</Button>}
-              <button className="icon-btn icon-btn--sm" aria-label={`ערוך את ${x.name}`} onClick={() => setContactEdit(x)}><Pencil size={15} /></button>
-              <button className="icon-btn icon-btn--sm" aria-label={`הסר את ${x.name}`} onClick={() => saveContacts(c.contacts.filter((y) => y.id !== x.id).map((y, i, arr) => ({ ...y, primary: x.primary ? i === 0 : y.primary || arr.length === 1 })), `${x.name} הוסר`)}><Trash2 size={15} /></button>
+              <button className="icon-btn icon-btn--sm" aria-label={`ערוך את ${x.name}`} onClick={() => setContactEdit(x)}><Pencil size={16} /></button>
+              <button className="icon-btn icon-btn--sm" aria-label={`הסר את ${x.name}`} onClick={() => saveContacts(c.contacts.filter((y) => y.id !== x.id).map((y, i, arr) => ({ ...y, primary: x.primary ? i === 0 : y.primary || arr.length === 1 })), `${x.name} הוסר`)}><Trash2 size={16} /></button>
             </li>
           ))}
         </ul>
@@ -535,7 +535,7 @@ function ContactsTab({ c }: { c: Customer }) {
       </section>
 
       <section className="card">
-        <div className="card__head"><h2 className="card__title">כתובות אספקה קבועות</h2><Button size="sm" className="card__head-end" icon={<Plus size={15} />} onClick={() => setAddrEdit({ id: newId(), label: '', address: '', directions: '', preferredBranchId: '' })}>כתובת</Button></div>
+        <div className="card__head"><h2 className="card__title">כתובות אספקה קבועות</h2><Button size="sm" className="card__head-end" icon={<Plus size={16} />} onClick={() => setAddrEdit({ id: newId(), label: '', address: '', directions: '', preferredBranchId: '' })}>כתובת</Button></div>
         <ul className="plist">
           {c.addresses.length === 0 && <li className="muted plist__empty">אין עדיין כתובות קבועות</li>}
           {c.addresses.map((a) => (
@@ -544,11 +544,11 @@ function ContactsTab({ c }: { c: Customer }) {
                 <b>{a.label || 'כתובת'}</b> <span>· {a.address}</span>
                 <span className="pitem__meta">
                   {a.directions && <span>{a.directions}</span>}
-                  {a.preferredBranchId && <span className="muted"><Star size={12} aria-hidden="true" /> סניף מועדף: {branchLabel(a.preferredBranchId)}</span>}
+                  {a.preferredBranchId && <span className="muted"><Star size={14} aria-hidden="true" /> סניף מועדף: {branchLabel(a.preferredBranchId)}</span>}
                 </span>
               </div>
-              <button className="icon-btn icon-btn--sm" aria-label={`ערוך כתובת ${a.label}`} onClick={() => setAddrEdit(a)}><Pencil size={15} /></button>
-              <button className="icon-btn icon-btn--sm" aria-label={`הסר כתובת ${a.label}`} onClick={() => saveAddresses(c.addresses.filter((y) => y.id !== a.id), 'הכתובת הוסרה')}><Trash2 size={15} /></button>
+              <button className="icon-btn icon-btn--sm" aria-label={`ערוך כתובת ${a.label}`} onClick={() => setAddrEdit(a)}><Pencil size={16} /></button>
+              <button className="icon-btn icon-btn--sm" aria-label={`הסר כתובת ${a.label}`} onClick={() => saveAddresses(c.addresses.filter((y) => y.id !== a.id), 'הכתובת הוסרה')}><Trash2 size={16} /></button>
             </li>
           ))}
         </ul>
@@ -580,7 +580,7 @@ function ContactEditor({ value, onSave, onCancel }: { value: Contact; onSave: (v
         <Field label="מייל"><input className="input input--sm input--ltr" value={v.email} onChange={(e) => { setV({ ...v, email: e.target.value }); setErr(''); }} /></Field>
       </div>
       {err && <p className="pop__err" role="alert">{err}</p>}
-      <div className="pedit__actions"><Button size="sm" variant="primary" type="submit" icon={<Check size={15} />}>שמור</Button><Button size="sm" variant="ghost" type="button" onClick={onCancel}>ביטול</Button></div>
+      <div className="pedit__actions"><Button size="sm" variant="primary" type="submit" icon={<Check size={16} />}>שמור</Button><Button size="sm" variant="ghost" type="button" onClick={onCancel}>ביטול</Button></div>
     </form>
   );
 }
@@ -602,7 +602,7 @@ function AddressEditor({ value, branches, branchLabel, onSave, onCancel }: { val
         </Field>
       </div>
       {err && <p className="pop__err" role="alert">{err}</p>}
-      <div className="pedit__actions"><Button size="sm" variant="primary" type="submit" icon={<Check size={15} />}>שמור</Button><Button size="sm" variant="ghost" type="button" onClick={onCancel}>ביטול</Button></div>
+      <div className="pedit__actions"><Button size="sm" variant="primary" type="submit" icon={<Check size={16} />}>שמור</Button><Button size="sm" variant="ghost" type="button" onClick={onCancel}>ביטול</Button></div>
     </form>
   );
 }

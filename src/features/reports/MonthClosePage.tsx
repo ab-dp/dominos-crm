@@ -77,10 +77,10 @@ export function MonthClosePage() {
   const busy = loading || mLoading;
 
   const STEPS: [Step, string, string, ReactNode][] = [
-    [1, 'השלמת חוסרים', done[1] ? 'אין חוסרים' : `${blocked.length} הזמנות`, <TriangleAlert size={18} key="1" />],
-    [2, 'בדיקת הקפות', done[2] ? (credit.length ? 'הכל שולם' : 'אין הקפות') : `${creditUnpaid.length} לא שולמו`, <Wallet size={18} key="2" />],
-    [3, 'העברה להנה"ח', done[3] ? `יוצא ${fmtStamp(month?.exportedAt)}` : 'טרם יוצא', <ReceiptText size={18} key="3" />],
-    [4, 'נעילה', locked ? 'החודש נעול' : 'פתוח', <Lock size={18} key="4" />],
+    [1, 'השלמת חוסרים', done[1] ? 'אין חוסרים' : `${blocked.length} הזמנות`, <TriangleAlert size={16} key="1" />],
+    [2, 'בדיקת הקפות', done[2] ? (credit.length ? 'הכל שולם' : 'אין הקפות') : `${creditUnpaid.length} לא שולמו`, <Wallet size={16} key="2" />],
+    [3, 'העברה להנה"ח', done[3] ? `יוצא ${fmtStamp(month?.exportedAt)}` : 'טרם יוצא', <ReceiptText size={16} key="3" />],
+    [4, 'נעילה', locked ? 'החודש נעול' : 'פתוח', <Lock size={16} key="4" />],
   ];
 
   return (
@@ -90,7 +90,7 @@ export function MonthClosePage() {
           <h1 className="page__title">סגירת חודש</h1>
           <p className="page__sub">
             חודש <bdi dir="ltr">{monthLabel(ym)}</bdi> · <Ltr>{orders.length}</Ltr> הזמנות ·{' '}
-            {locked ? <span className="mclose__state mclose__state--locked"><Lock size={13} aria-hidden="true" /> נעול · {month?.lockedByName} · {fmtStamp(month?.lockedAt)}</span>
+            {locked ? <span className="mclose__state mclose__state--locked"><Lock size={14} aria-hidden="true" /> נעול · {month?.lockedByName} · {fmtStamp(month?.lockedAt)}</span>
               : <span className="mclose__state">פתוח · <Ltr>{`${doneCount}/4`}</Ltr> שלבים הושלמו</span>}
           </p>
         </div>
@@ -132,7 +132,7 @@ export function MonthClosePage() {
 
 function StepIntro({ done, doneText, children }: { done: boolean; doneText: string; children: ReactNode }) {
   return done
-    ? <p className="mclose__intro is-done"><CircleCheckBig size={18} aria-hidden="true" /> {doneText}</p>
+    ? <p className="mclose__intro is-done"><CircleCheckBig size={16} aria-hidden="true" /> {doneText}</p>
     : <p className="mclose__intro">{children}</p>;
 }
 
@@ -203,7 +203,7 @@ function Export({ ym, orders, month, locked }: { ym: string; orders: Order[]; mo
         ייצוא כל הזמנות החודש לאקסל – כולל סטטוס, אמצעי ומצב תשלום, מס' Q, סכומים, תעודות רכש והערות לחיוב. אחרי הייצוא החודש מסומן "הועבר להנהלת חשבונות".
       </StepIntro>
       <div className="card mclose__card">
-        <Download size={22} aria-hidden="true" className="mclose__card-icon" />
+        <Download size={20} aria-hidden="true" className="mclose__card-icon" />
         <div><b>קובץ להנהלת חשבונות</b><span className="muted"><Ltr>{orders.length}</Ltr> הזמנות · חודש <bdi dir="ltr">{monthLabel(ym)}</bdi></span></div>
         <Button variant="primary" icon={<Download size={16} />} loading={busy} disabled={!orders.length} onClick={run}>{month?.exportedAt ? 'ייצוא מחדש' : 'ייצוא וסימון "הועבר"'}</Button>
       </div>
@@ -242,10 +242,10 @@ function LockStep({ ym, orders, month, done, fixes, onGo }: { ym: string; orders
   return (
     <>
       {locked ? (
-        <p className="mclose__intro is-done"><Lock size={18} aria-hidden="true" /> החודש נעול. סכומים, תאריכים, סטטוסים ומצבי תשלום של הזמנותיו משתנים רק עם סיבה, ומסומנים "תיקון לאחר סגירה".</p>
+        <p className="mclose__intro is-done"><Lock size={16} aria-hidden="true" /> החודש נעול. סכומים, תאריכים, סטטוסים ומצבי תשלום של הזמנותיו משתנים רק עם סיבה, ומסומנים "תיקון לאחר סגירה".</p>
       ) : (
         <div className="card mclose__card">
-          <Lock size={22} aria-hidden="true" className="mclose__card-icon" />
+          <Lock size={20} aria-hidden="true" className="mclose__card-icon" />
           <div>
             <b>סגור ונעל את החודש</b>
             {ready ? <span className="muted">כל ההזמנות נסגרו וכל ההקפות שולמו. הסיכומים יישמרו כעותק קפוא.{!done[3] && ' שים לב: החודש עוד לא יוצא להנהלת חשבונות.'}</span>

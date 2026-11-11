@@ -84,7 +84,7 @@ export function BranchPicker({ value, onChange, preferredId, label = 'סניף' 
                   className={`bpick__opt ${active === i ? 'is-active' : ''}`} onMouseEnter={() => setActive(i)} onClick={() => pick(i)}>
                   <span className="bpick__check">{value?.branchId === b.id && <Check size={14} />}</span>
                   <span className="bpick__name">{b.name}</span>
-                  {b.id === preferredId && <span className="bpick__pref"><Star size={12} aria-hidden="true" /> מועדף</span>}
+                  {b.id === preferredId && <span className="bpick__pref"><Star size={14} aria-hidden="true" /> מועדף</span>}
                   <span className="bpick__cluster">{clusterName(b.clusterId)}</span>
                 </li>
               ))}

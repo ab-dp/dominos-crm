@@ -35,7 +35,7 @@ export function InactivityGuard() {
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
         <Dialog.Content className="udialog" dir="rtl" aria-describedby="idle-desc" role="alertdialog">
-          <Dialog.Title className="udialog__title"><Clock size={18} aria-hidden="true" style={{ verticalAlign: -3 }} /> עדיין כאן?</Dialog.Title>
+          <Dialog.Title className="udialog__title"><Clock size={16} aria-hidden="true" style={{ verticalAlign: -3 }} /> עדיין כאן?</Dialog.Title>
           <p id="idle-desc" className="muted">
             לא הייתה פעילות כמעט שעה. תנותק בעוד <bdi dir="ltr" className="ltr"><b>{`${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`}</b></bdi> כדי להגן על המערכת בעמדה המשותפת.
           </p>

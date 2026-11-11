@@ -146,7 +146,7 @@ function Register({ onBack }: { onBack: () => void }) {
         <ul className="pwrules" id="pw-rules" aria-label="כללי הסיסמה">
           {rules.map((r) => (
             <li key={r.label} className={r.ok ? 'is-ok' : ''}>
-              <span className="pwrules__icon" aria-hidden="true">{r.ok ? <Check size={12} strokeWidth={3} /> : null}</span>
+              <span className="pwrules__icon" aria-hidden="true">{r.ok ? <Check size={14} strokeWidth={3} /> : null}</span>
               {r.label}<span className="sr-only">{r.ok ? ' – תקין' : ' – חסר'}</span>
             </li>
           ))}
@@ -165,7 +165,7 @@ function Pending() {
   const { profile, user, logout } = useAuth();
   return (
     <div className="pending">
-      <span className="pending__icon" aria-hidden="true"><Hourglass size={28} /></span>
+      <span className="pending__icon" aria-hidden="true"><Hourglass size={20} /></span>
       <h1 className="auth__title">הבקשה שלך נשלחה</h1>
       <p className="auth__lead">הבקשה הועברה למנהל המערכת. תוכל להיכנס אחרי שתאושר – המסך הזה יתעדכן לבד ברגע האישור, אין צורך לרענן.</p>
       <div className="pending__who">
@@ -191,7 +191,7 @@ function PasswordField({ label, value, onChange, autoComplete, invalid, describe
         <input className="input input--ltr" type={show ? 'text' : 'password'} autoComplete={autoComplete} value={value}
           onChange={(e) => onChange(e.target.value)} aria-invalid={invalid || undefined} aria-describedby={describedBy} />
         <button type="button" className="pw__toggle" onClick={() => setShow(!show)} aria-label={show ? 'הסתר סיסמה' : 'הצג סיסמה'} aria-pressed={show}>
-          {show ? <EyeOff size={18} /> : <Eye size={18} />}
+          {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </span>
       {hint && <span className="afield__hint">{hint}</span>}
@@ -233,7 +233,7 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
 function Notice({ tone, children, onClose }: { tone: 'danger'; children: ReactNode; onClose: () => void }) {
   return (
     <div className={`anotice anotice--${tone}`} role="alert">
-      <TriangleAlert size={18} aria-hidden="true" />
+      <TriangleAlert size={16} aria-hidden="true" />
       <span>{children}</span>
       <button onClick={onClose} aria-label="סגור הודעה"><X size={16} /></button>
     </div>

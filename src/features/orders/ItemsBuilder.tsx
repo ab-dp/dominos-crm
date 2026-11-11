@@ -295,7 +295,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
                   onBlur={() => { if (!isDraft && l.pText !== undefined) change(l.key, { pText: undefined }); }} {...on(l.key, 'price')} />
                 <input className={`input input--sm input--ltr ${bad && l.qty <= 0 ? 'is-invalid' : ''}`} inputMode="numeric" value={l.qty || ''} placeholder=""
                   onChange={(e) => change(l.key, { qty: Number(e.target.value.replace(/\D/g, '')) || 0 })} aria-label={`כמות – ${label}`} aria-invalid={bad && l.qty <= 0 ? true : undefined} {...on(l.key, 'qty')} />
-                {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(l.key)}><Trash2 size={15} /></button>}
+                {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(l.key)}><Trash2 size={16} /></button>}
               </div>
               {l.detail && <p className="ib-r__note">הערה: {l.detail}</p>}
               {topSug.length > 0 && (

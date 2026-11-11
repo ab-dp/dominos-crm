@@ -11,13 +11,13 @@ import { setTaskDone, type Task } from '../../data/tasks';
 import { useToast } from '../../design/Toast';
 import { Skeleton } from '../../design/components';
 import { Ltr, addDays, fmtDate, toISODate } from '../../lib/format';
-import { RULE_LABEL, type Issue, type Severity } from '../../rules-engine/health';
+import { RULE_LABEL, SEVERITY_LABEL, type Issue, type Severity } from '../../rules-engine/health';
 import { FixButton } from '../orders/OrderActions';
 import '../pages.css';
 import './ExceptionsPage.css';
 
 type Row = { o: OrderView; issue: Issue };
-const GROUPS: [Severity, string][] = [['red', 'חריגות'], ['orange', 'דחוף'], ['yellow', 'חסר']];
+const GROUPS: Severity[] = ['red', 'orange', 'yellow', 'info'];
 
 export function ExceptionsPage() {
   const { orders, now, tasks, loading } = useStore();
@@ -56,10 +56,11 @@ export function ExceptionsPage() {
           <p className="page__sub">לפי חומרה – בכל שורה הכפתור שפותר אותה.</p>
         </div>
         <dl className="head-stats">
-          <div className={by('red').length ? 'is-alert' : ''}><dt>חריגות</dt><dd><Ltr>{all.filter((r) => r.issue.severity === 'red').length}</Ltr></dd></div>
-          <div><dt>דחוף</dt><dd><Ltr>{all.filter((r) => r.issue.severity === 'orange').length}</Ltr></dd></div>
-          <div><dt>חסר</dt><dd><Ltr>{all.filter((r) => r.issue.severity === 'yellow').length}</Ltr></dd></div>
-          <div className={overdue.length ? 'is-alert' : ''}><dt>משימות להיום</dt><dd><Ltr>{overdue.length + dueToday.length}</Ltr></dd></div>
+          {GROUPS.map((sev) => {
+            const n = all.filter((r) => r.issue.severity === sev).length;
+            return <div key={sev} className={n && sev === 'red' ? 'is-alert' : ''}><dt>{SEVERITY_LABEL[sev]}</dt><dd><Ltr>{n}</Ltr></dd></div>;
+          })}
+          <div className={overdue.length ? 'is-warn' : ''}><dt>משימות להיום</dt><dd><Ltr>{overdue.length + dueToday.length}</Ltr></dd></div>
         </dl>
       </header>
 
@@ -72,7 +73,7 @@ export function ExceptionsPage() {
           {counts.map(([r, n]) => (
             <button key={r} className={`chip ${rule === String(r) ? 'is-on' : ''}`} aria-pressed={rule === String(r)} onClick={() => setRule(rule === String(r) ? null : String(r))}>
               {RULE_LABEL[r] ?? r} <span className="chip__n"><Ltr>{n}</Ltr></span>
-              {rule === String(r) && <X size={13} aria-hidden="true" />}
+              {rule === String(r) && <X size={14} aria-hidden="true" />}
             </button>
           ))}
         </div>
@@ -82,8 +83,9 @@ export function ExceptionsPage() {
         <section className="card" aria-labelledby="h-exc">
           <div className="card__head"><h2 id="h-exc" className="card__title">הזמנות שדורשות טיפול</h2><span className="muted exc__n"><Ltr>{rows.length}</Ltr> שורות</span></div>
           {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={40} />)}</div> : rows.length === 0 ? (
-            <p className="calm exc__calm"><CircleCheckBig size={18} aria-hidden="true" /> {rule ? `אין "${RULE_LABEL[Number(rule)]}"` : 'אין חריגים. הכל מטופל'}</p>
-          ) : GROUPS.map(([sev, title]) => {
+            <p className="calm exc__calm"><CircleCheckBig size={16} aria-hidden="true" /> {rule ? `אין "${RULE_LABEL[Number(rule)]}"` : 'אין חריגים. הכל מטופל'}</p>
+          ) : GROUPS.map((sev) => {
+            const title = SEVERITY_LABEL[sev];
             const list = by(sev);
             if (!list.length) return null;
             return (
@@ -113,10 +115,10 @@ export function ExceptionsPage() {
         <section className="card" aria-labelledby="h-tasks">
           <div className="card__head"><h2 id="h-tasks" className="card__title">משימות מעקב</h2><span className="muted exc__n"><Ltr>{tasks.length}</Ltr> פתוחות</span></div>
           {tasks.length === 0 ? (
-            <p className="exc__empty"><CalendarClock size={18} aria-hidden="true" /> אין משימות פתוחות. משימה נוצרת מ"משימת חזרה" בתיק לקוח, או מהצעד הבא של ליד.</p>
+            <p className="exc__empty"><CalendarClock size={16} aria-hidden="true" /> אין משימות פתוחות. משימה נוצרת מ"משימת חזרה" בתיק לקוח, או מהצעד הבא של ליד.</p>
           ) : (
             <>
-              <TaskGroup title="באיחור" tone="red" list={overdue} when={when} />
+              <TaskGroup title="באיחור" tone="orange" list={overdue} when={when} />
               <TaskGroup title="היום" tone="brand" list={dueToday} when={when} />
               <TaskGroup title="בהמשך" tone="muted" list={upcoming} when={when} />
             </>
@@ -127,7 +129,7 @@ export function ExceptionsPage() {
   );
 }
 
-function TaskGroup({ title, tone, list, when }: { title: string; tone: 'red' | 'brand' | 'muted'; list: Task[]; when: (iso: string) => React.ReactNode }) {
+function TaskGroup({ title, tone, list, when }: { title: string; tone: 'orange' | 'brand' | 'muted'; list: Task[]; when: (iso: string) => React.ReactNode }) {
   const toast = useToast();
   if (!list.length) return null;
   const done = (t: Task) => setTaskDone(t, true)

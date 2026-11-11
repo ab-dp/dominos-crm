@@ -121,7 +121,6 @@ export function PoEdit({ o }: { o: OrderView }) {
         <Popover.Content className="pop" aria-label="תעודת רכש" sideOffset={6} align="start" dir="rtl">
           <p className="pop__title">תעודת רכש</p>
           <PoForm o={o} done={() => setOpen(false)} />
-          <Popover.Arrow className="pop__arrow" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
@@ -244,7 +243,6 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
         <Popover.Content className="pop" aria-label={title} sideOffset={6} align="end" dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <p className="pop__title">{title}</p>
           {content}
-          <Popover.Arrow className="pop__arrow" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

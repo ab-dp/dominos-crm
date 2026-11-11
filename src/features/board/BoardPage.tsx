@@ -157,7 +157,7 @@ export function BoardPage() {
         <span className="board__vs">לעומת {prevName}</span>
         <Popover.Root>
           <Popover.Trigger asChild>
-            <Button variant="secondary" size="sm" icon={<Filter size={15} />}>סינון{active.length > 0 && <span className="board__fcount"><Ltr>{active.length}</Ltr></span>}</Button>
+            <Button variant="secondary" size="sm" icon={<Filter size={16} />}>סינון{active.length > 0 && <span className="board__fcount"><Ltr>{active.length}</Ltr></span>}</Button>
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content className="pop bfilter" align="end" sideOffset={6} dir="rtl">
@@ -182,13 +182,13 @@ export function BoardPage() {
             </Popover.Content>
           </Popover.Portal>
         </Popover.Root>
-        {usingRemote && <Button variant="ghost" size="sm" icon={<RefreshCw size={15} />} loading={remote.loading} onClick={remote.reload}>רענן</Button>}
+        {usingRemote && <Button variant="ghost" size="sm" icon={<RefreshCw size={16} />} loading={remote.loading} onClick={remote.reload}>רענן</Button>}
       </div>
       {active.length > 0 && (
         <div className="board__chips" aria-label="סינון פעיל">
           {active.map(([k, v]) => (
             <button key={k} type="button" className="chip is-on" onClick={() => setFilters({ ...filters, [k]: '', ...(k === 'cluster' ? { branch: '' } : {}) })} aria-label={`הסר סינון ${FILTER_NAME[k]}: ${v}`}>
-              {FILTER_NAME[k]}: {k === 'method' ? METHOD_LABEL[v] ?? v : v} <X size={13} aria-hidden="true" />
+              {FILTER_NAME[k]}: {k === 'method' ? METHOD_LABEL[v] ?? v : v} <X size={14} aria-hidden="true" />
             </button>
           ))}
         </div>
@@ -424,7 +424,7 @@ function CollectionsSection({ c, go }: { c: ReturnType<typeof collections>; go: 
         </>
       )}
       <ul className="bchecks">
-        <li><button type="button" onClick={() => go('/exceptions?rule=2')} className={c.gaps.count ? 'is-alert' : ''}>
+        <li><button type="button" onClick={() => go('/exceptions?rule=2')} className={c.gaps.count ? 'is-warn' : ''}>
           <span>פערים בין ההזמנה לקופה (Q)</span>
           <b>{c.gaps.count ? <>{orders$(c.gaps.count)} · <Ltr>{fmtMoney(c.gaps.sum)}</Ltr></> : 'אין'}</b>
         </button></li>
@@ -533,7 +533,7 @@ function LayoutMenu({ order, hidden, onChange }: { order: SectionKey[]; hidden: 
   const toggle = (k: SectionKey) => onChange(order, hidden.includes(k) ? hidden.filter((x) => x !== k) : [...hidden, k]);
   return (
     <Popover.Root>
-      <Popover.Trigger asChild><Button variant="secondary" size="sm" icon={<SlidersHorizontal size={15} />}>התאם תצוגה</Button></Popover.Trigger>
+      <Popover.Trigger asChild><Button variant="secondary" size="sm" icon={<SlidersHorizontal size={16} />}>התאם תצוגה</Button></Popover.Trigger>
       <Popover.Portal>
         <Popover.Content className="pop blayout" align="end" sideOffset={6} dir="rtl">
           <p className="pop__title">מה מוצג בבורד, ובאיזה סדר</p>
@@ -542,8 +542,8 @@ function LayoutMenu({ order, hidden, onChange }: { order: SectionKey[]; hidden: 
               <li key={k}>
                 <label className="blayout__check"><input type="checkbox" checked={!hidden.includes(k)} onChange={() => toggle(k)} /> {SECTIONS[k]}</label>
                 <span className="blayout__move">
-                  <button type="button" className="icon-btn icon-btn--sm" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`הזז למעלה: ${SECTIONS[k]}`}><ChevronUp size={15} /></button>
-                  <button type="button" className="icon-btn icon-btn--sm" onClick={() => move(i, 1)} disabled={i === order.length - 1} aria-label={`הזז למטה: ${SECTIONS[k]}`}><ChevronDown size={15} /></button>
+                  <button type="button" className="icon-btn icon-btn--sm" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`הזז למעלה: ${SECTIONS[k]}`}><ChevronUp size={16} /></button>
+                  <button type="button" className="icon-btn icon-btn--sm" onClick={() => move(i, 1)} disabled={i === order.length - 1} aria-label={`הזז למטה: ${SECTIONS[k]}`}><ChevronDown size={16} /></button>
                 </span>
               </li>
             ))}

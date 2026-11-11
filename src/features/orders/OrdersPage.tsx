@@ -56,6 +56,7 @@ export function OrdersPage() {
   [lists, tab, filter, q]);
   const total = rows.filter((o) => o.status !== 'cancelled').reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
   const needs = rows.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
+  const critical = rows.some((o) => o.health === 'critical');
   const set = (k: string, v: string | null) => {
     const p = new URLSearchParams(params);
     if (v === null) p.delete(k); else p.set(k, v);
@@ -73,7 +74,7 @@ export function OrdersPage() {
         <dl className="head-stats" aria-live="polite">
           <div><dt>הזמנות בתצוגה</dt><dd><Ltr>{rows.length}</Ltr></dd></div>
           <div><dt>סך הכל</dt><dd><Ltr>{fmtMoney(total)}</Ltr></dd></div>
-          <div className={needs ? 'is-alert' : ''}><dt>דורשות טיפול</dt><dd><Ltr>{needs}</Ltr></dd></div>
+          <div className={critical ? 'is-alert' : needs ? 'is-warn' : ''}><dt>דורשות טיפול</dt><dd><Ltr>{needs}</Ltr></dd></div>
         </dl>
       </header>
       {error && <p className="cform__formerr" role="alert">{error} – ההזמנות לא נטענו. רענן את הדף.</p>}

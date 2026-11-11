@@ -47,7 +47,7 @@ export function ErrorsPage() {
         {rows === null ? (
           <div className="loading-rows">{[0, 1, 2].map((i) => <Skeleton key={i} h={18} />)}</div>
         ) : rows.length === 0 ? (
-          <EmptyState icon={<CircleCheckBig size={24} />} title="אין תקלות">תקלה שתקרה אצל משתמש תופיע כאן, עם המסך והשעה.</EmptyState>
+          <EmptyState icon={<CircleCheckBig size={20} />} title="אין תקלות">תקלה שתקרה אצל משתמש תופיע כאן, עם המסך והשעה.</EmptyState>
         ) : (
           <ul className="errlog__list">
             {rows.map((r) => (

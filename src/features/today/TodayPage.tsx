@@ -10,7 +10,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { CLOSED, itemsText } from '../../data/types';
 import { Button, HealthBadge, Missing, Skeleton } from '../../design/components';
 import { orderDateTime } from '../../rules-engine/health';
-import { todayTaskCounts } from './todayTasks';
+import { redTasks, todayTaskCounts, type TaskKey } from './todayTasks';
 import { Ltr, Money, addDays, fmtDate, toISODate, weekday } from '../../lib/format';
 import { NextStep, StageTrack } from '../orders/OrderTimeline';
 import { downloadCsv } from '../../lib/csv';
@@ -28,7 +28,6 @@ export function TodayPage() {
   const [mine, setMine] = useState(false);
   const { profile, isAdmin } = useAuth();
   const pendingUsers = usePendingRequests();
-  const firstName = (profile?.name ?? '').split(' ')[0];
 
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
@@ -37,26 +36,26 @@ export function TodayPage() {
   /* משימות לפי ציר ההזמנה: לקוח ← תפעול ← Q ← קבוצת תפעול ← סגירה. מופיעה רק משימה שיש בה מה לעשות.
      הספירה משותפת לתפריט (todayTasks.ts) – המספר ליד "היום" הוא בדיוק מספר המשימות כאן */
   const c = todayTaskCounts(scope, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 });
-  const tasks: { key: string; title: string; sub?: string; icon: ReactNode; count: number; to: string; red?: boolean }[] = [
-    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'הזמנות של היום ומחר', icon: <UserCheck size={20} />, count: c.customer, to: '/exceptions?rule=6', red: true },
+  const red = redTasks(scope, c);
+  const tasks: { key: TaskKey; title: string; sub?: string; icon: ReactNode; count: number; to: string }[] = [
+    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'הזמנות של היום ומחר', icon: <UserCheck size={20} />, count: c.customer, to: '/exceptions?rule=6' },
     { key: 'branch', title: 'לעדכן בתפעול', sub: 'הזמנות של היום ומחר', icon: <Store size={20} />, count: c.branch, to: '/orders?tab=today&filter=branch' },
     { key: 'q', title: 'להקליד ל-Q', sub: 'הזמנות של היום', icon: <Send size={20} />, count: c.q, to: '/orders?tab=today&filter=q' },
     { key: 'ops', title: 'לשלוח בקבוצת תפעול', sub: 'הוקלדו ל-Q ועוד לא נשלחו', icon: <BellRing size={20} />, count: c.ops, to: '/exceptions?rule=12' },
-    { key: 'yesterday', title: 'לסגור הזמנות שעברו', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, count: c.yesterday, to: '/orders?tab=overdue', red: true },
-    // חריגים אדומים שאין להם משימה משלה למעלה (אשראי שלא חויב, פער מול Q, שעה שעברה היום, שינוי לעדכן ב-Q)
-    { key: 'urgent', title: 'חריגים דחופים', sub: 'במסך חריגים ומשימות', icon: <TriangleAlert size={20} />, count: c.urgent, to: '/exceptions', red: true },
+    { key: 'yesterday', title: 'לסגור הזמנות שעברו', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, count: c.yesterday, to: '/orders?tab=overdue' },
+    // חריגות קריטיות שאין להן משימה משלה למעלה (חיוב שנכשל, ביטול שלא בוצע בקופה)
+    { key: 'urgent', title: 'חריגים דחופים', sub: 'חיוב שנכשל, ביטול שלא בוצע ב-Q', icon: <TriangleAlert size={20} />, count: c.urgent, to: '/exceptions' },
     { key: 'missing', title: 'להשלים פרטים חסרים', icon: <ClipboardX size={20} />, count: c.missing, to: '/exceptions?rule=8' },
     { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, count: c.quotes, to: '/quotes?tab=waiting' },
     { key: 'followups', title: 'משימות מעקב להיום', icon: <ListChecks size={20} />, count: c.followups, to: '/exceptions' },
     { key: 'users', title: 'בקשות הצטרפות לאישור', icon: <UserPlus size={20} />, count: c.users, to: '/settings/users' },
   ];
-  const openTasks = tasks.filter((t) => t.count > 0);
+  // קודם מה שקריטי, אחר כך לפי סדר הציר
+  const openTasks = tasks.filter((t) => t.count > 0).sort((a, b) => Number(red.has(b.key)) - Number(red.has(a.key)));
 
   const todays = scope.filter((o) => o.date === today && o.status !== 'cancelled').sort((a, b) => a.time.localeCompare(b.time));
   const nowIdx = todays.findIndex((o) => orderDateTime(o) > now);
   const nextUp = todays.find((o) => orderDateTime(o) > now && !CLOSED.includes(o.status));
-  const hour = now.getHours();
-  const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : 'ערב טוב';
 
   /* "הורד היום ומחר" (אפיון 16): כל הזמנות היום ומחר לאקסל – לעבודה גם אם המערכת לא זמינה. תמיד של כולם, לא רק "שלי". */
   const downloadTodayTomorrow = () => {
@@ -73,14 +72,12 @@ export function TodayPage() {
 
   return (
     <div className="page today">
-      <header className="page__head today__hero">
+      <header className="page__head">
         <div>
-          <p className="today__date">יום {weekday(today)} · <Ltr>{fmtDate(today)}</Ltr></p>
-          <h1 className="page__title">{greeting}{firstName && <>, {firstName}</>}</h1>
-          <p className="today__summary" aria-live="polite">
-            {loading ? '…' : openTasks.length
-              ? <><b><Ltr>{openTasks.length}</Ltr> {openTasks.length === 1 ? 'משימה פתוחה' : 'משימות פתוחות'}</b> <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>
-              : <>אין משימות פתוחות <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>}
+          <h1 className="page__title">היום</h1>
+          <p className="page__sub" aria-live="polite">
+            יום {weekday(today)} <Ltr>{fmtDate(today)}</Ltr> <span aria-hidden="true">·</span>{' '}
+            {loading ? '…' : <>{openTasks.length ? <><Ltr>{openTasks.length}</Ltr> {openTasks.length === 1 ? 'משימה פתוחה' : 'משימות פתוחות'}</> : 'אין משימות פתוחות'} <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>}
           </p>
         </div>
         <div className="page__head-end">
@@ -97,24 +94,24 @@ export function TodayPage() {
         <section className="card" aria-labelledby="h-tasks">
           <div className="card__head">
             <h2 id="h-tasks" className="card__title">משימות פתוחות</h2>
-            {openTasks.length > 0 && <span className="pill pill--alert"><Ltr>{openTasks.length}</Ltr></span>}
+            {openTasks.length > 0 && <span className="pill"><Ltr>{openTasks.length}</Ltr></span>}
           </div>
           {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2].map((i) => <Skeleton key={i} h={44} />)}</div> : openTasks.length === 0 ? (
-            <p className="calm"><CircleCheckBig size={18} aria-hidden="true" /> אין משימות פתוחות</p>
+            <p className="calm"><CircleCheckBig size={16} aria-hidden="true" /> אין משימות פתוחות</p>
           ) : (
             <ul className="otasks">
               <AnimatePresence initial={false}>
                 {openTasks.map((t) => (
                   <motion.li key={t.key} layout={!reduce} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, transition: { duration: 0.2 } }}>
-                    <button className={`task ${t.red ? 'task--red' : ''}`} onClick={() => nav(t.to)}>
+                    <button className={`task ${red.has(t.key) ? 'task--red' : ''}`} onClick={() => nav(t.to)}>
                       <span className="task__icon" aria-hidden="true">{t.icon}</span>
                       <span className="task__text">
                         <span className="task__title">{t.title}</span>
                         {t.sub && <span className="task__sub">{t.sub}</span>}
                       </span>
                       <span className="task__count"><Ltr>{t.count}</Ltr></span>
-                      <ChevronLeft className="task__go" size={18} aria-hidden="true" />
+                      <ChevronLeft className="task__go" size={16} aria-hidden="true" />
                     </button>
                   </motion.li>
                 ))}

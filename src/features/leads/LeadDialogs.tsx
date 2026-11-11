@@ -33,7 +33,7 @@ export function Shell({ title, sub, children, onClose, wide }: { title: string; 
           onOpenAutoFocus={(e) => { e.preventDefault(); ((e.currentTarget as HTMLElement).querySelector('[data-autofocus], textarea, input, select') as HTMLElement | null)?.focus(); }}>
           <div className="sdialog__head">
             <Dialog.Title className="udialog__title">{title}</Dialog.Title>
-            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
+            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>
           </div>
           {sub && <p id="ldialog-sub" className="sdialog__sub">{sub}</p>}
           {children}

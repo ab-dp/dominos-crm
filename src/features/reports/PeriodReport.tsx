@@ -102,7 +102,7 @@ export function PeriodReport() {
           <p className="page__sub">לפי תאריך אספקה וסכום Q · <Ltr>{fmtDate(from)}</Ltr> עד <Ltr>{fmtDate(to)}</Ltr></p>
         </div>
         <div className="page__head-end">
-          <Button variant="ghost" size="sm" icon={<RefreshCw size={15} />} onClick={reload} disabled={loading}>רענן</Button>
+          <Button variant="ghost" size="sm" icon={<RefreshCw size={16} />} onClick={reload} disabled={loading}>רענן</Button>
           <Button variant="primary" icon={<Download size={16} />} onClick={exportXlsx} loading={busy} disabled={loading || !orders.length}>ייצוא לאקסל</Button>
         </div>
       </header>
@@ -131,7 +131,7 @@ export function PeriodReport() {
       {loading ? (
         <div className="card loading-rows" aria-busy="true" aria-label="טוען דוח">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} h={28} />)}</div>
       ) : !orders.length ? (
-        <section className="card"><EmptyState icon={<ChartColumn size={24} />} title="אין הזמנות בתקופה הזו">בחר תקופה אחרת.</EmptyState></section>
+        <section className="card"><EmptyState icon={<ChartColumn size={20} />} title="אין הזמנות בתקופה הזו">בחר תקופה אחרת.</EmptyState></section>
       ) : tab === 'orders' ? (
         <section className="card report__table-card" role="tabpanel" id="pp-orders" aria-labelledby="pt-orders">
           {notes.length > 0 && <p className="preport__note">{notes.join(' · ')}</p>}

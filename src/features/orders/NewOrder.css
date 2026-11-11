@@ -1,107 +1,107 @@
 .norder { width: min(820px, calc(100vw - 24px)); }
-.norder__head { gap: 12px; flex-wrap: wrap; }
+.norder__head { gap: var(--space-3); flex-wrap: wrap; }
 .norder__modes { margin-inline-start: auto; }
-.norder__modes button { display: inline-flex; align-items: center; gap: 6px; }
+.norder__modes button { display: inline-flex; align-items: center; gap: var(--space-2); }
 .norder__modes button svg { opacity: 0.7; }
 .norder__modes button.is-on svg { opacity: 1; color: var(--brand-600); }
-.norder .cform__sec legend { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.norder .cform__sec legend { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .norder .cform__sec > :not(legend) { clear: both; }
 .norder .bpick { max-width: none; }
-.norder .bpick__trigger[aria-invalid="true"], .norder [data-invalid] .bpick__trigger { border-color: var(--danger-fg); box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12); }
+.norder .bpick__trigger[aria-invalid="true"], .norder [data-invalid] .bpick__trigger { border-color: var(--danger-fg); box-shadow: 0 0 0 3px var(--danger-bg); }
 .norder__sum { margin-inline-start: auto; font-size: var(--text-table); color: var(--gray-600); font-weight: 500; }
 
-.no-date { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.no-date { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .no-date .input { flex: 1; min-width: 150px; }
 .no-time { max-width: 160px; }
-.no-hint { margin: 4px 0 0; font-size: var(--text-label); }
+.no-hint { margin: var(--space-1) 0 0; font-size: var(--text-label); }
 
 
-.no-items { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: var(--text-table); }
-.no-items th { text-align: start; font-weight: 500; color: var(--gray-600); font-size: var(--text-label); padding: 0 6px 6px; }
-.no-items td { padding: 4px 6px; border-top: 1px solid var(--gray-100); vertical-align: middle; }
+.no-items { width: 100%; border-collapse: collapse; margin-bottom: var(--space-2); font-size: var(--text-table); }
+.no-items th { text-align: start; font-weight: 500; color: var(--gray-600); font-size: var(--text-label); padding: 0 var(--space-2) var(--space-2); }
+.no-items td { padding: var(--space-1) var(--space-2); border-top: 1px solid var(--gray-100); vertical-align: middle; }
 .no-items .num { text-align: end; white-space: nowrap; }
-.no-items__name { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.no-items__name { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 500; }
 .no-items__price { width: 90px; }
 .stepper { display: inline-flex; align-items: center; border: 1px solid var(--gray-300); border-radius: var(--radius); overflow: hidden; }
-.stepper button { width: 30px; height: 32px; display: grid; place-items: center; border: 0; background: var(--gray-25); cursor: pointer; color: var(--gray-900); }
+.stepper button { width: 30px; height: var(--control-sm); display: grid; place-items: center; border: 0; background: var(--gray-25); cursor: pointer; color: var(--gray-900); }
 .stepper button:hover { background: var(--brand-50); }
-.stepper .input { width: 48px; height: 32px; border: 0; border-radius: 0; text-align: center; }
-.no-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.no-quick .chip { display: inline-flex; align-items: center; gap: 4px; }
-.no-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-.no-add__pick { flex: 1; min-width: 220px; max-width: 380px; height: 38px; }
+.stepper .input { width: 48px; height: var(--control-sm); border: 0; border-radius: 0; text-align: center; }
+.no-quick { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.no-quick .chip { display: inline-flex; align-items: center; gap: var(--space-1); }
+.no-add { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-3); }
+.no-add__pick { flex: 1; min-width: 220px; max-width: 380px; height: var(--control-md); }
 
-.no-dup { margin: 0 0 12px; }
+.no-dup { margin: 0 0 var(--space-3); }
 .no-dup.is-ack, .no-similar.is-ack { background: var(--danger-bg); color: var(--danger-fg); }
-.no-dup__actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.no-dup__actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-1); }
 
 @media (max-width: 640px) {
   .norder__modes { margin-inline-start: 0; order: 3; width: 100%; }
-  .norder__modes button { flex: 1; justify-content: center; padding: 0 6px; white-space: nowrap; }
+  .norder__modes button { flex: 1; justify-content: center; padding: 0 var(--space-2); white-space: nowrap; }
   .norder__modes button svg { display: none; }
   .norder__sum { display: none; }
   .no-items th:nth-child(3), .no-items td:nth-child(3) { display: none; }
 }
 
 /* סכום לחיוב – ברירת מחדל מחושבת, ניתן לשינוי ידני */
-.no-final { margin: 4px 0 10px; padding: 10px 12px; border-radius: var(--radius); background: var(--gray-25); }
+.no-final { margin: var(--space-1) 0 var(--space-3); padding: var(--space-3) var(--space-3); border-radius: var(--radius); background: var(--gray-25); }
 .no-final .cform__field { max-width: 280px; }
 .no-final.is-manual { background: var(--missing-bg); }
-.no-final__note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0; font-size: var(--text-label); }
-.no-final__tag { padding: 1px 8px; border-radius: var(--radius-panel); background: var(--white); font-weight: 600; color: var(--missing-fg); }
-.norder .fdrop { margin-bottom: 10px; }
+.no-final__note { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-2) 0 0; font-size: var(--text-label); }
+.no-final__tag { padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--white); font-weight: 500; color: var(--missing-fg); }
+.norder .fdrop { margin-bottom: var(--space-3); }
 
 /* פרטים חסרים לפני שמירה – מעל כפתור השמירה, תמיד גלוי */
-.no-missing { display: grid; gap: 4px; margin: 0; padding: 8px 20px; list-style: none; border-top: 1px solid var(--urgent-edge); background: var(--urgent-bg); font-size: var(--text-label); }
-.no-missing li { display: flex; align-items: flex-start; gap: 8px; color: var(--gray-800); }
+.no-missing { display: grid; gap: var(--space-1); margin: 0; padding: var(--space-2) var(--space-5); list-style: none; border-top: 1px solid var(--urgent-edge); background: var(--urgent-bg); font-size: var(--text-label); }
+.no-missing li { display: flex; align-items: flex-start; gap: var(--space-2); color: var(--gray-800); }
 .no-missing svg { flex: none; margin-top: 2px; color: var(--urgent-fg); }
 .no-missing b { color: var(--urgent-fg); }
 
 
 /* "האם זה איש הקשר?" – הצעות מאנשי הקשר השמורים, לא מילוי אוטומטי */
-.no-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; font-size: var(--text-table); }
-.no-suggest__q { font-weight: 600; color: var(--gray-700); margin-inline-end: 2px; }
+.no-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); font-size: var(--text-table); }
+.no-suggest__q { font-weight: 500; color: var(--gray-700); margin-inline-end: 2px; }
 .no-suggest--on { color: var(--ok-fg); font-weight: 500; }
-.no-suggest--on .link { margin-inline-start: 8px; font-weight: 400; }
-.no-keep { display: inline-flex; align-items: center; gap: 8px; margin: -2px 0 10px; font-size: var(--text-table); color: var(--gray-700); cursor: pointer; }
+.no-suggest--on .link { margin-inline-start: var(--space-2); font-weight: 400; }
+.no-keep { display: inline-flex; align-items: center; gap: var(--space-2); margin: -2px 0 var(--space-3); font-size: var(--text-table); color: var(--gray-700); cursor: pointer; }
 .no-keep input { width: 16px; height: 16px; accent-color: var(--brand-600); }
-.no-regular { margin-top: 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--brand-50); color: var(--brand-800); }
+.no-regular { margin-top: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--brand-50); color: var(--brand-800); }
 
 /* הערת מחיר של הלקוח (למשל "מחיר לפי ממשק WellBe") */
-.no-pricenote { margin: 0 0 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-table); }
+.no-pricenote { margin: 0 0 var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-table); }
 
 /* הזמנה בתאריך שעבר – לתיעוד בלבד */
-.no-past { display: grid; gap: 8px; margin: 4px 0 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-table); clear: both; }
-.no-past b { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-body); }
+.no-past { display: grid; gap: var(--space-2); margin: var(--space-1) 0 var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-table); clear: both; }
+.no-past b { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-body); }
 .no-past > span { color: var(--gray-900); }
 .no-past .seg { justify-self: start; flex-wrap: wrap; }
 .no-past .cform__field { max-width: 320px; }
 .no-past__mins { max-width: 160px; }
 /* אין עדיין פריטים */
-.no-items-empty { margin: 0 0 10px; padding: 10px 12px; border: 1px dashed var(--gray-300); border-radius: var(--radius); font-size: var(--text-label); color: var(--gray-600); }
+.no-items-empty { margin: 0 0 var(--space-3); padding: var(--space-3) var(--space-3); border: 1px dashed var(--gray-300); border-radius: var(--radius); font-size: var(--text-label); color: var(--gray-600); }
 .no-items-empty.is-err { border-color: var(--danger-fg); color: var(--danger-fg); }
 
 /* מחשבון מחיר: בסיסי המחיר מעל שורות הפריטים */
-.no-calc { margin-bottom: 12px; padding: 10px 12px 2px; border-radius: var(--radius); background: var(--gray-50); box-shadow: inset 0 0 0 1px var(--gray-100); }
-.no-calc__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: var(--text-table); }
+.no-calc { margin-bottom: var(--space-3); padding: var(--space-3) var(--space-3) 2px; border-radius: var(--radius); background: var(--gray-50); box-shadow: inset 0 0 0 1px var(--gray-100); }
+.no-calc__head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-2); font-size: var(--text-table); }
 .no-calc__pick { width: auto; min-width: 200px; }
 .chip--manual { border-style: dashed; color: var(--brand-700); }
-.no-base { display: inline-block; max-width: 160px; padding: 2px 8px; border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-800); font-size: var(--text-label); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.no-base { display: inline-block; max-width: 160px; padding: 2px var(--space-2); border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-800); font-size: var(--text-label); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 .no-base.is-manual { background: var(--gray-100); color: var(--gray-600); }
 .no-items__desc { min-width: 160px; }
 .no-items__reset { display: block; margin-top: 2px; font-size: var(--text-micro); }
 .cform__hint svg { vertical-align: -1px; }
-.no-missing__go { font-weight: 600; color: var(--urgent-fg); text-decoration: underline; text-underline-offset: 2px; }
-.no-formerr { margin: 0; padding: 10px 20px; border-top: 1px solid var(--danger-fg); background: var(--danger-bg); color: var(--danger-fg); font-weight: 600; }
+.no-missing__go { font-weight: 500; color: var(--urgent-fg); text-decoration: underline; text-underline-offset: 2px; }
+.no-formerr { margin: 0; padding: var(--space-3) var(--space-5); border-top: 1px solid var(--danger-fg); background: var(--danger-bg); color: var(--danger-fg); font-weight: 500; }
 /* הזמנה מהצעת מחיר */
-.no-fromquote { margin: 0 0 14px; padding: 10px 12px; border-radius: var(--radius); background: var(--brand-50); box-shadow: inset 0 0 0 1px var(--brand-100); color: var(--brand-800); font-size: var(--text-table); line-height: 1.55; }
+.no-fromquote { margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-3); border-radius: var(--radius); background: var(--brand-50); box-shadow: inset 0 0 0 1px var(--brand-100); color: var(--brand-800); font-size: var(--text-table); line-height: 1.55; }
 
 /* שאלה לפני סגירה בלי שמירה – במקום שורת הכפתורים, באותו מקום */
 .no-confirm { flex-wrap: wrap; background: var(--urgent-bg); }
-.no-confirm__q { display: inline-flex; align-items: center; gap: 6px; margin-inline-end: auto; font-weight: 600; color: var(--urgent-fg); }
+.no-confirm__q { display: inline-flex; align-items: center; gap: var(--space-2); margin-inline-end: auto; font-weight: 500; color: var(--urgent-fg); }
 
 /* פרט חסר (אפשר לשמור בלעדיו) – אותה מסגרת אדומה כמו קודם; aria-invalid נשאר רק לשגיאה שחוסמת */
-.norder .input[data-miss] { border-color: var(--danger-fg); box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12); }
+.norder .input[data-miss] { border-color: var(--missing-edge); box-shadow: 0 0 0 3px var(--missing-bg); }
 /* שורה לא שלמה בפריטים – חוסמת שמירה */
-.no-missing__block { color: var(--danger-fg); }
-.no-missing__block b { color: var(--danger-fg); }
+.no-missing__block { color: var(--missing-fg); }
+.no-missing__block b { color: var(--missing-fg); }

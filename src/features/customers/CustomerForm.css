@@ -6,33 +6,33 @@
   z-index: 61;
   animation: dlg-in var(--dur-standard) var(--ease);
 }
-.cform__head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 8px; }
+.cform__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5) var(--space-2); }
 .cform__head .udialog__title { margin: 0; font-size: var(--text-screen-title); }
-.cform__body { flex: 1; overflow: auto; padding: 0 20px 12px; }
-.cform__sec { border: 0; margin: 0; padding: 14px 0 6px; border-top: 1px solid var(--gray-100); }
+.cform__body { flex: 1; overflow: auto; padding: 0 var(--space-5) var(--space-3); }
+.cform__sec { border: 0; margin: 0; padding: var(--space-4) 0 var(--space-2); border-top: 1px solid var(--gray-100); }
 .cform__sec:first-child { border-top: 0; }
-.cform__sec legend { padding: 0; margin-bottom: 8px; font-size: var(--text-card-title); font-weight: 600; float: right; width: 100%; }
-.cform__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 10px; clear: both; }
-.cform__field { display: grid; gap: 4px; align-content: start; }
-.cform__field .input, .cform .bpick__trigger { height: 40px; }
+.cform__sec legend { padding: 0; margin-bottom: var(--space-2); font-size: var(--text-card-title); font-weight: 600; float: right; width: 100%; }
+.cform__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); clear: both; }
+.cform__field { display: grid; gap: var(--space-1); align-content: start; }
+.cform__field .input, .cform .bpick__trigger { height: var(--control-md); }
 .cform__field .seg { width: fit-content; }
-.cform__field .seg button { height: 34px; }
-.cform__ta { height: auto !important; padding: 10px 12px; resize: vertical; font: inherit; line-height: 1.5; }
+.cform__field .seg button { height: 32px; }
+.cform__ta { height: auto !important; padding: var(--space-3) var(--space-3); resize: vertical; font: inherit; line-height: 1.5; }
 .cform__err { font-size: var(--text-label); color: var(--danger-fg); font-weight: 500; }
 .cform__hint { font-size: var(--text-label); color: var(--brand-800); }
 .cform__twin { font-size: var(--text-label); justify-self: start; }
 .cform__check { height: 42px; }
-.input[aria-invalid="true"] { border-color: var(--danger-fg); box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12); }
+.input[aria-invalid="true"] { border-color: var(--danger-fg); box-shadow: 0 0 0 3px var(--danger-bg); }
 .cform__warn {
-  display: flex; gap: 10px; margin-top: 8px; padding: 12px 14px;
+  display: flex; gap: var(--space-3); margin-top: var(--space-2); padding: var(--space-3) var(--space-4);
   border-radius: var(--radius); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-table);
   animation: pop-in var(--dur-quick) var(--ease);
 }
 .cform__warn svg { flex: none; margin-top: 2px; }
-.cform__warn ul { margin: 4px 0; padding-inline-start: 18px; }
-.cform__formerr { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; padding: 10px 12px; border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-table); }
-.cform__foot { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--gray-100); }
-.cform__live { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-label); color: var(--urgent-fg); }
+.cform__warn ul { margin: var(--space-1) 0; padding-inline-start: var(--space-4); }
+.cform__formerr { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-2) 0 0; padding: var(--space-3) var(--space-3); border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-table); }
+.cform__foot { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-top: 1px solid var(--gray-100); }
+.cform__live { margin-inline-start: auto; display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-label); color: var(--urgent-fg); }
 @media (max-width: 640px) { .cform__row { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .cform, .cform__warn { animation: none; } }
 /* כותרת החלק צפה לרוחב מלא – כל מה שאחריה מתחיל בשורה חדשה, גם שדה רחב שלא בתוך שורה */
@@ -40,22 +40,22 @@
 .cform__field.is-wide { grid-column: 1 / -1; }
 
 /* מייל נוסף ואיש קשר נוסף */
-.cform__adds { display: flex; gap: 16px; margin: -2px 0 8px; clear: both; }
-.cform__adds .link { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-label); }
-.cform__extra { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 10px; clear: both; }
+.cform__adds { display: flex; gap: var(--space-4); margin: -2px 0 var(--space-2); clear: both; }
+.cform__adds .link { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-label); }
+.cform__extra { display: flex; align-items: flex-end; gap: var(--space-2); margin-bottom: var(--space-3); clear: both; }
 .cform__extra .cform__field { flex: 1; max-width: calc(50% - 6px); }
-.cform__extra .icon-btn { margin-bottom: 4px; }
-.cform__more { clear: both; margin-bottom: 10px; padding: 8px 12px 2px; border-radius: var(--radius); background: var(--gray-50); }
-.cform__more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.cform__extra .icon-btn { margin-bottom: var(--space-1); }
+.cform__more { clear: both; margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3) 2px; border-radius: var(--radius); background: var(--gray-50); }
+.cform__more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
 @media (max-width: 640px) { .cform__extra .cform__field { max-width: none; } }
 
 /* טלפון: טופס (הזמנה חדשה, לקוח חדש) במסך מלא – בלי שוליים, ושורת השמירה מעל פס הבית */
 @keyframes sheet-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @media (max-width: 640px) {
   .cform { inset: 0; top: 0; left: 0; transform: none; width: 100vw; max-height: none; height: 100%; border-radius: 0; padding-top: env(safe-area-inset-top, 0px); animation-name: sheet-in; }
-  .cform__head { padding: 10px 8px 6px 16px; }
+  .cform__head { padding: var(--space-3) var(--space-2) var(--space-2) var(--space-4); }
   .cform__head .udialog__title { font-size: var(--text-section); }
   .cform__head .icon-btn { width: 44px; height: 44px; }
-  .cform__body { padding: 0 16px 12px; overscroll-behavior: contain; }
-  .cform__foot { padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .cform__body { padding: 0 var(--space-4) var(--space-3); overscroll-behavior: contain; }
+  .cform__foot { padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); }
 }

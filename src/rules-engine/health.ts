@@ -7,10 +7,15 @@ import { DEFAULT_THRESHOLDS, type Thresholds } from '../data/thresholds';
 export type Severity = 'red' | 'orange' | 'yellow' | 'info';
 export type FixAction = 'q' | 'branch' | 'pay' | 'status' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel' | 'ackQUpdate' | 'ops';
 
-/* alert: false – אדום (חסר), אבל עוד רחוק; לא קופץ בפעמון ובהתראה לכולם עד שמתקרב */
-export type Issue = { rule: number; severity: Severity; label: string; action: FixAction; actionLabel: string; alert?: boolean };
+export type Issue = { rule: number; severity: Severity; label: string; action: FixAction; actionLabel: string };
 
 export type Health = 'ok' | 'missing' | 'urgent' | 'critical';
+
+/* מיפוי אחד מחומרה לצבע – כל רכיב (תג, שורה, מספר, קבוצה) קורא מכאן.
+   אדום (red → critical) רק לקריטי: מועד שעבר, חיוב שנכשל, ביטול שלא בוצע בקופה,
+   והזמנה של היום שלא ירדה ל-Q אחרי השעה שנקבעה. דחוף – כתום. חסר – צהוב. מעקב (info) – בלי צבע. */
+export const SEVERITY_TONE: Record<Severity, Health> = { red: 'critical', orange: 'urgent', yellow: 'missing', info: 'ok' };
+export const SEVERITY_LABEL: Record<Severity, string> = { red: 'חריגות', orange: 'דחוף', yellow: 'חסר', info: 'מעקב' };
 
 const RANK: Record<Severity, number> = { red: 3, orange: 2, yellow: 1, info: 0 };
 
@@ -47,9 +52,6 @@ function dayDiff(iso: string, now: Date): number {
 const minutesOfDay = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
 const nowMinutes = (d: Date) => d.getHours() * 60 + d.getMinutes();
 
-/* האם ההזמנה צריכה לקפוץ בהתראה לכולם (פעמון + הודעה) */
-export const isAlert = (i: Issue) => i.severity === 'red' && i.alert !== false;
-
 export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOLDS): Issue[] {
   const out: Issue[] = [];
   const closed = CLOSED.includes(o.status);
@@ -60,7 +62,7 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
   // פער מול Q – אלא אם אושר שהפער מוסבר, ומאז הסכומים לא השתנו
   const gapAcked = o.qGapAck && sameMoney(o.qGapAck.amount, o.amount) && o.qAmount !== undefined && sameMoney(o.qGapAck.qAmount, o.qAmount);
   if (o.qAmount !== undefined && o.status !== 'cancelled' && !sameMoney(o.qAmount, o.amount) && !gapAcked) {
-    out.push({ rule: 2, severity: 'red', label: 'פער מול Q', action: 'ackGap', actionLabel: 'בדוק פער' });
+    out.push({ rule: 2, severity: 'orange', label: 'פער מול Q', action: 'ackGap', actionLabel: 'בדוק פער' });
   }
   // חיוב אשראי שנכשל – אדום עד שמסמנים שטופל (שולם או בוטל)
   if (o.payment === 'failed' && o.status !== 'cancelled') {
@@ -71,9 +73,10 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
     out.push({ rule: 11, severity: 'orange', label: 'שונתה – לעדכן ב-Q', action: 'ackQUpdate', actionLabel: 'עודכן ב-Q' });
   }
   if (closed) {
-    if (o.status === 'cancelled' && o.qNumber && !o.qCancelAck) out.push({ rule: 10, severity: 'orange', label: 'בוטלה אחרי Q', action: 'ackCancel', actionLabel: 'אשר שבוטלה ב-Q' })
+    // ביטול שלא בוצע בקופה – קריטי
+    if (o.status === 'cancelled' && o.qNumber && !o.qCancelAck) out.push({ rule: 10, severity: 'red', label: 'בוטלה אחרי Q', action: 'ackCancel', actionLabel: 'אשר שבוטלה ב-Q' })
     // בוטלה אחרי שסומנה "שולם" בלי Q (למשל אשראי שסומן ידנית) – לבדוק החזר ולעדכן את מצב התשלום
-    else if (o.status === 'cancelled' && !o.qNumber && o.payment === 'paid') out.push({ rule: 10, severity: 'orange', label: 'בוטלה אחרי חיוב – לבדוק החזר', action: 'pay', actionLabel: 'עדכן תשלום' });;
+    else if (o.status === 'cancelled' && !o.qNumber && o.payment === 'paid') out.push({ rule: 10, severity: 'orange', label: 'בוטלה אחרי חיוב – לבדוק החזר', action: 'pay', actionLabel: 'עדכן תשלום' });
     return out.sort(bySeverity);
   }
 
@@ -89,22 +92,22 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
     out.push({ rule: 1, severity: 'red', label: 'לא הועברה ל-Q', action: 'q', actionLabel: 'סמן הועברה ל-Q' });
   }
   if (soon && !o.branchApproval) {
-    out.push({ rule: 4, severity: 'red', label: 'לא עודכן בתפעול', action: 'branch', actionLabel: 'סמן עודכן' });
+    out.push({ rule: 4, severity: 'orange', label: 'לא עודכן בתפעול', action: 'branch', actionLabel: 'סמן עודכן' });
   }
   if (diff === 0 && o.method === 'credit' && o.payment === 'pending' && !o.qNumber) {
     const late = minutesOfDay(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`) >= minutesOfDay(th.creditDeadline);
-    out.push({ rule: 5, severity: late ? 'red' : 'orange', label: late ? 'אשראי לא חויב – עבר המועד' : 'אשראי לא חויב', action: 'pay', actionLabel: 'סמן שולם' });
+    out.push({ rule: 5, severity: 'orange', label: late ? 'אשראי לא חויב – עבר המועד' : 'אשראי לא חויב', action: 'pay', actionLabel: 'סמן שולם' });
   }
   if (soon && (o.status === 'new' || o.status === 'pending_customer')) {
-    out.push({ rule: 6, severity: 'red', label: 'אין אישור לקוח', action: 'status', actionLabel: 'הלקוח אישר' });
+    out.push({ rule: 6, severity: 'orange', label: 'אין אישור לקוח', action: 'status', actionLabel: 'הלקוח אישר' });
   }
   const miss = missingOf(o);
   if (miss.length) {
-    // תמיד אדום; התראה לכולם רק כשההזמנה בחלון "בקרוב" (היום/מחר לפי הספים)
-    out.push({ rule: 8, severity: 'red', label: `חסר: ${miss.join(', ')}`, action: 'open', actionLabel: 'השלם פרטים', alert: soon || diff < 0 });
+    // צהוב; כשההזמנה כבר בחלון "בקרוב" (היום/מחר לפי הספים) או שמועדה עבר – דחוף (כתום)
+    out.push({ rule: 8, severity: soon || diff < 0 ? 'orange' : 'yellow', label: `חסר: ${miss.join(', ')}`, action: 'open', actionLabel: 'השלם פרטים' });
   }
   if (diff > th.soonDays && !o.branchApproval) {
-    out.push({ rule: 0, severity: 'yellow', label: 'לעדכן בתפעול', action: 'branch', actionLabel: 'סמן עודכן' });
+    out.push({ rule: 0, severity: 'info', label: 'לעדכן בתפעול', action: 'branch', actionLabel: 'סמן עודכן' });
   }
   return out.sort(bySeverity);
 }
@@ -112,8 +115,8 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
 function bySeverity(a: Issue, b: Issue) { return RANK[b.severity] - RANK[a.severity]; }
 
 export function healthOf(issues: Issue[]): Health {
-  const top = issues.reduce((m, i) => Math.max(m, RANK[i.severity]), 0);
-  return top === 3 ? 'critical' : top === 2 ? 'urgent' : top === 1 ? 'missing' : 'ok';
+  const top = issues.reduce<Severity>((m, i) => (RANK[i.severity] > RANK[m] ? i.severity : m), 'info');
+  return SEVERITY_TONE[top];
 }
 
 export const HEALTH_RANK: Record<Health, number> = { critical: 3, urgent: 2, missing: 1, ok: 0 };

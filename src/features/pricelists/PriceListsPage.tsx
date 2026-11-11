@@ -55,10 +55,10 @@ export function PriceListsPage() {
           <h1 className="page__title">מחירונים</h1>
           <p className="page__sub">מוצרים ומחירים לפי קטגוריה. המחירים כוללים מע"מ.</p>
         </div>
-        <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
+        <div className="page__head-end"><Button variant="primary" icon={<Plus size={16} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
       </header>
 
-      {error ? <div className="card"><EmptyState icon={<Tags size={24} />} title="לא ניתן לטעון">{error}</EmptyState></div> : (
+      {error ? <div className="card"><EmptyState icon={<Tags size={20} />} title="לא ניתן לטעון">{error}</EmptyState></div> : (
         <div className="br-grid">
           <section className="card" aria-labelledby="h-pl">
             <div className="card__head"><h2 id="h-pl" className="card__title">מחירונים</h2><span className="muted"><Ltr>{items.length}</Ltr></span></div>
@@ -92,7 +92,7 @@ export function PriceListsPage() {
           </section>
 
           {selected ? <Editor key={selected.id} pl={selected} all={items} customers={customers} assigned={assigned(selected.id)} onDuplicate={() => setDup(selected)} /> : !loading && (
-            <div className="card"><EmptyState icon={<Tags size={24} />} title="בחר מחירון או צור חדש">מחירון אחד יכול לשמש לקוחות רבים, או לקוח אחד בלבד.</EmptyState></div>
+            <div className="card"><EmptyState icon={<Tags size={20} />} title="בחר מחירון או צור חדש">מחירון אחד יכול לשמש לקוחות רבים, או לקוח אחד בלבד.</EmptyState></div>
           )}
         </div>
       )}
@@ -228,13 +228,13 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
         ) : (
           <>
             <h2 id="h-pled" className="card__title">{pl.name}</h2>
-            <button className="icon-btn icon-btn--sm" aria-label="שנה שם מחירון" onClick={() => setRenaming(true)}><Pencil size={15} /></button>
+            <button className="icon-btn icon-btn--sm" aria-label="שנה שם מחירון" onClick={() => setRenaming(true)}><Pencil size={16} /></button>
             {!pl.active && <span className="tag-inactive">לא פעיל</span>}
           </>
         )}
         <span className="card__head-end pl-head-actions">
           <span className={`pl-state pl-state--${state}`} aria-live="polite">{state === 'saving' ? 'שומר…' : state === 'saved' ? <><Check size={14} aria-hidden="true" /> נשמר</> : state === 'error' ? 'השמירה נכשלה – בדקו חיבור ונסו שוב' : ''}</span>
-          <Button size="sm" icon={<Copy size={15} />} onClick={onDuplicate}>שכפל</Button>
+          <Button size="sm" icon={<Copy size={16} />} onClick={onDuplicate}>שכפל</Button>
           <Button size="sm" variant="ghost" onClick={async () => { await updatePriceList(pl, { active: !pl.active }); toast({ message: pl.active ? 'המחירון סומן כלא פעיל – לא יוצע בהצעות ובהזמנות חדשות' : 'המחירון הופעל' }); }}>{pl.active ? 'סמן כלא פעיל' : 'הפעל'}</Button>
           <DeletePriceList pl={pl} assigned={assigned} />
         </span>
@@ -290,7 +290,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
                     ? <input className="input input--sm input--ltr" inputMode="numeric" value={r.upTo} onKeyDown={onKey} placeholder="—" onChange={(e) => change(r.id, { upTo: e.target.value.replace(/\D/g, '') })} aria-label={`עד כמה פריטים – ${label}`} />
                     : <input className={`input input--sm input--ltr ${r.pickup.trim() && num(r.pickup) === undefined ? 'is-invalid' : ''}`} inputMode="decimal" value={r.pickup} onKeyDown={onKey} placeholder={num(r.price) ? fmtMoney(num(r.price)!) : '—'}
                         onChange={(e) => change(r.id, { pickup: e.target.value })} aria-label={`מחיר איסוף – ${label}`} />}
-                  {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר – ${label}`} onClick={() => remove(r)}><Trash2 size={15} /></button>}
+                  {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר – ${label}`} onClick={() => remove(r)}><Trash2 size={16} /></button>}
                 </div>
                 {p && <p className="ib-err plt-err" role="alert">{p}</p>}
               </div>
@@ -308,7 +308,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
 
       <div className="pl-customers">
         <h3 className="pl-customers__title"><Users size={16} aria-hidden="true" /> לקוחות משויכים · <Ltr>{assigned.length}</Ltr>
-          <Button size="sm" className="pl-customers__add" icon={<Plus size={15} />} onClick={() => setPicking(true)}>שייך לקוחות</Button>
+          <Button size="sm" className="pl-customers__add" icon={<Plus size={16} />} onClick={() => setPicking(true)}>שייך לקוחות</Button>
         </h3>
         {assigned.length === 0 ? <p className="muted">אף לקוח לא משויך. לקוח משויך מקבל את המחירון הזה אוטומטית בהצעות ובהזמנות.</p> : (
           <ul className="pl-customers__list">
@@ -318,7 +318,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
                 <button type="button" aria-label={`הסר את ${c.name} מהמחירון`} onClick={async () => {
                   try { await assignPriceList([c], '', pl.name); toast({ message: <>{c.name} הוסר מהמחירון</>, onUndo: () => assignPriceList([{ ...c, priceListId: '' }], pl.id, pl.name) }); }
                   catch { toast({ tone: 'error', message: 'השמירה נכשלה – בדקו חיבור' }); }
-                }}><X size={13} /></button>
+                }}><X size={14} /></button>
               </li>
             ))}
           </ul>
@@ -442,7 +442,7 @@ function DeletePriceList({ pl, assigned }: { pl: PriceList; assigned: Customer[]
   };
   return (
     <>
-      <Button size="sm" variant="ghost" className="pl-delete" icon={<Trash2 size={15} />} onClick={() => setOpen(true)}>מחק</Button>
+      <Button size="sm" variant="ghost" className="pl-delete" icon={<Trash2 size={16} />} onClick={() => setOpen(true)}>מחק</Button>
       {open && (
         <Shell title={`מחיקת המחירון "${pl.name}"`} sub={<>המחירון והמוצרים שלו יימחקו. הזמנות והצעות קיימות לא משתנות – המחיר שמור בתוכן. ביומן תישאר רשומה עם הסיבה.</>} onClose={() => setOpen(false)}>
           <form className="sdialog__form" onSubmit={(e) => { e.preventDefault(); go(); }}>

@@ -81,7 +81,7 @@ export function MergeDialog({ source, all, onClose, onMerged }: { source: Custom
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
         <Dialog.Content className={`udialog merge ${target ? 'merge--review' : ''}`} dir="rtl" aria-describedby="merge-desc">
-          <Dialog.Title className="udialog__title"><GitMerge size={18} aria-hidden="true" style={{ verticalAlign: -3 }} /> מיזוג לקוח כפול</Dialog.Title>
+          <Dialog.Title className="udialog__title"><GitMerge size={16} aria-hidden="true" style={{ verticalAlign: -3 }} /> מיזוג לקוח כפול</Dialog.Title>
           <p id="merge-desc" className="muted">"{source.name}" ייסגר, וכל מה שרשום עליו יעבור ללקוח שתבחר. אי אפשר לבטל מיזוג.</p>
 
           {!target ? (
@@ -109,7 +109,7 @@ export function MergeDialog({ source, all, onClose, onMerged }: { source: Custom
             <div className="merge__review">
               <div className="merge__preview">
                 <span className="merge__from">{source.name}</span>
-                <ArrowLeft size={18} aria-hidden="true" />
+                <ArrowLeft size={16} aria-hidden="true" />
                 <span className="merge__to">{target.name}</span>
               </div>
 

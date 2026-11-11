@@ -54,7 +54,7 @@ export function QuotesPage() {
           <div><dt>ממתינות · סכום</dt><dd><Ltr>{fmtMoney(waitingSum)}</Ltr></dd></div>
           <div><dt>אושרו החודש</dt><dd><Ltr>{won}</Ltr></dd></div>
         </dl>
-        <div className="page__head-end"><Button variant="primary" icon={<Plus size={18} />} onClick={() => nav('/quotes/new')}>הצעה חדשה</Button></div>
+        <div className="page__head-end"><Button variant="primary" icon={<Plus size={16} />} onClick={() => nav('/quotes/new')}>הצעה חדשה</Button></div>
       </header>
       {error && <p className="cform__formerr" role="alert">{error} – ההצעות לא נטענו. רענן את הדף.</p>}
 
@@ -76,7 +76,7 @@ export function QuotesPage() {
 
       {loading ? <div className="card orders-loading" aria-busy="true" aria-label="טוען הצעות">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={20} />)}</div> : rows.length === 0 ? (
         <div className="card">
-          <EmptyState icon={<FileText size={24} />} title={items.length ? 'אין הצעות בתצוגה הזו' : 'עוד אין הצעות מחיר'}
+          <EmptyState icon={<FileText size={20} />} title={items.length ? 'אין הצעות בתצוגה הזו' : 'עוד אין הצעות מחיר'}
             action={!items.length && <Button variant="primary" icon={<Plus size={16} />} onClick={() => nav('/quotes/new')}>הצעה חדשה</Button>}>
             {items.length ? (tab === 'waiting' ? 'כל ההצעות שנשלחו קיבלו תשובה ✓' : '') : 'הצעה שמורה נשארת כאן עם כל היסטוריית המעקב שלה.'}
           </EmptyState>
@@ -99,7 +99,7 @@ export function QuotesPage() {
                     <td className="num"><Ltr>{fmtMoney(q.total)}</Ltr></td>
                     <td><span className={`qstat qstat--${exp ? 'expired' : q.status}`}>{exp ? 'פג תוקף' : SHORT_STATUS[q.status]}</span></td>
                     <td className="qrow__last">
-                      {late && <span className="qrow__late"><BellRing size={13} aria-hidden="true" /> אין עדכון {ago(h!)}</span>}
+                      {late && <span className="qrow__late"><BellRing size={14} aria-hidden="true" /> אין עדכון {ago(h!)}</span>}
                       <span className="qrow__note" title={q.lastNote}>{q.lastNote || <span className="muted">—</span>}</span>
                     </td>
                     <td className="qrow__act"><QuoteActions q={q} compact /></td>

@@ -3,13 +3,13 @@
 .otable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-table); }
 .otable thead th {
   position: sticky; top: 0; z-index: 2;
-  height: 38px; padding: 0 10px;
+  height: var(--control-md); padding: 0 var(--space-3);
   background: var(--white);
   border-bottom: 1px solid var(--line);
   font-size: var(--text-micro); font-weight: 500; color: var(--gray-600);
   text-align: start; white-space: nowrap;
 }
-.otable td { height: 52px; padding: 4px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; white-space: nowrap; }
+.otable td { height: 52px; padding: var(--space-1) var(--space-3); border-bottom: 1px solid var(--line-soft); vertical-align: middle; white-space: nowrap; }
 .otable tbody tr:last-child td { border-bottom: 0; }
 .otable .num { font-variant-numeric: tabular-nums; }
 .otable .strong { font-weight: 500; font-size: var(--text-body); color: var(--gray-900); }
@@ -21,7 +21,6 @@
 .orow:focus-visible td { background: var(--brand-50); }
 .orow:focus-visible td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
 .orow.is-selected td { background: var(--brand-50); }
-.orow--critical td:first-child { box-shadow: inset -3px 0 0 var(--danger-fg); }
 .orow.is-flash td { animation: row-flash 1.2s var(--ease); }
 @keyframes row-flash { 0%, 30% { background: var(--brand-100); } 100% { background: transparent; } }
 
@@ -29,7 +28,7 @@
 /* הסיבה בשורה – בטקסט רגיל; הצבע כבר מופיע בעמודת התקינות */
 .orow__why { display: block; font-size: var(--text-micro); font-weight: 500; margin-top: 1px; color: var(--gray-700); }
 .orow__branch { display: block; }
-.orow__sub { display: inline-flex; align-items: center; gap: 4px; font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); }
+.orow__sub { display: inline-flex; align-items: center; gap: var(--space-1); font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .orow__sub svg { display: none; }
 .orow__marks { padding-inline: 2px !important; }
 /* כותרת יום ושורת סניף+סכום – רק בכרטיסים של הטלפון */
@@ -37,14 +36,14 @@
 
 .bulkbar {
   position: sticky; top: 0; z-index: 3;
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 12px;
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   background: var(--navy); color: var(--white);
   font-size: var(--text-label);
   animation: pop-in var(--dur-quick) var(--ease);
 }
-.bulkbar span { margin-inline-end: 8px; font-weight: 600; }
-.bulkbar button { height: 30px; padding: 0 12px; border: 0; border-radius: var(--radius); background: rgba(255,255,255,0.1); color: var(--white); font: inherit; font-weight: 500; cursor: pointer; }
+.bulkbar span { margin-inline-end: var(--space-2); font-weight: 500; }
+.bulkbar button { height: var(--control-sm); padding: 0 var(--space-3); border: 0; border-radius: var(--radius); background: rgba(255,255,255,0.1); color: var(--white); font: inherit; font-weight: 500; cursor: pointer; }
 .bulkbar button:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
 .bulkbar button:disabled { opacity: 0.45; cursor: not-allowed; }
 .bulkbar__clear { margin-inline-start: auto; background: transparent !important; color: var(--navy-text) !important; }
@@ -58,7 +57,7 @@
 .orow.is-selected td:last-child { background: var(--brand-50); }
 @media (max-width: 1500px) {
   .otable .mark__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .otable .mark-btn { padding: 0 4px; }
+  .otable .mark-btn { padding: 0 var(--space-1); }
 }
 
 /* צפיפות: צפוף (ברירת מחדל) או מרווח */
@@ -71,22 +70,21 @@
   /* clip ולא hidden – כדי שכותרת היום תוכל להיצמד למעלה בגלילה */
   .otable-wrap { overflow: clip; }
   .otable--orders tr.oday { display: block; position: sticky; top: calc(var(--topbar) + env(safe-area-inset-top, 0px)); z-index: 2; }
-  .otable--orders tr.oday th { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 14px 8px; background: var(--gray-50); border-bottom: 1px solid var(--line); text-align: start; }
+  .otable--orders tr.oday th { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-2); background: var(--gray-50); border-bottom: 1px solid var(--line); text-align: start; }
   .otable--orders tr.oday + .orow { border-top: 0; }
   .oday__name { font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
   .oday__meta { font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
-  .orow__m { display: flex; justify-content: space-between; gap: 12px; margin-top: 3px; font-size: var(--text-label); color: var(--gray-700); }
+  .orow__m { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-1); font-size: var(--text-label); color: var(--gray-700); }
   .orow__m > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .orow__m-sum { flex: none; font-weight: 600; color: var(--gray-900); }
+  .orow__m-sum { flex: none; font-weight: 500; color: var(--gray-900); }
   .otable--orders, .otable--orders tbody { display: block; }
   .otable--orders thead { display: none; }
   .otable--orders .orow {
     display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "time cust health" "marks marks act";
-    gap: 6px 12px; padding: 12px 14px; background: var(--white);
+    gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); background: var(--white);
   }
   /* בטלפון: רשימה אחת עם קווי הפרדה במקום כרטיס לכל הזמנה */
   .otable--orders .orow + .orow { border-top: 1px solid var(--line); }
-  .otable--orders .orow--critical { box-shadow: inset -3px 0 0 var(--danger-fg); }
   .otable--orders td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
   .otable--orders td.c-time { display: block; grid-area: time; font-size: var(--text-card-title); }
   .otable--orders td.c-cust { display: block; grid-area: cust; min-width: 0; }
@@ -97,22 +95,19 @@
   .otable--orders .mark__label { position: static; width: auto; height: auto; clip: auto; }
 }
 
-.otable-more { display: flex; justify-content: center; padding: 16px; }
+.otable-more { display: flex; justify-content: center; padding: var(--space-4); }
 
-/* ביטול / סופקה חלקית – ישירות בשורה */
-.c-act__in { display: inline-flex; align-items: center; gap: 8px; }
-.row-acts { display: inline-flex; gap: 4px; }
-.row-act { height: 28px; padding: 0 10px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--gray-900); cursor: pointer; white-space: nowrap; transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
-.row-act:hover { border-color: var(--gray-300); color: var(--gray-900); }
-/* ביטול: שקט עד שמצביעים עליו – הפעולה הבאה בולטת יותר מהפעולה ההרסנית */
-.row-act--danger { color: var(--gray-600); border-color: transparent; background: transparent; }
-.row-act--danger:hover, .row-act--danger:focus-visible { border-color: transparent; color: var(--danger-fg); background: var(--danger-bg); }
+/* פעולה אחת בשורה + תפריט "⋯" */
+.c-act__in { display: inline-flex; align-items: center; gap: var(--space-2); }
+/* תפריט "⋯" – שקט, באותו גובה של הכפתור בשורה */
+.row-more { display: inline-grid; place-items: center; width: var(--control-sm); height: var(--control-sm); border: 0; border-radius: var(--radius); background: transparent; color: var(--gray-600); cursor: pointer; transition: background var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
+.row-more:hover, .row-more[data-state="open"] { background: var(--gray-100); color: var(--gray-900); }
+
 @media (max-width: 700px) {
   /* בטלפון: שורת פעולות משלה מתחת לסימונים, כדי לא לדחוק את שם הלקוח */
   .otable--orders tr.orow { grid-template-areas: "time cust health" "marks marks marks" "act act act" !important; }
   .otable--orders td.c-act { justify-self: stretch; }
-  /* ביטול עובר לכרטיס ההזמנה – לא ליד האגודל ברשימה */
-  .otable--orders .row-act--danger { display: none; }
-  .otable--orders .row-act { height: 40px; padding: 0 14px; }
+  /* אזורי לחיצה של 44px במגע */
+  .otable--orders .c-act .btn, .otable--orders .row-more { height: var(--control-lg); min-width: var(--control-lg); }
   .c-act__in { display: flex; justify-content: flex-end; flex-wrap: wrap; }
 }

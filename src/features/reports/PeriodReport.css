@@ -1,8 +1,8 @@
 /* סיכום תקופה: לשוניות מתחת לבחירת התקופה, והסיכום כטבלאות אחת מתחת לשנייה – כמו בקובץ האקסל */
-.preport__tabs { margin: 4px 0 16px; }
-.preport__note { margin: 0; padding: 10px 18px; font-size: var(--text-label); color: var(--gray-600); border-bottom: 1px solid var(--gray-100); }
+.preport__tabs { margin: var(--space-1) 0 var(--space-4); }
+.preport__note { margin: 0; padding: var(--space-3) var(--space-4); font-size: var(--text-label); color: var(--gray-600); border-bottom: 1px solid var(--gray-100); }
 .preport__sum { display: flex; flex-direction: column; max-width: 980px; }
-.preport__block { margin-bottom: 16px; }
+.preport__block { margin-bottom: var(--space-4); }
 .rtable--static tbody tr { cursor: default; }
 .rtable--static tbody tr:hover { background: none; }
 .rtable--static td { height: 40px; }

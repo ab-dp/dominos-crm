@@ -500,7 +500,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           ))}
         </div>
         {c && (method === c.paymentMethod
-          ? <span className="cform__hint muted"><Check size={12} aria-hidden="true" /> אמצעי התשלום הקבוע של הלקוח</span>
+          ? <span className="cform__hint muted"><Check size={14} aria-hidden="true" /> אמצעי התשלום הקבוע של הלקוח</span>
           : <span className="cform__hint">שונה בהזמנה הזו בלבד · הקבוע של הלקוח: {methods.find((m) => m.id === c.paymentMethod)?.label ?? METHOD_LABEL[c.paymentMethod] ?? c.paymentMethod} <button type="button" className="link" onClick={() => { setMethod(c.paymentMethod); setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : ''); }}>חזור לקבוע</button></span>)}
         {isNew && <span className="cform__hint muted">יישמר כאמצעי התשלום הקבוע של הלקוח</span>}
       </L>
@@ -556,7 +556,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                 </button>
               ))}
             </div>
-            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={18} /></button></Dialog.Close>
+            <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>
           </div>
 
           <form ref={formRef} className="cform__body" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
@@ -593,7 +593,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                     </Row>
                     {similar.length > 0 && (
                       <div className="cform__warn no-similar">
-                        <CircleAlert size={18} aria-hidden="true" />
+                        <CircleAlert size={16} aria-hidden="true" />
                         <div>
                           <b>אולי הלקוח כבר קיים?</b>
                           <ul>{similar.map(({ c: x, why }) => <li key={x.id}>{x.name} <span className="muted">({why})</span> · <button type="button" className="link" onClick={() => pickExisting(x)}>הזמנה ללקוח הזה</button></li>)}</ul>
@@ -652,7 +652,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
 
             {dup && (
               <div className="cform__warn no-dup" role="status">
-                <CircleAlert size={18} aria-hidden="true" />
+                <CircleAlert size={16} aria-hidden="true" />
                 <div>
                   <b>יש כבר הזמנה דומה:</b> הזמנה <Ltr>{dup.id}</Ltr> · {dup.customerName} · <Ltr>{fmtDate(dup.date)}</Ltr> <Ltr>{dup.time}</Ltr> · {dup.branchName} · <Ltr>{fmtMoney(dup.amount)}</Ltr>
                   <div className="no-dup__actions">

@@ -28,7 +28,7 @@ export function LeadFile() {
   const { items, loading } = useLeads();
   const l = items.find((x) => x.id === id);
   if (loading) return <div className="page"><Skeleton h={28} w="40%" /><div style={{ height: 16 }} /><Skeleton h={160} /></div>;
-  if (!l) return <div className="page"><div className="card"><EmptyState icon={<Target size={24} />} title="הליד לא נמצא" action={<Link className="btn btn--secondary btn--md" to="/leads"><span className="btn__label">חזרה ללידים</span></Link>} /></div></div>;
+  if (!l) return <div className="page"><div className="card"><EmptyState icon={<Target size={20} />} title="הליד לא נמצא" action={<Link className="btn btn--secondary btn--md" to="/leads"><span className="btn__label">חזרה ללידים</span></Link>} /></div></div>;
   return <FileBody l={l} all={items} />;
 }
 
@@ -67,13 +67,13 @@ function FileBody({ l, all }: { l: Lead; all: Lead[] }) {
             <p className="cfile__sub">
               <StagePill stage={l.stage} />
               {label('leadFields', l.field) && <span>{label('leadFields', l.field)}</span>}
-              {l.area && <span><MapPin size={13} aria-hidden="true" /> {l.area}</span>}
+              {l.area && <span><MapPin size={14} aria-hidden="true" /> {l.area}</span>}
               {label('leadSources', l.source) && <span>מקור: {label('leadSources', l.source)}</span>}
               <span>מטפל: {l.ownerName}</span>
             </p>
           </div>
           <div className="cfile__actions">
-            {open && <Button variant="primary" icon={<MessageSquarePlus size={18} />} onClick={() => setDlg({ kind: 'activity' })}>תיעוד פעילות</Button>}
+            {open && <Button variant="primary" icon={<MessageSquarePlus size={16} />} onClick={() => setDlg({ kind: 'activity' })}>תיעוד פעילות</Button>}
             {open && <Button icon={<UserCheck size={16} />} onClick={() => setDlg({ kind: 'convert' })}>הפוך ללקוח</Button>}
             {l.stage === 'won' && l.customerId && <Link className="btn btn--primary btn--md" to={`/customers/${l.customerId}`}><UserCheck size={16} aria-hidden="true" /><span className="btn__label">פתח את תיק הלקוח</span></Link>}
             {l.stage === 'lost' && <Button icon={<RotateCcw size={16} />} onClick={() => setDlg({ kind: 'reopen' })}>פתח מחדש</Button>}
@@ -100,17 +100,17 @@ function FileBody({ l, all }: { l: Lead; all: Lead[] }) {
             {OPEN_STAGES.map((s, i) => (
               <li key={s} className={i < stageIdx ? 'is-done' : i === stageIdx ? 'is-now' : ''}>
                 <button disabled={s === l.stage} aria-current={s === l.stage ? 'step' : undefined} onClick={() => setDlg({ kind: 'move', to: s })}>
-                  {i < stageIdx && <Check size={13} aria-hidden="true" />} {STAGE_LABEL[s]}
+                  {i < stageIdx && <Check size={14} aria-hidden="true" />} {STAGE_LABEL[s]}
                 </button>
               </li>
             ))}
-            <li className="lsteps__end"><button onClick={() => setDlg({ kind: 'convert' })}><UserCheck size={13} aria-hidden="true" /> לקוח פעיל</button></li>
+            <li className="lsteps__end"><button onClick={() => setDlg({ kind: 'convert' })}><UserCheck size={14} aria-hidden="true" /> לקוח פעיל</button></li>
           </ol>
         )}
 
         {open && l.nextStep && (
           <div className={`lnext ${l.nextStep.due < today ? 'is-late' : ''}`}>
-            <CalendarClock size={18} aria-hidden="true" />
+            <CalendarClock size={16} aria-hidden="true" />
             <div><span className="kpi__label">צעד הבא</span><StepLine lead={l} today={today} /></div>
             <Button size="sm" variant="ghost" onClick={() => setDlg({ kind: 'step' })}>שנה</Button>
           </div>
@@ -135,7 +135,7 @@ function FileBody({ l, all }: { l: Lead; all: Lead[] }) {
               {l.contacts.length === 0 && <li className="muted">אין אנשי קשר</li>}
               {l.contacts.map((c) => (
                 <li key={c.id}>
-                  <span className="lcontacts__name">{c.name}{c.decider && <span className="lcontacts__dec"><Star size={12} aria-hidden="true" /> מקבל החלטות</span>}</span>
+                  <span className="lcontacts__name">{c.name}{c.decider && <span className="lcontacts__dec"><Star size={14} aria-hidden="true" /> מקבל החלטות</span>}</span>
                   {c.role && <span className="muted">{c.role}</span>}
                   <span className="lcontacts__links">
                     {c.phone && <a className="fact__link" href={`tel:${c.phone}`}><PhoneIcon size={14} aria-hidden="true" /> <Ltr>{fmtPhone(c.phone)}</Ltr></a>}

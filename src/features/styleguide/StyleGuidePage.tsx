@@ -82,7 +82,7 @@ export function StyleGuidePage() {
       <section className="card sg__sec">
         <h2 className="card__title">כפתורים חכמים</h2>
         <div className="sg__row">
-          <Button variant="primary" icon={<Plus size={18} />} kbd="N">הזמנה חדשה</Button>
+          <Button variant="primary" icon={<Plus size={16} />} kbd="N">הזמנה חדשה</Button>
           <Button>משני</Button>
           <Button variant="ghost">שקט</Button>
           <Button variant="fix">סמן הועברה ל-Q</Button>
@@ -125,7 +125,7 @@ export function StyleGuidePage() {
       <section className="card sg__sec">
         <h2 className="card__title">טעינה ומצב ריק</h2>
         <div className="sg__skel"><Skeleton w="40%" h={16} /><Skeleton w="85%" /><Skeleton w="70%" /></div>
-        <EmptyState icon={<Plus size={24} />} title="אין הזמנות למחר" action={<Button variant="primary" icon={<Plus size={18} />}>הזמנה חדשה</Button>}>מצב ריק תמיד מסביר מה אפשר לעשות.</EmptyState>
+        <EmptyState icon={<Plus size={20} />} title="אין הזמנות למחר" action={<Button variant="primary" icon={<Plus size={16} />}>הזמנה חדשה</Button>}>מצב ריק תמיד מסביר מה אפשר לעשות.</EmptyState>
       </section>
     </div>
   );
