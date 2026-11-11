@@ -76,11 +76,12 @@ export function useOrderDocs(orderId: number) {
 }
 
 /* כל המסמכים של לקוח: הקבועים שלו ומסמכי ההזמנות שלו */
-export function useCustomerDocs(customerId: string) {
+export function useCustomerDocs(customerIds: string[]) {
   const [items, setItems] = useState<OrderDoc[] | null>(null);
-  useEffect(() => onSnapshot(query(collection(db, 'orderDocs'), where('customerId', '==', customerId)),
+  const key = customerIds.join(',');
+  useEffect(() => onSnapshot(query(collection(db, 'orderDocs'), where('customerId', 'in', key.split(','))),
     (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as OrderDoc).sort(sortNewest)),
-    () => setItems([])), [customerId]);
+    () => setItems([])), [key]);
   return items;
 }
 
