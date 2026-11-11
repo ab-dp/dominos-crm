@@ -93,3 +93,25 @@
 .cfile__plcond { color: var(--missing-fg); }
 .cfile__prices .cfile__plcat th { padding-top: 12px; text-align: start; font-size: var(--text-label); font-weight: 700; color: var(--brand-800); background: transparent; }
 .cfile__qrow { cursor: pointer; } .cfile__qrow:hover td { background: var(--gray-50); }
+
+/* מיזוג – צעד האישור: מה יעבור, ובחירה לכל פרט ששני הלקוחות מילאו אחרת */
+.merge--review { width: min(600px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.merge__review { display: grid; gap: 16px; }
+.merge__review .merge__preview { margin: 12px 0 0; }
+.merge__h { margin: 0 0 6px; font-size: var(--text-label); font-weight: 600; color: var(--gray-600); }
+.merge__line { margin: 0; font-size: var(--text-table); font-weight: 500; }
+.merge__sub { margin: 6px 0 0; font-size: var(--text-label); color: var(--gray-600); }
+.merge__fills { margin: 8px 0 0; display: grid; gap: 4px; font-size: var(--text-table); }
+.merge__fills > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; }
+.merge__fills dt { color: var(--gray-600); }
+.merge__fills dd { margin: 0; overflow-wrap: anywhere; }
+.merge__conflicts { display: grid; gap: 10px; }
+.merge__conflict { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.merge__conflict legend { padding: 0; margin-bottom: 4px; font-size: var(--text-label); font-weight: 600; }
+.merge__conflict label { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--gray-200); border-radius: var(--radius); cursor: pointer; transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease); }
+.merge__conflict label:hover { border-color: var(--gray-300); }
+.merge__conflict label.is-on { border-color: var(--brand-600); background: var(--brand-50); }
+.merge__conflict input { margin: 3px 0 0; accent-color: var(--brand-600); }
+.merge__val { font-size: var(--text-table); font-weight: 500; overflow-wrap: anywhere; }
+.merge__who { grid-column: 2; font-size: var(--text-micro); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 560px) { .merge__conflict { grid-template-columns: minmax(0, 1fr); } .merge__fills > div { grid-template-columns: minmax(0, 1fr); gap: 0; } }

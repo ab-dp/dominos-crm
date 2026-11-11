@@ -8,7 +8,7 @@ import {
   Plus, Star, Trash2, UserCheck, UserRound, UserX, Wallet,
 } from 'lucide-react';
 import {
-  addActivity, customerGaps, newId, primaryContact, updateCustomer, useActivity, useCustomerHistory, useCustomers,
+  addActivity, customerGaps, newId, primaryContact, updateCustomer, useActivity, useCustomerHistory, useCustomers, withMerged,
   type Address, type Contact, type Customer,
 } from '../../data/customers';
 import { useBranches, useClusters } from '../../data/branches';
@@ -48,7 +48,7 @@ export function CustomerFile() {
   if (!c) return <div className="page"><div className="card"><EmptyState icon={<UserRound size={24} />} title="הלקוח לא נמצא" action={<Link className="btn btn--secondary btn--md" to="/customers"><span className="btn__label">חזרה ללקוחות</span></Link>} /></div></div>;
   if (c.status === 'merged') {
     const target = items.find((x) => x.id === c.mergedInto);
-    return <div className="page"><div className="card"><EmptyState icon={<GitMerge size={24} />} title={`"${c.name}" מוזג`} action={target && <Link className="btn btn--primary btn--md" to={`/customers/${target.id}`}><span className="btn__label">פתח את {target.name}</span></Link>}>כל הפרטים עברו ללקוח "{target?.name ?? '—'}".</EmptyState></div></div>;
+    return <div className="page"><div className="card"><EmptyState icon={<GitMerge size={24} />} title={`"${c.name}" מוזג`} action={target && <Link className="btn btn--primary btn--md" to={`/customers/${target.id}`}><span className="btn__label">פתח את {target.name}</span></Link>}>ההזמנות, הצעות המחיר, המשימות, אנשי הקשר והכתובות עברו ללקוח "{target?.name ?? '—'}". הפעילות, ההיסטוריה והמסמכים מוצגים בתיק שלו.</EmptyState></div></div>;
   }
   return <FileBody c={c} all={items} />;
 }
@@ -153,7 +153,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
           {tab === 'prices' && <PricesTab c={c} />}
           {tab === 'payment' && <PaymentTab c={c} sharing={sharing} method={method} onEdit={() => setEditing(true)} />}
           {tab === 'contacts' && <ContactsTab c={c} />}
-          {tab === 'docs' && <CustomerDocsSection customerId={c.id} />}
+          {tab === 'docs' && <CustomerDocsSection customerId={c.id} mergedFrom={c.mergedFrom} />}
           {tab === 'activity' && <ActivityTab c={c} noteRef={noteRef} />}
           {tab === 'history' && <HistoryTab c={c} />}
       </motion.div>
@@ -609,7 +609,7 @@ function AddressEditor({ value, branches, branchLabel, onSave, onCancel }: { val
 
 /* ---------- פעילות: הערות, שיחות, משימות חזרה ---------- */
 function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextAreaElement> }) {
-  const items = useActivity(c.id);
+  const items = useActivity(withMerged(c));
   const toast = useToast();
   const [kind, setKind] = useState<'note' | 'call' | 'followup'>('note');
   const [text, setText] = useState('');
@@ -679,7 +679,7 @@ const FIELD_LABEL: Record<string, string> = {
   instructions: 'הנחיות קבועות', priceNote: 'הערת מחיר', billingInstructions: 'הנחיות חיוב', priceListId: 'מחירון', status: 'מצב', contacts: 'אנשי קשר', addresses: 'כתובות', customPrices: 'מחירים ייחודיים',
 };
 function HistoryTab({ c }: { c: Customer }) {
-  const rows = useCustomerHistory(c.id);
+  const rows = useCustomerHistory(withMerged(c));
   const show = (v: unknown) => (v === null || v === undefined || v === '' ? '—' : Array.isArray(v) ? `${v.length} פריטים` : typeof v === 'boolean' ? (v ? 'כן' : 'לא') : String(v));
   const ACTION: Record<string, string> = { create: 'הלקוח נוצר', update: 'עדכון', status: 'שינוי מצב', merge: 'מיזוג' };
   return (
