@@ -13,6 +13,7 @@ import {
   type ClusterGroup, type OpsSend,
 } from '../../data/opsSummary';
 import { saveError } from '../../lib/saveError';
+import { logError } from '../../lib/errorLog';
 import '../pages.css';
 import './ops.css';
 
@@ -49,7 +50,8 @@ export function OpsSummaryPage() {
     try {
       const { downloadOpsPdf } = await import('./opsPdf');
       await downloadOpsPdf(els, `סיכום לתפעול ${name} ${fmtDate(from)}${from !== to ? ` עד ${fmtDate(to)}` : ''}.pdf`);
-    } catch {
+    } catch (e) {
+      logError('ops-pdf', e); // נרשם בהגדרות ← תקלות, כדי שנדע מה נכשל
       toast({ tone: 'error', message: 'הורדת ה-PDF נכשלה. נסו שוב.' });
     } finally { setBusy(''); }
   };
@@ -158,8 +160,9 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
     return (
       <article className="os" ref={ref} dir="rtl">
         <header className="os-head">
-          <div>
-            <h1>סיכום הזמנות · {c.name}</h1>
+          <div className="os-cluster"><span>קבוצת תפעול</span><h1>{c.name}</h1></div>
+          <div className="os-title">
+            <p>סיכום הזמנות לתפעול</p>
             <p className="os-range">{rangeText(from, to)}</p>
           </div>
           <div className="os-stats">
@@ -183,7 +186,7 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
                 </div></td></tr>
               )}
               {d.branches.flatMap((b, bi) => [
-                <tr key={b.name} className={`os-br${bi % 2 ? ' is-wash' : ''}`}><td colSpan={6}><div><b>{b.name}</b><span>{totals(b.orders)}</span></div></td></tr>,
+                <tr key={b.name} className={`os-br${bi % 2 ? ' is-wash' : ''}`}><td colSpan={6}><div><p><b>{b.name}</b><span>{totals(b.orders)}</span></p></div></td></tr>,
                 ...b.orders.map((o) => <OrderRow key={o.id} o={o} wash={bi % 2 === 1} mark={mark.get(o.id)} />),
               ])}
             </tbody>

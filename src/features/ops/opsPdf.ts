@@ -1,25 +1,41 @@
-/* PDF לסיכום לתפעול: עמוד אחד לכל אשכול, תמיד. אשכול שנכנס ל-A4 לרוחב (גם בהקטנה קלה) מקבל עמוד A4 רגיל;
-   אשכול ארוך יותר מקבל עמוד אחד ארוך באותו רוחב – הכתב נשאר באותו גודל ושום הזמנה לא נחתכת בין עמודים. */
-const PAGE_W = 297, PAGE_H = 210, M = 8;
-const MIN_SCALE = 0.85; // הקטנה גדולה מזו כבר פוגעת בקריאה – עדיף עמוד ארוך
-const MAX_PX = 15000;   // גובה תמונה מקסימלי שדפדפנים מציירים בבטחה
+/* PDF לסיכום לתפעול: עמוד אחד לכל אשכול, לאורך – ברוחב A4 לרוחב (297 מ"מ), והגובה לפי האשכול. הכתב לא מוקטן.
+   כדי שכל קורא PDF יפתח אותו: התמונה נשמרת כרצועות JPEG זו מתחת לזו (לא תמונה ענקית אחת),
+   והעמוד לא עולה על 5,000 מ"מ (מעל ~5,080 קוראי PDF מסרבים) – אשכול ארוך מזה מוקטן כדי להיכנס. */
+const PAGE_W = 297, M = 8, MIN_H = 210, MAX_H = 5000;
+const MAX_CANVAS_PX = 16000; // צלע מקסימלית של קנבס שכל דפדפן מצייר בבטחה
+const MAX_CANVAS_AREA = 40e6;
+const STRIP_PX = 3000;       // גובה רצועה בקנבס
 
 export async function downloadOpsPdf(sheets: HTMLElement[], fileName: string) {
-  const [{ toPng }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')]);
-  const fullW = PAGE_W - 2 * M, room = PAGE_H - 2 * M;
+  const [{ toCanvas }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')]);
+  const fullW = PAGE_W - 2 * M;
   let pdf: InstanceType<typeof jsPDF> | undefined;
   for (const el of sheets) {
     const W = el.offsetWidth, H = el.offsetHeight;
-    const png = await toPng(el, { pixelRatio: Math.min(2, MAX_PX / H), backgroundColor: '#ffffff', cacheBust: true, width: W, height: H });
+    if (!W || !H) continue;
+    const ratio = Math.min(2, MAX_CANVAS_PX / H, Math.sqrt(MAX_CANVAS_AREA / (W * H)));
+    const canvas = await toCanvas(el, { pixelRatio: ratio, backgroundColor: '#ffffff', cacheBust: true, width: W, height: H });
     const hMm = H * (fullW / W);
-    const fit = room / hMm;
-    const long = fit < MIN_SCALE;
-    const pageH = long ? hMm + 2 * M : PAGE_H;
-    const format = [PAGE_W, pageH], orientation = pageH > PAGE_W ? 'portrait' : 'landscape';
+    const s = Math.min(1, (MAX_H - 2 * M) / hMm); // רק אשכול ענק מוקטן
+    const pageH = Math.max(MIN_H, hMm * s + 2 * M);
+    const format = [PAGE_W, pageH];
+    const orientation = pageH > PAGE_W ? 'portrait' : 'landscape';
     if (!pdf) pdf = new jsPDF({ unit: 'mm', format, orientation, compress: true });
     else pdf.addPage(format, orientation);
-    const s = long ? 1 : Math.min(1, fit), w = fullW * s;
-    pdf.addImage(png, 'PNG', (PAGE_W - w) / 2, M, w, hMm * s, undefined, 'FAST');
+    const w = fullW * s, x = (PAGE_W - w) / 2, mmPerCanvasPx = w / canvas.width;
+    for (let y = 0; y < canvas.height; y += STRIP_PX) {
+      const h = Math.min(STRIP_PX, canvas.height - y);
+      const strip = document.createElement('canvas');
+      strip.width = canvas.width;
+      strip.height = h;
+      const ctx = strip.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, strip.width, h);
+      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      // חפיפה זעירה בין רצועות – בלי קו לבן דק ביניהן בחלק מהקוראים
+      const overlap = y + h < canvas.height ? 0.15 : 0;
+      pdf.addImage(strip.toDataURL('image/jpeg', 0.92), 'JPEG', x, M + y * mmPerCanvasPx, w, h * mmPerCanvasPx + overlap);
+    }
   }
   pdf?.save(fileName);
 }

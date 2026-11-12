@@ -30,10 +30,13 @@
   font-family: var(--font); font-size: var(--text-table); line-height: 1.3; text-align: right; }
 .os * { box-sizing: border-box; }
 
-/* ראש הדף */
-.os-head { display: flex; align-items: center; gap: var(--space-5); padding-bottom: var(--space-3); border-bottom: 2px solid var(--ink); }
-.os-head h1 { margin: 0; font-size: var(--text-screen-title); font-weight: 600; color: var(--ink); line-height: 1.15; }
-.os-range { margin: 2px 0 0; font-size: var(--text-body); color: var(--os-text); }
+/* ראש הדף: שם קבוצת התפעול בבלוק כחול כהה – הדבר הראשון שרואים. לידו התאריכים, הסיכום והלוגו */
+.os-head { display: flex; align-items: center; gap: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--gray-200); }
+.os-cluster { display: grid; justify-items: center; min-width: 150px; padding: var(--space-2) var(--space-5); border-radius: 6px; background: var(--navy-2); color: var(--white); }
+.os-cluster span { font-size: var(--text-micro); color: var(--navy-text); line-height: 1.3; }
+.os-cluster h1 { margin: 0; font-size: 30px; font-weight: 600; line-height: 1.1; color: var(--white); }
+.os-title p { margin: 0; font-size: var(--text-label); color: var(--os-sub); }
+.os-title .os-range { margin-top: 2px; font-size: var(--text-card-title); font-weight: 600; color: var(--ink); }
 .os-stats { display: flex; margin-inline-start: auto; }
 .os-stats > div { display: grid; justify-items: center; padding: 0 var(--space-4); white-space: nowrap; }
 .os-stats > div + div { border-inline-start: 1px solid var(--gray-200); }
@@ -65,21 +68,23 @@
 .os-day--4 { --day: #4B5B6E; --day-dk: #334050; --day-ln: #C2CAD4; --day-mid: #DCE1E8; --day-tint: #E7EBF0; --day-wash: #F2F4F7; }
 .os-day--6 { --day: #6A4C7C; --day-dk: #4C3459; --day-ln: #CDBFD6; --day-mid: #E5DCEB; --day-tint: #ECE4F1; --day-wash: #F5F1F8; }
 
-/* מעבר יום: פס בגוון היום עם קו עליון בצבע היום, שם היום גדול במרכז */
+/* מעבר יום: פס מלא בצבע היום, טקסט לבן. הרמה החזקה ביותר בתוך הדף */
 .os-dayband td { padding: var(--space-5) 0 0; border: 0; }
 .os-table tbody:first-of-type .os-dayband td { padding-top: var(--space-3); }
-.os-dayband div { display: flex; justify-content: center; align-items: baseline; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--day-mid); border-top: 4px solid var(--day); }
-.os-dayband b { font-size: var(--text-kpi); font-weight: 600; line-height: 1.1; color: var(--day-dk); }
-.os-dayband span { font-size: var(--text-label); color: var(--day-dk); }
+.os-dayband div { display: flex; justify-content: center; align-items: baseline; gap: var(--space-3); padding: 6px var(--space-3); border-radius: 6px; background: var(--day); color: var(--white); }
+.os-dayband b { font-size: 26px; font-weight: 600; line-height: 1.15; }
+.os-dayband span { font-size: var(--text-label); }
 
-/* מעבר סניף: פס בהיר בגוון היום, השם במרכז. הסניפים מתחלפים בין לבן לגוון עדין – רואים איפה כל סניף מתחיל ונגמר */
-.os-br td { padding: var(--space-3) 0 0; border: 0; }
-.os-table tbody:first-of-type > .os-br:first-child td { padding-top: var(--space-3); }
-.os-br div { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-3); background: var(--day-tint); border-bottom: 2px solid var(--day); }
-.os-br div::before, .os-br div::after { content: ''; flex: 1; height: 1px; background: var(--day-ln); }
-.os-br b { font-size: var(--text-screen-title); font-weight: 600; line-height: 1.2; color: var(--day-dk); }
+/* מעבר סניף: תווית במסגרת בצבע היום, על קו לרוחב הדף – נראית אחרת לגמרי מפס היום.
+   הסניפים מתחלפים בין לבן לגוון עדין, כך שרואים איפה כל סניף מתחיל ונגמר */
+.os-br td { padding: var(--space-3) 0 6px; border: 0; }
+.os-br div { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-3); }
+.os-br div::before, .os-br div::after { content: ''; flex: 1; height: 2px; background: var(--day-ln); }
+.os-br p { display: inline-flex; align-items: baseline; gap: var(--space-3); margin: 0; padding: 2px var(--space-4); border: 2px solid var(--day); border-radius: 999px; background: var(--white); }
+.os-br b { font-size: var(--text-section); font-weight: 600; line-height: 1.25; color: var(--day-dk); }
 .os-br span { font-size: var(--text-label); color: var(--os-sub); }
 .os-table tr.is-wash td { background-color: var(--day-wash); }
+.os-br + tr td { border-top: 0; }
 
 /* שעה וכמות פיצות – מה שהסניף מחפש בכל שורה */
 .os-when b { display: block; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); color: var(--day-dk); white-space: nowrap; }
