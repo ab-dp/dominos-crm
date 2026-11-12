@@ -236,10 +236,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       if (!cleanPhone(effAccountPhone)) m[isNew ? 'ncAccount' : 'account'] = MISS;
       else { const pe = phoneError(effAccountPhone); if (pe) e[isNew ? 'ncAccount' : 'account'] = pe; }
     }
-    if (effMethod === 'other') {
-      if (!methodNote.trim()) m.methodNote = MISS;
-      else if (CARD_RE.test(methodNote)) e.methodNote = 'אסור לרשום כאן מספר כרטיס אשראי';
-    }
+    if (effMethod === 'other' && !methodNote.trim()) m.methodNote = MISS;
     if (CARD_RE.test(poNumber)) e.po = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(address)) e.address = 'אסור לרשום כאן מספר כרטיס אשראי';
@@ -517,7 +514,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       {/* "אחר": נפתח שדה לפירוט – מה אמצעי התשלום בפועל */}
       {effMethod === 'other' && (
         <L label="מה אמצעי התשלום?">
-          <input className="input" value={methodNote} onChange={(e) => { setMethodNote(e.target.value); clearErr('methodNote'); }} placeholder="למשל: העברה בנקאית, צ'ק" {...inv('methodNote')} />
+          <input className="input" value={methodNote} onChange={(e) => { setMethodNote(e.target.value); clearErr('methodNote'); }} placeholder="למשל: קופון, פיצוי" {...inv('methodNote')} />
           {err('methodNote')}
         </L>
       )}
