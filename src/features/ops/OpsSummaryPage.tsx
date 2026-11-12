@@ -151,6 +151,10 @@ export function OpsSummaryPage() {
 const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: string; now: Date; mark: Map<number, 'new' | 'changed'>; removed: string[] }>(
   function OpsSheet({ c, from, to, now, mark, removed }, ref) {
     const multiDay = from !== to;
+    // יום ← סניף: כל יום בפני עצמו, ובתוכו הסניפים באותו סדר כמו בכל הסיכום
+    const days = multiDay
+      ? [...new Set(c.orders.map((o) => o.date))].sort().map((date) => ({ date, branches: c.branches.map((b) => ({ name: b.name, orders: b.orders.filter((o) => o.date === date) })).filter((b) => b.orders.length) }))
+      : [{ date: from, branches: c.branches }];
     return (
       <article className="os" ref={ref} dir="rtl">
         <header className="os-head">
@@ -169,11 +173,19 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
         {removed.length > 0 && <p className="os-removed">ירדו מהסיכום מאז השליחה הקודמת (בוטלו, נסגרו או הוזזו): {removed.join(' · ')}</p>}
         <table className="os-table">
           <colgroup><col className="c-when" /><col className="c-pz" /><col className="c-cust" /><col className="c-items" /><col className="c-dlv" /><col className="c-sum" /></colgroup>
-          <thead><tr><th scope="col">{multiDay ? 'יום ושעה' : 'שעה'}</th><th scope="col" className="c">פיצות</th><th scope="col">לקוח ואיש קשר</th><th scope="col">פירוט ההזמנה והערות לסניף</th><th scope="col">אספקה</th><th scope="col" className="m">סכום</th></tr></thead>
-          {c.branches.map((b) => (
-            <tbody key={b.name}>
-              <tr className="os-br"><td colSpan={6}><b>{b.name}</b><span>{b.orders.length} {b.orders.length === 1 ? 'הזמנה' : 'הזמנות'} · {pizzasIn(b.orders)} פיצות · <Ltr>{fmtMoney(amountIn(b.orders))}</Ltr></span></td></tr>
-              {b.orders.map((o) => <OrderRow key={o.id} o={o} multiDay={multiDay} mark={mark.get(o.id)} />)}
+          <thead><tr><th scope="col">שעה</th><th scope="col" className="c">פיצות</th><th scope="col">לקוח ואיש קשר</th><th scope="col">פירוט ההזמנה והערות לסניף</th><th scope="col">אספקה</th><th scope="col" className="m">סכום</th></tr></thead>
+          {days.map((d) => (
+            <tbody key={d.date} className={`os-day os-day--${new Date(`${d.date}T12:00`).getDay()}`}>
+              {multiDay && (
+                <tr className="os-dayband"><td colSpan={6}><div>
+                  <b>יום {weekday(d.date)} · <Ltr>{dm(d.date)}</Ltr></b>
+                  <span>{totals(d.branches.flatMap((b) => b.orders))}</span>
+                </div></td></tr>
+              )}
+              {d.branches.flatMap((b) => [
+                <tr key={b.name} className="os-br"><td colSpan={6}><div><b>{b.name}</b><span>{totals(b.orders)}</span></div></td></tr>,
+                ...b.orders.map((o, i) => <OrderRow key={o.id} o={o} alt={i % 2 === 1} mark={mark.get(o.id)} />),
+              ])}
             </tbody>
           ))}
         </table>
@@ -186,12 +198,14 @@ function Stat({ n, l }: { n: ReactNode; l: string }) {
   return <div><b>{n}</b><span>{l}</span></div>;
 }
 
-function OrderRow({ o, multiDay, mark }: { o: Order; multiDay: boolean; mark?: 'new' | 'changed' }) {
+const totals = (os: Order[]) => `${os.length === 1 ? 'הזמנה אחת' : `${os.length} הזמנות`} · ${pizzasIn(os)} פיצות · ${fmtMoney(amountIn(os))}`;
+
+function OrderRow({ o, alt, mark }: { o: Order; alt: boolean; mark?: 'new' | 'changed' }) {
   const pz = pizzasIn([o]);
   const name = o.contactName?.trim(), phone = o.contactPhone?.trim(), note = o.instructions?.trim();
   return (
-    <tr className={mark ? `is-${mark}` : ''}>
-      <td className="os-when"><b><Ltr>{o.time}</Ltr></b>{multiDay && <span>{weekday(o.date)} <Ltr>{dm(o.date)}</Ltr></span>}</td>
+    <tr className={[alt && 'is-alt', mark && `is-${mark}`].filter(Boolean).join(' ') || undefined}>
+      <td className="os-when"><b><Ltr>{o.time}</Ltr></b></td>
       <td className="os-pz">{pz > 0 && <span><Ltr>{pz}</Ltr></span>}</td>
       <td className="os-cust">
         {mark && <span className={`os-tag os-tag--${mark}`}>{mark === 'new' ? 'חדש' : 'עודכן'}</span>}
