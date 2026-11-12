@@ -141,7 +141,7 @@ export type Order = {
   payment: PaymentState;
   method: PaymentMethod;
   methodLabel?: string;
-  methodNote?: string; // באמצעי תשלום "אחר": מה האמצעי בפועל (העברה בנקאית, צ'ק…)
+  methodNote?: string; // באמצעי תשלום "אחר": מה האמצעי בפועל (קופון, פיצוי…)
   accountPhone?: string;
   handler: string;
   handlerUid?: string;

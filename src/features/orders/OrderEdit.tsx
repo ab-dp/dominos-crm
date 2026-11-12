@@ -174,7 +174,7 @@ export function MethodEdit({ o }: { o: OrderView }) {
 export function MethodNoteEdit({ o, justPicked }: { o: OrderView; justPicked?: boolean }) {
   const save = useOrderSave(o);
   return (
-    <EditKv k="פירוט אמצעי התשלום" value={o.methodNote ?? ''} display={o.methodNote || <Missing />} placeholder="למשל: העברה בנקאית, צ'ק" autoEdit={justPicked}
+    <EditKv k="פירוט אמצעי התשלום" value={o.methodNote ?? ''} display={o.methodNote || <Missing />} placeholder="למשל: קופון, פיצוי" autoEdit={justPicked}
       onSave={(v) => save({ methodNote: v || undefined }, 'פירוט אמצעי התשלום')} />
   );
 }
