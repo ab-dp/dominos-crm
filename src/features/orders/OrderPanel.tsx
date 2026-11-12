@@ -16,7 +16,7 @@ import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } fro
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, PoEdit } from './OrderActions';
 import { OrderTimeline } from './OrderTimeline';
-import { RegisterBlock } from './OrderRegister';
+import { RegisterBlock, RegisterLocked } from './OrderRegister';
 import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
@@ -102,6 +102,13 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   useEffect(() => setTab('more'), [o.id]);
   const [scrolled, setScrolled] = useState(false);
   const gap = o.qAmount !== undefined && o.qAmount !== o.amount;
+  const cancelled = o.status === 'cancelled';
+  // "הקלד ל-Q" בציר מעביר לשורת Q שבבלוק הקופה – טופס אחד, לא שניים
+  const focusQ = () => {
+    const el = document.getElementById('reg-q-num') as HTMLInputElement | null;
+    el?.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    el?.focus({ preventScroll: true });
+  };
   const openCustomer = () => { panel.close(); nav(`/customers/${o.customerId}`); };
 
   return (
@@ -147,17 +154,18 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
       </div>
 
       <div className="panel__body" onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)} tabIndex={0} role="region" aria-label="תוכן תיק ההזמנה">
-        {(o.status === 'partial' || o.status === 'cancelled') && (
-          <div className={`closed-note closed-note--${o.status}`}>
-            <b>{o.status === 'partial' ? 'סופקה חלקית' : `בוטלה${o.cancelReason ? ` · ${o.cancelReason}` : ''}`}</b>
-            {(o.partialNote || o.cancelNote) && <span>{o.partialNote ?? o.cancelNote}</span>}
+        {o.status === 'partial' && (
+          <div className="closed-note">
+            <b>סופקה חלקית</b>
+            {o.partialNote && <span>{o.partialNote}</span>}
           </div>
         )}
-        {/* קודם כל: מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q */}
-        <RegisterBlock o={o} />
+        {cancelled && <CancelledNote o={o} />}
+        {/* קודם כל: מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q. בהזמנה מבוטלת – לקריאה בלבד */}
+        {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} />}
 
         <div className="panel__flow">
-          <OrderTimeline o={o} />
+          <OrderTimeline o={o} onQ={cancelled ? undefined : focusQ} />
           {/* פעולות שהן חלק מהציר מופיעות בציר עצמו – כאן רק שאר הבעיות */}
           {o.issues.some((i) => !STEP_ACTIONS.includes(i.action)) && (
             <div className="missing" aria-label="מה חסר">
@@ -180,7 +188,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           {tab === 'more' && (
             <Section id="details" title="פרטים נוספים">
               <Kv k="לקוח" v={<button className="link" onClick={openCustomer}>{o.customerName} · לתיק הלקוח</button>} />
-              <EditKv k="ערוץ / מספר פניה" value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ או מספר פניה')} onSave={(v) => save({ channel: v }, 'ערוץ / מספר פניה')} />
+              <EditKv k="ערוץ / מספר פניה" readOnly={cancelled} value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ או מספר פניה')} onSave={(v) => save({ channel: v }, 'ערוץ / מספר פניה')} />
               <Kv k="מטפל" v={<HandlerEdit o={o} />} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
               {o.branchPhone && <Kv k="טלפון הסניף" v={<Ltr>{fmtPhone(o.branchPhone)}</Ltr>} />}
@@ -191,7 +199,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             <>
               <Section id="payment" title="תשלום">
                 <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
-                <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} <PoEdit o={o} /></span>} />
+                <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} {!cancelled && <PoEdit o={o} />}</span>} />
                 {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
                 <div className="sums">
                   <div><span>סכום לחיוב</span><b>{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</b></div>
@@ -226,6 +234,20 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   );
 }
 
+/* הזמנה מבוטלת: למה, מי ומתי – בראש התיק. מי ומתי נקראים מהיומן (הרשומה האחרונה שהעבירה ל"בוטלה") */
+function CancelledNote({ o }: { o: OrderView }) {
+  const rows = useOrderHistory(o.id);
+  const row = rows?.find((r) => r.after?.status === 'cancelled');
+  return (
+    <div className="closed-note closed-note--cancelled" role="status">
+      <b>בוטלה{o.cancelReason && <> · {o.cancelReason}</>}</b>
+      {o.cancelNote && <span>{o.cancelNote}</span>}
+      {row && <span>בוטלה ע״י {row.byName}{row.at && <> · <Ltr>{fmtAt(row.at.toDate())}</Ltr></>}</span>}
+      {o.qNumber && !o.qCancelAck && <span className="closed-note__warn">הוקלדה ל-Q (<Ltr>{o.qNumber}</Ltr>) – צריך לבטל גם בקופה</span>}
+    </div>
+  );
+}
+
 function Section({ id, title, children, action }: { id: string; title: string; children: ReactNode; action?: ReactNode }) {
   return (
     <section id={`sec-${id}`} className="sec" aria-labelledby={`h-${id}`}>
@@ -244,6 +266,7 @@ export const FIELD: Record<string, string> = {
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
+  opsNotified: 'נשלח בקבוצת תפעול', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי',
 };
 export function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -258,6 +281,11 @@ export function showVal(k: string, v: unknown): string {
   if (k === 'delivery') return v === 'pickup' ? 'איסוף עצמי' : 'משלוח';
   if (k === 'deliveryFee') return fmtMoney(Number(v));
   if (k === 'method') return METHOD_LABEL[String(v)] ?? String(v);
+  if (k === 'opsNotified') return v ? 'נשלח' : 'עוד לא';
+  if (k === 'qNeedsUpdate') return v ? 'צריך לעדכן' : 'עודכן';
+  if (k === 'late') return (v as { minutes?: number }).minutes ? `${(v as { minutes: number }).minutes} דק'` : 'באיחור';
+  if (k === 'postCloseFix') return (v as { reason?: string }).reason ?? '—';
+  if (typeof v === 'object') return '—';
   return String(v);
 }
 const fmtAt = (d: Date) => `${fmtDate(toISODate(d))} | ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -272,7 +300,7 @@ function History({ o }: { o: OrderView }) {
         <li key={r.id}>
           <span className="timeline__at"><Ltr>{r.at ? fmtAt(r.at.toDate()) : '…'}</Ltr></span>
           <span>
-            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.action === 'doc' ? 'צירוף תעודת רכש' : r.action === 'note' ? 'הערה פנימית' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
+            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.action === 'doc' ? 'צירוף תעודת רכש' : r.action === 'note' ? 'הערה פנימית' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.after?.opsNotified === true && Object.keys(r.after).length === 1 ?'נשלח בקבוצת תפעול' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
             {r.action !== 'create' && r.action !== 'doc' && r.after && Object.keys(r.after).filter((k) => FIELD[k]).map((k) => (
               <span key={k} className="hist__change">{FIELD[k]}: <span className="muted">{showVal(k, r.before?.[k])}</span> ← {showVal(k, r.after?.[k])}</span>
             ))}

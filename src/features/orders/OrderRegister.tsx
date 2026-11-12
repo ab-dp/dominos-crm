@@ -1,12 +1,13 @@
 /* "להעברה לקופה": הבלוק הראשון בתיק ההזמנה – כל מה שהאחמ"ש צריך כדי להקליד את ההזמנה ל-Q ביום ההזמנה,
    ובתחתיתו השורה שבה רושמים שהועברה ל-Q (מספר, סכום, נשלח בקבוצת תפעול). כל ערך נערך בלחיצה, כמו בשאר התיק. */
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Check, Copy, TriangleAlert } from 'lucide-react';
-import { useStore, type OrderView } from '../../data/store';
-import { METHOD_LABEL, groupItems, itemsText, typeText, OTHER, categoryOf } from '../../data/types';
-import { Button, Missing } from '../../design/components';
+import { useEffect, useState } from 'react';
+import { Check, ChevronLeft, Copy } from 'lucide-react';
+import { type OrderView } from '../../data/store';
+import { METHOD_LABEL, groupItems, itemsText, typeText, OTHER, categoryOf, stageOf } from '../../data/types';
+import { Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, roundMoney, sameMoney, weekday } from '../../lib/format';
+import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, sameMoney, weekday } from '../../lib/format';
+import { QForm } from './OrderActions';
 import { phoneError } from '../../lib/names';
 import { PriceRows } from './ItemsBuilder';
 import { BranchEdit, DeliveryTypeEdit, EditKv, ItemsEditor, MethodEdit, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
@@ -83,72 +84,46 @@ export function RegisterBlock({ o }: { o: OrderView }) {
         {!!o.deliveryFee && <span className="muted">כולל משלוח <Money value={o.deliveryFee} /></span>}
         {o.calcAmount !== undefined && <span className="reg__tag">שונה ידנית · מחושב <Money value={o.calcAmount} /></span>}
       </div>
-      {!(o.status === 'cancelled' && !o.qNumber) && <QRow o={o} />}
+      <QRow o={o} />
     </section>
   );
 }
 
-/* השורה של Q: לפני ההקלדה – טופס קצר; אחרי – מה נרשם, וסימון "נשלח בקבוצת תפעול".
-   סכום Q הוא בקרה: ריק עד שמקלידים את הסכום שירד בקופה בפועל, ונבדק מול סכום ההזמנה (פער = חריגה) */
+/* השורה של Q: לפני ההקלדה – הטופס המשותף (QForm), מוטמע; אחרי – מה נרשם, ו"תיקון".
+   השליחה בקבוצת התפעול מסומנת בציר (הצעד הבא), לא כאן – מקום אחד לכל פעולה */
 function QRow({ o }: { o: OrderView }) {
-  const { update } = useStore();
   const [editing, setEditing] = useState(!o.qNumber);
-  const [num, setNum] = useState(o.qNumber ?? '');
-  const qText = (v?: number) => (v === undefined ? '' : String(v));
-  const [amt, setAmt] = useState(qText(o.qAmount));
-  const [ops, setOps] = useState(o.opsNotified !== false && !!o.qNumber);
-  const [err, setErr] = useState('');
-  const numRef = useRef<HTMLInputElement>(null);
-  const amtRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { setEditing(!o.qNumber); setNum(o.qNumber ?? ''); setAmt(qText(o.qAmount)); setOps(o.opsNotified !== false && !!o.qNumber); setErr(''); }, [o.id, o.qNumber, o.qAmount, o.amount, o.opsNotified]);
-  const custPending = o.status === 'new' || o.status === 'pending_customer';
-  const early = !o.qNumber && (custPending || !o.branchApproval);
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!num.trim()) { setErr("חובה: מס' ההזמנה ב-Q, למשל cs669"); numRef.current?.focus(); return; }
-    const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')));
-    if (!(qAmount > 0)) { setErr('חובה: הסכום שירד בקופה'); amtRef.current?.focus(); return; }
-    // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
-    const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
-    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...(custPending ? { status: 'approved' as const } : {}) }, !sameMoney(qAmount, o.amount)
-      ? <>הועברה ל-Q · <b>פער מול Q</b>: <Ltr>{fmtMoney(qAmount)}</Ltr> מול <Ltr>{fmtMoney(o.amount)}</Ltr></>
-      : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם</>);
-    setEditing(false);
-  };
-
+  useEffect(() => setEditing(!o.qNumber), [o.id, o.qNumber]);
   if (!editing && o.qNumber) {
     const gap = o.qAmount !== undefined && !sameMoney(o.qAmount, o.amount);
     return (
       <div className="reg-q reg-q--done">
         <span className="reg-q__done"><Check size={16} aria-hidden="true" /> הוקלד ל-Q · <Ltr>{o.qNumber}</Ltr> · <Money value={o.qAmount ?? o.amount} /></span>
         {gap && <span className="reg-q__gap">פער <Ltr>{fmtMoney(Math.abs((o.qAmount ?? 0) - o.amount))}</Ltr></span>}
-        <label className="check-inline reg-q__ops">
-          <input type="checkbox" checked={o.opsNotified !== false}
-            onChange={(e) => update(o.id, { opsNotified: e.target.checked }, e.target.checked ? <>נשלח בקבוצת תפעול · הזמנה <Ltr>{o.id}</Ltr></> : <>בוטל הסימון "נשלח בקבוצת תפעול"</>)} /> נשלח בקבוצת תפעול
-        </label>
+        {o.opsNotified === true && <span className="reg-q__ops-state">נשלח בקבוצת תפעול</span>}
         <button type="button" className="link reg-q__edit" onClick={() => setEditing(true)}>תיקון</button>
       </div>
     );
   }
+  // הכפתור "הועבר ל-Q" ראשי רק כשהקלדה ל-Q היא באמת הצעד הבא; בשלבים קודמים הצעד הבא הוא בציר
+  return <QForm o={o} inline primary={stageOf(o) === 'approved'} done={() => setEditing(false)} onCancel={o.qNumber ? () => setEditing(false) : undefined} />;
+}
+
+/* הזמנה מבוטלת: הפרטים לקריאה בלבד ומקופלים – בלי "העתק הכל" ובלי עריכה, כדי שלא יוקלדו לקופה בטעות */
+export function RegisterLocked({ o }: { o: OrderView }) {
+  const lines = registerText(o).split('\n').slice(1);
   return (
-    <form className="reg-q" onSubmit={submit} aria-label="העברה ל-Q">
-      {early && <p className="reg-q__warn"><TriangleAlert size={14} aria-hidden="true" /> {custPending ? 'הלקוח עוד לא אישר' : 'התפעול עוד לא עודכן'}. אפשר להמשיך.</p>}
-      <label className="reg-q__f">
-        <span className="kv__k">מס' הזמנה ב-Q</span>
-        <input ref={numRef} className="input input--ltr" value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} placeholder="cs669" aria-invalid={(!!err && !num.trim()) || undefined} />
-      </label>
-      <label className="reg-q__f reg-q__f--amt">
-        <span className="kv__k">הסכום שירד ב-Q (₪)</span>
-        <input ref={amtRef} className="input input--ltr" inputMode="decimal" value={amt} onChange={(e) => { setAmt(e.target.value); setErr(''); }} aria-invalid={(!!err && !!num.trim()) || undefined} />
-      </label>
-      <label className="check-inline reg-q__ops"><input type="checkbox" checked={ops} onChange={(e) => setOps(e.target.checked)} /> נשלח בקבוצת תפעול</label>
-      <div className="reg-q__btns">
-        <Button variant="primary" size="sm" type="submit">הועבר ל-Q</Button>
-        {o.qNumber && <button type="button" className="link" onClick={() => setEditing(false)}>ביטול</button>}
+    <details className="reg reg--locked">
+      <summary className="reg__head reg__summary">
+        <ChevronLeft size={16} aria-hidden="true" className="reg__chev" />
+        <span className="reg__title">פרטי ההזמנה</span>
+        <span className="muted">לקריאה בלבד</span>
+      </summary>
+      <div className="reg__lines">
+        {lines.map((l, i) => <p key={i}>{l}</p>)}
+        {o.qNumber && <p>הוקלד ל-Q · <Ltr>{o.qNumber}</Ltr> · <Ltr>{fmtMoney(o.qAmount ?? o.amount)}</Ltr></p>}
       </div>
-      {err && <p className="pop__err reg-q__err" role="alert">{err}</p>}
-    </form>
+    </details>
   );
 }
 

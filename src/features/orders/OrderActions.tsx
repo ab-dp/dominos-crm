@@ -1,5 +1,5 @@
 /* פעולות מהירות על הזמנה – בשורה, במסך "היום" ובתיק ההזמנה (אפיון 6.2). */
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { TriangleAlert } from 'lucide-react';
 import { Button, Field, MarkAction } from '../../design/components';
@@ -36,44 +36,60 @@ export function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
   );
 }
 
-export function QForm({ o, done }: { o: OrderView; done: () => void }) {
+/* טופס Q אחד לכל המערכת: בחלון קופץ (שורה, "היום", תיקון מהציר) ומוטמע בבלוק "להעברה לקופה" (inline).
+   סכום Q הוא בקרה: ריק עד שמקלידים את הסכום שירד בקופה, ונבדק מול סכום ההזמנה (פער = חריגה).
+   "נשלח בקבוצת תפעול" – אפשר לסמן כבר כאן; אם לא, זה הצעד הבא בציר. */
+export function QForm({ o, done, inline, primary = true, onCancel }: { o: OrderView; done: () => void; inline?: boolean; primary?: boolean; onCancel?: () => void }) {
   const { update } = useStore();
   const [num, setNum] = useState(o.qNumber ?? '');
-  // סכום Q – בקרה: ריק עד שמקלידים את הסכום שירד בקופה
   const [amt, setAmt] = useState(o.qAmount !== undefined ? String(o.qAmount) : '');
   const [ops, setOps] = useState(o.opsNotified !== false && !!o.qNumber);
   const [err, setErr] = useState('');
+  const numRef = useRef<HTMLInputElement>(null);
+  const amtRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { setNum(o.qNumber ?? ''); setAmt(o.qAmount !== undefined ? String(o.qAmount) : ''); setOps(o.opsNotified !== false && !!o.qNumber); setErr(''); }, [o.id, o.qNumber, o.qAmount, o.opsNotified]);
   // כלל 15: העברה ל-Q לפני אישור – אזהרה, לא חסימה
-  const early = !o.qNumber && (o.status !== 'approved' || !o.branchApproval);
+  const custPending = o.status === 'new' || o.status === 'pending_customer';
+  const early = !o.qNumber && (custPending || !o.branchApproval);
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!num.trim()) { setErr('חובה: מספר ההזמנה ב-Q, למשל cs669'); return; }
+    if (!num.trim()) { setErr("חובה: מס' ההזמנה ב-Q, למשל cs669"); numRef.current?.focus(); return; }
     const qAmount = roundMoney(Number(amt.replace(/[^\d.]/g, '')));
-    if (!(qAmount > 0)) { setErr('חובה: הסכום שירד בקופה'); return; }
+    if (!(qAmount > 0)) { setErr('חובה: הסכום שירד בקופה'); amtRef.current?.focus(); return; }
     // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
     const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
-    const cust = o.status === 'new' || o.status === 'pending_customer' ? { status: 'approved' as const } : {};
-    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...cust }, !sameMoney(qAmount, o.amount)
+    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...(custPending ? { status: 'approved' as const } : {}) }, !sameMoney(qAmount, o.amount)
       ? <>הועברה ל-Q · <b>פער מול Q</b>: <Ltr>{fmtMoney(qAmount)}</Ltr> מול <Ltr>{fmtMoney(o.amount)}</Ltr></>
-      : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם</>);
+      : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם{!ops && ' · הצעד הבא: לשלוח בקבוצת תפעול'}</>);
     done();
   };
+  const warn = early && <p className={inline ? 'reg-q__warn' : 'pop__warn'}><TriangleAlert size={14} aria-hidden="true" /> {custPending ? 'הלקוח עוד לא אישר' : 'התפעול עוד לא עודכן'}. אפשר להמשיך.</p>;
+  const numInput = <input ref={numRef} id={inline ? 'reg-q-num' : undefined} className="input input--ltr" autoFocus={!inline} value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} aria-invalid={(!!err && !num.trim()) || undefined} />;
+  const amtInput = <input ref={amtRef} className="input input--ltr" inputMode="decimal" value={amt} onChange={(e) => { setAmt(e.target.value); setErr(''); }} aria-invalid={(!!err && !!num.trim()) || undefined} />;
+  const opsBox = <label className={`check-inline ${inline ? 'reg-q__ops' : 'q-ops'}`}><input type="checkbox" checked={ops} onChange={(e) => setOps(e.target.checked)} /> נשלח בקבוצת תפעול</label>;
+  const error = err && <p className={`pop__err ${inline ? 'reg-q__err' : ''}`} role="alert">{err}</p>;
+  if (inline) {
+    return (
+      <form className="reg-q" onSubmit={submit} aria-label="העברה ל-Q">
+        {warn}
+        <label className="reg-q__f"><span className="kv__k">מס' הזמנה ב-Q</span>{numInput}</label>
+        <label className="reg-q__f reg-q__f--amt"><span className="kv__k">הסכום שירד ב-Q (₪)</span>{amtInput}</label>
+        {opsBox}
+        <div className="reg-q__btns">
+          <Button variant={primary ? 'primary' : 'secondary'} size="sm" type="submit">הועבר ל-Q</Button>
+          {onCancel && <button type="button" className="link" onClick={onCancel}>ביטול</button>}
+        </div>
+        {error}
+      </form>
+    );
+  }
   return (
     <form onSubmit={submit}>
-      {early && (
-        <p className="pop__warn"><TriangleAlert size={14} aria-hidden="true" /> {o.status !== 'approved' ? 'הלקוח עוד לא אישר' : 'התפעול עוד לא עודכן'}. אפשר להמשיך.</p>
-      )}
-      <Field label="מס' הזמנה ב-Q (חובה)">
-        <input className="input input--ltr" autoFocus value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} placeholder="cs669" aria-invalid={!!err && !num.trim()} />
-      </Field>
-      <Field label="הסכום שירד ב-Q (₪, חובה)">
-        <input className="input input--ltr" inputMode="decimal" value={amt} onChange={(e) => { setAmt(e.target.value); setErr(''); }} aria-invalid={!!err && !!num.trim()} />
-      </Field>
-      <label className="check-inline q-ops">
-        <input type="checkbox" checked={ops} onChange={(e) => setOps(e.target.checked)} /> נשלח בקבוצת תפעול
-      </label>
-      {!ops && <p className="pop__hint">תזכורת: לשלוח את ההזמנה בקבוצת התפעול. אפשר לסמן גם אחר כך.</p>}
-      {err && <p className="pop__err">{err}</p>}
+      {warn}
+      <Field label="מס' הזמנה ב-Q (חובה)">{numInput}</Field>
+      <Field label="הסכום שירד ב-Q (₪, חובה)">{amtInput}</Field>
+      {opsBox}
+      {error}
       <div className="pop__row"><Button variant="primary" size="sm" type="submit" kbd="Enter">{early ? 'שמור בכל זאת' : 'שמור'}</Button></div>
     </form>
   );

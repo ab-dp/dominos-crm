@@ -26,7 +26,8 @@
 
 .orow__cust { display: block; font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
 /* הסיבה בשורה – בטקסט רגיל; הצבע כבר מופיע בעמודת התקינות */
-.orow__why { display: block; font-size: var(--text-micro); font-weight: 500; margin-top: 1px; color: var(--gray-700); }
+.orow__why { display: block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-micro); font-weight: 500; margin-top: 1px; color: var(--gray-700); }
+.orow__more { color: var(--gray-600); }
 .orow__branch { display: block; }
 .orow__sub { display: inline-flex; align-items: center; gap: var(--space-1); font: 400 var(--text-micro) var(--font-mono); color: var(--gray-600); }
 .orow__sub svg { display: none; }
@@ -46,6 +47,7 @@
 .bulkbar button { height: var(--control-sm); padding: 0 var(--space-3); border: 0; border-radius: var(--radius); background: rgba(255,255,255,0.1); color: var(--white); font: inherit; font-weight: 500; cursor: pointer; }
 .bulkbar button:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
 .bulkbar button:disabled { opacity: 0.45; cursor: not-allowed; }
+.bulkbar .bulkbar__note { margin: 0; font-weight: 400; color: var(--navy-text); font-size: var(--text-label); }
 .bulkbar__clear { margin-inline-start: auto; background: transparent !important; color: var(--navy-text) !important; }
 
 @media (prefers-reduced-motion: reduce) { .orow.is-flash td, .bulkbar { animation: none; } }
