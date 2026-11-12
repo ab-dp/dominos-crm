@@ -182,9 +182,9 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
                   <span>{totals(d.branches.flatMap((b) => b.orders))}</span>
                 </div></td></tr>
               )}
-              {d.branches.flatMap((b) => [
-                <tr key={b.name} className="os-br"><td colSpan={6}><div><b>{b.name}</b><span>{totals(b.orders)}</span></div></td></tr>,
-                ...b.orders.map((o) => <OrderRow key={o.id} o={o} mark={mark.get(o.id)} />),
+              {d.branches.flatMap((b, bi) => [
+                <tr key={b.name} className={`os-br${bi % 2 ? ' is-wash' : ''}`}><td colSpan={6}><div><b>{b.name}</b><span>{totals(b.orders)}</span></div></td></tr>,
+                ...b.orders.map((o) => <OrderRow key={o.id} o={o} wash={bi % 2 === 1} mark={mark.get(o.id)} />),
               ])}
             </tbody>
           ))}
@@ -200,11 +200,11 @@ function Stat({ n, l }: { n: ReactNode; l: string }) {
 
 const totals = (os: Order[]) => `${os.length === 1 ? 'הזמנה אחת' : `${os.length} הזמנות`} · ${pizzasIn(os)} פיצות · ${fmtMoney(amountIn(os))}`;
 
-function OrderRow({ o, mark }: { o: Order; mark?: 'new' | 'changed' }) {
+function OrderRow({ o, wash, mark }: { o: Order; wash: boolean; mark?: 'new' | 'changed' }) {
   const pz = pizzasIn([o]);
   const name = o.contactName?.trim(), phone = o.contactPhone?.trim(), note = o.instructions?.trim();
   return (
-    <tr className={mark ? `is-${mark}` : undefined}>
+    <tr className={[wash && 'is-wash', mark && `is-${mark}`].filter(Boolean).join(' ') || undefined}>
       <td className="os-when"><b><Ltr>{o.time}</Ltr></b></td>
       <td className="os-pz">{pz > 0 && <span><Ltr>{pz}</Ltr></span>}</td>
       <td className="os-cust">

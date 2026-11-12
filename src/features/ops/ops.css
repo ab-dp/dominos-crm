@@ -55,35 +55,36 @@
 .os-table .m { text-align: left; font-family: var(--font-mono); color: var(--ink); white-space: nowrap; }
 .os-table .c { text-align: center; }
 
-/* צבע קבוע לכל יום בשבוע, בגוונים שקטים (שישי – הכחול של דומינוס, שבת – חציל). בלי אדום / כתום / צהוב */
-.os-day { --day: #006491; --day-dk: #00567D; --day-ln: #A7CDE0; --day-tint: #EBF4F8; }
-.os-day--0 { --day: #2F7D72; --day-dk: #1F5A52; --day-ln: #A9D3CC; --day-tint: #EEF6F4; }
-.os-day--1 { --day: #3A6EA5; --day-dk: #284F7A; --day-ln: #B3C9E2; --day-tint: #EEF3F9; }
-.os-day--2 { --day: #5B7A3A; --day-dk: #405826; --day-ln: #C3D2AE; --day-tint: #F2F5EC; }
-.os-day--3 { --day: #7A6650; --day-dk: #574735; --day-ln: #D3C7B8; --day-tint: #F6F2EE; }
-.os-day--4 { --day: #4B5B6E; --day-dk: #334050; --day-ln: #C2CAD4; --day-tint: #F1F3F6; }
-.os-day--6 { --day: #6A4C7C; --day-dk: #4C3459; --day-ln: #CDBFD6; --day-tint: #F4F0F6; }
+/* צבע קבוע לכל יום בשבוע, בגוונים רכים (שישי – הכחול של דומינוס, שבת – חציל). בלי אדום / כתום / צהוב.
+   day: הצבע עצמו · dk: טקסט · ln: קווים · mid: הפס של היום והפיצות · tint: כותרת הסניף · wash: רקע לסניף השני, הרביעי… */
+.os-day { --day: #006491; --day-dk: #00567D; --day-ln: #A7CDE0; --day-mid: #D3E7F1; --day-tint: #E2EEF5; --day-wash: #EFF6FA; }
+.os-day--0 { --day: #2F7D72; --day-dk: #1F5A52; --day-ln: #A9D3CC; --day-mid: #D2EAE5; --day-tint: #E1F0EC; --day-wash: #EFF7F5; }
+.os-day--1 { --day: #3A6EA5; --day-dk: #284F7A; --day-ln: #B3C9E2; --day-mid: #D7E3F1; --day-tint: #E3ECF6; --day-wash: #F0F5FA; }
+.os-day--2 { --day: #5B7A3A; --day-dk: #405826; --day-ln: #C3D2AE; --day-mid: #DFE8D2; --day-tint: #E9EFE1; --day-wash: #F3F6EE; }
+.os-day--3 { --day: #7A6650; --day-dk: #574735; --day-ln: #D3C7B8; --day-mid: #E9E1D7; --day-tint: #EFE9E2; --day-wash: #F7F3EF; }
+.os-day--4 { --day: #4B5B6E; --day-dk: #334050; --day-ln: #C2CAD4; --day-mid: #DCE1E8; --day-tint: #E7EBF0; --day-wash: #F2F4F7; }
+.os-day--6 { --day: #6A4C7C; --day-dk: #4C3459; --day-ln: #CDBFD6; --day-mid: #E5DCEB; --day-tint: #ECE4F1; --day-wash: #F5F1F8; }
 
-/* מעבר יום: פס בהיר בגוון היום, קו עליון בצבע היום, שם היום גדול במרכז */
+/* מעבר יום: פס בגוון היום עם קו עליון בצבע היום, שם היום גדול במרכז */
 .os-dayband td { padding: var(--space-5) 0 0; border: 0; }
 .os-table tbody:first-of-type .os-dayband td { padding-top: var(--space-3); }
-.os-dayband div { display: flex; justify-content: center; align-items: baseline; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--day-tint); border-top: 4px solid var(--day); }
+.os-dayband div { display: flex; justify-content: center; align-items: baseline; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--day-mid); border-top: 4px solid var(--day); }
 .os-dayband b { font-size: var(--text-kpi); font-weight: 600; line-height: 1.1; color: var(--day-dk); }
-.os-dayband span { font-size: var(--text-label); color: var(--os-text); }
+.os-dayband span { font-size: var(--text-label); color: var(--day-dk); }
 
-/* מעבר סניף: השם במרכז בין שני קווים בגוון היום */
-.os-br td { padding: var(--space-4) 0 var(--space-1); border: 0; }
+/* מעבר סניף: פס בהיר בגוון היום, השם במרכז. הסניפים מתחלפים בין לבן לגוון עדין – רואים איפה כל סניף מתחיל ונגמר */
+.os-br td { padding: var(--space-3) 0 0; border: 0; }
 .os-table tbody:first-of-type > .os-br:first-child td { padding-top: var(--space-3); }
-.os-br div { display: flex; align-items: center; gap: var(--space-3); }
+.os-br div { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-3); background: var(--day-tint); border-bottom: 2px solid var(--day); }
 .os-br div::before, .os-br div::after { content: ''; flex: 1; height: 1px; background: var(--day-ln); }
-.os-br b { font-size: var(--text-screen-title); font-weight: 600; line-height: 1.2; color: var(--ink); }
+.os-br b { font-size: var(--text-screen-title); font-weight: 600; line-height: 1.2; color: var(--day-dk); }
 .os-br span { font-size: var(--text-label); color: var(--os-sub); }
-.os-br + tr td { border-top: 2px solid var(--day); }
+.os-table tr.is-wash td { background-color: var(--day-wash); }
 
 /* שעה וכמות פיצות – מה שהסניף מחפש בכל שורה */
-.os-when b { display: block; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); color: var(--ink); white-space: nowrap; }
+.os-when b { display: block; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); color: var(--day-dk); white-space: nowrap; }
 .os-pz { text-align: center; }
-.os-pz span { display: inline-block; min-width: 44px; padding: 0 var(--space-2); border-radius: 4px; background: var(--day-tint); color: var(--day-dk); font-size: var(--text-section); font-weight: 600; line-height: 1.25; font-family: var(--font-mono); }
+.os-pz span { display: inline-block; min-width: 44px; padding: 0 var(--space-2); border-radius: 4px; background: var(--day-mid); color: var(--day-dk); font-size: var(--text-section); font-weight: 600; line-height: 1.25; font-family: var(--font-mono); }
 
 /* כל השאר: כתב רגיל ושקט */
 .os-cust > b { font-weight: 500; color: var(--ink); }
