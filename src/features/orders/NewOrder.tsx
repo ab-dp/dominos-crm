@@ -1,7 +1,7 @@
 /* יצירת הזמנה (אפיון 4.3, 4.4, 4.6, 6.4) – חלון אחד, שתי דרכים:
    הזמנה – ללקוח קיים: כל הפרטים בעמוד אחד. בחירת לקוח טוענת את הקבוע אצלו (תשלום, הקפה, כתובת, איש קשר).
    לקוח חדש – מקים לקוח והזמנה באותה שמירה.
-   פרט חובה שחסר לא חוסם: אחרי אישור ההזמנה נשמרת ומסומנת באדום עד שמשלימים. Ctrl+Enter שומר. */
+   פרט חובה שחסר לא חוסם: ההזמנה נשמרת ומסומנת כחסרה (צהוב; כתום כשהיא היום או מחר) עד שמשלימים. Ctrl+Enter שומר. */
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { saveError } from '../../lib/saveError';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -18,13 +18,13 @@ import { usePriceLists } from '../../data/priceLists';
 import { useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
 import { setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, categoryOf, type OrderStatus } from '../../data/types';
-import { Button } from '../../design/components';
+import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday } from '../../lib/format';
 import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
-import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, useCatalog, useRepriceOnDelivery, type Line } from './ItemsBuilder';
+import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, priceMissing, pricesUsed, toSaved, useCatalog, useRepriceOnDelivery, type Line } from './ItemsBuilder';
 import { uploadOrderDoc } from '../../data/orderDocs';
 import { FileDrop } from './OrderDocs';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
@@ -36,11 +36,10 @@ const MODES: [NewOrderMode, string, ReactNode][] = [
   ['full', 'הזמנה', <ClipboardList size={16} key="f" />],
   ['newCustomer', 'לקוח חדש', <UserPlus size={16} key="n" />],
 ];
-const START_STATUS: [OrderStatus, string][] = [['pending_customer', 'ממתין לאישור לקוח'], ['approved', 'הלקוח כבר אישר']];
 const MISS = 'חסר – אפשר להשלים אחר כך';
 const MISS_LABEL: Record<string, string> = {
   ncContact: 'איש קשר', contactName: 'איש קשר', ncPhone: 'טלפון', contactPhone: 'טלפון', time: 'שעה', branch: 'סניף',
-  channel: 'ערוץ / מספר פניה', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש',
+  channel: 'ערוץ / מספר פניה', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש', prices: 'מחיר',
 };
 
 const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
@@ -159,6 +158,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const real = lines.filter((l) => !isBlank(l)); // השורה הריקה שבסוף הטבלה לא נחשבת
   const linesTotal = roundMoney(real.reduce((t, l) => t + l.qty * l.unitPrice, 0));
   const badLine = real.find(lineProblem); // שורה שהתחילו למלא בלי כמות / סוג – חוסמת שמירה
+  // שורות בלי מחיר כשבאחרות יש מחיר: הסכום יוצא נמוך בשקט. לא חוסם – מופיע ב"חסרים" עם שם הסוג
+  const unpriced = [...new Set(real.filter((l) => priceMissing(l, pricesUsed(real))).map((l) => l.name.trim() || categoryOf(l)))];
   const useLines = real.length > 0;
   // דמי המשלוח נוספים לסכום הפריטים
   const feeValue = delivery === 'delivery' ? money(fee) : 0;
@@ -224,6 +225,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     if (real.some(lineProblem)) e.amount = 'בשורה המסומנת באדום חסרים כמות או סוג / מוצר';
     if (real.some((l) => CARD_RE.test(lineText(l)))) e.amount = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (!real.length) m.contents = MISS;
+    if (unpriced.length) m.prices = MISS;
     if (past && !outcome) e.outcome = 'בהזמנה בתאריך שעבר – בחרו מה קרה בה';
     if (past && outcome === 'cancelled' && !pastReason.trim()) e.outcome = 'חובה: סיבת הביטול';
     if (past && outcome === 'partial' && !pastReason.trim()) e.outcome = 'חובה: מה סופק בפועל';
@@ -239,11 +241,13 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     return { e, m };
   };
   const live = check();
-  // פרטים חסרים לא חוסמים: מוצגים מראש מעל כפתור השמירה, וההזמנה נשמרת בלחיצה אחת ומסומנת באדום
+  // פרטים חסרים לא חוסמים: מוצגים מראש מעל כפתור השמירה, וההזמנה נשמרת בלחיצה אחת ומסומנת כחסרה
   const missKeys = past ? [] : Object.keys(live.m).filter((k, i, a) => MISS_LABEL[k] && a.findIndex((x) => MISS_LABEL[x] === MISS_LABEL[k]) === i);
-  const missLive = missKeys.map((k) => MISS_LABEL[k]);
+  const missLabel = (k: string) => (k === 'prices' ? `מחיר ל${unpriced.join(', ')}` : MISS_LABEL[k]);
+  const missLive = missKeys.map(missLabel);
   /* קפיצה לשדה החסר */
   const goTo = (k: string) => {
+    if (k === 'prices') { setReveal((n) => n + 1); return; }
     const root = formRef.current; if (!root) return;
     const el = k === 'branch' ? root.querySelector<HTMLElement>('.bpick__trigger')
       : k === 'amount' && totalOnly ? root.querySelector<HTMLElement>('[data-field="final"]')
@@ -272,7 +276,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
 
   const submit = async () => {
     if (busy || !validate()) return;
-    const b = branchObj; // אפשר לשמור בלי סניף – ההזמנה תסומן באדום עד שישובץ
+    const b = branchObj; // אפשר לשמור בלי סניף – ההזמנה תסומן כחסרה עד שישובץ
     const customerName = isNew ? nc.name.trim() : c!.name;
     const input: NewOrderInput = {
       customerId: c?.id ?? '',
@@ -335,7 +339,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
         await setQuoteStatus(fq, 'ordered', '', { orderId: n }).catch(() => toast({ tone: 'error', message: <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
       }
       toast({
-        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת באדום</b></>}</>,
+        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת להשלמה</b></>}</>,
         action: { label: 'פתח תיק', run: () => panel.open(n) },
       });
       onClose();
@@ -345,10 +349,10 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     }
   };
 
-  const err = (k: string) => errors[k] ? <span className="cform__err" id={`no-${k}`} role="alert">{errors[k]}</span> : null;
+  const err = (k: string) => errors[k] ? <span className={`cform__err ${errors[k] === MISS ? 'cform__err--miss' : ''}`} id={`no-${k}`} role={errors[k] === MISS ? undefined : 'alert'}>{errors[k]}</span> : null;
   const inv = (k: string) => ({ 'data-field': k, 'aria-invalid': (!!errors[k] && errors[k] !== MISS) || undefined, 'data-miss': errors[k] === MISS || undefined, 'aria-describedby': errors[k] ? `no-${k}` : undefined });
   const customerChosen = isNew ? nc.name.trim().length > 0 : !!c;
-  const saveLabel = `${dup ? 'שמור כהזמנה נוספת' : isNew ? (similar.length ? 'שמור כלקוח חדש והזמנה' : 'שמור לקוח והזמנה') : 'שמור הזמנה'}${
+  const saveLabel = badLine ? `השלם שורה ב${categoryOf(badLine)}` : `${dup ? 'שמור כהזמנה נוספת' : isNew ? (similar.length ? 'שמור כלקוח חדש והזמנה' : 'שמור לקוח והזמנה') : 'שמור הזמנה'}${
     missLive.length && customerChosen ? ` עם ${missLive.length === 1 ? 'פרט חסר' : `${missLive.length} פרטים חסרים`}` : ''}`;
   const fade = reduce ? { initial: { opacity: 0 }, animate: { opacity: 1 } } : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 } };
 
@@ -366,7 +370,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
         {date && !errors.date && <span className="cform__hint muted">יום {weekday(date)}</span>}
         {err('date')}
       </L>
-      <L label="שעה" req>
+      <L label="שעה">
         <input type="time" step={900} className="input input--ltr no-time" value={time} onChange={(e) => { setTime(e.target.value); clearErr('time'); }} {...inv('time')} />
         {err('time')}
       </L>
@@ -375,16 +379,17 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
 
   const branchField = (
     <div className="cform__field" {...(errors.branch ? { 'data-invalid': true } : {})}>
-      <BranchPicker label="סניף (חובה)" value={branch} onChange={(v) => { setBranch(v); clearErr('branch'); }} preferredId={c?.addresses.find((a) => a.id === addressId)?.preferredBranchId} />
+      <BranchPicker label="סניף" value={branch} onChange={(v) => { setBranch(v); clearErr('branch'); }} preferredId={c?.addresses.find((a) => a.id === addressId)?.preferredBranchId} />
       {err('branch')}
     </div>
   );
 
+  // שלב התחלה: שאלה של כן/לא – תיבת סימון, לא בקר מפולח
   const statusField = (
     <L label="שלב התחלה" group>
-      <div className="seg" role="radiogroup" aria-label="סטטוס התחלתי">
-        {START_STATUS.map(([s, label]) => <button type="button" key={s} role="radio" aria-checked={status === s} className={status === s ? 'is-on' : ''} onClick={() => setStatus(s)}>{label}</button>)}
-      </div>
+      <label className="check-inline no-approved">
+        <input type="checkbox" checked={status === 'approved'} onChange={(e) => setStatus(e.target.checked ? 'approved' : 'pending_customer')} /> הלקוח כבר אישר
+      </label>
     </L>
   );
 
@@ -392,10 +397,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     <>
       <Row>
         <L label="סוג" group>
-          <div className="seg" role="radiogroup" aria-label="משלוח או איסוף">
-            <button type="button" role="radio" aria-checked={delivery === 'delivery'} className={delivery === 'delivery' ? 'is-on' : ''} onClick={() => setDelivery('delivery')}>משלוח</button>
-            <button type="button" role="radio" aria-checked={delivery === 'pickup'} className={delivery === 'pickup' ? 'is-on' : ''} onClick={() => setDelivery('pickup')}>איסוף עצמי</button>
-          </div>
+          <RadioSeg label="משלוח או איסוף" value={delivery} onChange={setDelivery} options={[{ value: 'delivery', label: 'משלוח' }, { value: 'pickup', label: 'איסוף עצמי' }]} />
         </L>
       </Row>
       {!isNew && c && c.contacts.length > 0 && (
@@ -419,7 +421,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
             <input className="input" value={contact.name} onChange={(e) => { setContact({ ...contact, name: e.target.value }); setContactId(''); clearErr('contactName'); }} placeholder="מי מקבל את ההזמנה" {...inv('contactName')} />
             {err('contactName')}
           </L>
-          <L label="טלפון" req>
+          <L label="טלפון">
             <input className="input input--ltr" inputMode="tel" value={contact.phone} onChange={(e) => { setContact({ ...contact, phone: e.target.value }); setContactId(''); clearErr('contactPhone'); }} placeholder="05X-XXXXXXX" {...inv('contactPhone')} />
             {err('contactPhone')}
           </L>
@@ -490,22 +492,24 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     </Section>
   );
 
+  const pickMethod = (id: string) => { if (isNew) setNc({ ...nc, paymentMethod: id }); else setMethod(id); clearErr('account', 'ncAccount'); };
   const paymentFields = (
     <Row>
       <L label="אמצעי תשלום" group>
-        <div className="seg" role="radiogroup" aria-label="אמצעי תשלום">
-          {methods.map((m) => (
-            <button type="button" key={m.id} role="radio" aria-checked={effMethod === m.id} className={effMethod === m.id ? 'is-on' : ''}
-              onClick={() => { if (isNew) setNc({ ...nc, paymentMethod: m.id }); else setMethod(m.id); clearErr('account', 'ncAccount'); }}>{m.label}</button>
-          ))}
-        </div>
+        {methods.length <= 3
+          ? <RadioSeg label="אמצעי תשלום" value={effMethod} onChange={pickMethod} options={methods.map((m) => ({ value: m.id, label: m.label }))} />
+          : (
+            <select className="input no-method" aria-label="אמצעי תשלום" value={effMethod} onChange={(e) => pickMethod(e.target.value)}>
+              {methods.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+            </select>
+          )}
         {c && (method === c.paymentMethod
           ? <span className="cform__hint muted"><Check size={14} aria-hidden="true" /> אמצעי התשלום הקבוע של הלקוח</span>
           : <span className="cform__hint">שונה בהזמנה הזו בלבד · הקבוע של הלקוח: {methods.find((m) => m.id === c.paymentMethod)?.label ?? METHOD_LABEL[c.paymentMethod] ?? c.paymentMethod} <button type="button" className="link" onClick={() => { setMethod(c.paymentMethod); setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : ''); }}>חזור לקבוע</button></span>)}
         {isNew && <span className="cform__hint muted">יישמר כאמצעי התשלום הקבוע של הלקוח</span>}
       </L>
       {effMethod === 'account' && (
-        <L label="טלפון הקפה" req>
+        <L label="טלפון הקפה">
           <input className="input input--ltr" inputMode="tel" value={isNew ? nc.accountPhone : accountPhone} placeholder="05X-XXXXXXX"
             onChange={(e) => { if (isNew) setNc({ ...nc, accountPhone: e.target.value }); else setAccountPhone(e.target.value); clearErr('account', 'ncAccount'); }} {...inv(isNew ? 'ncAccount' : 'account')} />
           {err(isNew ? 'ncAccount' : 'account')}
@@ -517,7 +521,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const poFields = (
     <>
       <Row>
-        <L label={c?.poRequired ? "מס' תעודת רכש" : "מס' תעודת רכש (לא חובה)"} req={!!c?.poRequired}>
+        <L label="מס' תעודת רכש">
           <input className="input input--ltr" value={poNumber} onChange={(e) => { setPoNumber(e.target.value); clearErr('po'); }} placeholder="אפשר גם אחר כך" {...inv('po')} />
           {err('po')}
           {c?.poRequired && <span className="cform__hint">הלקוח בדרך כלל עובד עם תעודת רכש</span>}
@@ -577,17 +581,15 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                         {err('ncName')}
                       </L>
                       <L label="סוג לקוח" group>
-                        <div className="seg" role="radiogroup" aria-label="סוג לקוח">
-                          {(['occasional', 'regular'] as const).map((t) => <button type="button" key={t} role="radio" aria-checked={nc.type === t} className={nc.type === t ? 'is-on' : ''} onClick={() => setNc({ ...nc, type: t })}>{t === 'regular' ? 'קבוע' : 'מזדמן'}</button>)}
-                        </div>
+                        <RadioSeg label="סוג לקוח" value={nc.type} onChange={(t) => setNc({ ...nc, type: t })} options={[{ value: 'occasional' as const, label: 'מזדמן' }, { value: 'regular' as const, label: 'קבוע' }]} />
                       </L>
                     </Row>
                     <Row>
                       <L label="איש קשר"><input className="input" value={nc.contactName} onChange={(e) => { setNc({ ...nc, contactName: e.target.value }); clearErr('ncContact'); }} {...inv('ncContact')} />{err('ncContact')}</L>
-                      <L label="טלפון" req><input className="input input--ltr" inputMode="tel" value={nc.contactPhone} onChange={(e) => { setNc({ ...nc, contactPhone: e.target.value }); clearErr('ncPhone'); }} placeholder="05X-XXXXXXX" {...inv('ncPhone')} />{err('ncPhone')}</L>
+                      <L label="טלפון"><input className="input input--ltr" inputMode="tel" value={nc.contactPhone} onChange={(e) => { setNc({ ...nc, contactPhone: e.target.value }); clearErr('ncPhone'); }} placeholder="05X-XXXXXXX" {...inv('ncPhone')} />{err('ncPhone')}</L>
                     </Row>
                     <Row>
-                      <L label="ח.פ / ע.מ (לא חובה)"><input className="input input--ltr" inputMode="numeric" value={nc.taxId} onChange={(e) => { setNc({ ...nc, taxId: e.target.value }); clearErr('ncTax'); }} {...inv('ncTax')} />{err('ncTax')}
+                      <L label="ח.פ / ע.מ"><input className="input input--ltr" inputMode="numeric" value={nc.taxId} onChange={(e) => { setNc({ ...nc, taxId: e.target.value }); clearErr('ncTax'); }} {...inv('ncTax')} />{err('ncTax')}
                         {taxTwin && <button type="button" className="link cform__twin" onClick={() => pickExisting(taxTwin)}>הזמנה ל"{taxTwin.name}" במקום</button>}
                       </L>
                     </Row>
@@ -625,24 +627,23 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                 <div className="no-past" role="alert">
                   <b><CircleAlert size={16} aria-hidden="true" /> תאריך שעבר – ההזמנה תיכנס לתיעוד בלבד</b>
                   <span>היא תישמר כסגורה, בארכיון ובתיק הלקוח, ולא תקפיץ התראות. בחרו מה קרה בה:</span>
-                  <div className="seg" role="radiogroup" aria-label="מה קרה בהזמנה">
-                    {([['delivered', 'סופקה'], ['late', 'סופקה באיחור'], ['partial', 'סופקה חלקית'], ['cancelled', 'בוטלה']] as const).map(([k, label]) => (
-                      <button type="button" key={k} role="radio" aria-checked={outcome === k} className={outcome === k ? 'is-on' : ''} onClick={() => { setOutcome(k); clearErr('outcome'); }}>{label}</button>
-                    ))}
-                  </div>
+                  <select className="input no-outcome" aria-label="מה קרה בהזמנה" data-field="outcome" value={outcome} onChange={(e) => { setOutcome(e.target.value as typeof outcome); clearErr('outcome'); }}>
+                    <option value="">בחרו…</option>
+                    {([['delivered', 'סופקה'], ['late', 'סופקה באיחור'], ['partial', 'סופקה חלקית'], ['cancelled', 'בוטלה']] as const).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                  </select>
                   {outcome === 'late' && <L label="זמן האיחור (דקות)"><input className="input input--ltr no-past__mins" inputMode="numeric" value={lateMin} onChange={(e) => setLateMin(e.target.value)} placeholder="למשל 20" /></L>}
                   {(outcome === 'cancelled' || outcome === 'partial') && (
                     <L label={outcome === 'cancelled' ? 'סיבת הביטול' : 'מה סופק בפועל'} req>
                       <input className="input" value={pastReason} onChange={(e) => { setPastReason(e.target.value); clearErr('outcome'); }} />
                     </L>
                   )}
-                  {outcome && outcome !== 'cancelled' && <L label="מס' הזמנה ב-Q (לא חובה)"><input className="input input--ltr no-past__mins" value={pastQ} onChange={(e) => setPastQ(e.target.value)} placeholder="cs000" /></L>}
+                  {outcome && outcome !== 'cancelled' && <L label="מס' הזמנה ב-Q"><input className="input input--ltr no-past__mins" value={pastQ} onChange={(e) => setPastQ(e.target.value)} placeholder="cs000" /></L>}
                   {err('outcome')}
                 </div>
               )}
               <Row>{branchField}{!past && statusField}</Row>
               <Row>
-                <L label="ערוץ / מספר פניה" req>
+                <L label="ערוץ / מספר פניה">
                   <input className="input" list="no-channels" value={channel} onChange={(e) => { setChannel(e.target.value); clearErr('channel'); }} placeholder="למשל: וואטסאפ, מוקד, WellBe או מספר פניה" {...inv('channel')} />
                   <datalist id="no-channels">{channelHints.map((h) => <option key={h} value={h} />)}</datalist>
                   {err('channel')}
@@ -675,7 +676,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           {(missLive.length > 0 || dup || similar.length > 0 || !!badLine) && (customerChosen || dup || !!badLine) && (
             <ul className="no-missing" aria-live="polite" aria-label="לפני השמירה">
               {badLine && <li className="no-missing__block"><CircleAlert size={16} aria-hidden="true" /><span><b>שורה לא שלמה ב{categoryOf(badLine)}</b> – חסרים כמות או סוג / מוצר, ובלעדיהם אי אפשר לשמור. <button type="button" className="link no-missing__go" onClick={() => setReveal((n) => n + 1)}>הצג</button></span></li>}
-              {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים:</b> {missKeys.map((k, i) => <span key={k}>{i > 0 && ', '}<button type="button" className="link no-missing__go" onClick={() => goTo(k)}>{MISS_LABEL[k]}</button></span>)} – אפשר לשמור עכשיו, וההזמנה תסומן באדום עד שישלימו.</span></li>}
+              {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים:</b> {missKeys.map((k, i) => <span key={k}>{i > 0 && ', '}<button type="button" className="link no-missing__go" onClick={() => goTo(k)}>{missLabel(k)}</button></span>)} – אפשר לשמור עכשיו, וההזמנה תסומן כחסרה עד שישלימו.</span></li>}
               {dup && <li><CircleAlert size={16} aria-hidden="true" /><span><b>יש הזמנה דומה</b> (<Ltr>{dup.id}</Ltr> · <Ltr>{dup.time}</Ltr>) – השמירה תיצור הזמנה נוספת.</span></li>}
               {similar.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>לקוח דומה כבר קיים</b> ({similar[0].c.name}) – השמירה תפתח לקוח חדש.</span></li>}
             </ul>

@@ -165,6 +165,36 @@ export function MarkAction({
 }
 
 /* שדה עם תווית קבועה מעליו (לא placeholder במקום תווית) */
+/* ---------- בקר מפולח לבחירה (radiogroup): עצירת Tab אחת, וחיצים / Home / End לבחירה ----------
+   רק ל-2–3 אפשרויות קצרות. RTL: חץ שמאלה = הבאה, חץ ימינה = הקודמת (סדר הקריאה) */
+export function RadioSeg<T extends string | number>({ options, value, onChange, label, className = '', base = 'seg' }: {
+  options: { value: T; label: ReactNode; aria?: string }[]; value: T | null | undefined; onChange: (v: T) => void; label: string; className?: string; base?: string;
+}) {
+  const idx = options.findIndex((o) => o.value === value);
+  const onKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const rtl = getComputedStyle(e.currentTarget).direction === 'rtl';
+    const step = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1
+      : e.key === 'ArrowLeft' ? (rtl ? 1 : -1) : e.key === 'ArrowRight' ? (rtl ? -1 : 1) : 0;
+    let next = -1;
+    if (step) next = ((idx < 0 ? 0 : idx) + step + options.length) % options.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = options.length - 1;
+    if (next < 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onChange(options[next].value);
+    (e.currentTarget.children[next] as HTMLElement | undefined)?.focus();
+  };
+  return (
+    <div className={`${base} ${className}`} role="radiogroup" aria-label={label} onKeyDown={onKey}>
+      {options.map((o, i) => (
+        <button type="button" key={String(o.value)} role="radio" aria-checked={i === idx} aria-label={o.aria} title={o.aria}
+          tabIndex={i === (idx < 0 ? 0 : idx) ? 0 : -1} className={i === idx ? 'is-on' : ''} onClick={() => onChange(o.value)}>{o.label}</button>
+      ))}
+    </div>
+  );
+}
+
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
     <label className="field">
