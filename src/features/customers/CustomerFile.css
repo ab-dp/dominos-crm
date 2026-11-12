@@ -13,8 +13,18 @@
 .fact__link:hover { background: var(--brand-50); }
 .tag { display: inline-flex; align-items: center; gap: var(--space-1); height: 26px; padding: 0 var(--space-3); border-radius: var(--radius-panel); background: var(--gray-100); font-size: var(--text-label); font-weight: 500; }
 .tag--brand { background: var(--brand-50); color: var(--brand-800); }
-.cfile__banner { padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-table); }
+/* הנחיות קבועות – מידע לעבודה, לא אזהרה: רקע שקט, בלי צבע "חסר" */
+.cfile__note { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: baseline; padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--gray-25); box-shadow: inset 0 0 0 1px var(--gray-100); font-size: var(--text-table); color: var(--gray-900); }
+.cfile__note b { font-size: var(--text-label); font-weight: 500; color: var(--gray-600); white-space: nowrap; }
+@media (max-width: 560px) { .cfile__note { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); } }
 .cfile__tabs { margin-bottom: 0; }
+/* ניווט משני בתוך קבוצה: שקט יותר מהלשוניות, בלי קו תחתון שני */
+.subtabs { display: flex; gap: var(--space-1); margin-top: calc(-1 * var(--space-1)); overflow-x: auto; scrollbar-width: none; }
+.subtab { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--control-sm); padding: 0 var(--space-3); border: 0; border-radius: var(--radius); background: none; font: inherit; font-size: var(--text-table); color: var(--gray-600); white-space: nowrap; cursor: pointer; transition: background var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
+.subtab:hover { color: var(--gray-900); background: var(--gray-50); }
+.subtab.is-on { background: var(--gray-100); color: var(--gray-900); font-weight: 500; }
+.subtab__n { font: 500 var(--text-micro) var(--font-mono); color: var(--gray-600); }
+.cfile__panel { min-width: 0; }
 
 .ov { display: grid; gap: var(--space-4); }
 .ov__period { justify-self: start; }
@@ -87,10 +97,11 @@
 .monthly__warn bdi { color: var(--urgent-fg); font-weight: 500; }
 .monthly__orders { border-top: 1px solid var(--gray-100); }
 .monthly__none { padding: var(--space-3); }
+.monthly__empty td { color: var(--gray-600); font-size: var(--text-label); }
 
 .cfile__pricenote { padding: var(--space-4) var(--space-4) var(--space-1); max-width: 560px; }
 .cfile__placts { display: inline-flex; align-items: center; gap: var(--space-3); }
-.cfile__plcond { color: var(--missing-fg); }
+.cfile__plcond { color: var(--gray-700); }
 .cfile__prices .cfile__plcat th { padding-top: var(--space-3); text-align: start; font-size: var(--text-label); font-weight: 500; color: var(--brand-800); background: transparent; }
 .cfile__qrow { cursor: pointer; } .cfile__qrow:hover td { background: var(--gray-50); }
 

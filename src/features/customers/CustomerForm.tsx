@@ -1,5 +1,5 @@
 /* טופס לקוח – הוספה ועריכה (אפיון 6.5). מניעת כפילות תוך כדי הקלדה:
-   ח.פ זהה – לא ניתן ליצור, עם קישור ללקוח הקיים. שם דומה או טלפון זהה – אזהרה, והמשתמש מחליט. */
+   ח.פ זהה – שגיאה בשדה מיד, והכפתור הראשי פותח את הלקוח הקיים במקום ליצור כפול. שם דומה או טלפון זהה – אזהרה, והמשתמש מחליט. */
 import { useMemo, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { CircleAlert, OctagonAlert, Plus, X } from 'lucide-react';
 import { createCustomer, newId, primaryContact, updateCustomer, type Contact, type Customer, type CustomerInput, EMPTY_CUSTOMER } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
-import { Button } from '../../design/components';
+import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { fmtPhone } from '../../lib/format';
 import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
@@ -53,12 +53,9 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
     const e: Record<string, string> = {};
     if (!f.name.trim()) e.name = 'חובה: שם הלקוח (חברה או אדם פרטי)';
     const te = taxIdError(f.taxId); if (te) e.taxId = te;
-    if (taxTwin) e.taxId = `ח.פ הזה כבר שייך ללקוח "${taxTwin.name}"`;
     const pe = phoneError(contact.phone); if (pe) e.contactPhone = pe;
-    if (f.paymentMethod === 'account') {
-      if (!cleanPhone(f.accountPhone)) e.accountPhone = 'חובה ללקוח הקפה: טלפון ההקפה';
-      else { const ae = phoneError(f.accountPhone); if (ae) e.accountPhone = ae; }
-    }
+    // טלפון הקפה לא חוסם שמירה – לקוח בלי טלפון הקפה נשמר ומסומן "חסר" ברשימה ובתיק
+    if (f.paymentMethod === 'account' && cleanPhone(f.accountPhone)) { const ae = phoneError(f.accountPhone); if (ae) e.accountPhone = ae; }
     if (contact.email && !/^\S+@\S+\.\S+$/.test(contact.email)) e.contactEmail = 'כתובת מייל לא תקינה';
     emails.forEach((m, i) => { if (m.trim() && !/^\S+@\S+\.\S+$/.test(m.trim())) e[`email${i}`] = 'כתובת מייל לא תקינה'; });
     more.forEach((m, i) => { const me = phoneError(m.phone); if (me) e[`morePhone${i}`] = me; if (m.email && !/^\S+@\S+\.\S+$/.test(m.email)) e[`moreEmail${i}`] = 'כתובת מייל לא תקינה'; });
@@ -66,7 +63,7 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
     if (CARD_RE.test(f.instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(f.billingInstructions)) e.billingInstructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     setErrors(e);
-    if (Object.keys(e).length) {
+    if (Object.keys(e).length || taxTwin) {
       // הפוקוס עובר לשדה הראשון השגוי (אפיון 2.2)
       requestAnimationFrame(() => (document.querySelector('.cform [aria-invalid="true"]') as HTMLElement | null)?.focus());
       return false;
@@ -74,7 +71,9 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
     return true;
   };
 
+  const openTwin = (c: Customer) => { onClose(); nav(`/customers/${c.id}`); };
   const submit = async () => {
+    if (taxTwin && !editing) { openTwin(taxTwin); return; }
     if (!validate()) return;
     if (warnings.length && !ackWarn) { setAckWarn(true); return; }
     const extra = emails.map((m) => m.trim()).filter(Boolean);
@@ -105,6 +104,7 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
 
   const err = (k: string) => errors[k] ? <span className="cform__err" id={`ce-${k}`} role="alert">{errors[k]}</span> : null;
   const inv = (k: string) => ({ 'aria-invalid': !!errors[k] || undefined, 'aria-describedby': errors[k] ? `ce-${k}` : undefined });
+  const taxDup = !errors.taxId && taxTwin;
 
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
@@ -124,23 +124,26 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                   {err('name')}
                 </L>
                 <L label="סוג לקוח">
-                  <div className="seg" role="radiogroup" aria-label="סוג לקוח">
-                    {(['regular', 'occasional'] as const).map((t) => (
-                      <button type="button" key={t} role="radio" aria-checked={f.type === t} className={f.type === t ? 'is-on' : ''} onClick={() => set('type', t)}>{t === 'regular' ? 'קבוע' : 'מזדמן'}</button>
-                    ))}
-                  </div>
+                  <RadioSeg label="סוג לקוח" value={f.type} onChange={(v) => set('type', v)} options={[{ value: 'regular', label: 'קבוע' }, { value: 'occasional', label: 'מזדמן' }]} />
                 </L>
               </Row>
               <Row>
                 <L label="ח.פ / ע.מ">
-                  <input className="input input--ltr" inputMode="numeric" value={f.taxId} onChange={(e) => set('taxId', e.target.value)} {...inv('taxId')} />
+                  <input className="input input--ltr" inputMode="numeric" value={f.taxId} onChange={(e) => set('taxId', e.target.value)} {...inv('taxId')}
+                    {...(taxDup ? { 'aria-invalid': true, 'aria-describedby': 'ce-taxdup' } : {})} />
                   {err('taxId')}
-                  {taxTwin && <button type="button" className="link cform__twin" onClick={() => { onClose(); nav(`/customers/${taxTwin.id}`); }}>פתח את "{taxTwin.name}"</button>}
+                  {/* ח.פ כפול נבדק בזמן ההקלדה – שגיאה בשדה מיד, לא רק אחרי הלחיצה */}
+                  {taxDup && (
+                    <span className="cform__err" id="ce-taxdup" aria-live="polite">
+                      ח.פ הזה כבר שייך ל"{taxTwin.name}" ·{' '}
+                      <button type="button" className="link cform__twin" onClick={() => openTwin(taxTwin)}>פתח את התיק</button>
+                    </span>
+                  )}
                 </L>
               </Row>
             </Section>
 
-            <Section title="איש קשר ראשי (לא חובה)">
+            <Section title="איש קשר ראשי">
               <Row>
                 <L label="שם"><input className="input" value={contact.name} onChange={(e) => { setContact({ ...contact, name: e.target.value }); setErrors((x) => ({ ...x, contactName: '' })); }} {...inv('contactName')} />{err('contactName')}</L>
                 <L label="תפקיד"><input className="input" value={contact.role} onChange={(e) => setContact({ ...contact, role: e.target.value })} placeholder="מנהלת משרד" /></L>
@@ -181,14 +184,13 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
             <Section title="תשלום ומחירון">
               <Row>
                 <L label="אמצעי תשלום ברירת מחדל">
-                  <div className="seg" role="radiogroup" aria-label="אמצעי תשלום">
-                    {activeMethods.map((m) => (
-                      <button type="button" key={m.id} role="radio" aria-checked={f.paymentMethod === m.id} className={f.paymentMethod === m.id ? 'is-on' : ''} onClick={() => set('paymentMethod', m.id)}>{m.label}</button>
-                    ))}
-                  </div>
+                  {/* בקר מפולח רק עד 3 אפשרויות, מעבר לזה רשימה נפתחת – כמו בהזמנה חדשה */}
+                  {activeMethods.length <= 3
+                    ? <RadioSeg label="אמצעי תשלום" value={f.paymentMethod} onChange={(v) => set('paymentMethod', v)} options={activeMethods.map((m) => ({ value: m.id, label: m.label }))} />
+                    : <select className="input" value={f.paymentMethod} onChange={(e) => set('paymentMethod', e.target.value)}>{activeMethods.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}</select>}
                 </L>
                 {f.paymentMethod === 'account' && (
-                  <L label="טלפון הקפה" req>
+                  <L label="טלפון הקפה">
                     <input className="input input--ltr" inputMode="tel" value={f.accountPhone} onChange={(e) => set('accountPhone', e.target.value)} placeholder="05X-XXXXXXX" {...inv('accountPhone')} />
                     {err('accountPhone')}
                     {cleanPhone(f.accountPhone).length >= 9 && others.some((c) => c.accountPhone === cleanPhone(f.accountPhone)) && (
@@ -210,7 +212,7 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                   </label>
                 </L>
               </Row>
-              <L label="הערת מחיר (לא חובה)" wide>
+              <L label="הערת מחיר" wide>
                 <input className="input" value={f.priceNote ?? ''} onChange={(e) => set('priceNote', e.target.value)} placeholder='למשל: מחיר לפי המחיר בממשק WellBe' {...inv('priceNote')} />
                 {err('priceNote')}
               </L>
@@ -234,7 +236,7 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                   <b>יכול להיות שהלקוח כבר קיים:</b>
                   <ul>
                     {warnings.map((w) => (
-                      <li key={w.c.id}>{w.why}: <button type="button" className="link" onClick={() => { onClose(); nav(`/customers/${w.c.id}`); }}>{w.c.name}</button></li>
+                      <li key={w.c.id}>{w.why}: <button type="button" className="link" onClick={() => openTwin(w.c)}>{w.c.name}</button></li>
                     ))}
                   </ul>
                   <span>אם זה לקוח אחר – לחץ שוב על "{editing ? 'שמור' : 'הוסף לקוח'}".</span>
@@ -245,9 +247,9 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
           </form>
 
           <div className="cform__foot">
-            <Button variant="primary" loading={busy} onClick={submit}>{editing ? 'שמור' : ackWarn && warnings.length ? 'זה לקוח אחר – הוסף' : 'הוסף לקוח'}</Button>
+            <Button variant="primary" loading={busy} onClick={submit}>{editing ? 'שמור' : taxTwin ? 'ח.פ קיים – פתח את הלקוח' : ackWarn && warnings.length ? 'זה לקוח אחר – הוסף' : 'הוסף לקוח'}</Button>
             <Dialog.Close asChild><Button variant="ghost">ביטול</Button></Dialog.Close>
-            {!editing && warnings.length > 0 && !ackWarn && <span className="cform__live"><CircleAlert size={14} aria-hidden="true" /> נמצא לקוח דומה – נבדוק לפני השמירה</span>}
+            {!editing && !taxTwin && warnings.length > 0 && !ackWarn && <span className="cform__live"><CircleAlert size={14} aria-hidden="true" /> נמצא לקוח דומה – נבדוק לפני השמירה</span>}
           </div>
         </Dialog.Content>
       </Dialog.Portal>

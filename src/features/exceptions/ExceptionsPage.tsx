@@ -178,7 +178,7 @@ function TaskGroup({ title, tone, list, when }: { title: string; tone: 'orange' 
             </label>
             <span className="task-row__main">
               <span className="task-row__text">{t.text}</span>
-              <span className="task-row__meta"><Link to={t.leadId ? `/leads/${t.leadId}` : `/customers/${t.customerId}`}>{t.customerName || 'לקוח'}</Link>{t.leadId && <span className="muted"> (ליד)</span>} · {when(t.due)} · {t.byName}</span>
+              <span className="task-row__meta"><Link to={t.leadId ? `/leads/${t.leadId}` : `/customers/${t.customerId}?tab=activity`}>{t.customerName || 'לקוח'}</Link>{t.leadId && <span className="muted"> (ליד)</span>} · {when(t.due)} · {t.byName}</span>
             </span>
           </li>
         ))}
