@@ -142,17 +142,15 @@
 .iedit .no-add { margin: 0; }
 .icon-btn--sm { width: var(--control-sm); height: var(--control-sm); }
 
-/* ---------- הערות פנימיות ---------- */
-.notes { display: grid; gap: var(--space-3); }
+/* ---------- הערות פנימיות מהעבר (לקריאה בלבד, מתחת ל"הערות להזמנה") ---------- */
+.earlier-notes { display: grid; gap: var(--space-1); margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--gray-100); }
+.earlier-notes .notes__list li:last-child { border-bottom: 0; padding-bottom: 0; }
 .notes__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-.notes__list li { padding: var(--space-3) 0; border-bottom: 1px solid var(--gray-100); }
-.notes__list li:first-child { padding-top: 0; }
+.notes__list li { padding: var(--space-2) 0; border-bottom: 1px solid var(--gray-100); }
 .notes__meta { font-size: var(--text-label); color: var(--gray-600); }
 .notes__meta b { color: var(--gray-900); font-weight: 500; }
 .notes__meta bdi { font-family: var(--font-mono); font-size: var(--text-micro); }
 .notes__list p { margin: 2px 0 0; font-size: var(--text-table); white-space: pre-wrap; }
-.notes__composer { display: grid; gap: var(--space-2); }
-.notes__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 @media (max-width: 700px) { .iedit__grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .iedit { animation: none; } }
 .remote-note { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--brand-50); border: 1px solid var(--brand-100); color: var(--brand-800); font-size: var(--text-label); }

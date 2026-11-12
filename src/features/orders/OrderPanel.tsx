@@ -1,5 +1,5 @@
 /* תיק הזמנה בפאנל צדדי (אפיון 6.3): קודם "להעברה לקופה" – כל מה שצריך כדי להוריד את ההזמנה ל-Q, ושורת Q.
-   מתחת: ציר ההזמנה, ושאר הפרטים בלשוניות (פרטים נוספים · תשלום ומסמכים · הערות · היסטוריה). */
+   מתחת: ציר ההזמנה, ושאר הפרטים בלשוניות (פרטים נוספים · תשלום ומסמכים · היסטוריה). ההערות – רק בבלוק הקופה. */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -22,12 +22,13 @@ import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
 const STEP_ACTIONS = ['q', 'branch', 'status', 'close', 'ops'];
 import { OrderDocsSection } from './OrderDocs';
-import { EditKv, NotesSection, useOrderSave } from './OrderEdit';
+import { EditKv, useOrderSave } from './OrderEdit';
+import { ChannelPicks } from './ChannelPicks';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import './OrderPanel.css';
 
-type Tab = 'more' | 'pay' | 'notes' | 'history';
-const TABS: [Tab, string][] = [['more', 'פרטים נוספים'], ['pay', 'תשלום ומסמכים'], ['notes', 'הערות'], ['history', 'היסטוריה']];
+type Tab = 'more' | 'pay' | 'history';
+const TABS: [Tab, string][] = [['more', 'פרטים נוספים'], ['pay', 'תשלום ומסמכים'], ['history', 'היסטוריה']];
 
 export function OrderPanel() {
   const panel = usePanel();
@@ -188,7 +189,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           {tab === 'more' && (
             <Section id="details" title="פרטים נוספים">
               <Kv k="לקוח" v={<button className="link" onClick={openCustomer}>{o.customerName} · לתיק הלקוח</button>} />
-              <EditKv k="ערוץ / מספר פניה" readOnly={cancelled} value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ או מספר פניה')} onSave={(v) => save({ channel: v }, 'ערוץ / מספר פניה')} />
+              <EditKv k="ערוץ / מספר פניה" readOnly={cancelled} value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ או מספר פניה')} onSave={(v) => save({ channel: v }, 'ערוץ / מספר פניה')}
+                picks={(draft, pick) => <ChannelPicks value={draft} onPick={pick} keepFocus />} />
               <Kv k="מטפל" v={<HandlerEdit o={o} />} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
               {o.branchPhone && <Kv k="טלפון הסניף" v={<Ltr>{fmtPhone(o.branchPhone)}</Ltr>} />}
@@ -214,11 +216,6 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
                 <OrderDocsSection orderId={o.id} customerId={o.customerId} />
               </Section>
             </>
-          )}
-          {tab === 'notes' && (
-            <Section id="notes" title="הערות פנימיות">
-              <NotesSection o={o} />
-            </Section>
           )}
           {tab === 'history' && <History o={o} />}
         </div>

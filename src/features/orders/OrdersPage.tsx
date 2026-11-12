@@ -28,7 +28,9 @@ const urgentFirst = (a: OrderView, b: OrderView) => HEALTH_RANK[b.health] - HEAL
 export function OrdersPage() {
   const { orders, now, loading, error } = useStore();
   const [params, setParams] = useSearchParams();
-  const tab = (params.get('tab') as Tab) || 'today';
+  // ערך לא מוכר בכתובת (קישור ישן או שגוי) – "היום", ולא מסך שבור
+  const raw = params.get('tab') as Tab | null;
+  const tab: Tab = raw && TABS.some(([k]) => k === raw) ? raw : 'today';
   const range = Number(params.get('range') ?? 7);
   const filterKey = params.get('filter');
   const filter = filterKey ? FILTERS[filterKey] : undefined;

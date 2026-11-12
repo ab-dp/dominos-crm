@@ -10,7 +10,7 @@ import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, sameMoney, weekday } from '../
 import { QForm } from './OrderActions';
 import { phoneError } from '../../lib/names';
 import { PriceRows } from './ItemsBuilder';
-import { BranchEdit, DeliveryTypeEdit, EditKv, ItemsEditor, MethodEdit, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
+import { BranchEdit, DeliveryTypeEdit, EarlierNotes, EditKv, ItemsEditor, MethodEdit, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
 
 /* טקסט מסודר להעתקה (להקלדה בקופה או לשליחה לסניף) */
 export function registerText(o: OrderView) {
@@ -25,7 +25,7 @@ export function registerText(o: OrderView) {
     (o.contactName || o.contactPhone) && `איש קשר: ${[o.contactName, o.contactPhone && fmtPhone(o.contactPhone)].filter(Boolean).join(' · ')}`,
     o.delivery === 'pickup' ? 'איסוף עצמי' : `משלוח: ${o.address ?? ''}`,
     items,
-    o.instructions && `הערות לסניף: ${o.instructions}`,
+    o.instructions && `הערות: ${o.instructions}`,
     `סכום: ${fmtMoney(o.amount)}`,
   ].filter(Boolean).join('\n');
 }
@@ -75,7 +75,9 @@ export function RegisterBlock({ o }: { o: OrderView }) {
         )}
       </div>
       <div className="reg__wide reg__note">
-        <EditKv k="הערות לסניף" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
+        {/* המקום היחיד להערות בהזמנה – אותו שדה של "הערות להזמנה" בהזמנה חדשה, ומופיע גם בסיכום לתפעול */}
+        <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
+        <EarlierNotes o={o} />
       </div>
 
       <div className="reg__sum">
