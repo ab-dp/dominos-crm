@@ -23,77 +23,84 @@
 .ops-phone { display: none; margin: 0 0 var(--space-2); font-size: var(--text-label); color: var(--gray-600); }
 .ops-fit { overflow: hidden; border: 1px solid var(--gray-100); border-radius: var(--radius); background: var(--white); }
 
-/* ---------- הדף שנשלח לתפעול: רוחב קבוע, כתב גדול ושורות צפופות – כדי שאשכול שלם ייכנס לצילום אחד / עמוד PDF אחד.
-   כל הזמנה: שעה · פיצות · לקוח · פירוט (שורה לכל סוג פיצה, כל השאר בשורה אחת, הערה לסניף מודגשת) · אספקה · סכום ---------- */
-.os { --os-blue: var(--navy-2); --os-sub: var(--gray-600); --os-line: var(--gray-200); --os-br: var(--brand-50);
-  box-sizing: border-box; width: 1080px; padding: var(--space-3) var(--space-4); background: var(--white); color: var(--gray-900);
-  font-family: var(--font); font-size: var(--text-card-title); line-height: 1.25; text-align: right; }
+/* ---------- הדף שנשלח לתפעול: רוחב קבוע, רגוע וקריא – כדי שאשכול שלם ייכנס לצילום אחד / עמוד PDF אחד.
+   בולט רק מה שהסניף צריך לראות במבט: היום, הסניף, השעה וכמות הפיצות. כל השאר בכתב רגיל ובאפור. ---------- */
+.os { --ink: var(--gray-900); --os-sub: var(--gray-500); --os-text: var(--gray-700); --os-line: var(--gray-100);
+  box-sizing: border-box; width: 1080px; padding: var(--space-4) var(--space-5); background: var(--white); color: var(--os-text);
+  font-family: var(--font); font-size: var(--text-table); line-height: 1.3; text-align: right; }
 .os * { box-sizing: border-box; }
-.os-head { display: flex; align-items: center; gap: var(--space-4); padding-bottom: var(--space-2); border-bottom: 3px solid var(--os-blue); }
-.os-head h1 { margin: 0; font-size: var(--text-screen-title); font-weight: 600; color: var(--os-blue); line-height: 1.15; }
-.os-range { margin: 2px 0 0; font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
-.os-stats { display: flex; gap: var(--space-2); margin-inline-start: auto; }
-.os-stats > div { display: flex; align-items: baseline; gap: var(--space-1); padding: var(--space-1) var(--space-3); background: var(--os-br); white-space: nowrap; }
-.os-stats b { font-size: var(--text-section); font-weight: 600; color: var(--os-blue); font-family: var(--font-mono); }
-.os-stats span { font-size: var(--text-label); color: var(--os-sub); }
-.os-head img { height: 32px; width: auto; display: block; }
+
+/* ראש הדף */
+.os-head { display: flex; align-items: center; gap: var(--space-5); padding-bottom: var(--space-3); border-bottom: 2px solid var(--ink); }
+.os-head h1 { margin: 0; font-size: var(--text-screen-title); font-weight: 600; color: var(--ink); line-height: 1.15; }
+.os-range { margin: 2px 0 0; font-size: var(--text-body); color: var(--os-text); }
+.os-stats { display: flex; margin-inline-start: auto; }
+.os-stats > div { display: grid; justify-items: center; padding: 0 var(--space-4); white-space: nowrap; }
+.os-stats > div + div { border-inline-start: 1px solid var(--gray-200); }
+.os-stats b { font-size: var(--text-section); font-weight: 600; color: var(--ink); line-height: 1.2; }
+.os-stats span { font-size: var(--text-micro); color: var(--os-sub); }
+.os-head img { height: 30px; width: auto; display: block; }
 .os-removed { margin: var(--space-2) 0 0; padding: var(--space-1) var(--space-3); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-label); }
 
-.os-table { width: 100%; margin-top: var(--space-2); border-collapse: collapse; table-layout: fixed; }
-.os-table .c-when { width: 76px; }
-.os-table .c-pz { width: 56px; }
-.os-table .c-cust { width: 212px; }
-.os-table .c-dlv { width: 160px; }
-.os-table .c-sum { width: 76px; }
-.os-table th { background: var(--os-blue); color: var(--white); font-weight: 600; font-size: var(--text-table); padding: var(--space-1) var(--space-2); text-align: right; }
-.os-table td { padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--os-line); vertical-align: top; overflow-wrap: anywhere; }
+/* טבלה: כותרות עמודה שקטות, קו דק בין הזמנות */
+.os-table { width: 100%; margin-top: var(--space-1); border-collapse: collapse; table-layout: fixed; }
+.os-table .c-when { width: 70px; }
+.os-table .c-pz { width: 62px; }
+.os-table .c-cust { width: 200px; }
+.os-table .c-dlv { width: 170px; }
+.os-table .c-sum { width: 80px; }
+.os-table th { padding: var(--space-2) var(--space-2) var(--space-1); border-bottom: 1px solid var(--gray-200); color: var(--os-sub); font-weight: 500; font-size: var(--text-micro); text-align: right; }
+.os-table td { padding: 5px var(--space-2); border-bottom: 1px solid var(--os-line); vertical-align: top; overflow-wrap: anywhere; }
 .os-table .m, .os-when b, .os-pz, .os-stats b { font-variant-numeric: tabular-nums; }
-.os-table .m { text-align: left; font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+.os-table .m { text-align: left; font-family: var(--font-mono); color: var(--ink); white-space: nowrap; }
 .os-table .c { text-align: center; }
 
-/* צבע קבוע לכל יום בשבוע (שישי תמיד כחול דומינוס, שבת תמיד סגול) – הפס, כותרות הסניפים, השעה והפיצות באותו גוון.
-   בלי אדום / כתום / צהוב: הם שמורים לחריגים ולחוסרים */
-.os-day { --day: #006491; --day-dk: #00567D; --day-ln: #4FB0DC; --day-tint: var(--brand-50); --day-row: #F3F8FB; }
-.os-day--0 { --day: #0F6E56; --day-dk: #085041; --day-ln: #5DCAA5; --day-tint: #E1F5EE; --day-row: #F2FAF7; }
-.os-day--1 { --day: #185FA5; --day-dk: #0C447C; --day-ln: #85B7EB; --day-tint: #E6F1FB; --day-row: #F4F8FD; }
-.os-day--2 { --day: #3B6D11; --day-dk: #27500A; --day-ln: #97C459; --day-tint: #EAF3DE; --day-row: #F5F9EF; }
-.os-day--3 { --day: #993556; --day-dk: #72243E; --day-ln: #ED93B1; --day-tint: #FBEAF0; --day-row: #FDF5F8; }
-.os-day--4 { --day: #3A4756; --day-dk: #0F1B2A; --day-ln: #C2CAD4; --day-tint: #E6EAEF; --day-row: #F5F7F9; }
-.os-day--6 { --day: #534AB7; --day-dk: #3C3489; --day-ln: #AFA9EC; --day-tint: #EEEDFE; --day-row: #F6F5FE; }
+/* צבע קבוע לכל יום בשבוע, בגוונים שקטים (שישי – הכחול של דומינוס, שבת – חציל). בלי אדום / כתום / צהוב */
+.os-day { --day: #006491; --day-dk: #00567D; --day-ln: #A7CDE0; --day-tint: #EBF4F8; }
+.os-day--0 { --day: #2F7D72; --day-dk: #1F5A52; --day-ln: #A9D3CC; --day-tint: #EEF6F4; }
+.os-day--1 { --day: #3A6EA5; --day-dk: #284F7A; --day-ln: #B3C9E2; --day-tint: #EEF3F9; }
+.os-day--2 { --day: #5B7A3A; --day-dk: #405826; --day-ln: #C3D2AE; --day-tint: #F2F5EC; }
+.os-day--3 { --day: #7A6650; --day-dk: #574735; --day-ln: #D3C7B8; --day-tint: #F6F2EE; }
+.os-day--4 { --day: #4B5B6E; --day-dk: #334050; --day-ln: #C2CAD4; --day-tint: #F1F3F6; }
+.os-day--6 { --day: #6A4C7C; --day-dk: #4C3459; --day-ln: #CDBFD6; --day-tint: #F4F0F6; }
 
-/* מעבר יום: פס מלא לרוחב, שם היום במרכז */
+/* מעבר יום: פס בהיר בגוון היום, קו עליון בצבע היום, שם היום גדול במרכז */
 .os-dayband td { padding: var(--space-5) 0 0; border: 0; }
-.os-table tbody:first-of-type .os-dayband td { padding-top: var(--space-2); }
-.os-dayband div { display: flex; justify-content: center; align-items: baseline; gap: var(--space-3); padding: var(--space-2); background: var(--day); color: var(--white); }
-.os-dayband b { font-size: var(--text-kpi); font-weight: 600; line-height: 1.1; }
-.os-dayband span { font-size: var(--text-body); }
+.os-table tbody:first-of-type .os-dayband td { padding-top: var(--space-3); }
+.os-dayband div { display: flex; justify-content: center; align-items: baseline; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--day-tint); border-top: 4px solid var(--day); }
+.os-dayband b { font-size: var(--text-kpi); font-weight: 600; line-height: 1.1; color: var(--day-dk); }
+.os-dayband span { font-size: var(--text-label); color: var(--os-text); }
 
-/* מעבר סניף: פס בגוון היום, השם גדול במרכז בין שני קווים */
-.os-br td { padding: var(--space-2) 0 0; border: 0; }
-.os-br div { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-3); background: var(--day-tint); border-top: 2px solid var(--day); border-bottom: 2px solid var(--day); }
-.os-br div::before, .os-br div::after { content: ''; flex: 1; height: 2px; background: var(--day-ln); }
-.os-br b { font-size: var(--text-screen-title); font-weight: 600; line-height: 1.2; color: var(--day-dk); }
-.os-br span { font-size: var(--text-table); color: var(--day-dk); }
-.os-table tr.is-alt td { background: var(--day-row); }
+/* מעבר סניף: השם במרכז בין שני קווים בגוון היום */
+.os-br td { padding: var(--space-4) 0 var(--space-1); border: 0; }
+.os-table tbody:first-of-type > .os-br:first-child td { padding-top: var(--space-3); }
+.os-br div { display: flex; align-items: center; gap: var(--space-3); }
+.os-br div::before, .os-br div::after { content: ''; flex: 1; height: 1px; background: var(--day-ln); }
+.os-br b { font-size: var(--text-screen-title); font-weight: 600; line-height: 1.2; color: var(--ink); }
+.os-br span { font-size: var(--text-label); color: var(--os-sub); }
+.os-br + tr td { border-top: 2px solid var(--day); }
 
-.os-when b { display: block; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); color: var(--day-dk); }
-.os-pz { text-align: center; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); }
-.os-pz span { display: inline-block; min-width: 40px; padding: 0 var(--space-1); background: var(--day); color: var(--white); }
-.os-cust > b { font-weight: 600; }
-.os-sub { display: block; color: var(--os-sub); font-size: var(--text-table); }
-.os-sub bdi, .os-when b { white-space: nowrap; }
-.os-type b { font-weight: 600; }
-.os-type > b { color: var(--day-dk); }
-.os-extra { font-size: var(--text-body); }
+/* שעה וכמות פיצות – מה שהסניף מחפש בכל שורה */
+.os-when b { display: block; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); color: var(--ink); white-space: nowrap; }
+.os-pz { text-align: center; }
+.os-pz span { display: inline-block; min-width: 44px; padding: 0 var(--space-2); border-radius: 4px; background: var(--day-tint); color: var(--day-dk); font-size: var(--text-section); font-weight: 600; line-height: 1.25; font-family: var(--font-mono); }
+
+/* כל השאר: כתב רגיל ושקט */
+.os-cust > b { font-weight: 500; color: var(--ink); }
+.os-sub { display: block; color: var(--os-sub); font-size: var(--text-label); }
+.os-sub bdi { white-space: nowrap; }
+.os-type b { font-weight: 500; color: var(--ink); }
+.os-extra { color: var(--os-text); }
 .os-extra span + span { margin-inline-start: var(--space-3); }
-.os-extra b { font-weight: 600; color: var(--day-dk); }
-.os-note { margin: 2px 0 0; padding: 1px var(--space-2); background: var(--day-tint); font-size: var(--text-body); font-weight: 600; white-space: pre-line; }
-.os-dlv { font-size: var(--text-body); }
-.os-dlv b { font-weight: 600; }
-.os-tag { display: inline-block; margin-inline-end: var(--space-1); padding: 0 var(--space-2); font-size: var(--text-micro); font-weight: 600; }
+.os-extra b { font-weight: 500; color: var(--os-sub); }
+.os-note { margin: 2px 0 0; color: var(--ink); white-space: pre-line; }
+.os-note b { font-weight: 500; color: var(--day-dk); }
+.os-dlv { font-size: var(--text-label); }
+.os-dlv b { font-weight: 500; color: var(--ink); }
+.os-tag { display: inline-block; margin-inline-end: var(--space-1); padding: 0 var(--space-2); border-radius: 4px; font-size: var(--text-micro); font-weight: 600; }
 .os-tag--new { background: var(--ok-bg); color: var(--ok-fg); }
 .os-tag--changed { background: var(--urgent-bg); color: var(--urgent-fg); }
-.os-foot { margin: var(--space-2) 0 0; font-size: var(--text-micro); color: var(--os-sub); text-align: center; }
+.os-foot { margin: var(--space-3) 0 0; font-size: var(--text-micro); color: var(--os-sub); text-align: center; }
 
 @media (max-width: 640px) {
   .ops-phone { display: block; }
