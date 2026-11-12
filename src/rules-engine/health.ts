@@ -39,6 +39,7 @@ export function missingOf(o: Order): string[] {
   if (!o.contactPhone) m.push('טלפון');
   if (o.delivery === 'delivery' && !o.address) m.push('כתובת');
   if (o.method === 'account' && !o.accountPhone) m.push('טלפון הקפה');
+  if (o.method === 'other' && !o.methodNote?.trim()) m.push('פירוט אמצעי התשלום');
   if (!o.items?.length && !o.contents?.trim()) m.push('תכולה');
   if (o.poRequired && !o.poNumber) m.push('תעודת רכש'); // רק ללקוח שמסומן "עובד עם תעודת רכש"
   return m;

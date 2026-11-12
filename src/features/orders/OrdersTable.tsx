@@ -9,7 +9,7 @@ import { EmptyState, HealthBadge, Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import type { XSheet } from '../../lib/xlsx';
-import { METHOD_LABEL, STAGE_LABEL, closeLabel, stageOf, type Order } from '../../data/types';
+import { STAGE_LABEL, closeLabel, methodText, stageOf, type Order } from '../../data/types';
 import { FixButton } from './OrderActions';
 import { NextStep, StageTrack, nextStepLabel, opsPending } from './OrderTimeline';
 import './OrdersTable.css';
@@ -148,7 +148,7 @@ function ordersSheet(rows: OrderView[]): XSheet {
         { label: 'שלב', kind: 'text', width: 20 }, { label: 'אמצעי', kind: 'text', width: 12 }, { label: 'מטפל', kind: 'text', width: 16 },
         { label: "מס' Q", kind: 'code', width: 12 }, { label: 'סכום Q', kind: 'money', width: 12 },
       ],
-      rows: rows.map((o) => [o.id, o.date, o.time, o.customerName, o.branchName, o.amount || null, stage(o), o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method, o.handler, o.qNumber, o.qAmount ?? null]),
+      rows: rows.map((o) => [o.id, o.date, o.time, o.customerName, o.branchName, o.amount || null, stage(o), methodText(o), o.handler, o.qNumber, o.qAmount ?? null]),
       rowStyle: rows.map((o) => (o.status === 'cancelled' ? 'muted' : undefined)),
       total: ['סה"כ', null, null, null, null, rows.filter((o) => o.status !== 'cancelled').reduce((t, o) => t + o.amount, 0), null, null, null, null, null],
     }],
@@ -237,7 +237,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       </td>
       <td className="num">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</td>
       <td className="orow__marks c-marks"><StageTrack o={o} /></td>
-      <td>{o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method}</td>
+      <td>{methodText(o)}</td>
       <td>{o.handler}</td>
       <td className="c-act" onClick={(e) => e.stopPropagation()}>
         <span className="c-act__in">

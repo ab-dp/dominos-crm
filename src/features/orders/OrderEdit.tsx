@@ -21,13 +21,14 @@ const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
 /* ---------- שדה אחד שנערך במקום ---------- */
 type Kind = 'text' | 'textarea' | 'date' | 'time' | 'phone' | 'money';
 
-export function EditKv({ k, value, display, kind = 'text', placeholder, validate, onSave, readOnly, picks }: {
+export function EditKv({ k, value, display, kind = 'text', placeholder, validate, onSave, readOnly, picks, autoEdit }: {
   k: string; value: string; display?: ReactNode; kind?: Kind; placeholder?: string;
   validate?: (v: string) => string; onSave: (v: string) => void; readOnly?: boolean;
   /* בחירה מהירה מתחת לשדה בזמן עריכה (למשל ערוצים מההגדרות); הבחירה נשמרת מיד */
   picks?: (draft: string, pick: (v: string) => void) => ReactNode;
+  autoEdit?: boolean; // נפתח מיד לעריכה (למשל אחרי בחירה ב"אחר" באמצעי התשלום)
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(!!autoEdit && !readOnly);
   const [draft, setDraft] = useState(value);
   const [err, setErr] = useState('');
   const [remote, setRemote] = useState<string | null>(null); // ערך שמשתמש אחר שמר בזמן שערכתי
@@ -160,12 +161,21 @@ export function MethodEdit({ o }: { o: OrderView }) {
         <span className="seg seg--inline" role="radiogroup" aria-label="אמצעי תשלום">
           {methods.map((m) => (
             <button key={m.id} type="button" role="radio" aria-checked={o.method === m.id} className={o.method === m.id ? 'is-on' : ''}
-              onClick={() => o.method !== m.id && save({ method: m.id, methodLabel: m.label }, 'אמצעי התשלום')}>{m.label}</button>
+              onClick={() => o.method !== m.id && save({ method: m.id, methodLabel: m.label, ...(o.methodNote !== undefined ? { methodNote: undefined } : {}) }, 'אמצעי התשלום')}>{m.label}</button>
           ))}
           {methods.length === 0 && (o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method)}
         </span>
       </span>
     </div>
+  );
+}
+
+/* "אחר": מה אמצעי התשלום בפועל. נפתח לעריכה מיד כשבוחרים "אחר" בכרטיס; בלי פירוט – מסומן "חסר" */
+export function MethodNoteEdit({ o, justPicked }: { o: OrderView; justPicked?: boolean }) {
+  const save = useOrderSave(o);
+  return (
+    <EditKv k="פירוט אמצעי התשלום" value={o.methodNote ?? ''} display={o.methodNote || <Missing />} placeholder="למשל: העברה בנקאית, צ'ק" autoEdit={justPicked}
+      onSave={(v) => save({ methodNote: v || undefined }, 'פירוט אמצעי התשלום')} />
   );
 }
 

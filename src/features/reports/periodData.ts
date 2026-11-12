@@ -1,6 +1,6 @@
 /* סיכום תקופה – דוח להנהלה. פונקציות טהורות: מהזמנות לטבלאות, שמשמשות גם את המסך וגם את קובץ האקסל.
    כלל אחיד כמו בשאר הדוחות: לפי תאריך אספקה וסכום Q (ואם לא הוקלד – הסכום לחיוב). סכומים בלי הזמנות שבוטלו. */
-import { METHOD_LABEL, OUTCOME_LABEL, PIZZA, STAGE_LABEL, categoryOf, stageOf, type Order } from '../../data/types';
+import { OUTCOME_LABEL, methodText, PIZZA, STAGE_LABEL, categoryOf, stageOf, type Order } from '../../data/types';
 import { addDays, roundMoney, toISODate } from '../../lib/format';
 import { ON_TIME_HINT, isDelivered, isLive, onTime, revenue, type Preset } from '../../data/metrics';
 
@@ -55,7 +55,7 @@ export function ordersTable(all: Order[]): STable {
     ids: list.map((o) => o.id),
     rows: list.map((o) => [
       o.date, o.time || null, o.id, o.customerName, o.branchName, o.cluster || null, o.channel || null, itemCount(o), o.qNumber || null,
-      o.qAmount ?? null, o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method, statusText(o),
+      o.qAmount ?? null, methodText(o), statusText(o),
       o.late ? (o.late.minutes || 'לא צוין') : null,
     ]),
     total: ['סה"כ', null, null, `${l.length} הזמנות`, null, null, null, null, null, sumQ(l), null, null, null],

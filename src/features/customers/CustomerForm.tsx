@@ -184,8 +184,8 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
             <Section title="תשלום ומחירון">
               <Row>
                 <L label="אמצעי תשלום ברירת מחדל">
-                  {/* בקר מפולח רק עד 3 אפשרויות, מעבר לזה רשימה נפתחת – כמו בהזמנה חדשה */}
-                  {activeMethods.length <= 3
+                  {/* בקר מפולח עד 4 אפשרויות, מעבר לזה רשימה נפתחת – כמו בהזמנה חדשה */}
+                  {activeMethods.length <= 4
                     ? <RadioSeg label="אמצעי תשלום" value={f.paymentMethod} onChange={(v) => set('paymentMethod', v)} options={activeMethods.map((m) => ({ value: m.id, label: m.label }))} />
                     : <select className="input" value={f.paymentMethod} onChange={(e) => set('paymentMethod', e.target.value)}>{activeMethods.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}</select>}
                 </L>

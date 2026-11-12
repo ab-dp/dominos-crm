@@ -1,6 +1,6 @@
 /* הגדרות הדוחות (אפיון 10). כל דוח: פונקציה טהורה מהזמנות לשורות וסיכום – קל לבדוק מול חישוב ידני.
    כלל אחיד: לפי תאריך אספקה וסכום Q (ואם לא הועברה – סכום לחיוב). סכומים בלי הזמנות שבוטלו; הביטולים נספרים בנפרד. */
-import { METHOD_LABEL, OUTCOME_LABEL, PAYMENT_LABEL, itemsText, outcomeOf, type Order, type Outcome } from '../../data/types';
+import { OUTCOME_LABEL, methodText, PAYMENT_LABEL, itemsText, outcomeOf, type Order, type Outcome } from '../../data/types';
 import { ON_TIME_HINT, isDelivered, isLive, onTime, pctOf, revenue, revenueOf } from '../../data/metrics';
 
 export const qVal = revenueOf;
@@ -56,7 +56,7 @@ export const REPORTS: ReportDef[] = [
         cells: {
           date: fmtD(o.date), time: o.time, id: o.id, customer: o.customerName, branch: o.branchName, cluster: o.cluster, channel: o.channel,
           handler: o.handler || o.createdBy, items: orderItemsText(o), amount: o.amount, q: o.qNumber ?? '', qAmount: o.qAmount ?? '',
-          method: o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method, payment: PAYMENT_LABEL[o.payment], outcome: deliveryText(o),
+          method: methodText(o), payment: PAYMENT_LABEL[o.payment], outcome: deliveryText(o),
           lateMin: o.late?.minutes || '', reason: o.status === 'cancelled' ? [o.cancelReason, o.cancelNote].filter(Boolean).join(' · ') : o.status === 'partial' ? o.partialNote ?? '' : '',
           po: o.poNumber ?? '', notes: [o.instructions, o.note].filter(Boolean).join(' · '),
         },

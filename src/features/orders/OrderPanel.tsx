@@ -261,7 +261,7 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 export const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'עדכון בתפעול', poNumber: 'תעודת רכש',
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
-  delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', accountPhone: 'טלפון הקפה',
+  delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', methodNote: 'פירוט אמצעי התשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
   opsNotified: 'נשלח בקבוצת תפעול', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי',
 };
@@ -278,6 +278,7 @@ export function showVal(k: string, v: unknown): string {
   if (k === 'delivery') return v === 'pickup' ? 'איסוף עצמי' : 'משלוח';
   if (k === 'deliveryFee') return fmtMoney(Number(v));
   if (k === 'method') return METHOD_LABEL[String(v)] ?? String(v);
+  if (k === 'methodNote') return String(v ?? '') || '—';
   if (k === 'opsNotified') return v ? 'נשלח' : 'עוד לא';
   if (k === 'qNeedsUpdate') return v ? 'צריך לעדכן' : 'עודכן';
   if (k === 'late') return (v as { minutes?: number }).minutes ? `${(v as { minutes: number }).minutes} דק'` : 'באיחור';
