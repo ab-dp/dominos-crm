@@ -53,6 +53,10 @@ export function readPreset(raw: string | null, allowed: Preset[]): Preset {
   return p && allowed.includes(p) ? p : DEFAULT_PRESET;
 }
 
-/* ---------- חריגים: סופרים הזמנות, לא בעיות. הזמנה עם שתי בעיות קריטיות נספרת פעם אחת ---------- */
+/* ---------- חריגים: סופרים הזמנות, לא בעיות. כל הזמנה נספרת פעם אחת – לפי הבעיה החמורה שלה,
+   בדיוק כמו הקבוצות במסך החריגים (כך 'דחוף 7' בראש המסך = 7 שורות בקבוצת 'דחוף') ---------- */
+const SEV_RANK: Record<Severity, number> = { red: 3, orange: 2, yellow: 1, info: 0 };
+export const topSeverity = (issues: { severity: Severity }[]): Severity | null =>
+  issues.reduce<Severity | null>((m, i) => (m === null || SEV_RANK[i.severity] > SEV_RANK[m] ? i.severity : m), null);
 export const ordersWithSeverity = <T extends { issues: { severity: Severity }[] }>(list: T[], sev: Severity) =>
-  list.filter((o) => o.issues.some((i) => i.severity === sev)).length;
+  list.filter((o) => topSeverity(o.issues) === sev).length;

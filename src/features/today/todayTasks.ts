@@ -1,22 +1,28 @@
 /* ספירת המשימות הפתוחות של מסך "היום" – במקום אחד, כדי שהמספר בתפריט יהיה בדיוק "N משימות פתוחות" שבמסך.
-   (קודם התפריט ספר הזמנות דחופות, המסך ספר משימות, והפעמון ספר התראות – שלושה מספרים שונים לאותו דבר) */
+   כל חריגה דחופה או קריטית שייכת למשימה אחת, כך ש"אין משימות פתוחות" אומר באמת שאין מה לעשות. */
 import type { OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
-import { missingOf } from '../../rules-engine/health';
+import { missingOf, orderDateTime } from '../../rules-engine/health';
 import { addDays, toISODate } from '../../lib/format';
 
-// כללים שיש להם משימה משלה ברשימה (3 – מועד עבר: "לסגור הזמנות שעברו")
-export const COVERED = [6, 4, 0, 1, 3, 12, 8];
+export type TaskKey = 'urgent' | 'yesterday' | 'customer' | 'branch' | 'q' | 'ops' | 'other' | 'missing' | 'quotes' | 'followups' | 'users';
 
-export type TaskKey = 'customer' | 'branch' | 'q' | 'ops' | 'yesterday' | 'urgent' | 'missing' | 'quotes' | 'followups' | 'users';
+/* חריגות דחופות שאין להן משימה משלה: פער מול Q, אשראי שלא חויב, שינוי שלא עודכן ב-Q, ביטול אחרי חיוב */
+const OTHER_RULES = [2, 5, 11];
+const isOther = (o: OrderView) => o.issues.some((i) => OTHER_RULES.includes(i.rule) || (i.rule === 10 && i.severity === 'orange'));
+// קריטי שאין לו משימה משלה: חיוב שנכשל, ביטול שלא בוצע בקופה (גם בהזמנה שכבר נסגרה)
+const URGENT_RULES = [7, 10];
 
-/* קטגוריה שיש בה משהו קריטי שלא טופל – מסומנת באדום במסך "היום" (כדי שאחמ"ש יראה מיד מה דחוף):
-   הזמנות של היום שלא ירדו ל-Q אחרי השעה שנקבעה, הזמנות שמועדן עבר, חריגות קריטיות, והצעות מחיר שלא חזרו אליהן */
+/* "עכשיו": קטגוריה שיש בה משהו קריטי שלא טופל – באדום ובראש המסך, כדי שאחמ"ש יראה מיד מה דחוף:
+   חריגות קריטיות, הזמנות שמועדן עבר, הזמנות של היום שלא ירדו ל-Q אחרי השעה שנקבעה, והצעות מחיר שלא חזרו אליהן.
+   הסדר כאן הוא סדר ההצגה בקבוצה. */
+export const NOW_ORDER: TaskKey[] = ['urgent', 'yesterday', 'q', 'quotes'];
+
 export function redTasks(orders: OrderView[], c: Record<TaskKey, number>): Set<TaskKey> {
   const s = new Set<TaskKey>();
-  if (orders.some((o) => o.issues.some((i) => i.rule === 1 && i.severity === 'red'))) s.add('q');
-  if (c.yesterday > 0) s.add('yesterday');
   if (c.urgent > 0) s.add('urgent');
+  if (orders.some((o) => o.issues.some((i) => i.rule === 3 && i.severity === 'red'))) s.add('yesterday');
+  if (orders.some((o) => o.issues.some((i) => i.rule === 1 && i.severity === 'red'))) s.add('q');
   if (c.quotes > 0) s.add('quotes');
   return s;
 }
@@ -27,13 +33,14 @@ export function todayTaskCounts(orders: OrderView[], now: Date, x: { dueTasks: n
   const open = orders.filter((o) => !CLOSED.includes(o.status));
   const soon = (o: OrderView) => o.date === today || o.date === tomorrow;
   return {
+    urgent: orders.filter((o) => o.issues.some((i) => i.severity === 'red' && URGENT_RULES.includes(i.rule))).length,
+    // מועד האספקה עבר (גם היום, אחרי השעה) – לסגור: סופקה / חלקית / באיחור
+    yesterday: open.filter((o) => orderDateTime(o) < now).length,
     customer: open.filter((o) => soon(o) && (o.status === 'new' || o.status === 'pending_customer')).length,
     branch: open.filter((o) => soon(o) && !o.branchApproval).length,
     q: open.filter((o) => o.date === today && !o.qNumber).length,
     ops: open.filter((o) => !!o.qNumber && o.opsNotified === false).length,
-    yesterday: open.filter((o) => o.date < today).length,
-    // קריטי שאין לו משימה משלה: חיוב שנכשל, ביטול שלא בוצע בקופה (גם בהזמנה שכבר נסגרה)
-    urgent: orders.filter((o) => o.issues.some((i) => i.severity === 'red' && !COVERED.includes(i.rule))).length,
+    other: orders.filter(isOther).length,
     missing: open.filter((o) => missingOf(o).length > 0).length,
     quotes: x.quoteFollowups,
     followups: x.dueTasks,

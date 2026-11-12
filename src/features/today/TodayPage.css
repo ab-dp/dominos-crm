@@ -1,76 +1,48 @@
-/* מסך "היום": כותרת שקטה על משטח העבודה, רצועת משימות בוקר אחת, ושני טורים – דחוף עכשיו וציר היום. */
+/* מסך "היום": שני טורים – משימות פתוחות (בשתי קבוצות: עכשיו / בהמשך היום) וציר הזמנות היום. */
 .today { display: flex; flex-direction: column; }
-.today > .admin-banner { order: 2; }
-.today > .morning { order: 1; }
-.today > .today__grid { order: 3; }
-.today > .info { order: 4; }
 
+/* ---------- שני הטורים ---------- */
+.today__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-5); align-items: start; }
+.today__grid > * { min-width: 0; }
+.pill { min-width: 22px; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-panel); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; background: var(--gray-100); color: var(--gray-700); }
+.calm { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-5) var(--space-4); color: var(--ok-fg); font-weight: 500; }
+.calm--quiet { color: var(--gray-600); }
+.calm--error { align-items: flex-start; color: var(--danger-fg); line-height: 1.5; }
+.calm--error svg { flex: none; margin-top: 3px; }
 
-/* ---------- משימות הבוקר: רצועה אחת, ארבעה טורים, התקדמות בקצה העליון ---------- */
-.morning { position: relative; margin: 0 0 var(--space-5); background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); overflow: hidden; }
-.section-title { margin: 0; font-size: var(--text-card-title); font-weight: 600; }
-.morning__head { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5) 0; }
-.morning__head .section-title { font-size: var(--text-micro); font-weight: 500; letter-spacing: 0; color: var(--gray-600); }
-.morning__count { margin-inline-start: auto; font: 500 var(--text-micro) var(--font-mono); color: var(--gray-600); }
-.progress { position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--gray-100); overflow: hidden; }
-.progress__bar { display: block; height: 100%; background: var(--ok-fg); }
-.morning__cards { list-style: none; margin: 0; padding: var(--space-1) 0 var(--space-2); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); transform-origin: top; }
-.morning__cards > li + li { border-inline-start: 1px solid var(--gray-100); }
-.morning__cards > li:nth-child(3n+1) { border-inline-start: 0; }
-.morning__cards > li:nth-child(n+4) { border-top: 1px solid var(--gray-100); }
+/* ---------- משימות פתוחות: קבוצה לכל דרגת דחיפות, שורה-קישור לכל משימה ---------- */
+.otasks__group { padding-bottom: var(--space-1); }
+.otasks__group + .otasks__group { border-top: 1px solid var(--line); }
+.otasks__label { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) var(--space-4) var(--space-1); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+.otasks__label bdi { font-family: var(--font-mono); }
+.otasks__label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gray-400); }
+.otasks__label--red { color: var(--danger-fg); }
+.otasks__label--red::before { background: var(--danger-fg); }
+.otasks__none { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-4) var(--space-3); color: var(--ok-fg); font-size: var(--text-table); font-weight: 500; }
+.otasks { list-style: none; margin: 0; padding: 0; }
+.otasks > li + li { border-top: 1px solid var(--line-soft); }
+
 .task {
   position: relative;
-  width: 100%; height: 100%;
-  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-3);
-  padding: var(--space-4) var(--space-5) var(--space-4);
-  border: 0; background: transparent;
-  font: inherit; text-align: start; cursor: pointer;
+  width: 100%;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: inherit; text-decoration: none; text-align: start;
   transition: background var(--dur-instant) var(--ease);
 }
 .task:hover { background: var(--gray-50); }
 .task:hover .task__title { color: var(--brand-700); }
-.task__step { display: none; }
 /* אייקון המשימה – סימן שקט, לא קופסה */
 .task__icon { width: 28px; height: 28px; display: grid; place-items: center; color: var(--gray-600); }
 .task__icon svg { width: var(--icon-lg); height: var(--icon-lg); }
 .task__text { display: grid; min-width: 0; }
 .task__title { font-weight: 600; transition: color var(--dur-instant) var(--ease); }
 .task__sub { font-size: var(--text-label); color: var(--gray-600); }
-.task__count { font: 500 var(--text-kpi)/1 var(--font-mono); color: var(--gray-900); perspective: 400px; min-width: 36px; text-align: center; letter-spacing: -0.03em; }
-.task__ok { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ok-bg); color: var(--ok-fg); }
-.task--done .task__title { color: var(--gray-600); font-weight: 500; }
-.task--done .task__icon { background: var(--ok-bg); color: var(--ok-fg); border-color: transparent; }
-.morning__done {
-  display: flex; align-items: center; justify-content: center; gap: var(--space-2);
-  height: 56px; color: var(--ok-fg); font-weight: 500;
-  transform-origin: top;
-}
-
-/* ---------- שני הטורים ---------- */
-.today__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-5); align-items: start; }
-.today__grid > * { min-width: 0; }
-.pill { min-width: 22px; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-panel); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; }
-.pill--alert { background: var(--gray-100); color: var(--gray-700); }
-.calm { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-5) var(--space-4); color: var(--ok-fg); font-weight: 500; }
-
-/* ---------- דחוף עכשיו: שורות על קו הפרדה, פס דק בקצה, בלי קופסאות ---------- */
-.urgent { display: grid; gap: 0; padding: var(--space-1) 0 var(--space-2); }
-.urgent__group + .urgent__group { border-top: 1px solid var(--gray-100); margin-top: var(--space-1); padding-top: var(--space-1); }
-.urgent ul { list-style: none; margin: 0; padding: 0; display: grid; }
-.urgent__label { margin: var(--space-3) var(--space-4) var(--space-1); font-size: var(--text-micro); font-weight: 500; letter-spacing: 0; display: flex; align-items: center; gap: var(--space-2); }
-.urgent__label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
-.urgent__label--critical { color: var(--danger-fg); }
-.urgent__label--critical::before { background: var(--danger-fg); }
-.urgent__label--urgent { color: var(--urgent-fg); }
-.urgent__label--urgent::before { background: var(--urgent-edge); }
-.urgent__row { position: relative; display: flex; align-items: center; gap: var(--space-2); padding: 2px var(--space-3) 2px var(--space-3); }
-.urgent__row + .urgent__row::after { content: ""; position: absolute; top: 0; inset-inline: 18px; height: 1px; background: var(--gray-100); }
-.urgent__row::before { content: ""; position: absolute; inset-inline-start: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 var(--radius-tag) var(--radius-tag) 0; }
-.urgent__main { flex: 1; min-width: 0; display: grid; gap: 1px; padding: var(--space-3) var(--space-2); border: 0; border-radius: var(--radius); background: transparent; font: inherit; text-align: start; cursor: pointer; }
-.urgent__main:hover .urgent__issue { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
-.urgent__issue { font-weight: 600; font-size: var(--text-table); }
-.urgent__issue { color: var(--gray-900); }
-.urgent__meta { font-size: var(--text-label); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* המספר – ערך בשורה, לא מספר ענק */
+.task__count { min-width: 28px; font: 600 var(--text-table) var(--font-mono); color: var(--gray-900); text-align: center; }
+.task--red .task__count, .task--red .task__icon { color: var(--danger-fg); }
+.task__go { color: var(--gray-300); transition: color var(--dur-instant) var(--ease), transform var(--dur-instant) var(--ease); }
+.task:hover .task__go { color: var(--brand-700); transform: translateX(-2px); }
 
 /* ---------- ציר היום ---------- */
 .tl { list-style: none; margin: 0; padding: var(--space-2) var(--space-3) var(--space-3); }
@@ -83,56 +55,21 @@
 .tl__cust { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tl__meta { font-size: var(--text-label); color: var(--gray-600); }
 .tl__marks { display: inline-flex; flex: none; }
-.tl__now { position: relative; display: flex; align-items: center; gap: var(--space-2); height: 26px; margin: var(--space-1) 0; color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; }
+.tl__now { position: relative; display: flex; align-items: center; gap: var(--space-2); height: 24px; margin: var(--space-1) 0; color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; }
 .tl__now::after { content: ""; flex: 1; height: 1px; background: var(--brand-600); }
-.tl__now::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-600); }
+.tl__now::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand-600); }
 .tl__now bdi { font-family: var(--font-mono); }
 .tl__row.is-next { background: var(--brand-50); }
 .tl__row.is-next .tl__time { color: var(--brand-700); }
-.tl__next { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--white); border: 1px solid var(--brand-100); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; }
-
-/* ---------- שורת מידע תחתונה ---------- */
-.info { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-5); }
-.info__item {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  height: var(--control-md); padding: 0 var(--space-4);
-  border: 1px solid var(--gray-100); border-radius: var(--radius);
-  background: var(--white); color: var(--gray-600);
-  font: inherit; font-size: var(--text-label);
-  transition: border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease);
-}
-button.info__item { cursor: pointer; }
-button.info__item:hover { border-color: var(--gray-300); color: var(--gray-900); }
-.info__item b { color: var(--gray-900); font-weight: 500; }
+.tl__next { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--white); border: 1px solid var(--brand-100); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; white-space: nowrap; }
 
 @media (max-width: 1200px) {
-  .morning__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .morning__cards > li:nth-child(n) { border-inline-start: 1px solid var(--gray-100); border-top: 0; }
-  .morning__cards > li:nth-child(odd) { border-inline-start: 0; }
-  .morning__cards > li:nth-child(n+3) { border-top: 1px solid var(--gray-100); }
   .today__grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 700px) {
-  .morning__cards { grid-template-columns: 1fr; }
-  .morning__cards > li + li { border-inline-start: 0; border-top: 1px solid var(--gray-100); }
-  .tl__marks { display: none; }
-}
-.info__item--tasks { border-color: var(--brand-100); color: var(--brand-800); background: var(--brand-50); }
-.info__item--tasks b { color: var(--brand-800); }
-
-/* ---------- משימות פתוחות: רשימה אחת, רק מה שעוד דורש טיפול ---------- */
-.otasks { list-style: none; margin: 0; padding: var(--space-1) 0 var(--space-2); }
-.otasks > li + li { border-top: 1px solid var(--gray-100); }
-.otasks .task { grid-template-columns: auto minmax(0, 1fr) auto auto; padding: var(--space-3) var(--space-4); }
-.otasks .task__count { font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
-.otasks .task--red .task__count { color: var(--danger-fg); }
-.otasks .task--red .task__icon { color: var(--danger-fg); }
-.task__go { color: var(--gray-300); transition: color var(--dur-instant) var(--ease), transform var(--dur-instant) var(--ease); }
-.task:hover .task__go { color: var(--brand-700); transform: translateX(-2px); }
-.calm--quiet { color: var(--gray-600); }
 
 /* טלפון: ציר היום בשתי שורות – שם הלקוח מקבל את כל הרוחב, השלב יורד מתחתיו */
 @media (max-width: 700px) {
+  .tl__marks { display: none; }
   .tl { padding: var(--space-1) var(--space-1) var(--space-2); }
   .tl__row { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: start; gap: 2px var(--space-2); padding: var(--space-3) var(--space-2); }
   .tl__time { width: auto; padding-top: 2px; }

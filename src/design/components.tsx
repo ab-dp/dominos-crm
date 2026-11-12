@@ -57,11 +57,12 @@ const HEALTH_META: Record<Exclude<Health, 'ok'>, { word: string; Icon: typeof Oc
   urgent: { word: 'דחוף', Icon: TriangleAlert },
   missing: { word: 'חסר', Icon: CircleAlert },
 };
-export function HealthBadge({ health, issues, compact }: { health: Health; issues: Issue[]; compact?: boolean }) {
+/* focusable=false: כשהבעיות כבר נקראות בשם הנגיש של השורה – בלי עצירת Tab נוספת */
+export function HealthBadge({ health, issues, compact, focusable = true }: { health: Health; issues: Issue[]; compact?: boolean; focusable?: boolean }) {
   if (health === 'ok') return <span className="sr-only">תקינה</span>;
   const { word, Icon } = HEALTH_META[health];
   const badge = (
-    <span className={`health health--${health}`} tabIndex={0} role="img" aria-label={`${word}: ${issues.map((i) => i.label).join(', ')}`}>
+    <span className={`health health--${health}`} tabIndex={focusable ? 0 : undefined} role="img" aria-label={`${word}: ${issues.map((i) => i.label).join(', ')}`}>
       <Icon size={14} strokeWidth={2.4} aria-hidden="true" />
       {!compact && <span>{word}</span>}
     </span>
