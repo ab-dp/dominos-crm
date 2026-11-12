@@ -184,7 +184,7 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
               )}
               {d.branches.flatMap((b) => [
                 <tr key={b.name} className="os-br"><td colSpan={6}><div><b>{b.name}</b><span>{totals(b.orders)}</span></div></td></tr>,
-                ...b.orders.map((o, i) => <OrderRow key={o.id} o={o} alt={i % 2 === 1} mark={mark.get(o.id)} />),
+                ...b.orders.map((o) => <OrderRow key={o.id} o={o} mark={mark.get(o.id)} />),
               ])}
             </tbody>
           ))}
@@ -200,11 +200,11 @@ function Stat({ n, l }: { n: ReactNode; l: string }) {
 
 const totals = (os: Order[]) => `${os.length === 1 ? 'הזמנה אחת' : `${os.length} הזמנות`} · ${pizzasIn(os)} פיצות · ${fmtMoney(amountIn(os))}`;
 
-function OrderRow({ o, alt, mark }: { o: Order; alt: boolean; mark?: 'new' | 'changed' }) {
+function OrderRow({ o, mark }: { o: Order; mark?: 'new' | 'changed' }) {
   const pz = pizzasIn([o]);
   const name = o.contactName?.trim(), phone = o.contactPhone?.trim(), note = o.instructions?.trim();
   return (
-    <tr className={[alt && 'is-alt', mark && `is-${mark}`].filter(Boolean).join(' ') || undefined}>
+    <tr className={mark ? `is-${mark}` : undefined}>
       <td className="os-when"><b><Ltr>{o.time}</Ltr></b></td>
       <td className="os-pz">{pz > 0 && <span><Ltr>{pz}</Ltr></span>}</td>
       <td className="os-cust">
@@ -212,7 +212,7 @@ function OrderRow({ o, alt, mark }: { o: Order; alt: boolean; mark?: 'new' | 'ch
         <b>{o.customerName}</b>
         {(name || phone) && <span className="os-sub">{name}{name && phone && ' · '}{phone && <Ltr>{fmtPhone(phone)}</Ltr>}</span>}
       </td>
-      <td className="os-items"><Items o={o} />{note && <p className="os-note">הערה: {note}</p>}</td>
+      <td className="os-items"><Items o={o} />{note && <p className="os-note"><b>הערה לסניף:</b> {note}</p>}</td>
       <td className="os-dlv">{o.delivery === 'pickup' ? <b>איסוף עצמי</b> : (o.address?.trim() || <b>משלוח</b>)}</td>
       <td className="m"><Ltr>{fmtMoney(o.amount)}</Ltr></td>
     </tr>
