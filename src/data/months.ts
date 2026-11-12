@@ -6,13 +6,16 @@ import { collection, doc, onSnapshot, query, serverTimestamp, where, writeBatch 
 import { auth, db } from '../lib/firebase';
 import { fromDoc } from './orders';
 import { outcomeOf, type Order } from './types';
+import { isLive, onTime, revenue, revenueOf } from './metrics';
 
 export type MonthSummary = {
   count: number; sum: number; cancelled: number;
   byMethod: Record<string, { count: number; sum: number }>;
   byCustomer: { name: string; count: number; sum: number }[];
-  /* פילוח אספקה: בזמן / באיחור / חלקית / בוטלה */
+  /* פילוח אספקה: בזמן / באיחור / חלקית / בוטלה (סיכומים שננעלו לפני שהיה onTime) */
   byOutcome?: Record<string, number>;
+  /* סופקו בזמן – אותה הגדרה כמו בבורד ובדוחות (data/metrics.ts) */
+  onTime?: { delivered: number; onTime: number; late: number; partial: number };
 };
 export type MonthDoc = {
   status: 'open' | 'locked';
@@ -94,8 +97,9 @@ export const reopenMonth = (ym: string, base: MonthDoc | null, reason: string) =
   write(ym, base, { status: 'open', reopenedAt: serverTimestamp() as never, reopenedByName: who().name, reopenReason: reason }, auditMonth(ym, 'reopen', {}, reason));
 
 export function summarize(orders: Order[]): MonthSummary {
-  const live = orders.filter((o) => o.status !== 'cancelled');
-  const val = (o: Order) => o.qAmount ?? o.amount;
+  const live = orders.filter(isLive);
+  const val = revenueOf;
+  const t = onTime(orders);
   const byMethod: MonthSummary['byMethod'] = {};
   const byCust = new Map<string, { name: string; count: number; sum: number }>();
   live.forEach((o) => {
@@ -106,8 +110,9 @@ export function summarize(orders: Order[]): MonthSummary {
     byCust.set(o.customerId, c);
   });
   return {
-    count: live.length, sum: live.reduce((t, o) => t + val(o), 0), cancelled: orders.length - live.length,
+    count: live.length, sum: revenue(live), cancelled: orders.length - live.length,
     byMethod, byCustomer: [...byCust.values()].sort((a, b) => b.sum - a.sum),
     byOutcome: orders.reduce<Record<string, number>>((m, o) => { const k = outcomeOf(o); m[k] = (m[k] ?? 0) + 1; return m; }, {}),
+    onTime: { delivered: t.delivered, onTime: t.onTime, late: t.late, partial: t.partial },
   };
 }

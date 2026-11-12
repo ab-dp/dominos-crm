@@ -28,6 +28,7 @@ import '../reports/ReportsPage.css';
 import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
+import { isLive, onTime, revenue, revenueOf } from '../../data/metrics';
 import { cleanPhone, phoneError } from '../../lib/names';
 import { CustomerForm } from './CustomerForm';
 import { MergeDialog } from './MergeDialog';
@@ -166,7 +167,8 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
 
 /* ---------- סקירה ---------- */
 const PERIODS: [number, string][] = [[1, 'החודש'], [3, '3 חודשים'], [12, '12 חודשים']];
-const qSum = (list: OrderView[]) => list.reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+/* הכנסות – מ-data/metrics.ts, כמו בבורד ובדוחות. "החודש" = מה-1 ועד היום, גם בסקירה וגם בסיכומים החודשיים */
+const qSum = (list: OrderView[]) => revenue(list);
 
 function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) => void; orders: OrderView[]; loading: boolean }) {
   const { now } = useStore();
@@ -197,7 +199,7 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
         <button className="ov__order" onClick={(e) => panel.open(o.id, e.currentTarget)}>
           <b>הזמנה <Ltr>{o.id}</Ltr></b>
           <span><Ltr>{fmtDate(o.date)}</Ltr> · <Ltr>{o.time}</Ltr> · {o.branchName}</span>
-          <span><Ltr>{fmtMoney(o.qAmount ?? o.amount)}</Ltr></span>
+          <span><Ltr>{fmtMoney(revenueOf(o))}</Ltr></span>
         </button>
       ) : <span className="muted">{empty}</span>}
     </div>
@@ -212,7 +214,7 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
           <div key={k} className="kpi card"><span className="kpi__label">{k}</span><span className={`kpi__value ${loading ? '' : 'is-live'}`}>{loading ? <Skeleton w={60} h={22} /> : v}</span></div>
         ))}
       </div>
-      <p className="ov__note muted">לפי תאריך אספקה, בלי הזמנות שבוטלו.</p>
+      <p className="ov__note muted">לפי תאריך אספקה וסכום Q, עד היום, בלי הזמנות שבוטלו. "פתוח לתשלום" – מכל החודשים.</p>
       {!loading && orders.length > 0 && (
         <section className="card ov__chart" aria-label="סך לפי חודש – 12 חודשים">
           <div className="card__head"><h2 className="card__title">12 חודשים אחרונים</h2><button className="link" onClick={() => onTab('monthly')}>לסיכומים החודשיים</button></div>
@@ -237,22 +239,24 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
 /* ---------- 12 חודשים אחרונים: שורה לכל חודש (אפיון 6.6, 10) ---------- */
 type MonthRow = { key: string; label: string; count: number; sum: number; avg: number; cancelled: number; gaps: number; unpaid: number; orders: OrderView[] };
 function lastMonths(orders: OrderView[], now: Date): MonthRow[] {
+  const today = toISODate(now);
   return Array.from({ length: 12 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const all = orders.filter((o) => o.date.startsWith(key));
-    const lv = all.filter((o) => o.status !== 'cancelled');
-    const sum = lv.reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+    // החודש הנוכחי – עד היום, בלי הזמנות עתידיות (כמו "החודש" בסקירה, בבורד ובדוחות)
+    const all = orders.filter((o) => o.date.startsWith(key) && o.date <= today);
+    const lv = all.filter(isLive);
+    const sum = revenue(lv);
     return {
       key, label: `${key.slice(5)}.${key.slice(0, 4)}`, count: lv.length, sum, avg: lv.length ? Math.round(sum / lv.length) : 0,
       cancelled: all.length - lv.length, gaps: lv.filter((o) => o.qAmount !== undefined && o.qAmount !== o.amount).length,
-      unpaid: lv.filter((o) => o.payment === 'pending' || o.payment === 'failed').reduce((t, o) => t + (o.qAmount ?? o.amount), 0), orders: all,
+      unpaid: revenue(lv.filter((o) => o.payment === 'pending' || o.payment === 'failed')), orders: all,
     };
   });
 }
 
 // הזמנות שסופקו (או סופקו חלקית) באיחור
-const lateOf = (list: OrderView[]) => list.filter((o) => (o.status === 'delivered' || o.status === 'partial') && o.late).length;
+const lateOf = (list: OrderView[]) => onTime(list).late;
 
 function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean }) {
   const { now } = useStore();
@@ -264,7 +268,7 @@ function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean
   const picked = rows.find((r) => r.key === open);
   return (
     <div className="card monthly">
-      <div className="card__head"><h2 className="card__title">סיכומים חודשיים</h2><span className="muted monthly__hint">12 חודשים · לפי תאריך אספקה וסכום Q · לחיצה על חודש מציגה את ההזמנות</span></div>
+      <div className="card__head"><h2 className="card__title">סיכומים חודשיים</h2><span className="muted monthly__hint">12 חודשים · לפי תאריך אספקה וסכום Q · החודש הנוכחי עד היום · לחיצה על חודש מציגה את ההזמנות</span></div>
       <div className="report__scroll">
         <table className="rtable">
           <caption className="sr-only">סיכום חודשי ל-12 החודשים האחרונים</caption>

@@ -3,17 +3,18 @@
 import { useEffect, useState } from 'react';
 import { collection, doc, onSnapshot, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { REVENUE_HINT } from './metrics';
 
 export type Goals = {
   orders?: number;    // מספר הזמנות בחודש
-  revenue?: number;   // הכנסות בחודש (₪, כולל מע"מ – כמו הסכום לחיוב)
+  revenue?: number;   // הכנסות בחודש (₪) – סכום Q, ואם לא הוקלד הסכום לחיוב (כמו בבורד ובדוחות)
   onTimePct?: number; // אחוז הזמנות שסופקו בזמן
 };
 
 export const GOAL_META: Record<keyof Goals, { title: string; hint: string; unit: string; max: number }> = {
   orders: { title: 'הזמנות בחודש', hint: 'כמה הזמנות (בלי ביטולים) בחודש קלנדרי', unit: 'הזמנות', max: 100000 },
-  revenue: { title: 'הכנסות בחודש', hint: 'סך הסכום לחיוב של ההזמנות בחודש, בלי ביטולים', unit: '₪', max: 100000000 },
-  onTimePct: { title: 'אספקה בזמן', hint: 'אחוז ההזמנות שסופקו בלי "באיחור" מתוך ההזמנות שסופקו', unit: '%', max: 100 },
+  revenue: { title: 'הכנסות בחודש', hint: `${REVENUE_HINT}, בחודש קלנדרי`, unit: '₪', max: 100000000 },
+  onTimePct: { title: 'סופקו בזמן', hint: 'אחוז ההזמנות שסופקו בלי איחור, מתוך כל ההזמנות שסופקו (מלא או חלקי)', unit: '%', max: 100 },
 };
 
 export function useGoals() {

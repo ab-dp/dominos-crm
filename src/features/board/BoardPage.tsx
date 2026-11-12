@@ -136,7 +136,7 @@ export function BoardPage() {
       <header className="page__head board__head">
         <div>
           <h1 className="page__title">בורד</h1>
-          <p className="page__sub">נכון ל-<Ltr>{nowText}</Ltr> · סכומים לפי תאריך אספקה, בלי ביטולים.</p>
+          <p className="page__sub">נכון ל-<Ltr>{nowText}</Ltr> · סכומים לפי תאריך אספקה וסכום Q, בלי ביטולים.</p>
         </div>
         <div className="page__head-end">
           <LayoutMenu order={order} hidden={hidden} onChange={(o, hd) => setLayout({ order: o, hidden: hd })} />
@@ -367,25 +367,26 @@ function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string
 
 /* ---------- עמידה בזמנים ---------- */
 function ServiceSection({ sv, goal, rangeText, go }: { sv: ReturnType<typeof service>; goal?: number; rangeText: ReactNode; go: (to: string) => void }) {
+  /* בזמן + באיחור = כל מה שסופק (כמו בדוחות). האחוזים – מתוך מה שסופק, כמו המספר הראשי. חלקית היא "מתוכן", בלי פס משלה */
   const segs = [
-    { k: 'is-ready', label: 'בזמן', v: sv.onTime }, { k: 'is-customer', label: 'באיחור', v: sv.late },
-    { k: 'is-ops', label: 'חלקית', v: sv.partial }, { k: 'is-cancel', label: 'בוטלו', v: sv.cancelled },
+    { k: 'is-ready', label: 'בזמן', v: sv.onTime, of: sv.delivered }, { k: 'is-customer', label: 'באיחור', v: sv.late, of: sv.delivered },
+    { k: 'is-ops', label: 'מתוכן חלקית', v: sv.partial, of: 0 }, { k: 'is-cancel', label: 'בוטלו', v: sv.cancelled, of: 0 },
   ];
   return (
     <Section id="svc" title="עמידה בזמנים" meta={rangeText}
       lead={sv.delivered === 0 ? <p>עוד לא סופקו הזמנות בתקופה הזו.</p> : (
         <>
           <p className="bsec__stmt"><b><Ltr>{sv.onTimePct}%</Ltr></b> מההזמנות סופקו בזמן</p>
-          <p className="muted">מתוך {orders$(sv.delivered)} שסופקו{goal ? <> · היעד: <span className={(sv.onTimePct ?? 0) >= goal ? 'is-ok' : 'is-warn'}><Ltr>{goal}%</Ltr></span></> : null}</p>
+          <p className="muted">מתוך {orders$(sv.delivered)} שסופקו (מלא או חלקי){goal ? <> · היעד: <span className={(sv.onTimePct ?? 0) >= goal ? 'is-ok' : 'is-warn'}><Ltr>{goal}%</Ltr></span></> : null}</p>
         </>
       )}>
       {sv.closed > 0 && (
         <>
           <div className="bstack" role="img" aria-label={segs.map((x) => `${x.label} ${x.v}`).join(', ')}>
-            {segs.filter((x) => x.v > 0).map((x) => <span key={x.k} className={x.k} style={{ flexGrow: x.v }} />)}
+            {segs.filter((x) => x.v > 0 && x.k !== 'is-ops').map((x) => <span key={x.k} className={x.k} style={{ flexGrow: x.v }} />)}
           </div>
           <ul className="bstats">
-            {segs.map((x) => <li key={x.k}><i className={x.k} aria-hidden="true" />{x.label}<b><Ltr>{num(x.v)}</Ltr></b><span><Ltr>{Math.round((x.v / sv.closed) * 100)}%</Ltr></span></li>)}
+            {segs.map((x) => <li key={x.k}><i className={x.k === 'is-ops' ? undefined : x.k} aria-hidden="true" />{x.label}<b><Ltr>{num(x.v)}</Ltr></b><span>{x.of ? <Ltr>{Math.round((x.v / x.of) * 100)}%</Ltr> : null}</span></li>)}
           </ul>
         </>
       )}

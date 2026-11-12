@@ -2,20 +2,10 @@
    כלל אחיד כמו בשאר הדוחות: לפי תאריך אספקה וסכום Q (ואם לא הוקלד – הסכום לחיוב). סכומים בלי הזמנות שבוטלו. */
 import { METHOD_LABEL, OUTCOME_LABEL, PIZZA, STAGE_LABEL, categoryOf, stageOf, type Order } from '../../data/types';
 import { addDays, roundMoney, toISODate } from '../../lib/format';
-import { qVal } from './defs';
+import { ON_TIME_HINT, isDelivered, isLive, onTime, revenue, type Preset } from '../../data/metrics';
 
-/* ---------- תקופות ---------- */
-export type PeriodPreset = 'lastWeek' | 'prevMonth' | 'month' | 'custom';
-export const PERIOD_PRESETS: [PeriodPreset, string][] = [['lastWeek', 'שבוע שעבר'], ['prevMonth', 'חודש קודם'], ['month', 'החודש'], ['custom', 'תאריכים']];
-
-export function periodRange(p: PeriodPreset, now: Date): [string, string] {
-  const y = now.getFullYear(); const m = now.getMonth();
-  // שבוע שעבר: ראשון עד שבת של השבוע שלפני השבוע הנוכחי
-  if (p === 'lastWeek') { const sun = addDays(now, -now.getDay() - 7); return [toISODate(sun), toISODate(addDays(sun, 6))]; }
-  if (p === 'prevMonth') return [toISODate(new Date(y, m - 1, 1)), toISODate(new Date(y, m, 0))];
-  // החודש (וברירת המחדל של "תאריכים"): מה-1 בחודש ועד היום
-  return [toISODate(new Date(y, m, 1)), toISODate(now)];
-}
+/* ---------- תקופות: מתוך הרשימה המשותפת (data/metrics.ts) – אותם שמות ואותה משמעות בכל הדוחות ---------- */
+export const PERIOD_PRESETS: Preset[] = ['lastWeek', 'prevMonth', 'month', 'custom'];
 
 /* ---------- מבנה טבלה משותף למסך ולאקסל ---------- */
 /* id: מספר בלי פסיק אלפים (מס' הזמנה); code: טקסט קצר בכיוון שמאל-ימין (שעה, מס' Q) */
@@ -25,9 +15,9 @@ export type TCol = { label: string; kind: Kind; width: number };
 export type STable = { id: string; title: string; note?: string; cols: TCol[]; rows: Cell[][]; total?: Cell[]; ids?: number[] };
 export type Kpi = { label: string; value: number; kind: Kind; sub?: string };
 
-const live = (o: Order) => o.status !== 'cancelled';
-const done = (o: Order) => o.status === 'delivered' || o.status === 'partial';
-const sumQ = (list: Order[]) => roundMoney(list.reduce((t, o) => t + qVal(o), 0));
+const live = isLive;
+const done = isDelivered;
+const sumQ = (list: Order[]) => revenue(list);
 const frac = (part: number, whole: number) => (whole ? part / whole : null);
 const WEEKDAY = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const byTime = (a: Order, b: Order) => (a.date + a.time).localeCompare(b.date + b.time) || a.id - b.id;
@@ -83,7 +73,7 @@ function aggregate(list: Order[], key: (o: Order) => string, extra?: (o: Order) 
   list.forEach((o) => {
     const k = key(o) || '—';
     const e = m.get(k) ?? { name: k, extra: extra?.(o) || '—', count: 0, sum: 0, done: 0, late: 0, lateMin: 0, lateMinN: 0 };
-    if (live(o)) { e.count += 1; e.sum = roundMoney(e.sum + qVal(o)); }
+    if (live(o)) { e.count += 1; e.sum = roundMoney(e.sum + revenue([o])); }
     if (done(o)) {
       e.done += 1;
       if (o.late) { e.late += 1; if (o.late.minutes) { e.lateMin += o.late.minutes; e.lateMinN += 1; } }
@@ -99,6 +89,7 @@ export function summary(all: Order[], from: string, to: string): Summary {
   const total = sumQ(l);
   const closed = all.filter(done);
   const late = closed.filter((o) => !!o.late);
+  const t = onTime(all);
   const cancelled = all.length - l.length;
   const open = all.filter((o) => live(o) && !done(o)).length;
   const allLate = aggregate(all, () => 'all')[0] ?? { lateMin: 0, lateMinN: 0 };
@@ -107,7 +98,7 @@ export function summary(all: Order[], from: string, to: string): Summary {
     { label: 'הכנסות', value: total, kind: 'money' },
     { label: 'הזמנות', value: l.length, kind: 'num', sub: cancelled ? `ועוד ${cancelled} שבוטלו` : undefined },
     { label: 'ממוצע להזמנה', value: l.length ? roundMoney(total / l.length) : 0, kind: 'money' },
-    { label: 'סופקו בזמן', value: frac(closed.length - late.length, closed.length) ?? 0, kind: 'pct', sub: closed.length ? `מתוך ${closed.length} שסופקו` : 'אין הזמנות שסופקו' },
+    { label: 'סופקו בזמן', value: t.rate ?? 0, kind: 'pct', sub: t.delivered ? `מתוך ${t.delivered} שסופקו` : 'אין הזמנות שסופקו' },
     { label: 'פיצות', value: l.reduce((t, o) => t + pizzaCount(o), 0), kind: 'num' },
     { label: 'לקוחות שהזמינו', value: new Set(l.map((o) => o.customerId || o.customerName)).size, kind: 'num' },
   ];
@@ -130,7 +121,7 @@ export function summary(all: Order[], from: string, to: string): Summary {
   /* אחוזים מתוך ההזמנות שסופקו (כמו בבורד): בזמן + באיחור = 100%. חלקיות, ביטולים ופתוחות – כמות בלבד */
   const service: STable = {
     id: 'service', title: 'עמידה בזמנים',
-    note: closed.length ? `${Math.round(((closed.length - late.length) / closed.length) * 100)}% מההזמנות סופקו בזמן, מתוך ${closed.length} שסופקו` : 'אין עדיין הזמנות שסופקו בתקופה',
+    note: t.delivered ? `"סופקו בזמן" – ${ON_TIME_HINT}` : 'אין עדיין הזמנות שסופקו בתקופה',
     cols: [{ label: 'סטטוס', kind: 'text', width: 30 }, { label: 'הזמנות', kind: 'num', width: 14 }, { label: 'מתוך שסופקו', kind: 'pct', width: 14 }, { label: "איחור ממוצע (דק')", kind: 'num', width: 16 }],
     rows: [
       ['סופקו בזמן', closed.length - late.length, frac(closed.length - late.length, closed.length), null],

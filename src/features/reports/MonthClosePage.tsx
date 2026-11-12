@@ -8,6 +8,7 @@ import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useStore, type OrderView } from '../../data/store';
 import { lockMonth, markExported, monthLabel, reopenMonth, summarize, useMonth, useMonthOrders, type MonthDoc } from '../../data/months';
+import { ON_TIME_HINT, pctOf } from '../../data/metrics';
 import { CLOSED, METHOD_LABEL, OUTCOME_LABEL, PAYMENT_LABEL, STAGE_LABEL, closeLabel, stageOf, type Order } from '../../data/types';
 import { Button, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -264,9 +265,17 @@ function LockStep({ ym, orders, month, done, fixes, onGo }: { ym: string; orders
           <div><dt>סך החודש</dt><dd><Ltr>{fmtMoney(s.sum)}</Ltr></dd></div>
           <div><dt>ממוצע</dt><dd><Ltr>{s.count ? fmtMoney(Math.round(s.sum / s.count)) : '—'}</Ltr></dd></div>
           <div><dt>בוטלו</dt><dd><Ltr>{s.cancelled}</Ltr></dd></div>
-          {s.byOutcome && (['ontime', 'late', 'partial'] as const).map((k) => <div key={k}><dt>{OUTCOME_LABEL[k]}</dt><dd><Ltr>{s.byOutcome![k] ?? 0}</Ltr></dd></div>)}
+          {/* אותה הגדרה כמו בבורד ובדוחות; סיכום שננעל לפני כן מוצג כפי שנשמר */}
+          {s.onTime ? (
+            <>
+              <div><dt>סופקו בזמן</dt><dd><Ltr>{s.onTime.onTime}</Ltr>{s.onTime.delivered > 0 && <small> · <Ltr>{pctOf(s.onTime.onTime / s.onTime.delivered)}%</Ltr></small>}</dd></div>
+              <div><dt>סופקו באיחור</dt><dd><Ltr>{s.onTime.late}</Ltr></dd></div>
+              <div><dt>מתוכן חלקית</dt><dd><Ltr>{s.onTime.partial}</Ltr></dd></div>
+            </>
+          ) : s.byOutcome && (['ontime', 'late', 'partial'] as const).map((k) => <div key={k}><dt>{OUTCOME_LABEL[k]}</dt><dd><Ltr>{s.byOutcome![k] ?? 0}</Ltr></dd></div>)}
           {Object.entries(s.byMethod).map(([m, v]) => <div key={m}><dt>{METHOD_LABEL[m] ?? m}</dt><dd><Ltr>{fmtMoney(v.sum)}</Ltr><small> · <Ltr>{v.count}</Ltr></small></dd></div>)}
         </dl>
+        {s.onTime && <p className="msum__def muted">סכומים לפי סכום Q · "סופקו בזמן" – {ON_TIME_HINT}</p>}
         {s.byCustomer.length > 0 && (
           <div className="report__scroll">
             <table className="rtable msum__table">

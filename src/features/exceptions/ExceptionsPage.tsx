@@ -1,6 +1,7 @@
 /* חריגים ומשימות (אפיון 9): כל מה שדורש טיפול, במקום אחד. שורה לכל בעיה, עם הכפתור שפותר אותה,
    מקובץ לפי חומרה; ובצד – משימות המעקב מתיקי הלקוחות. מבוסס על אותו מנוע של מסך "היום" והפעמון. */
 import { useMemo, useState } from 'react';
+import { ordersWithSeverity } from '../../data/metrics';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { CalendarClock, CircleCheckBig, X } from 'lucide-react';
@@ -30,10 +31,10 @@ export function ExceptionsPage() {
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
 
-  const all = useMemo<Row[]>(() => orders
-    .filter((o) => !mine || (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name))
+  const scoped = useMemo(() => orders.filter((o) => !mine || (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name)), [orders, mine, profile]);
+  const all = useMemo<Row[]>(() => scoped
     .flatMap((o) => o.issues.map((issue) => ({ o, issue })))
-    .sort((a, b) => (a.o.date + a.o.time).localeCompare(b.o.date + b.o.time)), [orders, mine, profile]);
+    .sort((a, b) => (a.o.date + a.o.time).localeCompare(b.o.date + b.o.time)), [scoped]);
   const rows = rule === null ? all : all.filter((r) => String(r.issue.rule) === rule);
   const counts = useMemo(() => {
     const m = new Map<number, number>();
@@ -53,11 +54,12 @@ export function ExceptionsPage() {
       <header className="page__head">
         <div>
           <h1 className="page__title">חריגים ומשימות</h1>
-          <p className="page__sub">לפי חומרה – בכל שורה הכפתור שפותר אותה.</p>
+          <p className="page__sub">לפי חומרה – בכל שורה הכפתור שפותר אותה. המספרים למעלה – הזמנות.</p>
         </div>
         <dl className="head-stats">
           {GROUPS.map((sev) => {
-            const n = all.filter((r) => r.issue.severity === sev).length;
+            // סופרים הזמנות ולא בעיות – "קריטי" כאן = המספר ליד "חריגים" בתפריט
+            const n = ordersWithSeverity(scoped, sev);
             return <div key={sev} className={n && sev === 'red' ? 'is-alert' : ''}><dt>{SEVERITY_LABEL[sev]}</dt><dd><Ltr>{n}</Ltr></dd></div>;
           })}
           <div className={overdue.length ? 'is-warn' : ''}><dt>משימות להיום</dt><dd><Ltr>{overdue.length + dueToday.length}</Ltr></dd></div>
@@ -90,7 +92,8 @@ export function ExceptionsPage() {
             if (!list.length) return null;
             return (
               <div key={sev} className="exc__group">
-                <p className={`exc__label exc__label--${sev}`}>{title} <Ltr>{list.length}</Ltr></p>
+                {/* הזמנות ולא שורות – אותו מספר כמו בראש המסך (הזמנה עם שתי בעיות באותה חומרה מופיעה בשתי שורות) */}
+                <p className={`exc__label exc__label--${sev}`}>{title} <Ltr>{new Set(list.map((r) => r.o.id)).size}</Ltr></p>
                 <ul className="exc__list">
                   <AnimatePresence initial={false}>
                     {list.map(({ o, issue }) => (

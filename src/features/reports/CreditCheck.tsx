@@ -2,6 +2,7 @@
    ✓ ליד כל שורה שנמצאה בדוח הקופה (נשמר לחודש – משתמש אחר רואה וממשיך), "סמן כשולם" לשורות המסוננות וייצוא לאקסל.
    משמש גם בדוח ההקפות וגם בשלב 2 של סגירת החודש. */
 import { useMemo, useState } from 'react';
+import { revenueOf } from '../../data/metrics';
 import { CheckCheck, Download } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore } from '../../data/store';
@@ -34,7 +35,7 @@ export function CreditCheck({ ym, orders, month, loading, locked }: { ym: string
     return [...m.entries()];
   }, [rows]);
 
-  const sum = (list: Order[]) => list.reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+  const sum = (list: Order[]) => list.reduce((t, o) => t + revenueOf(o), 0);
   const unpaid = rows.filter((o) => o.payment === 'pending' || o.payment === 'failed');
   const found = rows.filter((o) => checked[o.id]).length;
   const toggle = (o: Order) => setChecked(ym, month, o.id, !checked[o.id]).catch(() => toast({ tone: 'error', message: 'הסימון לא נשמר – בדוק חיבור' }));
