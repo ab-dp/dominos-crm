@@ -13,6 +13,7 @@ import {
   type ClusterGroup, type OpsSend,
 } from '../../data/opsSummary';
 import { saveError } from '../../lib/saveError';
+import { logError } from '../../lib/errorLog';
 import '../pages.css';
 import './ops.css';
 
@@ -49,7 +50,8 @@ export function OpsSummaryPage() {
     try {
       const { downloadOpsPdf } = await import('./opsPdf');
       await downloadOpsPdf(els, `סיכום לתפעול ${name} ${fmtDate(from)}${from !== to ? ` עד ${fmtDate(to)}` : ''}.pdf`);
-    } catch {
+    } catch (e) {
+      logError('ops-pdf', e); // נרשם בהגדרות ← תקלות, כדי שנדע מה נכשל
       toast({ tone: 'error', message: 'הורדת ה-PDF נכשלה. נסו שוב.' });
     } finally { setBusy(''); }
   };
