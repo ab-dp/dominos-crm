@@ -1,0 +1,11 @@
+/* ערוצים מההגדרות – בחירה מהירה מתחת לשדה */
+.chpicks { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.chpick {
+  display: inline-flex; align-items: center; height: var(--control-sm); padding: 0 var(--space-3);
+  border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white);
+  font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--gray-700); cursor: pointer;
+  transition: border-color var(--dur-instant) var(--ease), background var(--dur-instant) var(--ease);
+}
+.chpick:hover { border-color: var(--gray-300); color: var(--gray-900); }
+.chpick.is-on { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); }
+@media (prefers-reduced-motion: reduce) { .chpick { transition: none; } }

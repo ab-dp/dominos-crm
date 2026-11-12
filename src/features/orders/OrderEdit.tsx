@@ -1,17 +1,16 @@
 /* עריכה בתוך תיק ההזמנה (אפיון 6.3): לוחצים על ערך, משנים, Enter או יציאה מהשדה – נשמר.
    Esc מבטל. כל שמירה נרשמת ביומן עם הערך הקודם, ומוצגת הודעה עם "בטל". */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Check, Pencil, Send } from 'lucide-react';
+import { Check, Pencil } from 'lucide-react';
 import { useBranches, useClusters } from '../../data/branches';
 import { newId, useCustomers } from '../../data/customers';
 import { useLists } from '../../data/lists';
-import { addOrderNote, useOrderNotes } from '../../data/orders';
+import { useOrderNotes } from '../../data/orders';
 import { usePriceLists } from '../../data/priceLists';
 import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, useCatalog, type Line } from './ItemsBuilder';
 import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, type Order } from '../../data/types';
 import { Button, Missing } from '../../design/components';
-import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, roundMoney, sameMoney, toISODate } from '../../lib/format';
 import { cleanPhone, phoneError } from '../../lib/names';
 import { BranchPicker } from '../branches/BranchPicker';
@@ -22,9 +21,11 @@ const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
 /* ---------- שדה אחד שנערך במקום ---------- */
 type Kind = 'text' | 'textarea' | 'date' | 'time' | 'phone' | 'money';
 
-export function EditKv({ k, value, display, kind = 'text', placeholder, validate, onSave, readOnly }: {
+export function EditKv({ k, value, display, kind = 'text', placeholder, validate, onSave, readOnly, picks }: {
   k: string; value: string; display?: ReactNode; kind?: Kind; placeholder?: string;
   validate?: (v: string) => string; onSave: (v: string) => void; readOnly?: boolean;
+  /* בחירה מהירה מתחת לשדה בזמן עריכה (למשל ערוצים מההגדרות); הבחירה נשמרת מיד */
+  picks?: (draft: string, pick: (v: string) => void) => ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -37,8 +38,8 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
   useEffect(() => { if (!editing) setDraft(value); }, [value, editing]);
   useEffect(() => { if (editing) { start.current = value; setRemote(null); ref.current?.focus(); ref.current?.select?.(); } }, [editing]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const commit = () => {
-    const v = kind === 'phone' ? cleanPhone(draft) : draft.trim();
+  const commit = (next?: string) => {
+    const v = kind === 'phone' ? cleanPhone(next ?? draft) : (next ?? draft).trim();
     const before = kind === 'phone' ? cleanPhone(value) : value.trim();
     if (v === before) { setEditing(false); setErr(''); return; }
     const e = (CARD_RE.test(v) && kind !== 'phone' ? 'אסור לרשום כאן מספר כרטיס אשראי' : '') || validate?.(v) || '';
@@ -60,15 +61,16 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
         <span className="kv__field">
           {kind === 'textarea' ? (
             <textarea ref={ref} className="input kv__input kv__ta" rows={2} value={draft} placeholder={placeholder} aria-labelledby={`kv-${k}`} aria-invalid={!!err || undefined}
-              onChange={(e) => { setDraft(e.target.value); setErr(''); }} onBlur={commit}
+              onChange={(e) => { setDraft(e.target.value); setErr(''); }} onBlur={() => commit()}
               onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); cancel(); } if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); commit(); } }} />
           ) : (
             <input ref={ref} className={`input kv__input ${kind === 'text' ? '' : 'input--ltr'}`} value={draft} placeholder={placeholder} aria-labelledby={`kv-${k}`} aria-invalid={!!err || undefined}
               type={kind === 'date' ? 'date' : kind === 'time' ? 'time' : 'text'} step={kind === 'time' ? 900 : undefined}
               inputMode={kind === 'phone' ? 'tel' : kind === 'money' ? 'decimal' : undefined}
-              onChange={(e) => { setDraft(e.target.value); setErr(''); }} onBlur={commit}
+              onChange={(e) => { setDraft(e.target.value); setErr(''); }} onBlur={() => commit()}
               onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); cancel(); } if (e.key === 'Enter') { e.preventDefault(); commit(); } }} />
           )}
+          {picks?.(draft, (v) => { setDraft(v); commit(v); })}
           {remote !== null && (
             <span className="kv__remote" role="alert">
               משתמש אחר שינה בינתיים ל: <b>{remote || 'ריק'}</b>
@@ -252,48 +254,29 @@ export function ItemsEditor({ o, onDone }: { o: OrderView; onDone: () => void })
   );
 }
 
-/* ---------- הערות פנימיות ---------- */
-export function NotesSection({ o }: { o: OrderView }) {
+/* ---------- הערות פנימיות מהעבר ----------
+   להזמנה יש מקום אחד להערות: "הערות להזמנה" בבלוק הקופה. הערות פנימיות שנרשמו לפני האיחוד
+   (בשדה note, במערך notes הישן ובתת-האוסף notes) לא נמחקות – הן מוצגות כאן לקריאה בלבד, ורק כשיש כאלה. */
+export function EarlierNotes({ o }: { o: OrderView }) {
   const notes = useOrderNotes(o.id);
-  const toast = useToast();
-  const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-  const send = async () => {
-    if (!text.trim()) return;
-    if (CARD_RE.test(text)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
-    setBusy(true);
-    try { await addOrderNote(o.id, text); setText(''); }
-    catch { toast({ tone: 'error', message: 'ההערה לא נשמרה – בדוק חיבור' }); }
-    setBusy(false);
-  };
-  const legacy = [
+  const fmtAt = (d: Date) => `${fmtDate(toISODate(d))} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const all = [
     ...(o.note ? [{ id: 'first', byName: o.createdBy, when: fmtDate(o.createdAt), text: o.note }] : []),
     ...o.notes.map((n, i) => ({ id: `old-${i}`, byName: n.by, when: fmtDate(n.at), text: n.text })),
-  ];
-  const fmtAt = (d: Date) => `${fmtDate(toISODate(d))} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  const all = [...legacy, ...(notes ?? []).map((n) => ({ id: n.id, byName: n.byName, when: n.at ? fmtAt(n.at.toDate()) : 'עכשיו', text: n.text }))];
+    ...(notes ?? []).map((n) => ({ id: n.id, byName: n.byName, when: typeof n.at?.toDate === 'function' ? fmtAt(n.at.toDate()) : '', text: n.text })),
+  ].filter((n) => n.text.trim() && n.text.trim() !== (o.instructions ?? '').trim());
+  if (!all.length) return null;
   return (
-    <div className="notes">
-      {all.length === 0 ? <p className="muted">אין עדיין הערות</p> : (
-        <ol className="notes__list">
-          {all.map((n) => (
-            <li key={n.id}>
-              <span className="notes__meta"><b>{n.byName}</b> · <Ltr>{n.when}</Ltr></span>
-              <p>{n.text}</p>
-            </li>
-          ))}
-        </ol>
-      )}
-      <div className="notes__composer">
-        <textarea className="input cform__ta" rows={2} value={text} placeholder="הוסף הערה פנימית (נראית רק במוקד)" aria-label="הערה פנימית חדשה" aria-invalid={!!err || undefined}
-          onChange={(e) => { setText(e.target.value); setErr(''); }}
-          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send(); } }} />
-        <div className="notes__row">
-          {err ? <span className="cform__err" role="alert">{err}</span> : <span className="kv__hint">אי אפשר לערוך או למחוק הערה אחרי השמירה · Ctrl+Enter</span>}
-          <Button size="sm" variant="secondary" icon={<Send size={14} />} loading={busy} disabled={!text.trim()} onClick={send}>הוסף</Button>
-        </div>
-      </div>
+    <div className="earlier-notes">
+      <span className="kv__k">הערות פנימיות קודמות</span>
+      <ol className="notes__list">
+        {all.map((n) => (
+          <li key={n.id}>
+            <span className="notes__meta"><b>{n.byName}</b>{n.when && <> · <Ltr>{n.when}</Ltr></>}</span>
+            <p>{n.text}</p>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

@@ -14,6 +14,7 @@ import { useBranches, useClusters } from '../../data/branches';
 import { EMPTY_CUSTOMER, newId, primaryContact, updateCustomer, useCustomers, type Customer } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
+import { ChannelPicks } from './ChannelPicks';
 import { usePriceLists } from '../../data/priceLists';
 import { useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
 import { setQuoteStatus } from '../../data/quotes';
@@ -148,8 +149,6 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c?.id]);
 
-  /* ערוץ ההזמנה נכתב ידנית (וואטסאפ, מכירות, מוקד, WellBe…). ההצעות רק משלימות הקלדה. */
-  const channelHints = useMemo(() => [...new Set([...(lists?.channels ?? []).filter((x) => x.active).map((x) => x.label), ...orders.map((o) => o.channel).filter(Boolean)])].slice(0, 30), [lists, orders]);
 
   /* ---------- פריטים ומחיר ---------- */
   const catalog = useCatalog(priceList, c, delivery);
@@ -644,8 +643,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
               <Row>{branchField}{!past && statusField}</Row>
               <Row>
                 <L label="ערוץ / מספר פניה">
-                  <input className="input" list="no-channels" value={channel} onChange={(e) => { setChannel(e.target.value); clearErr('channel'); }} placeholder="למשל: וואטסאפ, מוקד, WellBe או מספר פניה" {...inv('channel')} />
-                  <datalist id="no-channels">{channelHints.map((h) => <option key={h} value={h} />)}</datalist>
+                  {/* האפשרויות – רק מה שהוגדר ב"ערוצי קבלה" בהגדרות; אפשר גם להקליד חופשי (למשל מספר פניה) */}
+                  <input className="input" value={channel} onChange={(e) => { setChannel(e.target.value); clearErr('channel'); }} placeholder="בחרו למטה או הקלידו, למשל מספר פניה" {...inv('channel')} />
+                  <ChannelPicks value={channel} onPick={(v) => { setChannel(v); clearErr('channel'); }} />
                   {err('channel')}
                 </L>
               </Row>

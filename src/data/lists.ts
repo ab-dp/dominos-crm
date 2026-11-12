@@ -9,7 +9,7 @@ export type ListKey = 'channels' | 'cancelReasons' | 'paymentMethods' | 'docType
 export type Lists = Record<ListKey, ListItem[]>;
 
 export const LIST_META: Record<ListKey, { title: string; hint: string }> = {
-  channels: { title: 'ערוצי קבלה', hint: 'איך ההזמנה הגיעה למוקד' },
+  channels: { title: 'ערוצי קבלה', hint: 'האפשרויות בשדה "ערוץ" בהזמנה. אפשר גם להקליד שם טקסט חופשי' },
   cancelReasons: { title: 'סיבות ביטול', hint: 'נבחרות בחלון "בוטלה"' },
   paymentMethods: { title: 'אמצעי תשלום', hint: 'שלושת הבסיסיים נעולים – הדוחות נשענים עליהם' },
   docTypes: { title: 'סוגי מסמכים', hint: 'לסיווג קבצים בתיק הזמנה ובתיק לקוח' },
