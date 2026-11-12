@@ -55,7 +55,13 @@ export const METHOD_LABEL: Record<string, string> = {
   credit: 'אשראי',
   account: 'הקפה',
   cash: 'מזומן',
+  other: 'אחר',
 };
+/* אמצעי התשלום כפי שמוצג בכל מקום (כרטיס, טבלאות, דוחות, ייצוא): "אחר – העברה בנקאית" כשנבחר "אחר" */
+export function methodText(o: { method: string; methodLabel?: string; methodNote?: string }) {
+  const label = o.methodLabel || METHOD_LABEL[o.method] || o.method;
+  return o.method === 'other' && o.methodNote?.trim() ? `${label} – ${o.methodNote.trim()}` : label;
+}
 
 export type Branch = { id: string; name: string; cluster: string; phone: string };
 
@@ -135,6 +141,7 @@ export type Order = {
   payment: PaymentState;
   method: PaymentMethod;
   methodLabel?: string;
+  methodNote?: string; // באמצעי תשלום "אחר": מה האמצעי בפועל (העברה בנקאית, צ'ק…)
   accountPhone?: string;
   handler: string;
   handlerUid?: string;

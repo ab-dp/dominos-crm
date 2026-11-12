@@ -11,7 +11,7 @@ export type Lists = Record<ListKey, ListItem[]>;
 export const LIST_META: Record<ListKey, { title: string; hint: string }> = {
   channels: { title: 'ערוצי קבלה', hint: 'האפשרויות בשדה "ערוץ" בהזמנה. אפשר גם להקליד שם טקסט חופשי' },
   cancelReasons: { title: 'סיבות ביטול', hint: 'נבחרות בחלון "בוטלה"' },
-  paymentMethods: { title: 'אמצעי תשלום', hint: 'שלושת הבסיסיים נעולים – הדוחות נשענים עליהם' },
+  paymentMethods: { title: 'אמצעי תשלום', hint: 'ארבעת הבסיסיים נעולים – הדוחות נשענים עליהם. "אחר" פותח בהזמנה שדה לפירוט' },
   docTypes: { title: 'סוגי מסמכים', hint: 'לסיווג קבצים בתיק הזמנה ובתיק לקוח' },
   leadSources: { title: 'מקורות לידים', hint: 'מאיפה הגיע הלקוח הפוטנציאלי' },
   leadFields: { title: 'תחומים', hint: 'תחום העיסוק של העסק – לסינון ולקמפיינים' },
@@ -23,19 +23,30 @@ const item = (id: string, label: string, locked = false): ListItem => ({ id, lab
 export const DEFAULT_LISTS: Lists = {
   channels: [item('phone', 'טלפון'), item('whatsapp', 'WhatsApp'), item('email', 'מייל')],
   cancelReasons: [item('customer', 'הלקוח ביטל'), item('branch', 'הסניף לא יכול לבצע'), item('date', 'שינוי מועד'), item('dup', 'הזמנה כפולה'), item('other', 'אחר')],
-  paymentMethods: [item('credit', 'אשראי', true), item('account', 'הקפה', true), item('cash', 'מזומן', true)],
+  paymentMethods: [item('credit', 'אשראי', true), item('account', 'הקפה', true), item('cash', 'מזומן', true), item('other', 'אחר', true)],
   leadSources: [item('referral', 'המלצה'), item('event', 'אירוע'), item('outbound', 'פנייה יזומה'), item('website', 'אתר'), item('inbound', 'פנה אלינו')],
   leadFields: [item('hitech', 'הייטק'), item('education', 'חינוך'), item('health', 'בריאות'), item('municipal', 'רשות מקומית'), item('security', 'ביטחון'), item('industry', 'תעשייה'), item('offices', 'משרדים'), item('events', 'אירועים'), item('other', 'אחר')],
   lostReasons: [item('price', 'מחיר'), item('competitor', 'עובדים עם ספק אחר'), item('noneed', 'אין צורך כרגע'), item('noanswer', 'לא עונים'), item('kosher', 'כשרות'), item('other', 'אחר')],
   docTypes: [item('po', 'תעודת רכש'), item('quote', 'הצעת מחיר'), item('invoice', 'חשבונית'), item('agreement', 'הסכם / טופס הקפה'), item('other', 'אחר')],
 };
 
+/* פריטי מערכת שנוספו אחרי שהרשימה כבר נשמרה בהגדרות (למשל אמצעי התשלום "אחר") – מתווספים לסוף הרשימה, בלי לגעת במה שנשמר */
+function withSystemItems(l: Lists): Lists {
+  const out = { ...l };
+  (Object.keys(DEFAULT_LISTS) as ListKey[]).forEach((k) => {
+    const have = new Set((out[k] ?? []).map((x) => x.id));
+    const add = DEFAULT_LISTS[k].filter((x) => x.locked && !have.has(x.id));
+    if (add.length) out[k] = [...(out[k] ?? []), ...add];
+  });
+  return out;
+}
+
 export function useLists() {
   const [lists, setLists] = useState<Lists | null>(null);
   const [missing, setMissing] = useState(false);
   const [error, setError] = useState('');
   useEffect(() => onSnapshot(doc(db, 'settings', 'lists'),
-    (s) => { setMissing(!s.exists()); setLists(s.exists() ? { ...DEFAULT_LISTS, ...(s.data() as Partial<Lists>) } : DEFAULT_LISTS); },
+    (s) => { setMissing(!s.exists()); setLists(s.exists() ? withSystemItems({ ...DEFAULT_LISTS, ...(s.data() as Partial<Lists>) }) : DEFAULT_LISTS); },
     () => setError('אין הרשאה או אין חיבור')), []);
   return { lists, missing, error };
 }

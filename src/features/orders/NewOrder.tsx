@@ -40,7 +40,7 @@ const MODES: [NewOrderMode, string, ReactNode][] = [
 const MISS = 'חסר – אפשר להשלים אחר כך';
 const MISS_LABEL: Record<string, string> = {
   ncContact: 'איש קשר', contactName: 'איש קשר', ncPhone: 'טלפון', contactPhone: 'טלפון', time: 'שעה', branch: 'סניף',
-  channel: 'ערוץ / מספר פניה', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש', prices: 'מחיר',
+  channel: 'ערוץ / מספר פניה', methodNote: 'פירוט אמצעי התשלום', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש', prices: 'מחיר',
 };
 
 const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
@@ -99,6 +99,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const [pastReason, setPastReason] = useState('');
   const [channel, setChannel] = useState('');
   const [method, setMethod] = useState('');
+  const [methodNote, setMethodNote] = useState(''); // באמצעי תשלום "אחר": מה האמצעי בפועל
   const [accountPhone, setAccountPhone] = useState('');
   const [poNumber, setPoNumber] = useState('');
   const [instructions, setInstructions] = useState('');
@@ -132,6 +133,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     const fromQuote = prefill.current;
     prefill.current = false;
     setMethod(c.paymentMethod);
+    setMethodNote('');
     setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : '');
     setAddressId(fromQuote && address ? c.addresses.find((a) => a.address.trim() === address.trim())?.id ?? '' : addr?.id ?? '');
     if (!fromQuote || !address) setAddress(addr?.address ?? c.businessAddress ?? '');
@@ -234,6 +236,10 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       if (!cleanPhone(effAccountPhone)) m[isNew ? 'ncAccount' : 'account'] = MISS;
       else { const pe = phoneError(effAccountPhone); if (pe) e[isNew ? 'ncAccount' : 'account'] = pe; }
     }
+    if (effMethod === 'other') {
+      if (!methodNote.trim()) m.methodNote = MISS;
+      else if (CARD_RE.test(methodNote)) e.methodNote = 'אסור לרשום כאן מספר כרטיס אשראי';
+    }
     if (CARD_RE.test(poNumber)) e.po = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(address)) e.address = 'אסור לרשום כאן מספר כרטיס אשראי';
@@ -296,6 +302,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       } : {}),
       method: effMethod,
       methodLabel,
+      methodNote: effMethod === 'other' ? methodNote.trim() || undefined : undefined,
       accountPhone: effMethod === 'account' ? cleanPhone(effAccountPhone) : undefined,
       handler: profile?.name ?? '',
       handlerUid: profile?.uid,
@@ -495,7 +502,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const paymentFields = (
     <Row>
       <L label="אמצעי תשלום" group>
-        {methods.length <= 3
+        {methods.length <= 4
           ? <RadioSeg label="אמצעי תשלום" value={effMethod} onChange={pickMethod} options={methods.map((m) => ({ value: m.id, label: m.label }))} />
           : (
             <select className="input no-method" aria-label="אמצעי תשלום" value={effMethod} onChange={(e) => pickMethod(e.target.value)}>
@@ -507,6 +514,13 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           : <span className="cform__hint">שונה בהזמנה הזו בלבד · הקבוע של הלקוח: {methods.find((m) => m.id === c.paymentMethod)?.label ?? METHOD_LABEL[c.paymentMethod] ?? c.paymentMethod} <button type="button" className="link" onClick={() => { setMethod(c.paymentMethod); setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : ''); }}>חזור לקבוע</button></span>)}
         {isNew && <span className="cform__hint muted">יישמר כאמצעי התשלום הקבוע של הלקוח</span>}
       </L>
+      {/* "אחר": נפתח שדה לפירוט – מה אמצעי התשלום בפועל */}
+      {effMethod === 'other' && (
+        <L label="מה אמצעי התשלום?">
+          <input className="input" value={methodNote} onChange={(e) => { setMethodNote(e.target.value); clearErr('methodNote'); }} placeholder="למשל: העברה בנקאית, צ'ק" {...inv('methodNote')} />
+          {err('methodNote')}
+        </L>
+      )}
       {effMethod === 'account' && (
         <L label="טלפון הקפה">
           <input className="input input--ltr" inputMode="tel" value={isNew ? nc.accountPhone : accountPhone} placeholder="05X-XXXXXXX"

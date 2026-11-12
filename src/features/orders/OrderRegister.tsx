@@ -1,23 +1,23 @@
 /* "להעברה לקופה": הבלוק הראשון בתיק ההזמנה – כל מה שהאחמ"ש צריך כדי להקליד את ההזמנה ל-Q ביום ההזמנה,
    ובתחתיתו השורה שבה רושמים שהועברה ל-Q (מספר, סכום, נשלח בקבוצת תפעול). כל ערך נערך בלחיצה, כמו בשאר התיק. */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { type OrderView } from '../../data/store';
-import { METHOD_LABEL, groupItems, itemsText, typeText, OTHER, categoryOf, stageOf } from '../../data/types';
+import { groupItems, itemsText, methodText, typeText, OTHER, categoryOf, stageOf } from '../../data/types';
 import { Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, sameMoney, weekday } from '../../lib/format';
 import { QForm } from './OrderActions';
 import { phoneError } from '../../lib/names';
 import { PriceRows } from './ItemsBuilder';
-import { BranchEdit, DeliveryTypeEdit, EarlierNotes, EditKv, ItemsEditor, MethodEdit, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
+import { BranchEdit, DeliveryTypeEdit, EarlierNotes, EditKv, ItemsEditor, MethodEdit, MethodNoteEdit, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
 
 /* טקסט מסודר להעתקה (להקלדה בקופה או לשליחה לסניף) */
 export function registerText(o: OrderView) {
   const items = !o.items.length ? o.contents ?? ''
     : !o.items.some((i) => categoryOf(i) !== OTHER) ? itemsText(o.items)
       : groupItems(o.items).map((c) => `${c.category} ${c.qty}: ${c.types.map(typeText).join(' ; ')}`).join('\n');
-  const method = o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method;
+  const method = methodText(o);
   return [
     `הזמנה ${o.id} · ${o.customerName}`,
     `${weekday(o.date)} ${fmtDate(o.date)} · ${o.time} · ${o.branchName}`,
@@ -35,6 +35,10 @@ export function RegisterBlock({ o }: { o: OrderView }) {
   const toast = useToast();
   const [editItems, setEditItems] = useState(false);
   useEffect(() => setEditItems(false), [o.id]);
+  // אמצעי התשלום של ההזמנה הזו שונה עכשיו ל"אחר" (ולא כך נפתח הכרטיס) – שדה הפירוט נפתח מיד לכתיבה
+  const lastMethod = useRef(`${o.id}:${o.method}`);
+  const justPickedOther = o.method === 'other' && !o.methodNote && lastMethod.current !== `${o.id}:other` && lastMethod.current.startsWith(`${o.id}:`);
+  useEffect(() => { lastMethod.current = `${o.id}:${o.method}`; });
   const copy = async () => {
     try { await navigator.clipboard.writeText(registerText(o)); toast({ message: 'פרטי ההזמנה הועתקו' }); }
     catch { toast({ tone: 'error', message: 'ההעתקה לא הצליחה – אפשר לסמן ולהעתיק ידנית' }); }
@@ -53,6 +57,7 @@ export function RegisterBlock({ o }: { o: OrderView }) {
         <MethodEdit o={o} />
         {o.method === 'account'
           ? <EditKv k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />
+          : o.method === 'other' ? <MethodNoteEdit o={o} justPicked={justPickedOther} />
           : <span aria-hidden="true" />}
         <EditKv k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <Missing />} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
         <EditKv k="טלפון איש הקשר" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />

@@ -9,7 +9,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useStore, type OrderView } from '../../data/store';
 import { lockMonth, markExported, monthLabel, reopenMonth, summarize, useMonth, useMonthOrders, type MonthDoc } from '../../data/months';
 import { ON_TIME_HINT, pctOf } from '../../data/metrics';
-import { CLOSED, METHOD_LABEL, OUTCOME_LABEL, PAYMENT_LABEL, STAGE_LABEL, closeLabel, stageOf, type Order } from '../../data/types';
+import { CLOSED, METHOD_LABEL, OUTCOME_LABEL, methodText, PAYMENT_LABEL, STAGE_LABEL, closeLabel, stageOf, type Order } from '../../data/types';
 import { Button, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone } from '../../lib/format';
@@ -183,7 +183,7 @@ function Export({ ym, orders, month, locked }: { ym: string; orders: Order[]; mo
             { label: 'מצב תשלום', kind: 'text', width: 14 }, { label: "מס' Q", kind: 'code', width: 11 }, { label: 'סכום הזמנה', kind: 'money', width: 13 }, { label: 'סכום Q', kind: 'money', width: 12 },
             { label: 'תעודת רכש', kind: 'code', width: 13 }, { label: 'הערות לחיוב', kind: 'text', width: 30 }, { label: 'תיקון לאחר סגירה', kind: 'text', width: 24 },
           ],
-          rows: sorted.map((o) => [o.id, o.date, o.customerName, o.branchName, o.cluster, closeLabel(o), o.methodLabel || METHOD_LABEL[o.method] || o.method,
+          rows: sorted.map((o) => [o.id, o.date, o.customerName, o.branchName, o.cluster, closeLabel(o), methodText(o),
             o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment], o.qNumber ?? '', o.amount, o.qAmount ?? '', o.poNumber ?? '', o.billingNote ?? '', o.postCloseFix?.reason ?? '']),
           rowStyle: sorted.map((o) => (o.status === 'cancelled' ? 'muted' : undefined)),
         }],
