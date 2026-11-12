@@ -1,43 +1,25 @@
-/* PDF לסיכום לתפעול: A4 לרוחב, כל אשכול מעמוד חדש. אשכול נכנס לעמוד אחד – אם צריך, מוקטן לגובה העמוד.
-   רק כשההקטנה הייתה הופכת את הטקסט לקטן מדי, הוא ממשיך לעמוד הבא – נחתך בין הזמנות ולא באמצע הזמנה. */
+/* PDF לסיכום לתפעול: עמוד אחד לכל אשכול, תמיד. אשכול שנכנס ל-A4 לרוחב (גם בהקטנה קלה) מקבל עמוד A4 רגיל;
+   אשכול ארוך יותר מקבל עמוד אחד ארוך באותו רוחב – הכתב נשאר באותו גודל ושום הזמנה לא נחתכת בין עמודים. */
 const PAGE_W = 297, PAGE_H = 210, M = 8;
-const MIN_SCALE = 0.72; // מתחת לזה הטקסט קטן מדי לקריאה – עדיף עמוד נוסף
+const MIN_SCALE = 0.85; // הקטנה גדולה מזו כבר פוגעת בקריאה – עדיף עמוד ארוך
+const MAX_PX = 15000;   // גובה תמונה מקסימלי שדפדפנים מציירים בבטחה
 
 export async function downloadOpsPdf(sheets: HTMLElement[], fileName: string) {
   const [{ toPng }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')]);
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape', compress: true });
-  let first = true;
+  const fullW = PAGE_W - 2 * M, room = PAGE_H - 2 * M;
+  let pdf: InstanceType<typeof jsPDF> | undefined;
   for (const el of sheets) {
     const W = el.offsetWidth, H = el.offsetHeight;
-    const png = await toPng(el, { pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true, width: W, height: H });
-    const fullW = PAGE_W - 2 * M, room = PAGE_H - 2 * M;
-    const mmPerPx = fullW / W;
-    const fit = room / (H * mmPerPx);
-    const addPage = () => { if (!first) pdf.addPage(); first = false; };
-    if (fit >= MIN_SCALE) {
-      // עמוד אחד: ברוחב מלא, או מוקטן לגובה וממורכז
-      const s = Math.min(1, fit), w = fullW * s, h = H * mmPerPx * s;
-      addPage();
-      pdf.addImage(png, 'PNG', (PAGE_W - w) / 2, M, w, h, undefined, 'FAST');
-      continue;
-    }
-    // כמה עמודים: בקנה מידה MIN_SCALE, חיתוך בסוף שורת הזמנה
-    const s = MIN_SCALE, w = fullW * s, k = mmPerPx * s; // מ"מ לפיקסל
-    const pageHpx = room / k;
-    const top = el.getBoundingClientRect().top;
-    const scale = el.getBoundingClientRect().height / H || 1;
-    const cuts = [...el.querySelectorAll('.os-table tbody tr, .os-head, .os-table thead')].map((n) => (n.getBoundingClientRect().bottom - top) / scale).sort((a, b) => a - b);
-    let start = 0;
-    while (start < H - 1) {
-      const limit = start + pageHpx;
-      const end = limit >= H ? H : [...cuts].reverse().find((y) => y <= limit && y > start + 40) ?? limit;
-      addPage();
-      pdf.addImage(png, 'PNG', (PAGE_W - w) / 2, M - start * k, w, H * k, undefined, 'FAST');
-      pdf.setFillColor(255, 255, 255);
-      pdf.rect(0, 0, PAGE_W, M, 'F');
-      pdf.rect(0, M + (end - start) * k, PAGE_W, PAGE_H, 'F');
-      start = end;
-    }
+    const png = await toPng(el, { pixelRatio: Math.min(2, MAX_PX / H), backgroundColor: '#ffffff', cacheBust: true, width: W, height: H });
+    const hMm = H * (fullW / W);
+    const fit = room / hMm;
+    const long = fit < MIN_SCALE;
+    const pageH = long ? hMm + 2 * M : PAGE_H;
+    const format = [PAGE_W, pageH], orientation = pageH > PAGE_W ? 'portrait' : 'landscape';
+    if (!pdf) pdf = new jsPDF({ unit: 'mm', format, orientation, compress: true });
+    else pdf.addPage(format, orientation);
+    const s = long ? 1 : Math.min(1, fit), w = fullW * s;
+    pdf.addImage(png, 'PNG', (PAGE_W - w) / 2, M, w, hMm * s, undefined, 'FAST');
   }
-  pdf.save(fileName);
+  pdf?.save(fileName);
 }

@@ -23,45 +23,56 @@
 .ops-phone { display: none; margin: 0 0 var(--space-2); font-size: var(--text-label); color: var(--gray-600); }
 .ops-fit { overflow: hidden; border: 1px solid var(--gray-100); border-radius: var(--radius); background: var(--white); }
 
-/* ---------- הדף שנשלח לתפעול: רוחב קבוע (A4 לרוחב), צפוף וקריא, צבעי הלוגו כמו בהצעת המחיר ---------- */
-.os { --os-blue: var(--navy-2); --os-sub: var(--gray-600); --os-line: var(--gray-100); --os-br: var(--brand-50);
-  box-sizing: border-box; width: 1080px; padding: var(--space-4) var(--space-5) var(--space-4); background: var(--white); color: var(--gray-900);
-  font-family: var(--font); font-size: 12.5px; line-height: 1.45; text-align: right; }
+/* ---------- הדף שנשלח לתפעול: רוחב קבוע, כתב גדול ושורות צפופות – כדי שאשכול שלם ייכנס לצילום אחד / עמוד PDF אחד.
+   כל הזמנה: שעה · פיצות · לקוח · פירוט (שורה לכל סוג פיצה, כל השאר בשורה אחת, הערה לסניף מודגשת) · אספקה · סכום ---------- */
+.os { --os-blue: var(--navy-2); --os-sub: var(--gray-600); --os-line: var(--gray-200); --os-br: var(--brand-50);
+  box-sizing: border-box; width: 1080px; padding: var(--space-3) var(--space-4); background: var(--white); color: var(--gray-900);
+  font-family: var(--font); font-size: var(--text-body); line-height: 1.25; text-align: right; }
 .os * { box-sizing: border-box; }
-.os-head { display: flex; align-items: center; gap: var(--space-5); padding-bottom: var(--space-3); border-bottom: 3px solid var(--os-blue); }
+.os-head { display: flex; align-items: center; gap: var(--space-4); padding-bottom: var(--space-2); border-bottom: 3px solid var(--os-blue); }
 .os-head h1 { margin: 0; font-size: var(--text-screen-title); font-weight: 600; color: var(--os-blue); line-height: 1.15; }
-.os-range { margin: var(--space-1) 0 0; font-size: var(--text-body); font-weight: 600; color: var(--gray-900); }
+.os-range { margin: 2px 0 0; font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
 .os-stats { display: flex; gap: var(--space-2); margin-inline-start: auto; }
-.os-stats > div { display: grid; justify-items: center; min-width: 66px; padding: var(--space-1) var(--space-3); background: var(--os-br); }
-.os-stats b { font-size: var(--text-card-title); font-weight: 600; color: var(--os-blue); font-family: var(--font-mono); }
-.os-stats span { font-size: var(--text-micro); color: var(--os-sub); }
-.os-head img { height: 34px; width: auto; display: block; }
-.os-removed { margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-3); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-micro); }
+.os-stats > div { display: flex; align-items: baseline; gap: var(--space-1); padding: var(--space-1) var(--space-3); background: var(--os-br); white-space: nowrap; }
+.os-stats b { font-size: var(--text-section); font-weight: 600; color: var(--os-blue); font-family: var(--font-mono); }
+.os-stats span { font-size: var(--text-label); color: var(--os-sub); }
+.os-head img { height: 32px; width: auto; display: block; }
+.os-removed { margin: var(--space-2) 0 0; padding: var(--space-1) var(--space-3); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-label); }
 
-.os-table { width: 100%; margin-top: var(--space-3); border-collapse: collapse; table-layout: fixed; }
-.os-table .c-when { width: 74px; }
-.os-table .c-cust { width: 176px; }
-.os-table .c-dlv { width: 170px; }
-.os-table .c-sum { width: 76px; }
-.os-table .c-note { width: 150px; }
-.os-table th { background: var(--os-blue); color: var(--white); font-weight: 600; font-size: var(--text-micro); padding: var(--space-2) var(--space-2); text-align: right; }
-.os-table td { padding: var(--space-2) var(--space-2); border-bottom: 1px solid var(--os-line); vertical-align: top; overflow-wrap: anywhere; }
+.os-table { width: 100%; margin-top: var(--space-2); border-collapse: collapse; table-layout: fixed; }
+.os-table .c-when { width: 92px; }
+.os-table .c-pz { width: 62px; }
+.os-table .c-cust { width: 190px; }
+.os-table .c-dlv { width: 164px; }
+.os-table .c-sum { width: 78px; }
+.os-table th { background: var(--os-blue); color: var(--white); font-weight: 600; font-size: var(--text-label); padding: var(--space-1) var(--space-2); text-align: right; }
+.os-table td { padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--os-line); vertical-align: top; overflow-wrap: anywhere; }
+.os-table tbody tr:not(.os-br):nth-child(odd) td { background: var(--gray-50); }
+.os-table .m, .os-when b, .os-pz, .os-stats b { font-variant-numeric: tabular-nums; }
 .os-table .m { text-align: left; font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
-.os-br td { padding: var(--space-2) var(--space-2); background: var(--os-br); border-bottom: 1px solid var(--gray-200); border-top: 8px solid var(--white); }
-.os-br b { font-size: var(--text-table); color: var(--os-blue); }
-.os-br span { margin-inline-start: var(--space-3); font-size: var(--text-micro); color: var(--os-sub); }
+.os-table .c { text-align: center; }
+
+/* סניף: שורה אחת – השם בולט, והסיכום שלו לידו */
+.os-br td { padding: var(--space-1) var(--space-2); background: var(--os-br); border-top: 6px solid var(--white); border-bottom: 2px solid var(--os-blue); }
 .os-table tbody:first-of-type .os-br td { border-top: 0; }
-.os-when span { display: block; font-size: 11.5px; color: var(--os-sub); white-space: nowrap; }
-.os-when b { font-size: var(--text-table); font-family: var(--font-mono); }
-.os-table td > b { display: block; }
-.os-sub { display: block; color: var(--os-sub); font-size: var(--text-micro); }
-.os-items { font-size: var(--text-micro); }
-.os-cat { display: flex; gap: var(--space-2); }
-.os-cat + .os-cat { margin-top: 2px; }
-.os-cat > b { flex: none; min-width: 74px; color: var(--os-blue); }
-.os-type { display: block; }
-.os-note { font-size: var(--text-micro); white-space: pre-line; }
-.os-tag { display: inline-block; margin-bottom: 2px; padding: 0 var(--space-2); font-size: var(--text-micro); font-weight: 600; }
+.os-br b { font-size: var(--text-section); font-weight: 600; color: var(--os-blue); }
+.os-br span { margin-inline-start: var(--space-3); font-size: var(--text-label); color: var(--os-sub); }
+
+.os-when b { display: block; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); color: var(--os-blue); }
+.os-when span { display: block; font-size: var(--text-label); color: var(--os-sub); white-space: nowrap; }
+.os-pz { text-align: center; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); }
+.os-pz span { display: inline-block; min-width: 40px; padding: 0 var(--space-1); background: var(--os-blue); color: var(--white); }
+.os-cust > b { font-weight: 600; }
+.os-sub { display: block; color: var(--os-sub); font-size: var(--text-label); }
+.os-type b { font-weight: 600; }
+.os-type > b { color: var(--os-blue); }
+.os-extra { font-size: var(--text-table); }
+.os-extra span + span { margin-inline-start: var(--space-3); }
+.os-extra b { font-weight: 600; color: var(--os-blue); }
+.os-note { margin: 2px 0 0; padding: 1px var(--space-2); background: var(--os-br); font-size: var(--text-table); font-weight: 600; white-space: pre-line; }
+.os-dlv { font-size: var(--text-table); }
+.os-dlv b { font-weight: 600; }
+.os-tag { display: inline-block; margin-inline-end: var(--space-1); padding: 0 var(--space-2); font-size: var(--text-micro); font-weight: 600; }
 .os-tag--new { background: var(--ok-bg); color: var(--ok-fg); }
 .os-tag--changed { background: var(--urgent-bg); color: var(--urgent-fg); }
 .os-foot { margin: var(--space-2) 0 0; font-size: var(--text-micro); color: var(--os-sub); text-align: center; }
@@ -71,14 +82,3 @@
   .ops-card__actions { margin-inline-start: 0; width: 100%; }
   .ops-card__actions .btn { flex: 1; }
 }
-
-/* סידור: שם הסניף במרכז שורת הכותרת, שעה וכמות פיצות בולטות בכל הזמנה */
-.os-br td { text-align: center; padding: var(--space-2) var(--space-2); }
-.os-br b { display: block; font-size: var(--text-card-title); letter-spacing: .01em; }
-.os-br span { display: block; margin: 1px 0 0; }
-.os-table .c-when { width: 86px; }
-.os-when b { font-size: var(--text-card-title); font-weight: 600; color: var(--os-blue); }
-.os-pz { display: inline-block; margin-top: var(--space-1); padding: 1px var(--space-2); background: var(--os-blue); color: var(--white); font-style: normal; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
-.os-pz bdi { font-family: var(--font-mono); }
-.os-table tbody tr:not(.os-br):nth-child(odd) td { background: var(--gray-50); }
-.os-cat > b { font-weight: 600; }

@@ -1,5 +1,5 @@
 /* סיכום לתפעול: בוחרים תאריכים (מחר / סופ"ש / טווח) ומקבלים דף מסודר לכל אשכול – סניף ← יום ושעה, פירוט מלא של כל הזמנה.
-   הדף בנוי לצילום מסך או ל-PDF (עמוד אחד לאשכול). נכנסות רק הזמנות שהלקוח אישר; מה שעוד ממתין לאישור הלקוח מוצג באדום למעלה. */
+   הדף בנוי לצילום מסך או ל-PDF – כתב גדול ושורות צפופות, עמוד אחד לאשכול. נכנסות רק הזמנות שהלקוח אישר; מה שעוד ממתין לאישור הלקוח מוצג באדום למעלה. */
 import { forwardRef, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AlertTriangle, Check, Download, Send } from 'lucide-react';
 import { useStore } from '../../data/store';
@@ -7,7 +7,7 @@ import { usePanel } from '../../app/PanelContext';
 import { Button, EmptyState } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
-import { OTHER, categoryOf, groupItems, itemsText, typeText, type Order } from '../../data/types';
+import { OTHER, PIZZA, categoryOf, groupItems, itemsText, typeText, type Order } from '../../data/types';
 import {
   amountIn, awaitingCustomer, diffSince, groupByCluster, inRange, inSummary, markOpsSent, pizzasIn, tomorrowRange, useOpsSends, weekendRange,
   type ClusterGroup, type OpsSend,
@@ -147,7 +147,7 @@ export function OpsSummaryPage() {
   );
 }
 
-/* הדף עצמו – רוחב קבוע (כמו A4 לרוחב), כדי שצילום מסך ו-PDF ייראו אותו דבר */
+/* הדף עצמו – רוחב קבוע, כדי שצילום מסך ו-PDF ייראו אותו דבר */
 const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: string; now: Date; mark: Map<number, 'new' | 'changed'>; removed: string[] }>(
   function OpsSheet({ c, from, to, now, mark, removed }, ref) {
     const multiDay = from !== to;
@@ -168,8 +168,8 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
         </header>
         {removed.length > 0 && <p className="os-removed">ירדו מהסיכום מאז השליחה הקודמת (בוטלו, נסגרו או הוזזו): {removed.join(' · ')}</p>}
         <table className="os-table">
-          <colgroup><col className="c-when" /><col className="c-cust" /><col className="c-items" /><col className="c-dlv" /><col className="c-sum" /><col className="c-note" /></colgroup>
-          <thead><tr><th>{multiDay ? 'יום ושעה' : 'שעה'}</th><th>לקוח ואיש קשר</th><th>פירוט ההזמנה</th><th>אספקה</th><th className="m">סכום</th><th>הערות לסניף</th></tr></thead>
+          <colgroup><col className="c-when" /><col className="c-pz" /><col className="c-cust" /><col className="c-items" /><col className="c-dlv" /><col className="c-sum" /></colgroup>
+          <thead><tr><th scope="col">{multiDay ? 'יום ושעה' : 'שעה'}</th><th scope="col" className="c">פיצות</th><th scope="col">לקוח ואיש קשר</th><th scope="col">פירוט ההזמנה והערות לסניף</th><th scope="col">אספקה</th><th scope="col" className="m">סכום</th></tr></thead>
           {c.branches.map((b) => (
             <tbody key={b.name}>
               <tr className="os-br"><td colSpan={6}><b>{b.name}</b><span>{b.orders.length} {b.orders.length === 1 ? 'הזמנה' : 'הזמנות'} · {pizzasIn(b.orders)} פיצות · <Ltr>{fmtMoney(amountIn(b.orders))}</Ltr></span></td></tr>
@@ -187,38 +187,45 @@ function Stat({ n, l }: { n: ReactNode; l: string }) {
 }
 
 function OrderRow({ o, multiDay, mark }: { o: Order; multiDay: boolean; mark?: 'new' | 'changed' }) {
-  const contact = [o.contactName?.trim(), o.contactPhone?.trim() && fmtPhone(o.contactPhone.trim())].filter(Boolean);
+  const pz = pizzasIn([o]);
+  const name = o.contactName?.trim(), phone = o.contactPhone?.trim(), note = o.instructions?.trim();
   return (
     <tr className={mark ? `is-${mark}` : ''}>
-      <td className="os-when">{multiDay && <span>{weekday(o.date)} <Ltr>{dm(o.date)}</Ltr></span>}<b><Ltr>{o.time}</Ltr></b>{pizzasIn([o]) > 0 && <em className="os-pz"><Ltr>{pizzasIn([o])}</Ltr> פיצות</em>}</td>
-      <td>
+      <td className="os-when"><b><Ltr>{o.time}</Ltr></b>{multiDay && <span>{weekday(o.date)} <Ltr>{dm(o.date)}</Ltr></span>}</td>
+      <td className="os-pz">{pz > 0 && <span><Ltr>{pz}</Ltr></span>}</td>
+      <td className="os-cust">
         {mark && <span className={`os-tag os-tag--${mark}`}>{mark === 'new' ? 'חדש' : 'עודכן'}</span>}
         <b>{o.customerName}</b>
-        {contact.length > 0 && <span className="os-sub">{o.contactName?.trim()}{contact.length > 1 && ' · '}{o.contactPhone?.trim() && <Ltr>{fmtPhone(o.contactPhone.trim())}</Ltr>}</span>}
+        {(name || phone) && <span className="os-sub">{name}{name && phone && ' · '}{phone && <Ltr>{fmtPhone(phone)}</Ltr>}</span>}
       </td>
-      <td className="os-items"><Items o={o} /></td>
-      <td>{o.delivery === 'pickup' ? <b>איסוף עצמי</b> : <><b>משלוח</b>{o.address?.trim() && <span className="os-sub">{o.address.trim()}</span>}</>}</td>
+      <td className="os-items"><Items o={o} />{note && <p className="os-note">הערה: {note}</p>}</td>
+      <td className="os-dlv">{o.delivery === 'pickup' ? <b>איסוף עצמי</b> : (o.address?.trim() || <b>משלוח</b>)}</td>
       <td className="m"><Ltr>{fmtMoney(o.amount)}</Ltr></td>
-      <td className="os-note">{o.instructions?.trim() || ''}</td>
     </tr>
   );
 }
 
-/* פירוט מלא: שורה לכל קטגוריה, ובה כל סוג עם התוספות והחלוקה – כמו בקובץ ההזמנה */
+/* פירוט מלא, צפוף: שורה לכל סוג פיצה (עם התוספות והחלוקה), וכל שאר הקטגוריות יחד בשורה אחת */
 function Items({ o }: { o: Order }) {
   if (!o.items.length) return <>{o.contents?.trim() || '—'}</>;
   if (!o.items.some((i) => categoryOf(i) !== OTHER)) return <>{itemsText(o.items)}</>;
+  const groups = groupItems(o.items);
+  const rest = groups.filter((g) => g.category !== PIZZA);
   return (
     <>
-      {groupItems(o.items).map((g) => (
-        <div key={g.category} className="os-cat">
-          <b>{g.category} <Ltr>{g.qty}</Ltr></b>
-          {/* מוצרים בלי פירוט ("6 סופלה · 4 לחם שום") – באותה שורה; עם תוספות / חלוקה – שורה לכל סוג */}
-          {g.types.some((t) => t.rows.some((r) => r.text))
-            ? <span>{g.types.map((t, i) => <span key={i} className="os-type">{typeText(t)}</span>)}</span>
-            : <span>{g.types.map(typeText).join(' · ')}</span>}
+      {groups.find((g) => g.category === PIZZA)?.types.map((t, i) => (
+        <div key={i} className="os-type">
+          <b>{t.qty} {t.name}</b>
+          {t.rows.length === 1
+            ? t.rows[0].text && <> — {t.rows[0].text}</>
+            : <> — {t.rows.map((r, j) => <span key={j}>{j > 0 && ' · '}<b>{r.qty}</b> {r.text || 'רגיל'}</span>)}</>}
         </div>
       ))}
+      {rest.length > 0 && (
+        <div className="os-extra">
+          {rest.map((g) => <span key={g.category}><b>{g.category}:</b> {g.types.map(typeText).join(' · ')} </span>)}
+        </div>
+      )}
     </>
   );
 }
