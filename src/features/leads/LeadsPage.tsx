@@ -143,9 +143,10 @@ function Board({ leads, today, onMove, onOpen }: { leads: Lead[]; today: string;
                     onDragEnd={() => { setDragId(null); setOver(null); }}>
                     <button className="ldcard__main" onClick={() => onOpen(l)} aria-label={`${l.name}, ${STAGE_LABEL[l.stage]}${l.nextStep ? `, צעד הבא: ${l.nextStep.text}` : ''}`}>
                       <span className="ldcard__name">{l.name}</span>
-                      <span className="ldcard__meta">
-                        {[fieldLabel(l.field), deciderOf(l)?.name].filter(Boolean).join(' · ')}
-                        {l.potentialAmount > 0 && <> · <Ltr>{fmtMoney(l.potentialAmount)}</Ltr> בחודש</>}
+                      <span className="ldcard__meta dotlist">
+                        {fieldLabel(l.field) && <span>{fieldLabel(l.field)}</span>}
+                        {deciderOf(l)?.name && <span>{deciderOf(l)!.name}</span>}
+                        {l.potentialAmount > 0 && <span><Ltr>{fmtMoney(l.potentialAmount)}</Ltr> בחודש</span>}
                       </span>
                       <StepLine lead={l} today={today} />
                     </button>
@@ -153,15 +154,18 @@ function Board({ leads, today, onMove, onOpen }: { leads: Lead[]; today: string;
                   </article>
                 </li>
               ))}
-              {list.length === 0 && <li className="lcol__empty">אפשר לגרור לכאן</li>}
+              {list.length === 0 && <li className="lcol__empty">{dragId ? 'שחררו כאן' : 'אין לידים בשלב'}</li>}
             </ul>
           </section>
         );
       })}
-      <div className="lboard__ends">
-        <div className={`lend lend--won ${over === 'won' ? 'is-over' : ''}`} {...zone('won')}><UserCheck size={16} aria-hidden="true" /> לקוח פעיל<small>גרירה לכאן פותחת "הפיכה ללקוח"</small></div>
-        <div className={`lend lend--lost ${over === 'lost' ? 'is-over' : ''}`} {...zone('lost')}><XCircle size={16} aria-hidden="true" /> לא רלוונטי<small>עם סיבה</small></div>
-      </div>
+      {/* יעדי הסיום מופיעים רק בזמן גרירה, כמגש צף בתחתית – בלי לתפוס עמודה קבועה. בלי עכבר: תפריט השלב בכל כרטיס */}
+      {dragId && (
+        <div className="lboard__ends" aria-hidden="true">
+          <div className={`lend lend--won ${over === 'won' ? 'is-over' : ''}`} {...zone('won')}><UserCheck size={16} aria-hidden="true" /> לקוח פעיל<small>פותח "הפיכה ללקוח"</small></div>
+          <div className={`lend lend--lost ${over === 'lost' ? 'is-over' : ''}`} {...zone('lost')}><XCircle size={16} aria-hidden="true" /> לא רלוונטי<small>עם סיבה</small></div>
+        </div>
+      )}
     </div>
   );
 }
@@ -241,26 +245,26 @@ function LeadTable({ leads, today, onOpen }: { leads: Lead[]; today: string; onO
         <div className="otable-wrap">
           <table className="otable otable--dense ltable">
             <caption className="sr-only">לקוחות פוטנציאליים</caption>
-            <thead><tr><th>שם</th><th>שלב</th><th>תחום</th><th>אזור</th><th>מקור</th><th>איש קשר</th><th className="num">פוטנציאל בחודש</th><th>צעד הבא</th><th>מטפל</th></tr></thead>
+            <thead><tr><th>שם</th><th className="c-step">צעד הבא</th><th>שלב</th><th>איש קשר</th><th className="num">פוטנציאל בחודש</th><th>מטפל</th></tr></thead>
             <tbody>
               {rows.map((l) => {
                 const d = deciderOf(l);
                 return (
-                  <tr key={l.id} className="orow" tabIndex={0} onClick={() => onOpen(l)} aria-label={`${l.name}, ${STAGE_LABEL[l.stage]}. Enter לפתיחה`}
+                  <tr key={l.id} className="orow" tabIndex={0} onClick={() => onOpen(l)} aria-label={`${l.name}, ${STAGE_LABEL[l.stage]}${isOpen(l) && l.nextStep ? `, צעד הבא: ${l.nextStep.text}, ${l.nextStep.due < today ? 'באיחור' : l.nextStep.due === today ? 'היום' : fmtDate(l.nextStep.due)}` : ''}. Enter לפתיחה`}
                     onKeyDown={(e) => {
                       if (e.target !== e.currentTarget) return;
                       if (e.key === 'Enter') { e.preventDefault(); onOpen(l); }
                       if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
                       if (e.key === 'ArrowUp') { e.preventDefault(); (e.currentTarget.previousElementSibling as HTMLElement | null)?.focus(); }
                     }}>
-                    <td className="strong">{l.name}</td>
-                    <td><StagePill stage={l.stage} /></td>
-                    <td>{label('leadFields', l.field) || <span className="muted">—</span>}</td>
-                    <td>{l.area || <span className="muted">—</span>}</td>
-                    <td>{label('leadSources', l.source) || <span className="muted">—</span>}</td>
-                    <td>{d ? <>{d.name}{d.phone && <span className="muted"> · <Ltr>{fmtPhone(d.phone)}</Ltr></span>}</> : <span className="muted">—</span>}</td>
-                    <td className="num">{l.potentialAmount ? <Ltr>{fmtMoney(l.potentialAmount)}</Ltr> : <span className="muted">—</span>}</td>
+                    <td className="c-name">
+                      <span className="strong">{l.name}</span>
+                      {(label('leadFields', l.field) || l.area) && <span className="ltable__sub dotlist">{label('leadFields', l.field) && <span>{label('leadFields', l.field)}</span>}{l.area && <span>{l.area}</span>}</span>}
+                    </td>
                     <td className="c-step">{isOpen(l) ? <StepLine lead={l} today={today} /> : l.stage === 'lost' ? <span className="muted">{l.lostReason}</span> : <span className="muted">הפך ללקוח</span>}</td>
+                    <td><StagePill stage={l.stage} /></td>
+                    <td className="c-contact">{d ? <><span>{d.name}</span>{d.phone && <span className="ltable__sub"><Ltr>{fmtPhone(d.phone)}</Ltr></span>}</> : <span className="muted">—</span>}</td>
+                    <td className="num">{l.potentialAmount ? <Ltr>{fmtMoney(l.potentialAmount)}</Ltr> : <span className="muted">—</span>}</td>
                     <td>{l.ownerName}</td>
                   </tr>
                 );

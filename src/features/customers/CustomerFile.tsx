@@ -1,6 +1,6 @@
 /* תיק לקוח במסך מלא (אפיון 6.6) – המקום לראות את כל התמונה על הלקוח. */
-import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { motion, useReducedMotion } from 'motion/react';
 import {
@@ -15,7 +15,7 @@ import { useBranches, useClusters } from '../../data/branches';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
 import { useCustomerOrders } from '../../data/orders';
-import { SHORT_STATUS, isExpired, useQuotes } from '../../data/quotes';
+import { SHORT_STATUS, isExpired, useQuotes, type Quote } from '../../data/quotes';
 import '../quotes/quotes.css';
 import { useStore, type OrderView } from '../../data/store';
 import { CATEGORIES, CLOSED } from '../../data/types';
@@ -36,10 +36,28 @@ import '../pages.css';
 import './CustomerFile.css';
 
 type Tab = 'overview' | 'orders' | 'quotes' | 'monthly' | 'prices' | 'payment' | 'contacts' | 'docs' | 'activity' | 'history';
-const TABS: [Tab, string][] = [
-  ['overview', 'סקירה'], ['orders', 'הזמנות'], ['quotes', 'הצעות מחיר'], ['monthly', 'סיכומים חודשיים'], ['prices', 'מחירון'], ['payment', 'תשלום והקפה'],
-  ['contacts', 'אנשי קשר וכתובות'], ['docs', 'מסמכים'], ['activity', 'פעילות'], ['history', 'היסטוריה'],
+/* עשר הלשוניות בארבע קבוצות. לכל לשונית כתובת משלה (?tab=), כך ש"אחורה" וקישור לעמית מגיעים לאותו מקום */
+type Group = { key: string; label: string; tabs: [Tab, string][] };
+const GROUPS: Group[] = [
+  { key: 'overview', label: 'סקירה', tabs: [['overview', 'סקירה']] },
+  { key: 'orders', label: 'הזמנות והצעות', tabs: [['orders', 'הזמנות'], ['quotes', 'הצעות מחיר'], ['monthly', 'סיכום חודשי']] },
+  { key: 'details', label: 'פרטים ומחירון', tabs: [['contacts', 'אנשי קשר וכתובות'], ['prices', 'מחירון'], ['payment', 'תשלום והקפה']] },
+  { key: 'activity', label: 'פעילות', tabs: [['activity', 'הערות ומשימות'], ['docs', 'מסמכים'], ['history', 'היסטוריית שינויים']] },
 ];
+const ALL_TABS = GROUPS.flatMap((g) => g.tabs.map(([t]) => t));
+const groupOf = (t: Tab) => GROUPS.find((g) => g.tabs.some(([x]) => x === t))!;
+
+/* חיצים, Home ו-End בין לשוניות (RTL: חץ שמאלה = הבאה). הפוקוס זז עם הבחירה */
+function tabKeys<T>(e: KeyboardEvent<HTMLElement>, keys: T[], cur: T, pick: (t: T) => void) {
+  const i = keys.indexOf(cur);
+  const to = e.key === 'ArrowLeft' ? (i + 1) % keys.length : e.key === 'ArrowRight' ? (i - 1 + keys.length) % keys.length
+    : e.key === 'Home' ? 0 : e.key === 'End' ? keys.length - 1 : -1;
+  if (to < 0) return;
+  e.preventDefault();
+  pick(keys[to]);
+  const list = e.currentTarget;
+  requestAnimationFrame(() => (list.querySelectorAll<HTMLElement>('[role="tab"]')[to])?.focus());
+}
 
 export function CustomerFile() {
   const { id = '' } = useParams();
@@ -60,7 +78,11 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
   const reduce = useReducedMotion();
   const { lists } = useLists();
   const { items: priceLists } = usePriceLists();
-  const [tab, setTab] = useState<Tab>('overview');
+  const [params, setParams] = useSearchParams();
+  const raw = params.get('tab') as Tab | null;
+  const tab: Tab = raw && ALL_TABS.includes(raw) ? raw : 'overview';
+  const setTab = (t: Tab) => { const p = new URLSearchParams(params); if (t === 'overview') p.delete('tab'); else p.set('tab', t); setParams(p, { replace: true }); };
+  const group = groupOf(tab);
   const [editing, setEditing] = useState(false);
   const [merging, setMerging] = useState(false);
   const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -70,8 +92,11 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
   const sharing = c.accountPhone ? all.filter((x) => x.id !== c.id && x.status !== 'merged' && x.accountPhone === c.accountPhone) : [];
 
   const { now, openNewOrder, thresholds } = useStore();
-  const { orders: raw, loading: ordersLoading } = useCustomerOrders(c.id);
-  const corders = useMemo<OrderView[]>(() => raw.map((o) => { const issues = issuesFor(o, now, thresholds); return { ...o, issues, health: healthOf(issues) }; }), [raw, now, thresholds]);
+  const { orders: rawOrders, loading: ordersLoading } = useCustomerOrders(c.id);
+  const quotes = useQuotes({ customerId: c.id });
+  const corders = useMemo<OrderView[]>(() => rawOrders.map((o) => { const issues = issuesFor(o, now, thresholds); return { ...o, issues, health: healthOf(issues) }; }), [rawOrders, now, thresholds]);
+  const openCount = corders.filter((o) => !CLOSED.includes(o.status)).length;
+  const countOf = (t: Tab) => (t === 'orders' && !ordersLoading ? openCount : t === 'quotes' && !quotes.loading ? quotes.items.length : null);
 
   const openNote = () => { setTab('activity'); setTimeout(() => noteRef.current?.focus(), 50); };
 
@@ -131,25 +156,42 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
         </div>
 
         {c.instructions && (
-          <div className="cfile__banner" role="note"><b>הנחיות קבועות:</b> {c.instructions}</div>
+          <div className="cfile__note" role="note"><b>הנחיות קבועות</b><span>{c.instructions}</span></div>
         )}
       </header>
 
       {/* ---------- טאבים ---------- */}
-      <nav className="tabs cfile__tabs" role="tablist" aria-label="תיק לקוח">
-        {TABS.map(([k, label]) => (
-          <button key={k} role="tab" aria-selected={tab === k} className={`tab ${tab === k ? 'is-on' : ''}`} onClick={() => setTab(k)}>
-            {label}
-            {k === 'contacts' && <span className="tab__count"><Ltr>{c.contacts.length + c.addresses.length}</Ltr></span>}
-          </button>
-        ))}
-      </nav>
+      <div className="tabs cfile__tabs" role="tablist" aria-label="תיק לקוח" onKeyDown={(e) => tabKeys(e, GROUPS, group, (g) => setTab(g.tabs[0][0]))}>
+        {GROUPS.map((g) => {
+          const on = g === group;
+          const n = g.key === 'orders' ? countOf('orders') : null;
+          return (
+            <button key={g.key} id={`cf-g-${g.key}`} role="tab" aria-selected={on} aria-controls="cf-panel" tabIndex={on ? 0 : -1} className={`tab ${on ? 'is-on' : ''}`} onClick={() => !on && setTab(g.tabs[0][0])}>
+              {g.label}
+              {n ? <span className="tab__count" aria-label={`${n} פתוחות`}><Ltr>{n}</Ltr></span> : null}
+            </button>
+          );
+        })}
+      </div>
+
+      {group.tabs.length > 1 && (
+        <div className="subtabs" role="tablist" aria-label={group.label} onKeyDown={(e) => tabKeys(e, group.tabs.map(([t]) => t), tab, setTab)}>
+          {group.tabs.map(([k, label]) => {
+            const n = countOf(k);
+            return (
+              <button key={k} id={`cf-t-${k}`} role="tab" aria-selected={tab === k} aria-controls="cf-panel" tabIndex={tab === k ? 0 : -1} className={`subtab ${tab === k ? 'is-on' : ''}`} onClick={() => setTab(k)}>
+                {label}{n !== null && <span className="subtab__n"><Ltr>{n}</Ltr></span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* החלפת טאב: הופעה רכה בלבד – התוכן לא תלוי בסיום אנימציית יציאה */}
-      <motion.div key={tab} role="tabpanel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.16 }}>
+      <motion.div key={tab} id="cf-panel" role="tabpanel" aria-labelledby={group.tabs.length > 1 ? `cf-t-${tab}` : `cf-g-${group.key}`} className="cfile__panel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.16 }}>
           {tab === 'overview' && <Overview c={c} onTab={setTab} orders={corders} loading={ordersLoading} />}
           {tab === 'orders' && <OrdersTab c={c} orders={corders} loading={ordersLoading} />}
-          {tab === 'quotes' && <QuotesTab c={c} />}
+          {tab === 'quotes' && <QuotesTab c={c} items={quotes.items} loading={quotes.loading} />}
           {tab === 'monthly' && <MonthlyTab orders={corders} loading={ordersLoading} />}
           {tab === 'prices' && <PricesTab c={c} />}
           {tab === 'payment' && <PaymentTab c={c} sharing={sharing} method={method} onEdit={() => setEditing(true)} />}
@@ -217,7 +259,7 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
       <p className="ov__note muted">לפי תאריך אספקה וסכום Q, עד היום, בלי הזמנות שבוטלו. "פתוח לתשלום" – מכל החודשים.</p>
       {!loading && orders.length > 0 && (
         <section className="card ov__chart" aria-label="סך לפי חודש – 12 חודשים">
-          <div className="card__head"><h2 className="card__title">12 חודשים אחרונים</h2><button className="link" onClick={() => onTab('monthly')}>לסיכומים החודשיים</button></div>
+          <div className="card__head"><h2 className="card__title">12 חודשים אחרונים</h2><button className="link" onClick={() => onTab('monthly')}>לסיכום החודשי</button></div>
           <BarChart kind="time" money data={lastMonths(orders, now).reverse().map((m) => ({ id: m.key, label: m.label, value: m.sum }))} onPick={() => onTab('monthly')} />
         </section>
       )}
@@ -266,16 +308,28 @@ function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean
   const rows = lastMonths(orders, now);
   const total = rows.reduce((t, r) => ({ count: t.count + r.count, sum: t.sum + r.sum, cancelled: t.cancelled + r.cancelled, gaps: t.gaps + r.gaps, unpaid: t.unpaid + r.unpaid }), { count: 0, sum: 0, cancelled: 0, gaps: 0, unpaid: 0 });
   const picked = rows.find((r) => r.key === open);
+  // חודשים רצופים בלי אף הזמנה (גם לא מבוטלת) מקופלים לשורה אחת
+  const runs = rows.reduce<{ empty: boolean; rows: MonthRow[] }[]>((acc, r) => {
+    const empty = r.orders.length === 0;
+    const last = acc[acc.length - 1];
+    if (last && last.empty && empty) last.rows.push(r); else acc.push({ empty, rows: [r] });
+    return acc;
+  }, []);
   return (
     <div className="card monthly">
-      <div className="card__head"><h2 className="card__title">סיכומים חודשיים</h2><span className="muted monthly__hint">12 חודשים · לפי תאריך אספקה וסכום Q · החודש הנוכחי עד היום · לחיצה על חודש מציגה את ההזמנות</span></div>
+      <div className="card__head"><h2 className="card__title">סיכום חודשי</h2><span className="muted monthly__hint">12 חודשים · לפי תאריך אספקה וסכום Q · החודש הנוכחי עד היום</span></div>
       <div className="report__scroll">
         <table className="rtable">
           <caption className="sr-only">סיכום חודשי ל-12 החודשים האחרונים</caption>
-          <thead><tr><th>חודש</th><th className="num">הזמנות</th><th className="num">סך</th><th className="num">ממוצע</th><th className="num">ביטולים</th><th className="num">באיחור</th><th className="num">חלקית</th><th className="num">פערי Q</th><th className="num">פתוח לתשלום</th><th>מצב חודש</th></tr></thead>
+          <thead><tr><th>חודש</th><th className="num">הזמנות</th><th className="num">סך</th><th className="num">ממוצע</th><th className="num">ביטולים</th><th className="num">באיחור</th><th className="num">חלקית</th><th className="num">פערי Q</th><th className="num">פתוח לתשלום</th></tr></thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.key} className={open === r.key ? 'is-picked' : ''} tabIndex={0} onClick={() => setOpen(open === r.key ? null : r.key)} onKeyDown={(e) => { if (e.key === 'Enter') setOpen(open === r.key ? null : r.key); }}>
+            {runs.map((run) => run.empty ? (
+              <tr key={run.rows[0].key} className="monthly__empty">
+                <td colSpan={9}>{run.rows.length === 1 ? <>אין הזמנות ב-<Ltr>{run.rows[0].label}</Ltr></> : <>אין הזמנות מ-<Ltr>{run.rows[run.rows.length - 1].label}</Ltr> עד <Ltr>{run.rows[0].label}</Ltr></>}</td>
+              </tr>
+            ) : run.rows.map((r) => (
+              <tr key={r.key} className={open === r.key ? 'is-picked' : ''} tabIndex={0} aria-expanded={open === r.key} aria-label={`${r.label}: ${r.count} הזמנות. Enter להצגת ההזמנות`}
+                onClick={() => setOpen(open === r.key ? null : r.key)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(open === r.key ? null : r.key); } }}>
                 <td><Ltr>{r.label}</Ltr></td>
                 <td className="num"><Ltr>{r.count}</Ltr></td>
                 <td className="num"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
@@ -285,11 +339,10 @@ function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean
                 <td className="num"><Ltr>{r.orders.filter((o) => o.status === 'partial').length}</Ltr></td>
                 <td className={`num ${r.gaps ? 'monthly__warn' : ''}`}><Ltr>{r.gaps}</Ltr></td>
                 <td className={`num ${r.unpaid ? 'monthly__warn' : ''}`}><Ltr>{fmtMoney(r.unpaid)}</Ltr></td>
-                <td><span className="muted" title="סגירת חודש – שלב 9">פתוח</span></td>
               </tr>
-            ))}
+            )))}
           </tbody>
-          <tfoot><tr><td>סה"כ</td><td className="num"><Ltr>{total.count}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.sum)}</Ltr></td><td className="num"><Ltr>{total.count ? fmtMoney(Math.round(total.sum / total.count)) : '—'}</Ltr></td><td className="num"><Ltr>{total.cancelled}</Ltr></td><td className="num"><Ltr>{lateOf(rows.flatMap((r) => r.orders))}</Ltr></td><td className="num"><Ltr>{rows.flatMap((r) => r.orders).filter((o) => o.status === 'partial').length}</Ltr></td><td className="num"><Ltr>{total.gaps}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.unpaid)}</Ltr></td><td /></tr></tfoot>
+          <tfoot><tr><td>סה"כ</td><td className="num"><Ltr>{total.count}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.sum)}</Ltr></td><td className="num"><Ltr>{total.count ? fmtMoney(Math.round(total.sum / total.count)) : '—'}</Ltr></td><td className="num"><Ltr>{total.cancelled}</Ltr></td><td className="num"><Ltr>{lateOf(rows.flatMap((r) => r.orders))}</Ltr></td><td className="num"><Ltr>{rows.flatMap((r) => r.orders).filter((o) => o.status === 'partial').length}</Ltr></td><td className="num"><Ltr>{total.gaps}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.unpaid)}</Ltr></td></tr></tfoot>
         </table>
       </div>
       {picked && (
@@ -350,16 +403,14 @@ function missingOf(c: Customer): [string, Tab][] {
 }
 
 /* ---------- הצעות מחיר של הלקוח ---------- */
-function QuotesTab({ c }: { c: Customer }) {
+function QuotesTab({ c, items, loading }: { c: Customer; items: Quote[]; loading: boolean }) {
   const nav = useNavigate();
   const { now } = useStore();
-  const { items, loading } = useQuotes({ customerId: c.id });
   const today = toISODate(now);
   return (
     <div className="card">
       <div className="card__head">
         <h2 className="card__title">הצעות מחיר</h2>
-        <span className="muted"><Ltr>{items.length}</Ltr></span>
         <Button size="sm" className="card__head-end" icon={<Plus size={16} />} onClick={() => nav(`/quotes/new?customer=${c.id}`)}>הצעה חדשה</Button>
       </div>
       {loading ? <div className="loading-rows"><Skeleton h={30} /></div> : items.length === 0 ? <p className="muted cfile__plhint">עוד אין הצעות מחיר ללקוח. הצעה חדשה מכאן כבר מקושרת ללקוח ולמחירון שלו.</p> : (

@@ -1,13 +1,33 @@
 .cust-skel { display: grid; gap: var(--space-3); padding: var(--space-4); }
-.cust-table td:last-child, .cust-table th:last-child { position: static; box-shadow: none; width: 40px; }
+/* העמודה האחרונה ("פרטים חסרים") לא נדבקת לקצה כמו עמודת הפעולות בטבלת ההזמנות */
+.cust-table td:last-child, .cust-table th:last-child { position: static; box-shadow: none; }
+.cust-table .c-po { width: 64px; text-align: center; }
+.cust-table th.c-po abbr { text-decoration: none; cursor: help; }
+.cust-table .c-gaps { width: 1%; min-width: 168px; }
 .is-inactive-row td { color: var(--gray-600); }
 .cust-inactive { margin-inline-start: var(--space-2); }
 .ctype { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; }
 /* קבוע הוא ברירת המחדל – טקסט שקט; מזדמן מקבל תג, כי הוא החריג */
 .ctype--regular { padding: 0; color: var(--gray-600); }
 .ctype--occasional { background: var(--gray-100); color: var(--gray-700); }
-.shared-tag { margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 500; }
-.po-tag { display: inline-grid; place-items: center; color: var(--brand-600); }
+.shared-tag { margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; }
+.po-tag { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--brand-700); vertical-align: middle; }
+.po-tag__m { display: none; font-size: var(--text-label); font-weight: 500; }
 .tablebar .seg button { display: inline-flex; align-items: center; gap: var(--space-2); }
-.cust-gaps { display: flex; flex-wrap: wrap; gap: var(--space-1); white-space: normal; }
-.cust-gaps .mgaps__tag { padding: 2px var(--space-2); border-radius: var(--radius-tag); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 500; }
+
+/* פרטים חסרים – נקודת "חסר" (Health dot), הפרט הראשון ו"+N" */
+.cgaps { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-label); font-weight: 500; color: var(--missing-fg); white-space: nowrap; cursor: default; }
+.cgaps::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--missing-edge); }
+.cgaps__more { color: var(--gray-600); font-weight: 400; margin-inline-start: calc(-1 * var(--space-1)); }
+.cgaps__m, .cgaps__all { display: none; }
+
+@media (max-width: 700px) {
+  /* בכרטיס בטלפון: "חסר: ח.פ, הנחיות חיוב" במלואו, ות. רכש במילים – בלי אייקון שאין לו תווית */
+  .cust-table .c-po, .cust-table .c-gaps { width: auto; min-width: 0; text-align: start; }
+  .cust-table td.c-po:empty, .cust-table td.c-gaps:empty { display: none; }
+  .cust-table td.c-gaps { flex-basis: 100%; }
+  .cgaps { white-space: normal; }
+  .cgaps__m, .cgaps__all { display: inline; }
+  .cgaps__more { display: none; }
+  .po-tag__m { display: inline; }
+}

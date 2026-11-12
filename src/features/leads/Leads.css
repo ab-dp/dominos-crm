@@ -13,12 +13,24 @@
 .lstepline svg { flex: none; align-self: center; color: var(--gray-600); }
 .lstepline__text { min-width: 0; }
 .lstepline__when { grid-column: 2; color: var(--gray-600); white-space: nowrap; font-weight: 500; }
-.ltable td.c-step { white-space: normal; min-width: 220px; max-width: 320px; overflow: visible; text-overflow: clip; }
+/* טבלה: "צעד הבא" היא העמודה החשובה – רוחב שמספיק לטקסט ולתאריך, עם שבירת שורות */
+.ltable .c-step { width: 34%; min-width: 240px; }
+.ltable td.c-step { white-space: normal; overflow: visible; text-overflow: clip; }
+.ltable td.c-name, .ltable td.c-contact { white-space: normal; }
+.ltable td.c-name > span, .ltable td.c-contact > span { display: block; }
+.ltable td.c-name > .dotlist { display: flex; }
+.ltable__sub { margin-top: 2px; font-size: var(--text-label); color: var(--gray-600); }
+
+/* רשימת פרטים עם מפריד שנוצר ב-CSS – בלי "·" תלוי כשהשורה נשברת או כשפרט חסר.
+   לכל פריט מפריד בתחילתו; הרשימה מוזזת ברוחב מפריד אחד וחותכת אותו, כך שהמפריד של הפריט הראשון בכל שורה לא נראה (RTL: תחילת השורה בימין) */
+.dotlist { --dot: 16px; display: flex; flex-wrap: wrap; margin-inline-start: calc(-1 * var(--dot)); clip-path: inset(0 var(--dot) 0 0); }
+.dotlist > span { position: relative; margin-inline-start: var(--dot); }
+.dotlist > span::before { content: "·"; position: absolute; inset-inline-start: calc(-1 * var(--dot)); width: var(--dot); text-align: center; color: var(--gray-400); }
 .lstepline--today .lstepline__when, .lstepline--today svg { color: var(--brand-700); font-weight: 500; }
 .lstepline--late .lstepline__when, .lstepline--late svg { color: var(--urgent-fg); font-weight: 500; }
 
 /* ---------- לוח ---------- */
-.lboard { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 180px; gap: var(--space-3); align-items: start; }
+.lboard { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); align-items: start; }
 .lcol { display: grid; gap: var(--space-2); min-height: 240px; padding: var(--space-3); border-radius: var(--radius-panel); background: var(--gray-50); box-shadow: inset 0 0 0 1px var(--gray-100); transition: box-shadow var(--dur-quick) var(--ease), background var(--dur-quick) var(--ease); }
 .lcol.is-over, .lend.is-over { background: var(--brand-50); box-shadow: inset 0 0 0 2px var(--brand-600); }
 .lcol__head { display: flex; align-items: baseline; gap: var(--space-2); padding: 2px var(--space-1) var(--space-1); }
@@ -37,11 +49,12 @@
 .ldcard__meta { font-size: var(--text-label); color: var(--gray-600); }
 .ldcard__menu { margin: var(--space-2) 0 0 var(--space-1); width: 28px; height: 28px; flex: none; }
 
-.lboard__ends { display: grid; gap: var(--space-3); }
-.lend { display: grid; justify-items: center; gap: var(--space-1); padding: var(--space-5) var(--space-3); border: 1px dashed var(--gray-300); border-radius: var(--radius-panel); text-align: center; font-size: var(--text-table); font-weight: 500; color: var(--gray-600); transition: background var(--dur-quick) var(--ease), box-shadow var(--dur-quick) var(--ease); }
+/* מגש היעדים: מופיע רק בזמן גרירה, צף בתחתית המסך */
+.lboard__ends { position: fixed; bottom: var(--space-5); left: calc((100vw - var(--side-w, 0px)) / 2); z-index: 30; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); width: min(520px, calc(100vw - 32px)); padding: var(--space-3); border-radius: var(--radius-panel); background: var(--white); box-shadow: var(--shadow-float); transform: translateX(-50%); animation: tray-in var(--dur-quick) var(--ease); }
+@keyframes tray-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.lend { display: grid; justify-items: center; gap: var(--space-1); padding: var(--space-4) var(--space-3); border: 1px dashed var(--brand-600); border-radius: var(--radius-panel); text-align: center; font-size: var(--text-table); font-weight: 500; color: var(--gray-600); transition: background var(--dur-quick) var(--ease), box-shadow var(--dur-quick) var(--ease); }
 .lend small { font-size: var(--text-micro); font-weight: 400; }
 .lend--won svg { color: var(--ok-fg); }
-.lboard.is-dragging .lend { border-color: var(--brand-600); color: var(--gray-900); }
 
 .menu__label { padding: var(--space-2) var(--space-3) var(--space-1); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 
@@ -61,17 +74,20 @@
 
 /* ---------- תיק ליד ---------- */
 .lfile__avatar { background: var(--brand-600); }
-.lsteps { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-1); flex-wrap: wrap; }
-.lsteps button { display: inline-flex; align-items: center; gap: var(--space-1); height: var(--control-sm); padding: 0 var(--space-4); border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); cursor: pointer; }
-.lsteps button:hover:not(:disabled) { border-color: var(--brand-600); color: var(--brand-800); }
-.lsteps .is-done button { background: var(--brand-50); border-color: var(--brand-100); color: var(--brand-800); }
-.lsteps .is-now button { background: var(--brand-600); border-color: var(--brand-600); color: var(--white); font-weight: 500; cursor: default; opacity: 1; }
-.lsteps__end { margin-inline-start: var(--space-2); padding-inline-start: var(--space-3); border-inline-start: 1px solid var(--gray-100); }
-.lsteps__end button { color: var(--ok-fg); }
+/* מסלול השלבים – לקריאה בלבד (לא כפתורים), כדי שלא יחזרו שלב בטעות */
+.lsteps-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.lsteps { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; flex-wrap: wrap; }
+.lsteps li { position: relative; display: inline-flex; align-items: center; gap: var(--space-1); height: var(--control-sm); padding: 0 var(--space-3); border-radius: var(--radius-tag); font-size: var(--text-label); font-weight: 500; color: var(--gray-500); }
+.lsteps li + li { margin-inline-start: var(--space-4); }
+.lsteps li + li::before { content: ""; position: absolute; top: 50%; inset-inline-start: calc(-1 * var(--space-4)); width: var(--space-4); height: 1px; background: var(--gray-200); }
+.lsteps .is-done { color: var(--brand-700); }
+.lsteps .is-done + li::before { background: var(--brand-100); }
+.lsteps .is-now { background: var(--brand-50); color: var(--brand-800); font-weight: 600; }
 
-.lnext { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--brand-50); }
+/* צעד הבא: ברוחב התוכן, והכפתור צמוד לתאריך ולא תקוע בקצה */
+.lnext { justify-self: start; display: flex; align-items: center; gap: var(--space-4); max-width: 100%; padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--brand-50); }
 .lnext > svg { color: var(--brand-700); flex: none; }
-.lnext > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.lnext > div { flex: 0 1 auto; min-width: 0; display: grid; gap: 2px; }
 .lnext .lstepline { font-size: var(--text-table); }
 .lnext.is-late { background: var(--urgent-bg); }
 .lnext.is-late > svg { color: var(--urgent-fg); }
@@ -110,17 +126,20 @@
 
 @media (max-width: 1100px) {
   .lboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lboard__ends { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
   .lfile__grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .lboard { grid-template-columns: 1fr; }
+  .lboard__ends { display: none; } /* גרירת HTML5 לא עובדת במגע – תפריט השלב בכרטיס */
+  .lnext { justify-self: stretch; flex-wrap: wrap; }
+  .lsteps li + li { margin-inline-start: 0; }
+  .lsteps li + li::before { display: none; }
   .lcol { min-height: 0; }
   .lact__grid { grid-template-columns: 1fr; }
   .ltoday__row { flex-wrap: wrap; }
   .ltoday__main { flex-basis: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .lcol, .ldcard, .lend { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .lcol, .ldcard, .lend { transition: none; } .lboard__ends { animation: none; } }
 .lnext .lstepline { display: grid; grid-template-columns: minmax(0, 1fr); }
 .lnext .lstepline svg { display: none; }
 .lnext .lstepline__when { grid-column: 1; }

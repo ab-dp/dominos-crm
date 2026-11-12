@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
-import { ArrowRight, CalendarClock, Check, Mail, MapPin, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon, RotateCcw, Star, Target, UserCheck, UserRound, XCircle } from 'lucide-react';
+import { ArrowRight, CalendarClock, Check, ChevronDown, Mail, MapPin, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon, RotateCcw, Star, Target, UserCheck, UserRound, XCircle } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { useBranches } from '../../data/branches';
 import { useLists } from '../../data/lists';
@@ -94,28 +94,41 @@ function FileBody({ l, all }: { l: Lead; all: Lead[] }) {
           </div>
         </div>
 
-        {/* שלבים: לחיצה על שלב פותחת מעבר עם צעד הבא */}
+        {/* שלבים: מסלול לקריאה בלבד. מעבר שלב – בתפריט "העבר שלב" (עם צעד הבא); הפיכה ללקוח – רק בכפתור בכותרת */}
         {open && (
-          <ol className="lsteps" aria-label="שלב המכירה">
-            {OPEN_STAGES.map((s, i) => (
-              <li key={s} className={i < stageIdx ? 'is-done' : i === stageIdx ? 'is-now' : ''}>
-                <button disabled={s === l.stage} aria-current={s === l.stage ? 'step' : undefined} onClick={() => setDlg({ kind: 'move', to: s })}>
-                  {i < stageIdx && <Check size={14} aria-hidden="true" />} {STAGE_LABEL[s]}
-                </button>
-              </li>
-            ))}
-            <li className="lsteps__end"><button onClick={() => setDlg({ kind: 'convert' })}><UserCheck size={14} aria-hidden="true" /> לקוח פעיל</button></li>
-          </ol>
+          <div className="lsteps-row">
+            <ol className="lsteps" aria-label="שלב המכירה">
+              {OPEN_STAGES.map((s, i) => (
+                <li key={s} className={i < stageIdx ? 'is-done' : i === stageIdx ? 'is-now' : ''} aria-current={s === l.stage ? 'step' : undefined}>
+                  {i < stageIdx && <Check size={14} aria-hidden="true" />}
+                  {STAGE_LABEL[s]}
+                  {i < stageIdx && <span className="sr-only"> (עבר)</span>}
+                </li>
+              ))}
+            </ol>
+            <Dropdown.Root dir="rtl">
+              <Dropdown.Trigger asChild>
+                <button className="btn btn--ghost btn--sm"><span className="btn__label">העבר שלב</span><ChevronDown size={14} aria-hidden="true" /></button>
+              </Dropdown.Trigger>
+              <Dropdown.Portal>
+                <Dropdown.Content className="menu" align="start" sideOffset={4}>
+                  {OPEN_STAGES.filter((s) => s !== l.stage).map((s) => (
+                    <Dropdown.Item key={s} className="menu__item" onSelect={() => setDlg({ kind: 'move', to: s })}>{STAGE_LABEL[s]}</Dropdown.Item>
+                  ))}
+                </Dropdown.Content>
+              </Dropdown.Portal>
+            </Dropdown.Root>
+          </div>
         )}
 
         {open && l.nextStep && (
           <div className={`lnext ${l.nextStep.due < today ? 'is-late' : ''}`}>
             <CalendarClock size={16} aria-hidden="true" />
             <div><span className="kpi__label">צעד הבא</span><StepLine lead={l} today={today} /></div>
-            <Button size="sm" variant="ghost" onClick={() => setDlg({ kind: 'step' })}>שנה</Button>
+            <Button size="sm" variant="secondary" icon={<Pencil size={16} />} onClick={() => setDlg({ kind: 'step' })}>עדכן צעד</Button>
           </div>
         )}
-        {l.stage === 'lost' && <div className="cfile__banner" role="note"><b>לא רלוונטי:</b> {l.lostReason}{l.lostNote && <> · {l.lostNote}</>}</div>}
+        {l.stage === 'lost' && <div className="cfile__note" role="note"><b>לא רלוונטי</b><span>{l.lostReason}{l.lostNote && <> · {l.lostNote}</>}</span></div>}
       </header>
 
       <div className="lfile__grid">
