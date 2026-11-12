@@ -18,11 +18,11 @@
 .panel__marks { display: inline-flex; gap: 2px; flex-wrap: wrap; }
 .link { border: 0; background: none; padding: 0; font: inherit; color: var(--brand-700); font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; text-decoration-color: rgba(0,100,145,0.3); }
 .link:hover { text-decoration-color: currentColor; }
-.missing { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.missing__item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2); padding-inline-start: var(--space-4); font-size: var(--text-table); font-weight: 500; background: var(--white); }
-.missing__item + .missing__item { border-top: 1px solid var(--gray-100); }
+/* שאר הבעיות: רשימה בתוך התיק, מופרדת בקווים – בלי מסגרת נוספת */
+.missing { display: grid; gap: 0; border-top: 1px solid var(--line-soft); }
+.missing__item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; font-size: var(--text-table); font-weight: 500; background: var(--white); border-bottom: 1px solid var(--line-soft); }
 .missing__item span { display: inline-flex; align-items: center; gap: var(--space-2); }
-.missing__item span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.missing__item span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 /* הבעיות בתיק: נקודה בצבע החומרה, טקסט רגיל; פס בקצה רק לחריגה */
 .missing__item { color: var(--gray-900); }
 .missing__item span::before { background: var(--gray-400); }
@@ -60,9 +60,8 @@
 .items td { padding: var(--space-2) var(--space-2); border-bottom: 1px solid var(--gray-100); }
 .items td bdi { font-family: var(--font-mono); }
 .sums { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-3); }
-.sums > div { display: grid; gap: 2px; padding: var(--space-3) var(--space-4); border: 1px solid var(--gray-100); border-radius: var(--radius); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+.sums > div { display: grid; gap: 2px; padding-top: var(--space-3); border-top: 1px solid var(--line-soft); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 .sums b { font: 600 var(--text-section) var(--font); color: var(--gray-900); }
-.sums .is-gap { background: var(--urgent-bg); border-color: transparent; }
 .sums .is-gap b, .sums em { color: var(--urgent-fg); }
 .sums em { font-style: normal; font-weight: 500; }
 
@@ -80,7 +79,7 @@
 .panel__tabs a.is-on { color: var(--brand-800); border-bottom-color: var(--brand-600); font-weight: 500; }
 .panel__tabs a { transition: color var(--dur-quick) var(--ease), border-color var(--dur-quick) var(--ease); }
 .hist__change { display: block; font-size: var(--text-label); margin-top: 2px; }
-.order-contents { margin: 0 0 var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--gray-25); border: 1px solid var(--gray-100); white-space: pre-wrap; font-size: var(--text-table); }
+.order-contents { margin: 0 0 var(--space-3); white-space: pre-wrap; font-size: var(--text-body); font-weight: 600; }
 .kv__edit { display: inline-flex; align-items: center; gap: var(--space-3); }
 .sums .no-final__tag { margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 500; }
 @media (max-width: 760px), (pointer: coarse) { .panel__foot .muted { display: none; } }
@@ -114,10 +113,23 @@
 .sec__head .link { font-size: var(--text-label); }
 
 /* ---------- הזמנה שנסגרה: מה קרה ולמה ---------- */
-.closed-note { display: grid; gap: 2px; margin-top: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius); border: 1px solid var(--gray-100); font-size: var(--text-table); }
-.closed-note--partial { box-shadow: inset -3px 0 0 var(--urgent-edge); }
-.closed-note--cancelled { box-shadow: inset -3px 0 0 var(--gray-600); background: var(--gray-25); }
+.closed-note { display: grid; gap: var(--space-1); margin-top: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-panel); border: 1px solid var(--line); font-size: var(--text-table); }
+.closed-note--cancelled { background: var(--gray-25); }
+.closed-note b { font-size: var(--text-card-title); }
 .closed-note span { color: var(--gray-600); }
+.closed-note .closed-note__warn { color: var(--danger-fg); font-weight: 500; }
+
+/* הזמנה מבוטלת: פרטי ההזמנה מקופלים ולקריאה בלבד */
+.reg--locked { background: var(--gray-25); }
+.reg__summary { cursor: pointer; list-style: none; padding-bottom: 0; margin-bottom: 0; border-bottom: 0; min-height: var(--control-sm); }
+.reg__summary::-webkit-details-marker { display: none; }
+.reg__summary .muted { font-size: var(--text-label); }
+.reg__chev { color: var(--gray-600); transition: transform var(--dur-quick) var(--ease); }
+.reg--locked[open] .reg__chev { transform: rotate(-90deg); }
+.reg--locked[open] .reg__summary { padding-bottom: var(--space-2); margin-bottom: var(--space-2); border-bottom: 1px solid var(--line); }
+.reg__lines { display: grid; gap: var(--space-1); color: var(--gray-700); font-size: var(--text-table); }
+.reg__lines p { margin: 0; white-space: pre-wrap; }
+@media (prefers-reduced-motion: reduce) { .reg__chev { transition: none; } }
 
 /* ---------- עריכת פריטים ---------- */
 .iedit { display: grid; gap: var(--space-3); padding: 0; margin-bottom: var(--space-3);  animation: pop-in var(--dur-quick) var(--ease); }
@@ -219,9 +231,13 @@
 .reg-q__done bdi { white-space: nowrap; }
 .reg-q__gap { padding: 1px var(--space-2); border-radius: var(--radius-tag); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 500; }
 .reg-q__edit { margin-inline-start: auto; font-size: var(--text-label); }
+.reg-q__ops-state { font-size: var(--text-label); color: var(--gray-600); }
 
 /* מתחת לבלוק: ציר ההזמנה ושאר הבעיות, ואז לשוניות */
-.panel__flow { display: grid; gap: var(--space-3); padding: var(--space-3) 0 var(--space-1); }
+.panel__flow { display: grid; gap: var(--space-3); padding: var(--space-4) 0 var(--space-1); }
+
+/* הודעות לא מכסות את שורת התחתית של התיק (מחק הזמנה, חזרה לרשימה) */
+@media (min-width: 701px) { body:has(.panel__foot) .toasts { bottom: calc(var(--control-lg) + var(--space-6)); } }
 .panel__tabs--body { position: sticky; top: -4px; z-index: 1; margin: var(--space-3) 0 0; padding-top: var(--space-1); background: var(--white); border-bottom: 1px solid var(--line); }
 .panel__tabs--body button { white-space: nowrap; }
 

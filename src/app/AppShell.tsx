@@ -11,6 +11,7 @@ import { Button, Tip, useHotkey } from '../design/components';
 import { useStore } from '../data/store';
 import { useAuth } from '../auth/AuthContext';
 import { openTaskCount, todayTaskCounts } from '../features/today/todayTasks';
+import { ordersWithSeverity } from '../data/metrics';
 import { usePendingRequests } from '../auth/usePendingRequests';
 import { ROLE_LABEL } from '../auth/types';
 import { Ltr } from '../lib/format';
@@ -52,7 +53,8 @@ export function AppShell({ children }: { children: ReactNode }) {
      אדום בתפריט רק לקטגוריה שיש בה משהו קריטי שלא טופל: חריגות (אדום) והצעות מחיר שלא חזרו אליהן */
   const dueLeadSteps = dueTasks.filter((t) => t.leadId).length;
   const todayCount = openTaskCount(todayTaskCounts(orders, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 }));
-  const redCount = orders.reduce((n, o) => n + o.issues.filter((i) => i.severity === 'red').length, 0);
+  // הזמנות עם חריגה קריטית – אותו מספר כמו "קריטי" בראש מסך החריגים (הזמנה עם שתי בעיות נספרת פעם אחת)
+  const redCount = ordersWithSeverity(orders, 'red');
 
   function newOrder() {
     openNewOrder();

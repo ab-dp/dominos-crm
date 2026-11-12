@@ -9,7 +9,8 @@ import { useStore } from '../../data/store';
 import { METHOD_LABEL, OUTCOME_LABEL, outcomeOf, type Order, type Outcome } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, addDays, fmtDate, fmtMoney, toISODate } from '../../lib/format';
+import { Ltr, fmtDate, fmtMoney } from '../../lib/format';
+import { PRESET_LABEL, presetRange, readPreset, type Preset } from '../../data/metrics';
 import { REPORTS, qVal, type Col, type ReportDef, type ReportResult, type Row } from './defs';
 import { BarChart } from './BarChart';
 import { reportName, reportSheet } from './reportExcel';
@@ -44,19 +45,8 @@ export function ReportsHub() {
   );
 }
 
-/* ---------- טווחי תאריכים ---------- */
-type Preset = 'week' | 'month' | 'prev' | 'd30' | 'm3' | 'custom';
-const PRESETS: [Preset, string][] = [['week', 'השבוע'], ['month', 'החודש'], ['prev', 'החודש הקודם'], ['d30', '30 ימים'], ['m3', '3 חודשים'], ['custom', 'מותאם']];
-function rangeOf(p: Preset, now: Date): [string, string] {
-  const y = now.getFullYear(); const m = now.getMonth();
-  const day = (d: Date) => toISODate(d);
-  if (p === 'prev') return [day(new Date(y, m - 1, 1)), day(new Date(y, m, 0))];
-  // שבוע: ראשון עד שבת של השבוע הנוכחי
-  if (p === 'week') { const s = new Date(y, m, now.getDate() - now.getDay()); return [day(s), day(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6))]; }
-  if (p === 'd30') return [day(addDays(now, -29)), day(now)];
-  if (p === 'm3') return [day(new Date(y, m - 2, 1)), day(new Date(y, m + 1, 0))];
-  return [day(new Date(y, m, 1)), day(new Date(y, m + 1, 0))];
-}
+/* ---------- טווחי תאריכים: אותן תקופות ואותה משמעות כמו בסיכום תקופה ובבורד (data/metrics.ts) ---------- */
+const PRESETS: Preset[] = ['week', 'month', 'prevMonth', 'd30', 'm3', 'custom'];
 
 const fmtCell = (c: Col, v: string | number | undefined) => {
   if (v === undefined || v === '') return '';
@@ -81,8 +71,8 @@ function Report({ def }: { def: ReportDef }) {
   const nav = useNavigate();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
-  const preset = (params.get('range') as Preset) || 'month';
-  const [pf, pt] = rangeOf(preset, now);
+  const preset = readPreset(params.get('range'), PRESETS);
+  const { from: pf, to: pt } = presetRange(preset, now);
   const from = preset === 'custom' ? params.get('from') ?? pf : pf;
   const to = preset === 'custom' ? params.get('to') ?? pt : pt;
   const cluster = params.get('cluster') ?? '';
@@ -143,7 +133,7 @@ function Report({ def }: { def: ReportDef }) {
       {/* מסננים בשורה אחת */}
       <div className="tablebar report__filters">
         <div className="seg" role="group" aria-label="טווח">
-          {PRESETS.map(([p, l]) => <button key={p} className={preset === p ? 'is-on' : ''} aria-pressed={preset === p} onClick={() => set(p === 'custom' ? { range: p, from, to } : { range: p, from: null, to: null })}>{l}</button>)}
+          {PRESETS.map((p) => [p, PRESET_LABEL[p]] as const).map(([p, l]) => <button key={p} className={preset === p ? 'is-on' : ''} aria-pressed={preset === p} onClick={() => set(p === 'custom' ? { range: p, from, to } : { range: p, from: null, to: null })}>{l}</button>)}
         </div>
         {preset === 'custom' && (
           <span className="report__dates">
@@ -216,6 +206,7 @@ function Report({ def }: { def: ReportDef }) {
                 <span className="report__count"><Ltr>{res.rows.length}</Ltr> {def.perOrder ? 'הזמנות' : 'שורות'}</span>
               </div>
             )}
+            {res.note && res.rows.length > 0 && <p className="report__note">{res.note}</p>}
             {res.rows.length === 0 ? (
               <EmptyState icon={<ChartColumn size={20} />} title="אין נתונים בטווח הזה">נסה טווח תאריכים אחר או נקה את הסינון.</EmptyState>
             ) : (

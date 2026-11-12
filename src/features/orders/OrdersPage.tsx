@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { revenue } from '../../data/metrics';
 import { useSearchParams } from 'react-router-dom';
 import { Rows3, Rows4, Search, X } from 'lucide-react';
 import { Skeleton } from '../../design/components';
@@ -54,7 +55,7 @@ export function OrdersPage() {
     .filter((o) => !filter || filter.test(o))
     .filter((o) => !q || o.customerName.toLowerCase().includes(q) || String(o.id).includes(q) || (o.qNumber ?? '').toLowerCase().includes(q) || o.branchName.includes(q)),
   [lists, tab, filter, q]);
-  const total = rows.filter((o) => o.status !== 'cancelled').reduce((t, o) => t + (o.qAmount ?? o.amount), 0);
+  const total = revenue(rows);
   const needs = rows.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
   const critical = rows.some((o) => o.health === 'critical');
   const set = (k: string, v: string | null) => {

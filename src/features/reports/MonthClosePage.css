@@ -47,6 +47,7 @@
 .msum__kpis dt { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 .msum__kpis dd { margin: 0; font: 500 var(--text-section)/1.2 var(--font-mono); }
 .msum__kpis dd small { font-size: var(--text-micro); color: var(--gray-600); }
+.msum__def { margin: 0; padding: var(--space-3) var(--space-4); font-size: var(--text-label); border-bottom: 1px solid var(--gray-100); }
 .msum__table td, .msum__table th { cursor: default; }
 .msum__table tbody tr { cursor: default; }
 .msum__empty { margin: 0; padding: var(--space-4) var(--space-4); }

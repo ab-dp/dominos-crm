@@ -9,7 +9,8 @@ import { useStore } from '../../data/store';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney } from '../../lib/format';
-import { PERIOD_PRESETS, missingQ, ordersTable, periodRange, summary, type Cell, type Kind, type PeriodPreset, type STable } from './periodData';
+import { PERIOD_PRESETS, missingQ, ordersTable, summary, type Cell, type Kind, type STable } from './periodData';
+import { PRESET_LABEL, presetRange, readPreset } from '../../data/metrics';
 import { useProgressive } from '../../lib/useProgressive';
 import '../pages.css';
 import './ReportsPage.css';
@@ -60,8 +61,8 @@ export function PeriodReport() {
   const toast = useToast();
   const panel = usePanel();
   const [params, setParams] = useSearchParams();
-  const preset = (PERIOD_PRESETS.some(([p]) => p === params.get('range')) ? params.get('range') : 'lastWeek') as PeriodPreset;
-  const [pf, pt] = periodRange(preset, now);
+  const preset = readPreset(params.get('range'), PERIOD_PRESETS);
+  const { from: pf, to: pt } = presetRange(preset, now);
   const from = preset === 'custom' ? params.get('from') ?? pf : pf;
   const to = preset === 'custom' ? params.get('to') ?? pt : pt;
   const tab = params.get('tab') === 'summary' ? 'summary' : 'orders';
@@ -109,7 +110,7 @@ export function PeriodReport() {
 
       <div className="tablebar report__filters">
         <div className="seg" role="group" aria-label="תקופה">
-          {PERIOD_PRESETS.map(([p, l]) => <button key={p} className={preset === p ? 'is-on' : ''} aria-pressed={preset === p} onClick={() => set(p === 'custom' ? { range: p, from, to } : { range: p, from: null, to: null })}>{l}</button>)}
+          {PERIOD_PRESETS.map((p) => [p, PRESET_LABEL[p]] as const).map(([p, l]) => <button key={p} className={preset === p ? 'is-on' : ''} aria-pressed={preset === p} onClick={() => set(p === 'custom' ? { range: p, from, to } : { range: p, from: null, to: null })}>{l}</button>)}
         </div>
         {preset === 'custom' && (
           <span className="report__dates">

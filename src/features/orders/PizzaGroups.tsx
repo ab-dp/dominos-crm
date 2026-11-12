@@ -7,6 +7,8 @@ import { PIZZA, splitPart } from '../../data/types';
 import { Ltr, fmtMoney, roundMoney } from '../../lib/format';
 import { newId } from '../../data/customers';
 import { catalogFor, isBlank, lineProblem, type CatalogItem, type Line } from './ItemsBuilder';
+import { RadioSeg } from '../../design/components';
+import { useToast } from '../../design/Toast';
 
 type Split = 1 | 2 | 4;
 const SPLITS: { n: Split; label: string; aria: string }[] = [{ n: 1, label: 'שלמה', aria: 'שלמה' }, { n: 2, label: '½', aria: 'חצי-חצי' }, { n: 4, label: '¼', aria: 'רבעים' }];
@@ -34,14 +36,22 @@ export function pizzaGroups(lines: Line[]): Group[] {
   return out;
 }
 
-export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, lastPrice, onTouched }: {
+export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, lastPrice, onTouched, revealProblems = 0, pricesUsed = false }: {
   lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[];
   topHints: string[]; typeHints: string[]; lastPrice: (name: string) => number | undefined; onTouched?: () => void;
+  /* מונה: שמירה שנחסמה או 'הצג' – השורה הפעילה מפסיקה להיות מוגנת מסימון, כדי שהשדה החסר יאדים ויקבל את הסמן */
+  revealProblems?: number;
+  /* יש בהזמנה שורות עם מחיר – סוג בלי מחיר מסומן כחסר */
+  pricesUsed?: boolean;
 }) {
+  const toast = useToast();
   const groups = useMemo(() => pizzaGroups(lines), [lines]);
   // כרטיסים מקופלים: בהזמנה עם הרבה סוגים – כולם מקופלים חוץ מהאחרון
   const [closed, setClosed] = useState<Set<string>>(() => new Set(groups.length > 2 ? groups.slice(0, -1).map((g) => g.id) : []));
   const [focus, setFocus] = useState<{ key: string; field: string } | null>(null);
+  // אחרי שמירה שנחסמה: השדה החסר נשאר מסומן גם כשהסמן בו, עד שממלאים אותו
+  const [shown, setShown] = useState(false);
+  useEffect(() => { if (revealProblems) { setFocus(null); setShown(true); } }, [revealProblems]);
   /* יציאה מכרטיס בלחיצת עכבר: שורת "מחיר מוצע" נעלמת רק אחרי שהלחיצה הסתיימה – אחרת כל מה שמתחתיה קופץ למעלה,
      הכפתור זז מתחת לעכבר והלחיצה הולכת לאיבוד (למשל "+ סוג פיצה" אחרי עריכת שם הסוג) */
   const pointerDown = useRef(false);
@@ -72,11 +82,21 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
     touch();
   };
   const remove = (key: string) => { setLines((ls) => ls.filter((l) => l.key !== key)); touch(); };
-  const removeGroup = (g: Group) => { const keys = new Set(g.lines.map((l) => l.key)); setLines((ls) => ls.filter((l) => !keys.has(l.key))); touch(); };
+  /* הסרת סוג שלם – עם 'בטל', כי היא מוחקת את כל השורות שלו */
+  const removeGroup = (g: Group) => {
+    const keys = new Set(g.lines.map((l) => l.key));
+    const removed = g.lines.filter((l) => !isBlank(l));
+    setLines((ls) => ls.filter((l) => !keys.has(l.key)));
+    touch();
+    if (removed.length) toast({ message: <>הוסר הסוג {g.name || 'פיצה'} ({removed.length === 1 ? 'שורה אחת' : <><Ltr>{removed.length}</Ltr> שורות</>})</>, onUndo: () => setLines((ls) => [...ls, ...removed]) });
+  };
   // שם הסוג: משנה את כל השורות של הכרטיס
   const rename = (g: Group, name: string) => {
     const keys = new Set(g.lines.map((l) => l.key));
-    setLines((ls) => ls.map((l) => (keys.has(l.key) ? { ...l, name, gid: g.id } : l)));
+    // מחיר: כשבמחירון יש בדיוק פריט אחד בשם הזה, והסוג עוד בלי מחיר – הוא חל מיד (אפשר לשנות)
+    const exact = catalog.filter((it) => it.category === PIZZA && it.unit && it.name.trim() === name.trim());
+    const auto = !g.price && exact.length === 1 ? exact[0] : null;
+    setLines((ls) => ls.map((l) => (keys.has(l.key) ? { ...l, name, gid: g.id, ...(auto && !l.unitPrice ? { unitPrice: auto.unit!, itemId: auto.id, manualPrice: undefined } : {}) } : l)));
     touch();
   };
   // מחיר הסוג: חל על כל השורות שבמחיר הקודם של הסוג (שורה עם מחיר משלה – לא משתנה)
@@ -126,7 +146,8 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
         const toggle = () => setClosed((s) => { const n = new Set(s); if (n.has(g.id)) n.delete(g.id); else n.add(g.id); return n; });
         if (!isOpen) {
           const summary = g.lines.filter((l) => !isBlank(l)).map((l) => `${l.parts?.length ? l.parts.map((p) => p.trim() || 'רגילה').join(' | ') : l.toppings?.join(', ') || 'ללא תוספת'} ${l.qty}`).join(' · ');
-          const bad = g.lines.some(lineProblem);
+          // שורה לא שלמה, או סוג בלי מחיר כשבאחרים יש מחיר – מסומן, ונפתח מ"הצג" / מהקישור בשורת החסרים
+          const bad = g.lines.some(lineProblem) || (pricesUsed && count > 0 && !g.price);
           return (
             <button type="button" key={g.id} className={`pg pg--closed ${bad ? 'is-bad' : ''}`} onClick={toggle} aria-expanded={false} aria-label={`${g.name || 'סוג פיצה'}: ${count} פיצות. פתח לעריכה`}>
               <b>{g.name || 'סוג פיצה'}</b>
@@ -149,10 +170,14 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
                 aria-label="סוג פיצה" aria-invalid={nameBad || undefined}
                 onFocus={() => setFocus({ key: g.lines[0].key, field: `gname:${g.id}` })}
                 onChange={(e) => rename(g, e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); (e.currentTarget.closest('.pg')?.querySelector('[data-line] input[data-col="tops"]') as HTMLInputElement | null)?.focus(); } }} />
+                aria-keyshortcuts="Control+Delete"
+                onKeyDown={(e) => {
+                  if (e.key === 'Delete' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); removeGroup(g); return; }
+                  if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); (e.currentTarget.closest('.pg')?.querySelector('[data-line] input[data-col="tops"]') as HTMLInputElement | null)?.focus(); }
+                }} />
               <label className="pg__gprice">
                 <span>מחיר ליח׳</span>
-                <input className="input input--sm input--ltr" inputMode="decimal" placeholder="—" aria-label={`מחיר ליחידה – ${g.name || 'סוג פיצה'}`}
+                <input className={`input input--sm input--ltr ${pricesUsed && count > 0 && !g.price ? 'is-miss' : ''}`} inputMode="decimal" placeholder="—" aria-label={`מחיר ליחידה – ${g.name || 'סוג פיצה'}`}
                   defaultValue={g.price || ''} key={`${g.id}:${g.price}`}
                   onFocus={() => setFocus({ key: g.lines[0].key, field: `gprice:${g.id}` })}
                   onBlur={(e) => { const v = money(e.target.value); if (v !== g.price) setGroupPrice(g, v); }}
@@ -160,7 +185,8 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
               </label>
               <span className="pg__count" aria-label={`${count} פיצות`}><Ltr>{count}</Ltr> פיצות</span>
               {groups.length > 1 && <button type="button" className="icon-btn icon-btn--sm" aria-label={`קפל – ${g.name || 'סוג פיצה'}`} onClick={toggle}><ChevronUp size={16} /></button>}
-              <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר את הסוג ${g.name || ''} וכל השורות שלו`} onClick={() => removeGroup(g)}><Trash2 size={16} /></button>
+              {/* מחוץ למסלול ה-Tab (Enter או רווח בטעות היו מוחקים סוג שלם); מהמקלדת: Ctrl+Delete בשם הסוג */}
+              <button type="button" tabIndex={-1} className="icon-btn icon-btn--sm" aria-label={`הסר את הסוג ${g.name || ''} וכל השורות שלו`} title="הסר את הסוג וכל השורות (Ctrl+Delete בשם הסוג)" onClick={() => removeGroup(g)}><Trash2 size={16} /></button>
             </div>
             {(levels.length > 0 || (last !== undefined && last !== g.price)) && (
               <p className="ib-sug ib-sug--price pg__sug">
@@ -182,7 +208,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
               const base = { name: g.raw, gid: g.id, unitPrice: g.price, autoName: true };
               const set = (patch: Partial<Line>) => patchLine(key, patch, base);
               const active = focus?.key === key;
-              const bad = !active && lineProblem({ ...line, name: line.name || g.name });
+              const bad = (!active || shown) && lineProblem({ ...line, name: line.name || g.name });
               const split = (line.parts?.length ?? 1) as Split;
               const tText = line.tText ?? (line.toppings ?? []).join(', ');
               const own = line.unitPrice > 0 && line.unitPrice !== g.price;
@@ -205,7 +231,8 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
                 if (n === 1) set({ parts: undefined, toppings: splitPart(cur.filter((p) => p.trim()).join(', ')), tText: undefined });
                 else set({ parts: Array.from({ length: n }, (_, i) => cur[i] ?? ''), toppings: undefined, tText: undefined });
               };
-              const on = (field: string) => ({ onFocus: () => setFocus({ key, field }), onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => onKey(e, g, l), 'data-col': field });
+              const on = (field: string) => ({ onFocus: () => setFocus({ key, field }), 'aria-keyshortcuts': l ? 'Control+Delete' : undefined, 'data-col': field,
+                onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => { if (l && e.key === 'Delete' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); remove(key); return; } onKey(e, g, l); } });
               return (
                 <div key={key} className={`pg__row ${isDraft ? 'is-draft' : ''}`} data-line={key}>
                   <div className="pg__r">
@@ -221,9 +248,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
                         ))}
                       </span>
                     )}
-                    <span className="ib-split" role="radiogroup" aria-label={`חלוקה – ${label}`}>
-                      {SPLITS.map((s) => <button type="button" key={s.n} role="radio" aria-checked={split === s.n} aria-label={s.aria} title={s.aria} className={split === s.n ? 'is-on' : ''} onClick={() => setSplit(s.n)}>{s.label}</button>)}
-                    </span>
+                    <RadioSeg base="ib-split" label={`חלוקה – ${label}`} value={split} onChange={setSplit} options={SPLITS.map((x) => ({ value: x.n, label: x.label, aria: x.aria }))} />
                     <span className="pg__rprice">
                       <input className={`input input--sm input--ltr ${own ? 'is-own' : ''}`} inputMode="decimal" value={priceText} placeholder={g.price ? fmtMoney(g.price) : '—'} aria-label={`מחיר לשורה (אם שונה ממחיר הסוג) – ${label}`}
                         onChange={(e) => { const v = money(e.target.value); set({ pText: e.target.value, unitPrice: v || g.price, manualPrice: v > 0 || undefined, itemId: v ? undefined : line.itemId }); }}
@@ -233,7 +258,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
                     <input className={`input input--sm input--ltr ${bad && line.qty <= 0 ? 'is-invalid' : ''}`} inputMode="numeric" value={line.qty || ''} aria-label={`כמות – ${label}`}
                       aria-invalid={bad && line.qty <= 0 ? true : undefined}
                       onChange={(e) => set({ qty: Number(e.target.value.replace(/\D/g, '')) || 0 })} {...on('qty')} />
-                    {l && !(isDraft && g.lines.length === 1) ? <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} onClick={() => remove(key)}><Trash2 size={16} /></button> : <span />}
+                    {l && !(isDraft && g.lines.length === 1) ? <button type="button" tabIndex={-1} className="icon-btn icon-btn--sm" aria-label={`הסר שורה – ${label}`} title="הסר שורה (Ctrl+Delete בשורה)" onClick={() => remove(key)}><Trash2 size={16} /></button> : <span />}
                   </div>
                   {line.detail && <p className="ib-r__note">הערה: {line.detail}</p>}
                   {topSug.length > 0 && (

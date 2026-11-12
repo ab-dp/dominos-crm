@@ -11,6 +11,7 @@ import { CATEGORIES, OTHER, PIZZA, categoryOf, groupItems, splitPart, type Order
 import { Ltr, fmtMoney, roundMoney } from '../../lib/format';
 import { newId } from '../../data/customers';
 import { PizzaGroups } from './PizzaGroups';
+import { RadioSeg } from '../../design/components';
 import './ItemsBuilder.css';
 
 /* tText / pText – הטקסט כפי שמוקלד (פסיק בסוף, "12."), עד שיוצאים מהשדה. autoName – סוג הפיצה הועתק מהשורה הקודמת ולא נכתב. לא נשמרים */
@@ -28,6 +29,9 @@ export const isBlank = (l: OrderItem & { autoName?: boolean }) => !l.qty && !l.t
   && (!l.unitPrice || (l.group === PIZZA && !!l.autoName)) && (!l.name.trim() || !!l.autoName);
 /* שורה שהתחילו למלא בלי כמות או בלי סוג / מוצר */
 export const lineProblem = (l: OrderItem) => !isBlank(l) && (!l.name.trim() || l.qty <= 0);
+/* מחיר חסר: יש בהזמנה שורות עם מחיר, והשורה הזו בלי – הסכום יוצא נמוך בשקט. לא חוסם; מסומן בצהוב ובשורת "חסרים" */
+export const pricesUsed = (ls: OrderItem[]) => ls.some((l) => !isBlank(l) && l.unitPrice > 0);
+export const priceMissing = (l: OrderItem, used: boolean) => used && !isBlank(l) && l.qty > 0 && !(l.unitPrice > 0);
 export const lineText = (l: OrderItem) => `${l.name} ${l.detail ?? ''} ${(l.toppings ?? []).join(' ')} ${(l.parts ?? []).join(' ')}`;
 
 /* המוצרים של המחירון שנבחר (בלי מדרגות המשלוח), במחיר המתאים: משלוח/איסוף, ומחיר מיוחד ללקוח – רק במחירון של הלקוח.
@@ -142,7 +146,8 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
   const [tab, setTab] = useState(() => (lines.length ? categoryOf(lines[0]) : PIZZA));
   useEffect(() => {
     if (!revealProblems) return;
-    const bad = lines.find((l) => lineProblem(l));
+    const used = pricesUsed(lines);
+    const bad = lines.find((l) => lineProblem(l)) ?? lines.find((l) => priceMissing(l, used));
     if (!bad) return;
     setTab(categoryOf(bad));
     setFocus(null);
@@ -151,7 +156,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
       const root = rootRef.current; if (!root) return;
       const closed = root.querySelector<HTMLButtonElement>('.pg--closed.is-bad');
       if (closed && tries > 0) { closed.click(); go(tries - 1); return; }
-      const el = root.querySelector<HTMLElement>('input.is-invalid, [aria-invalid="true"]');
+      const el = root.querySelector<HTMLElement>('input.is-invalid, [aria-invalid="true"]') ?? root.querySelector<HTMLElement>('input.is-miss');
       el?.scrollIntoView({ block: 'center' });
       el?.focus({ preventScroll: true });
     });
@@ -181,6 +186,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
     const pos = at < 0 ? 0 : ls.slice(0, at).filter((l) => !isP(l)).length;
     return [...rest.slice(0, pos), ...next, ...rest.slice(pos)];
   });
+  const usedPrices = pricesUsed(lines);
   const count = (cat: string) => lines.filter((l) => categoryOf(l) === cat && !isBlank(l)).reduce((t, l) => t + l.qty, 0);
 
   const change = (key: string, patch: Partial<Line>) => {
@@ -224,7 +230,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
       </div>
 
       {tab === PIZZA ? (
-        <PizzaGroups lines={pizzaLines} setLines={setPizza} catalog={catalog} topHints={topHints} onTouched={onTouched}
+        <PizzaGroups lines={pizzaLines} setLines={setPizza} catalog={catalog} topHints={topHints} onTouched={onTouched} revealProblems={revealProblems} pricesUsed={pricesUsed(lines)}
           typeHints={[...new Set([...catalog.filter((x) => x.category === PIZZA).map((x) => x.name), ...hints.names(PIZZA)])]} lastPrice={(n) => hints.lastPrice(PIZZA, n)} />
       ) : (
       <div className={`ib-table ${pizza ? 'ib-table--pizza' : ''}`} role="table" aria-label={`פריטים – ${tab}`}>
@@ -284,13 +290,9 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
                   </span>
                 ))}
                 {pizza && (
-                  <span className="ib-split" role="radiogroup" aria-label={`חלוקה – ${label}`}>
-                    {SPLITS.map((s) => (
-                      <button type="button" key={s.n} role="radio" aria-checked={split === s.n} aria-label={s.aria} title={s.aria} className={split === s.n ? 'is-on' : ''} onClick={() => setSplit(l, s.n)}>{s.label}</button>
-                    ))}
-                  </span>
+                  <RadioSeg base="ib-split" label={`חלוקה – ${label}`} value={split} onChange={(n) => setSplit(l, n)} options={SPLITS.map((x) => ({ value: x.n, label: x.label, aria: x.aria }))} />
                 )}
-                <input className="input input--sm input--ltr" inputMode="decimal" value={priceText} placeholder="—" aria-label={`מחיר ליחידה – ${label}`}
+                <input className={`input input--sm input--ltr ${priceMissing(l, usedPrices) ? 'is-miss' : ''}`} inputMode="decimal" value={priceText} placeholder="—" aria-label={`מחיר ליחידה – ${label}`}
                   onChange={(e) => { const v = money(e.target.value); change(l.key, { pText: e.target.value, unitPrice: v, manualPrice: v > 0 || undefined, ...(v ? {} : { itemId: undefined }) }); }}
                   onBlur={() => { if (!isDraft && l.pText !== undefined) change(l.key, { pText: undefined }); }} {...on(l.key, 'price')} />
                 <input className={`input input--sm input--ltr ${bad && l.qty <= 0 ? 'is-invalid' : ''}`} inputMode="numeric" value={l.qty || ''} placeholder=""

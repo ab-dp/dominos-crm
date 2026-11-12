@@ -105,3 +105,8 @@
 /* שורה לא שלמה בפריטים – חוסמת שמירה */
 .no-missing__block { color: var(--missing-fg); }
 .no-missing__block b { color: var(--missing-fg); }
+
+/* פרט חסר מתחת לשדה – לא שגיאה: בצבע "חסר", לא באדום */
+.norder .cform__err--miss { color: var(--missing-fg); }
+.no-method, .no-outcome { max-width: 240px; }
+.no-approved { min-height: var(--control-md); }

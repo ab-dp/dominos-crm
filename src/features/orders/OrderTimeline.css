@@ -1,8 +1,8 @@
-/* ציר ההזמנה – בתיק ההזמנה */
-.timeline-wrap { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--white); }
-.otl { flex: 1; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+/* ציר ההזמנה – בתיק ההזמנה. בלי מסגרת משלו: יושב בתוך התיק, מופרד בקו ובמרווח (כרטיס אחד, בלי קינון) */
+.timeline-wrap { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); }
+.otl { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
 .otl-step { position: relative; display: flex; gap: var(--space-2); align-items: flex-start; min-width: 0; }
-.otl-step + .otl-step::before { content: ''; position: absolute; inset-inline-end: calc(100% - 4px); top: 11px; width: calc(8px); height: 2px; background: var(--gray-200); }
+.otl-step + .otl-step::before { content: ''; position: absolute; inset-inline-end: calc(100% - 4px); top: 11px; width: 8px; height: 2px; background: var(--gray-200); }
 .otl-step__dot { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 var(--text-micro) var(--font-mono); background: var(--white); color: var(--gray-600); box-shadow: inset 0 0 0 1.5px var(--gray-300); }
 .otl-step.is-done .otl-step__dot { background: var(--ok-fg); color: var(--white); box-shadow: none; }
 .otl-step.is-done.is-warn .otl-step__dot { background: var(--urgent-edge); }
@@ -11,11 +11,17 @@
 .otl-step__title { font-size: var(--text-table); font-weight: 600; }
 .otl-step.is-todo .otl-step__title { color: var(--gray-600); font-weight: 500; }
 .otl-step__detail { font-size: var(--text-label); color: var(--gray-600); overflow-wrap: anywhere; }
-.otl-step__red { color: var(--urgent-fg); font-weight: 500; }
-.otl-step__link { font-size: var(--text-label); }
-.otl-cancel { display: grid; gap: var(--space-1); justify-items: end; flex: none; }
-.otl-cancel__tag { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-label); font-weight: 500; }
+/* חוסר בשלב (דולג, עוד לא נשלח לתפעול) – דחוף, בכתום ובמילים */
+.otl-step__warn { display: block; color: var(--urgent-fg); font-weight: 500; }
+.otl-step__edit { padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-table); font-weight: 600; color: inherit; cursor: pointer; text-align: start; text-decoration: underline dotted var(--gray-300); text-underline-offset: 3px; }
+.otl-step__edit:hover { color: var(--brand-700); }
 .timeline-wrap.is-cancelled .otl { opacity: 0.55; }
+
+/* הצעד הבא: הכפתור הראשי של התיק */
+.otl-next { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
+.otl-next__label { font-size: var(--text-label); color: var(--gray-600); font-weight: 500; }
+.otl-next__spacer { flex: 1; }
+.otl-next__warn { font-size: var(--text-label); color: var(--urgent-fg); font-weight: 500; }
 
 /* ציר קטן בשורה */
 .stage { display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
@@ -35,18 +41,7 @@
 .close-form__reopen { justify-self: start; font-size: var(--text-label); }
 
 @media (max-width: 700px) {
-  .timeline-wrap { flex-direction: column; }
-  .otl { grid-template-columns: 1fr 1fr; }
+  .otl { grid-template-columns: 1fr 1fr; row-gap: var(--space-3); }
   .otl-step + .otl-step::before { display: none; }
-  .otl-cancel { justify-items: start; }
+  .otl-next .btn--md { height: var(--control-lg); }
 }
-
-/* מבנה: תחנות למעלה, הצעד הבא למטה */
-.timeline-wrap { flex-direction: column; align-items: stretch; gap: var(--space-3); }
-.otl-step__edit { padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-table); font-weight: 600; color: inherit; cursor: pointer; text-align: start; text-decoration: underline dotted var(--gray-300); text-underline-offset: 3px; }
-.otl-step__edit:hover { color: var(--brand-700); }
-.otl-next { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding-top: var(--space-3); border-top: 1px solid var(--gray-100); }
-.otl-next__label { font-size: var(--text-label); color: var(--gray-600); font-weight: 500; }
-.otl-next__spacer { flex: 1; }
-.otl-next__warn { font-size: var(--text-label); }
-.otl-ops { display: inline-flex; align-items: center; gap: var(--space-1); height: 28px; padding: 0 var(--space-3); border: 1px solid var(--urgent-edge); border-radius: var(--radius-panel); background: var(--urgent-bg); color: var(--urgent-fg); font: inherit; font-size: var(--text-label); font-weight: 500; cursor: pointer; }

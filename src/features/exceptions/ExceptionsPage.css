@@ -1,4 +1,4 @@
-/* מסך החריגים: אותה שפה של "דחוף עכשיו" – שורות על קו הפרדה, נקודה ופס דק בקצה */
+/* מסך החריגים: שורה לכל הזמנה על קו הפרדה; החומרה מסומנת פעם אחת – בכותרת הקבוצה */
 .exc__grid { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 5fr); gap: var(--space-5); align-items: start; }
 .exc__grid > * { min-width: 0; }
 .exc__n { margin-inline-start: auto; font-size: var(--text-label); }
@@ -8,7 +8,7 @@
 .exc__group { padding-bottom: var(--space-2); }
 .exc__label { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) var(--space-4) var(--space-1); font-size: var(--text-micro); font-weight: 500; letter-spacing: 0; }
 .exc__label bdi { font-family: var(--font-mono); font-weight: 500; }
-.exc__label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.exc__label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .exc__label--red { color: var(--danger-fg); }
 .exc__label--orange { color: var(--urgent-fg); }
 .exc__label--orange::before { background: var(--urgent-edge); }
@@ -19,12 +19,19 @@
 .exc__list, .tasks { list-style: none; margin: 0; padding: 0; }
 .exc__row { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4) 0 var(--space-3); overflow: hidden; }
 .exc__row + .exc__row::after, .task-row + .task-row::after { content: ""; position: absolute; top: 0; inset-inline: 18px; height: 1px; background: var(--gray-100); }
-.exc__row::before { content: ""; position: absolute; inset-inline-start: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 var(--radius-tag) var(--radius-tag) 0; }
 /* החומרה מסומנת פעם אחת – בכותרת הקבוצה ובפס דק לחריגה בלבד; שורה רגילה בטקסט רגיל */
 .exc__main { flex: 1; min-width: 0; display: grid; gap: 2px; padding: var(--space-3) var(--space-2); border: 0; background: none; font: inherit; text-align: start; cursor: pointer; }
 .exc__main:hover .exc__issue { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
-.exc__issue { font-weight: 600; font-size: var(--text-table); }
-.exc__issue { color: var(--gray-900); }
+/* הבעיה העיקרית, ואחריה שאר הבעיות של אותה הזמנה כתגים קטנים עם נקודת חומרה */
+.exc__issues { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+.exc__issue { font-weight: 600; font-size: var(--text-table); color: var(--gray-900); }
+.exc__more { display: inline-flex; align-items: center; gap: var(--space-1); height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); border: 1px solid var(--line); background: var(--white); font-size: var(--text-micro); font-weight: 500; color: var(--gray-700); }
+.exc__more::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gray-400); }
+.exc__more--red::before { background: var(--danger-fg); }
+.exc__more--orange::before { background: var(--urgent-edge); }
+.exc__more--yellow::before { background: var(--missing-edge); }
+.exc__calm--filter { display: grid; justify-items: start; gap: var(--space-2); }
+.exc__calm--filter .calm { padding: 0; }
 .exc__meta { font-size: var(--text-label); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .exc__meta b { color: var(--gray-900); font-weight: 500; }
 .exc__meta bdi { font-family: var(--font-mono); font-size: var(--text-micro); }

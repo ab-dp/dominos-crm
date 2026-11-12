@@ -1,20 +1,22 @@
 /* הטבלה המרכזית (אפיון 6.2). היום · מחר · עתידיות · ארכיון הם אותה טבלה עם מסנן שונה.
    חיצים מעבר בין שורות, Enter פתיחה. כל פעולה נפוצה – ישירות בשורה. */
-import { Fragment, memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { Fragment, memo, useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { ClipboardList, Ellipsis, Phone as PhoneIcon } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { EmptyState, HealthBadge, Missing } from '../../design/components';
-import { Ltr, Money, fmtDate, fmtMoney, weekday } from '../../lib/format';
-import { METHOD_LABEL } from '../../data/types';
+import { useToast } from '../../design/Toast';
+import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
+import type { XSheet } from '../../lib/xlsx';
+import { METHOD_LABEL, STAGE_LABEL, closeLabel, stageOf, type Order } from '../../data/types';
 import { FixButton } from './OrderActions';
-import { NextStep, StageTrack, nextStepLabel } from './OrderTimeline';
+import { NextStep, StageTrack, nextStepLabel, opsPending } from './OrderTimeline';
 import './OrdersTable.css';
 
 const PAGE = 150;
 // פעולות שהן חלק מהציר – מופיעות ככפתור "הצעד הבא", לא ככפתור תיקון נוסף
-const STEP_ACTIONS = ['q', 'branch', 'status', 'close'];
+const STEP_ACTIONS = ['q', 'branch', 'status', 'close', 'ops'];
 
 export function OrdersTable({ rows, showDate = true, emptyText, caption, density = 'dense' }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string; density?: 'dense' | 'comfy' }) {
   const panel = usePanel();
@@ -57,15 +59,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
   const allOn = selected.length === rows.length;
   return (
     <div className="otable-wrap">
-      {selected.length > 0 && (
-        <div className="bulkbar" role="toolbar" aria-label="פעולות על הזמנות מסומנות">
-          <span><Ltr>{selected.length}</Ltr> נבחרו</span>
-          <button onClick={() => { updateMany(selected, { status: 'delivered' }, <><Ltr>{selected.length}</Ltr> הזמנות סומנו כסופקו</>); setSelected([]); }}>סמן כסופקו</button>
-          <button onClick={() => { updateMany(selected, { payment: 'paid' }, <><Ltr>{selected.length}</Ltr> הזמנות סומנו כשולמו</>); setSelected([]); }}>סמן שולם</button>
-          <button disabled title="שלב 8">ייצוא לאקסל</button>
-          <button className="bulkbar__clear" onClick={() => setSelected([])}>ניקוי בחירה</button>
-        </div>
-      )}
+      {selected.length > 0 && <BulkBar rows={rows.filter((r) => selected.includes(r.id))} clear={() => setSelected([])} updateMany={updateMany} />}
       <table className={`otable otable--orders otable--${density}`}>
         <caption className="sr-only">{caption}</caption>
         <thead>
@@ -100,6 +94,65 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
       )}
     </div>
   );
+}
+
+/* פעולה מרובה לא עוקפת את מסלול ההזמנה:
+   "סמן כסופקו" – רק הזמנות שהוקלדו ל-Q ונשלחו בקבוצת תפעול; "סמן שולם" – בלי מבוטלות ובלי מה שכבר שולם.
+   השאר מדולגות, וההודעה אומרת כמה ולמה. */
+// מספר + פועל מותאם: 'הזמנה אחת סומנה' / '3 הזמנות סומנו'
+const count = (n: number, one: string, many: string) => (n === 1 ? <>הזמנה אחת {one}</> : <><Ltr>{n}</Ltr> הזמנות {many}</>);
+function BulkBar({ rows, clear, updateMany }: { rows: OrderView[]; clear: () => void; updateMany: (ids: number[], patch: Partial<Order>, message: ReactNode) => void }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const closable = rows.filter((o) => stageOf(o) === 'in_q' && !opsPending(o));
+  const payable = rows.filter((o) => o.status !== 'cancelled' && o.payment !== 'cancelled' && o.payment !== 'paid');
+  const skipped = (n: number, why: string) => (n > 0 ? <> · {count(n, 'דולגה', 'דולגו')} ({why})</> : null);
+  const deliver = () => {
+    updateMany(closable.map((o) => o.id), { status: 'delivered' }, <>{count(closable.length, 'סומנה כסופקה', 'סומנו כסופקו')}{skipped(rows.length - closable.length, 'לא הוקלדו ל-Q או לא נשלחו לתפעול')}</>);
+    clear();
+  };
+  const pay = () => {
+    updateMany(payable.map((o) => o.id), { payment: 'paid' }, <>{count(payable.length, 'סומנה כשולמה', 'סומנו כשולמו')}{skipped(rows.length - payable.length, 'בוטלו או כבר שולמו')}</>);
+    clear();
+  };
+  const exportXlsx = async () => {
+    setBusy(true);
+    try {
+      const { downloadXlsx } = await import('../../lib/xlsx');
+      await downloadXlsx(`הזמנות-${toISODate(new Date())}`, [ordersSheet(rows)]);
+      toast({ message: <>{count(rows.length, 'יוצאה', 'יוצאו')} לאקסל</> });
+    } catch { toast({ tone: 'error', message: 'הייצוא נכשל – נסה שוב' }); }
+    setBusy(false);
+  };
+  return (
+    <div className="bulkbar" role="toolbar" aria-label="פעולות על הזמנות מסומנות">
+      <span><Ltr>{rows.length}</Ltr> נבחרו</span>
+      <button onClick={deliver} disabled={!closable.length}>סמן כסופקו{closable.length > 0 && closable.length < rows.length && <> (<Ltr>{closable.length}</Ltr>)</>}</button>
+      <button onClick={pay} disabled={!payable.length}>סמן שולם{payable.length > 0 && payable.length < rows.length && <> (<Ltr>{payable.length}</Ltr>)</>}</button>
+      <button onClick={exportXlsx} disabled={busy}>{busy ? 'מייצא…' : 'ייצוא לאקסל'}</button>
+      {!closable.length && <span className="bulkbar__note">לסגירה: רק הזמנות שהוקלדו ל-Q ונשלחו לתפעול</span>}
+      <button className="bulkbar__clear" onClick={clear}>ניקוי בחירה</button>
+    </div>
+  );
+}
+
+function ordersSheet(rows: OrderView[]): XSheet {
+  const stage = (o: OrderView) => { const s = stageOf(o); return s === 'delivered' || s === 'partial' ? closeLabel(o) : STAGE_LABEL[s]; };
+  return {
+    name: 'הזמנות', title: 'הזמנות שנבחרו',
+    tables: [{
+      main: true,
+      cols: [
+        { label: "מס' הזמנה", kind: 'id', width: 11 }, { label: 'תאריך', kind: 'date', width: 12 }, { label: 'שעה', kind: 'code', width: 8 },
+        { label: 'לקוח', kind: 'text', width: 28 }, { label: 'סניף', kind: 'text', width: 20 }, { label: 'סכום', kind: 'money', width: 12 },
+        { label: 'שלב', kind: 'text', width: 20 }, { label: 'אמצעי', kind: 'text', width: 12 }, { label: 'מטפל', kind: 'text', width: 16 },
+        { label: "מס' Q", kind: 'code', width: 12 }, { label: 'סכום Q', kind: 'money', width: 12 },
+      ],
+      rows: rows.map((o) => [o.id, o.date, o.time, o.customerName, o.branchName, o.amount || null, stage(o), o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method, o.handler, o.qNumber, o.qAmount ?? null]),
+      rowStyle: rows.map((o) => (o.status === 'cancelled' ? 'muted' : undefined)),
+      total: ['סה"כ', null, null, null, null, rows.filter((o) => o.status !== 'cancelled').reduce((t, o) => t + o.amount, 0), null, null, null, null, null],
+    }],
+  };
 }
 
 /* כותרת יום – רק בתצוגת הכרטיסים של הטלפון */
@@ -156,7 +209,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       className={`orow orow--${o.health} ${flash ? 'is-flash' : ''} ${selected ? 'is-selected' : ''}`}
       onClick={(e) => panel.open(o.id, e.currentTarget)}
       onKeyDown={onRowKey}
-      aria-label={`הזמנה ${o.id}, ${o.customerName}, ${showDate ? `${fmtDate(o.date)} ` : ''}${o.time}${top ? `, ${top.label}` : ''}`}
+      aria-label={`הזמנה ${o.id}, ${o.customerName}, ${showDate ? `${fmtDate(o.date)} ` : ''}${o.time}${o.issues.length ? `, ${o.issues.map((i) => i.label).join(', ')}` : ''}`}
     >
       <td className="col-check" onClick={(e) => e.stopPropagation()}>
         <input type="checkbox" aria-label={`בחר הזמנה ${o.id}`} checked={selected} onChange={() => toggle(o.id)} />
@@ -166,7 +219,12 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
       {showDate && <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>}
       <td className="c-cust">
         <span className="orow__cust">{o.customerName}{o.changedAfterApproval && <span className="changed-tag changed-tag--sm" title="שונתה לאחר אישור">שונתה</span>}</span>
-        {top && o.health !== 'ok' && <span className={`orow__why orow__why--${o.health}`}>{top.label}</span>}
+        {/* הסיבות גלויות בשורה, לא רק בריחוף: שתיים ראשונות, ומספר הנוספות */}
+        {top && o.health !== 'ok' && (
+          <span className={`orow__why orow__why--${o.health}`} title={o.issues.map((i) => i.label).join(' · ')}>
+            {o.issues.slice(0, 2).map((i) => i.label).join(' · ')}{o.issues.length > 2 && <span className="orow__more"> +<Ltr>{o.issues.length - 2}</Ltr></span>}
+          </span>
+        )}
         {/* בטלפון העמודות מוסתרות – סניף וסכום בשורה אחת מתחת לשם */}
         <span className="orow__m">
           <span>{o.branchName || <Missing>ללא סניף</Missing>}</span>
