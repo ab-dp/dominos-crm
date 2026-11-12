@@ -160,8 +160,9 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
     return (
       <article className="os" ref={ref} dir="rtl">
         <header className="os-head">
-          <div>
-            <h1>סיכום הזמנות · {c.name}</h1>
+          <div className="os-cluster"><span>קבוצת תפעול</span><h1>{c.name}</h1></div>
+          <div className="os-title">
+            <p>סיכום הזמנות לתפעול</p>
             <p className="os-range">{rangeText(from, to)}</p>
           </div>
           <div className="os-stats">
@@ -185,7 +186,7 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
                 </div></td></tr>
               )}
               {d.branches.flatMap((b, bi) => [
-                <tr key={b.name} className={`os-br${bi % 2 ? ' is-wash' : ''}`}><td colSpan={6}><div><b>{b.name}</b><span>{totals(b.orders)}</span></div></td></tr>,
+                <tr key={b.name} className={`os-br${bi % 2 ? ' is-wash' : ''}`}><td colSpan={6}><div><p><b>{b.name}</b><span>{totals(b.orders)}</span></p></div></td></tr>,
                 ...b.orders.map((o) => <OrderRow key={o.id} o={o} wash={bi % 2 === 1} mark={mark.get(o.id)} />),
               ])}
             </tbody>

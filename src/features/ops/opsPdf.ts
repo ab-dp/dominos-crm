@@ -1,56 +1,41 @@
-/* PDF לסיכום לתפעול: עמודי A4 לרוחב רגילים בלבד, כל אשכול מעמוד חדש.
-   אשכול שנכנס לעמוד אחד (גם בהקטנה קלה) – עמוד אחד. אשכול ארוך – כמה עמודים, נחתך בין הזמנות:
-   לא באמצע הזמנה, ולא בין כותרת של יום / סניף לבין ההזמנה הראשונה שלה.
-   כל עמוד מקבל תמונה משלו (JPEG) בגודל העמוד – בלי עמודים בגודל חריג ובלי תמונה ענקית אחת, שקוראי PDF מתקשים לפתוח. */
-const PAGE_W = 297, PAGE_H = 210, M = 8;
-const MIN_SCALE = 0.85; // הקטנה גדולה מזו כבר פוגעת בקריאה – עדיף עמוד נוסף
+/* PDF לסיכום לתפעול: עמוד אחד לכל אשכול, לאורך – ברוחב A4 לרוחב (297 מ"מ), והגובה לפי האשכול. הכתב לא מוקטן.
+   כדי שכל קורא PDF יפתח אותו: התמונה נשמרת כרצועות JPEG זו מתחת לזו (לא תמונה ענקית אחת),
+   והעמוד לא עולה על 5,000 מ"מ (מעל ~5,080 קוראי PDF מסרבים) – אשכול ארוך מזה מוקטן כדי להיכנס. */
+const PAGE_W = 297, M = 8, MIN_H = 210, MAX_H = 5000;
 const MAX_CANVAS_PX = 16000; // צלע מקסימלית של קנבס שכל דפדפן מצייר בבטחה
 const MAX_CANVAS_AREA = 40e6;
+const STRIP_PX = 3000;       // גובה רצועה בקנבס
 
 export async function downloadOpsPdf(sheets: HTMLElement[], fileName: string) {
   const [{ toCanvas }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')]);
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape', compress: true });
-  const fullW = PAGE_W - 2 * M, room = PAGE_H - 2 * M;
-  let first = true;
+  const fullW = PAGE_W - 2 * M;
+  let pdf: InstanceType<typeof jsPDF> | undefined;
   for (const el of sheets) {
     const W = el.offsetWidth, H = el.offsetHeight;
     if (!W || !H) continue;
     const ratio = Math.min(2, MAX_CANVAS_PX / H, Math.sqrt(MAX_CANVAS_AREA / (W * H)));
     const canvas = await toCanvas(el, { pixelRatio: ratio, backgroundColor: '#ffffff', cacheBust: true, width: W, height: H });
-    const k = canvas.height / H; // פיקסלים בקנבס לכל פיקסל בדף
-    const mmPerPx = fullW / W;
-    const fit = room / (H * mmPerPx);
-    const s = fit >= MIN_SCALE ? Math.min(1, fit) : MIN_SCALE;
-    const pageHpx = room / (mmPerPx * s);
-    const cuts = fit >= MIN_SCALE ? [] : cutPoints(el, H);
-    let start = 0;
-    while (start < H - 1) {
-      const limit = start + pageHpx;
-      const end = limit >= H ? H : [...cuts].reverse().find((y) => y <= limit && y > start + 80) ?? Math.floor(limit);
-      const slice = document.createElement('canvas');
-      slice.width = canvas.width;
-      slice.height = Math.max(1, Math.round((end - start) * k));
-      const ctx = slice.getContext('2d')!;
+    const hMm = H * (fullW / W);
+    const s = Math.min(1, (MAX_H - 2 * M) / hMm); // רק אשכול ענק מוקטן
+    const pageH = Math.max(MIN_H, hMm * s + 2 * M);
+    const format = [PAGE_W, pageH];
+    const orientation = pageH > PAGE_W ? 'portrait' : 'landscape';
+    if (!pdf) pdf = new jsPDF({ unit: 'mm', format, orientation, compress: true });
+    else pdf.addPage(format, orientation);
+    const w = fullW * s, x = (PAGE_W - w) / 2, mmPerCanvasPx = w / canvas.width;
+    for (let y = 0; y < canvas.height; y += STRIP_PX) {
+      const h = Math.min(STRIP_PX, canvas.height - y);
+      const strip = document.createElement('canvas');
+      strip.width = canvas.width;
+      strip.height = h;
+      const ctx = strip.getContext('2d')!;
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, slice.width, slice.height);
-      ctx.drawImage(canvas, 0, Math.round(start * k), canvas.width, slice.height, 0, 0, slice.width, slice.height);
-      if (!first) pdf.addPage('a4', 'landscape');
-      first = false;
-      const w = fullW * s;
-      pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', (PAGE_W - w) / 2, M, w, (end - start) * mmPerPx * s);
-      start = end;
+      ctx.fillRect(0, 0, strip.width, h);
+      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      // חפיפה זעירה בין רצועות – בלי קו לבן דק ביניהן בחלק מהקוראים
+      const overlap = y + h < canvas.height ? 0.15 : 0;
+      pdf.addImage(strip.toDataURL('image/jpeg', 0.92), 'JPEG', x, M + y * mmPerCanvasPx, w, h * mmPerCanvasPx + overlap);
     }
   }
-  pdf.save(fileName);
-}
-
-/* נקודות חיתוך אפשריות (בפיקסלים של הדף): תחילת כל שורה בטבלה, חוץ משורה שבאה מיד אחרי כותרת יום או סניף */
-function cutPoints(el: HTMLElement, H: number) {
-  const box = el.getBoundingClientRect();
-  const scale = box.height / H || 1; // הדף מוקטן על המסך בטלפון / חלון צר
-  const rows = [...el.querySelectorAll<HTMLTableRowElement>('.os-table tbody tr')];
-  return rows
-    .filter((_, i) => i > 0 && !rows[i - 1].matches('.os-br, .os-dayband'))
-    .map((r) => (r.getBoundingClientRect().top - box.top) / scale)
-    .sort((a, b) => a - b);
+  pdf?.save(fileName);
 }
