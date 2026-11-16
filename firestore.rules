@@ -139,7 +139,12 @@ service cloud.firestore {
       allow update: if isActive()
         && validCustomer(request.resource.data, cid)
         && request.resource.data.updatedBy == request.auth.uid
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'createdAt']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'createdAt'])
+        // מיזוג: "ממוזג אל" נקבע רק על לקוח פעיל, אל לקוח קיים אחר. לקוח שמוזג נשאר ממוזג ולא משתנה
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['mergedInto'])
+            || (resource.data.status == 'active' && request.resource.data.mergedInto is string
+                && request.resource.data.mergedInto != cid && exists(/databases/$(database)/documents/customers/$(request.resource.data.mergedInto))))
+        && (resource.data.status != 'merged' || request.resource.data.status == 'merged');
       allow delete: if false;
 
       match /activity/{aid} {
@@ -279,11 +284,12 @@ service cloud.firestore {
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['amount', 'qAmount', 'calcAmount', 'deliveryFee', 'date', 'status', 'payment', 'method', 'items'])
             || (!monthLocked(resource.data.date) && !monthLocked(request.resource.data.date))
             || lockFixOk(request.resource.data))
-        // חודש נעול: העברה ללקוח אחר – עם סיבה, או במיזוג לקוחות (הלקוח הקודם מסומן באותה פעולה כממוזג אל החדש)
+        // חודש נעול: העברה ללקוח אחר – עם סיבה, או במיזוג לקוחות (רק לקוח ועדכון, והלקוח הקודם כבר מסומן כממוזג אל החדש)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['customerId', 'customerName'])
             || (!monthLocked(resource.data.date) && !monthLocked(request.resource.data.date))
             || lockFixOk(request.resource.data)
-            || getAfter(/databases/$(database)/documents/customers/$(resource.data.customerId)).data.get('mergedInto', '') == request.resource.data.customerId);
+            || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['customerId', 'customerName', 'updatedAt', 'updatedBy'])
+                && getAfter(/databases/$(database)/documents/customers/$(resource.data.customerId)).data.get('mergedInto', '') == request.resource.data.customerId));
       // מחיקה לגמרי – רק מנהל מערכת, ולא בחודש נעול (ביומן נשארת רשומה עם הסיבה)
       allow delete: if isAdmin() && !monthLocked(resource.data.date);
 

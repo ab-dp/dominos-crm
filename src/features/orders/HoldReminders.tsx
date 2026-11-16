@@ -19,7 +19,7 @@ export function HoldReminders() {
 
   useEffect(() => {
     if (!profile?.uid || !orders.length) return;
-    const due = orders.filter((o) => o.hold && o.hold.by === profile.uid && !o.qNumber && o.status !== 'cancelled' && holdDue(o.hold, now));
+    const due = orders.filter((o) => o.hold && o.hold.by === profile.uid && !o.qNumber && o.status !== 'cancelled' && !!o.hold.remindAt && holdDue(o.hold, now));
     const fresh = due.filter((o) => !shown.current.has(`${o.id}:${o.hold!.remindAt}`));
     fresh.forEach((o) => shown.current.add(`${o.id}:${o.hold!.remindAt}`));
     if (!ready.current) { ready.current = true; return; }

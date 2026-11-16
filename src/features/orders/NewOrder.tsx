@@ -74,7 +74,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const tomorrow = toISODate(addDays(now, 1));
   /* מהצעת מחיר: הלקוח, המועד, המשלוח והשורות (כמות ומחיר) עוברים לטופס. נשאר לפרט סוגים ותוספות */
   const fq = initial.fromQuote;
-  const prefill = useRef(!!fq);
+  /* מזהה הלקוח שהפרטים מההצעה שייכים אליו. לא מתאפס בהרצה חוזרת של אותו לקוח (StrictMode), רק כשמחליפים לקוח */
+  const prefill = useRef<string | null>(fq?.customerId || null);
 
   const [mode, setMode] = useState<NewOrderMode>(initial.customerName || initial.mode === 'newCustomer' || (fq && !fq.customerId) ? 'newCustomer' : 'full');
   const [customerId, setCustomerId] = useState(initial.customerId ?? fq?.customerId ?? '');
@@ -91,7 +92,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const [override, setOverride] = useState<string | null>(null); // סכום לחיוב שהוקלד ידנית
   const [poFile, setPoFile] = useState<File | null>(null);
   const [lines, setLines] = useState<Line[]>(() => (fq?.lines ?? []).map((l) => ({ key: newId(), group: l.category, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.unitPrice ? { manualPrice: true } : {}) })));
-  const [status, setStatus] = useState<OrderStatus>('pending_customer');
+  const [status, setStatus] = useState<OrderStatus>(fq?.status === 'approved' ? 'approved' : 'pending_customer');
   // הזמנה בתאריך שעבר – לתיעוד בלבד: נשמרת ישר כסגורה, לפי התוצאה
   const [outcome, setOutcome] = useState<'' | 'delivered' | 'late' | 'partial' | 'cancelled'>('');
   const [lateMin, setLateMin] = useState('');
@@ -133,8 +134,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   useEffect(() => {
     if (!c) return;
     const addr = c.addresses[0];
-    const fromQuote = prefill.current;
-    prefill.current = false;
+    const fromQuote = prefill.current === c.id;
+    if (!fromQuote) prefill.current = null;
     setMethod(c.paymentMethod);
     setMethodNote('');
     setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : '');
