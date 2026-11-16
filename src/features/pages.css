@@ -123,3 +123,10 @@
   .head-stats > div + div { margin-inline-start: 0; padding-inline-start: 0; border-inline-start: 0; }
 }
 .loading-rows { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-4); }
+
+/* הזמנות: בחירת טווח תאריכים / היקף הארכיון – שורה אחת מעל הסינונים */
+.orange { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--white); box-shadow: inset 0 0 0 1px var(--line); }
+.orange__f { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
+.orange__note { font-size: var(--text-label); }
+.orange__note bdi { font-family: var(--font-mono); }
+.orange__err { font-size: var(--text-label); font-weight: 500; color: var(--danger-fg); }

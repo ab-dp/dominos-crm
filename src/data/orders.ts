@@ -48,11 +48,13 @@ function auditDoc(entity: 'order' | 'customer', entityId: string, action: string
 /* ---------- קריאה חיה ----------
    כדי לא לקרוא את כל ההיסטוריה בכל טעינה (מכסת קריאות חינמית): כל ההזמנות הפתוחות, מכל תאריך,
    ועוד כל ההזמנות מתחילת החודש הקודם. ארכיון ישן יותר ייפתח בדוחות (שלב 8). */
+/* מאיזה תאריך הרשימה החיה מכילה את כל ההזמנות (כולל סגורות): תחילת החודש הקודם. לפני כן – רק הפתוחות, והשאר נטען לפי דרישה */
+export const liveSince = (now: Date) => toISODate(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
 export function useLiveOrders() {
   const [state, setState] = useState<{ orders: Order[]; loading: boolean; error: string }>({ orders: [], loading: true, error: '' });
   useEffect(() => {
-    const now = new Date();
-    const since = toISODate(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+    const since = liveSince(new Date());
     let open: Order[] | null = null;
     let recent: Order[] | null = null;
     const emit = () => {
@@ -236,17 +238,19 @@ export function useOrderViewers(orderId: number) {
 
 /* ---------- דוחות (אפיון 10): כל ההזמנות בטווח תאריכי אספקה, בקריאה אחת לפי דרישה ----------
    לא מאזינים בזמן אמת – דוח נטען בפתיחה ובלחיצה על "רענן", כדי לשמור על מכסת הקריאות החינמית. */
-export function useOrdersRange(from: string, to: string) {
+export function useOrdersRange(from: string, to: string, enabled = true) {
   const [state, setState] = useState<{ orders: Order[]; loading: boolean; error: string }>({ orders: [], loading: true, error: '' });
   const [tick, setTick] = useState(0);
   useEffect(() => {
+    // enabled=false: לא קוראים כלום (למשל כשהטווח כבר נמצא ברשימה החיה)
+    if (!enabled) { setState({ orders: [], loading: false, error: '' }); return; }
     let alive = true;
     setState((s) => ({ ...s, loading: true }));
     getDocs(query(collection(db, 'orders'), where('date', '>=', from), where('date', '<=', to)))
       .then((s) => { if (alive) setState({ orders: s.docs.map((d) => fromDoc(d.id, d.data())), loading: false, error: '' }); })
       .catch(() => { if (alive) setState({ orders: [], loading: false, error: 'אין הרשאה או אין חיבור' }); });
     return () => { alive = false; };
-  }, [from, to, tick]);
+  }, [from, to, tick, enabled]);
   return { ...state, reload: () => setTick((t) => t + 1) };
 }
 
