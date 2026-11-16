@@ -4,16 +4,18 @@ import { type ReactNode } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
-import { closeLabel } from '../../data/types';
+import { closeLabel, holdDue } from '../../data/types';
 import { HealthBadge, Missing, Skeleton } from '../../design/components';
 import { Ltr, Money } from '../../lib/format';
 import { usePref } from '../../lib/prefs';
 import { orderDateTime } from '../../rules-engine/health';
 import { NextStep } from '../orders/OrderTimeline';
+import { HoldActions, agoText, remindText } from '../orders/Hold';
 import { qProgress, type Lane } from './qQueue';
 
 const LANE_META: Record<Lane, { title: string; empty?: string; fold?: boolean }> = {
   todo: { title: 'להקליד ל-Q', empty: 'כל ההזמנות שהלקוח אישר ירדו ל-Q' },
+  hold: { title: 'בהמתנה' },
   customer: { title: 'ממתינות לאישור לקוח' },
   inq: { title: 'ירדו ל-Q', fold: true },
   closed: { title: 'נסגרו', fold: true },
@@ -45,7 +47,7 @@ export function TodayQueue({ lanes, loading, now }: { lanes: Record<Lane, OrderV
 
       {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={40} />)}</div>
         : p.total === 0 ? <p className="calm calm--quiet">אין הזמנות להיום</p>
-        : (['todo', 'customer', 'inq', 'closed'] as Lane[]).map((lane) => {
+        : (['todo', 'hold', 'customer', 'inq', 'closed'] as Lane[]).map((lane) => {
           const list = lanes[lane];
           const meta = LANE_META[lane];
           if (!list.length && lane !== 'todo') return null;
@@ -84,11 +86,12 @@ function QueueRow({ o, lane, isNext, now }: { o: OrderView; lane: Lane; isNext: 
   const panel = usePanel();
   // הזמנה של היום שלא ירדה ל-Q אחרי השעה שנקבעה – החריגה האדומה (כלל 1)
   const late = lane === 'todo' && o.issues.some((i) => i.rule === 1 && i.severity === 'red');
-  const credit = (lane === 'todo' || lane === 'customer') && o.method === 'credit' && o.payment !== 'paid' && o.payment !== 'cancelled';
+  const credit = (lane === 'todo' || lane === 'hold' || lane === 'customer') && o.method === 'credit' && o.payment !== 'paid' && o.payment !== 'cancelled';
   const minutes = Math.round((orderDateTime(o).getTime() - now.getTime()) / 60000);
-  const label = `${o.time} ${o.customerName}${late ? ', לא הועברה ל-Q' : ''}${o.qNumber ? `, Q ${o.qNumber}` : ''}${o.health !== 'ok' && !late ? `, ${o.issues.map((i) => i.label).join(', ')}` : ''}`;
+  const back = lane !== 'hold' && holdDue(o.hold, now);
+  const label = `${o.time} ${o.customerName}${o.hold ? `, בהמתנה: ${o.hold.reason}` : ''}${late ? ', לא הועברה ל-Q' : ''}${o.qNumber ? `, Q ${o.qNumber}` : ''}${o.health !== 'ok' && !late ? `, ${o.issues.map((i) => i.label).join(', ')}` : ''}`;
   return (
-    <li className={`qrow qrow--${lane} ${late ? 'is-late' : ''}`}>
+    <li className={`qrow qrow--${lane} ${late ? 'is-late' : ''} ${back ? 'is-back' : ''}`}>
       <span className="qrow__time">{lane === 'inq' && <Check size={14} aria-hidden="true" className="qrow__ok" />}{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</span>
       <button className="qrow__main" onClick={(e) => panel.open(o.id, e.currentTarget)} aria-label={label}>
         <span className="qrow__cust">
@@ -102,11 +105,20 @@ function QueueRow({ o, lane, isNext, now }: { o: OrderView; lane: Lane; isNext: 
         </span>
       </button>
       <span className="qrow__tags">
+        {back && <span className="qtag qtag--back">הגיע הזמן לחזור</span>}
         {late && <span className="qtag qtag--late">לא הועברה ל-Q</span>}
         {credit && <span className="qtag qtag--credit">אשראי לחיוב</span>}
         {!late && lane !== 'closed' && <HealthBadge health={o.health} issues={o.issues} compact focusable={false} />}
       </span>
-      {lane !== 'closed' && <span className="qrow__act"><NextStep o={o} /></span>}
+      {lane !== 'closed' && <span className="qrow__act">{o.hold ? <HoldActions o={o} /> : <NextStep o={o} />}</span>}
+      {/* בהמתנה: למה, מי ומתי, ומתי לחזור */}
+      {o.hold && (lane === 'hold' || back) && (
+        <span className="qrow__hold">
+          <b>{o.hold.reason}{o.hold.attempts > 1 && <> · ניסיון <Ltr>{o.hold.attempts}</Ltr></>}</b>
+          {o.hold.note && <> · {o.hold.note}</>}
+          <span className="qrow__hold-meta"> · {o.hold.byName} {agoText(o.hold.at, now)}{o.hold.remindAt && !back && <> · {remindText(o.hold, now)}</>}</span>
+        </span>
+      )}
     </li>
   );
 }

@@ -39,6 +39,9 @@
   --missing-edge: #D8B53A;
   --danger-line: #EDB3BC; /* גבול של כפתור/תג מסוכן */
   --ok-mark: #2E9E62;     /* וי בהודעה על רקע כהה */
+  /* "בהמתנה" – סגול שקט, נפרד מכתום "דחוף": ההזמנה חונה בכוונה ומחכה לחזרה (DESIGN.md, The Q-Lane Rule) */
+  --hold-bg: #F2EEFA;    --hold-fg: #5B3A9E;
+  --hold-edge: #8C6BD0;
   --line: var(--gray-100);
   --line-soft: #EEF1F4;   /* קו בין שורות טבלה */
 

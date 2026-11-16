@@ -12,6 +12,7 @@ import { Button, Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, sameMoney, toISODate, weekday } from '../../lib/format';
 import { QForm } from './OrderActions';
+import { HoldButton } from './Hold';
 import { phoneError } from '../../lib/names';
 import { PriceRows } from './ItemsBuilder';
 import { BranchEdit, DeliveryTypeEdit, EarlierNotes, EditKv, ItemsEditor, MethodEdit, MethodNoteEdit, showDate, showPhone, useOrderSave, validDate, validPhone, validTime } from './OrderEdit';
@@ -51,7 +52,11 @@ export function RegisterBlock({ o }: { o: OrderView }) {
     <section className="reg" aria-labelledby="h-reg">
       <div className="reg__head">
         <h3 id="h-reg" className="reg__title">להעברה לקופה</h3>
-        <button type="button" className="link reg__copy" onClick={copy}><Copy size={14} aria-hidden="true" /> העתק הכל</button>
+        <span className="reg__head-end">
+          {/* הלקוח לא עונה / חסר משהו – מעבירים להמתנה וממשיכים להזמנה הבאה */}
+          <HoldButton o={o} />
+          <button type="button" className="link reg__copy" onClick={copy}><Copy size={14} aria-hidden="true" /> העתק הכל</button>
+        </span>
       </div>
       <div className="reg__grid">
         <EditKv k="תאריך" kind="date" value={o.date} display={<>{weekday(o.date)} {showDate(o.date)}</>} validate={validDate} onSave={(v) => save({ date: v }, 'תאריך האספקה')} />
@@ -133,7 +138,7 @@ function NextToType({ o, primary }: { o: OrderView; primary: boolean }) {
   const [mine] = usePref('scope:mine', false);
   const today = toISODate(now);
   if (o.date !== today) return null;
-  const next = nextToType(mine ? mineOnly(orders, profile) : orders, today, o.id);
+  const next = nextToType(mine ? mineOnly(orders, profile) : orders, today, now, o.id);
   if (!next) return <span className="reg-q__all">אין עוד הזמנות להקליד היום</span>;
   return (
     <Button size="sm" variant={primary ? 'primary' : 'secondary'} autoFocus={primary} className="reg-q__next" onClick={() => panel.open(next.id)}

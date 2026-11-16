@@ -17,6 +17,7 @@ import { healthOf, issuesFor } from '../../rules-engine/health';
 import { FixButton, PoEdit } from './OrderActions';
 import { OrderTimeline } from './OrderTimeline';
 import { RegisterBlock, RegisterLocked } from './OrderRegister';
+import { HoldBanner } from './Hold';
 import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
@@ -165,6 +166,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           </div>
         )}
         {cancelled && <CancelledNote o={o} />}
+        <HoldBanner o={o} />
         {/* קודם כל: מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q. בהזמנה מבוטלת – לקריאה בלבד */}
         {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} />}
 
@@ -268,7 +270,7 @@ export const FIELD: Record<string, string> = {
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', methodNote: 'פירוט אמצעי התשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
-  opsNotified: 'נשלח בקבוצת תפעול', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות',
+  opsNotified: 'נשלח בקבוצת תפעול', hold: 'בהמתנה', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות',
 };
 export function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -285,6 +287,7 @@ export function showVal(k: string, v: unknown): string {
   if (k === 'method') return METHOD_LABEL[String(v)] ?? String(v);
   if (k === 'methodNote') return String(v ?? '') || '—';
   if (k === 'opsNotified') return v ? 'נשלח' : 'עוד לא';
+  if (k === 'hold') return v ? (() => { const h = v as { reason?: string; note?: string; attempts?: number }; return [h.reason, h.attempts && h.attempts > 1 ? `ניסיון ${h.attempts}` : '', h.note].filter(Boolean).join(' · '); })() : 'שוחררה';
   if (k === 'qNeedsUpdate') return v ? 'צריך לעדכן' : 'עודכן';
   if (k === 'late') return (v as { minutes?: number }).minutes ? `${(v as { minutes: number }).minutes} דק'` : 'באיחור';
   if (k === 'postCloseFix') return (v as { reason?: string }).reason ?? '—';

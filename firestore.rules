@@ -209,7 +209,18 @@ service cloud.firestore {
         && (!('calcAmount' in d) || (d.calcAmount is number && d.calcAmount >= 0))
         && (!('qAmount' in d) || (d.qAmount is number && d.qAmount >= 0 && d.qAmount < 1000000))
         && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee < 10000))
+        && (!('hold' in d) || validHold(d.hold))
         && d.keys().size() <= 70;
+    }
+    // "בהמתנה": סיבה, הערה קצרה, מי ומתי, מתי לחזור ומספר ניסיונות
+    function validHold(h) {
+      return h is map && h.keys().hasOnly(['reason', 'note', 'by', 'byName', 'at', 'remindAt', 'attempts'])
+        && h.reason is string && h.reason.size() > 0 && h.reason.size() <= 60
+        && h.get('note', '') is string && h.get('note', '').size() <= 500
+        && h.by is string && h.byName is string && h.byName.size() <= 120
+        && h.at is string && h.at.size() <= 40
+        && h.get('remindAt', '') is string && h.get('remindAt', '').size() <= 40
+        && h.attempts is int && h.attempts >= 1 && h.attempts <= 99;
     }
 
     // ---------- סגירת חודש (אפיון 7) ----------
