@@ -300,7 +300,9 @@ function LockStep({ ym, orders, month, done, fixes, onGo }: { ym: string; orders
           {s.onTime ? (
             <>
               <div><dt>סופקו בזמן</dt><dd><Ltr>{s.onTime.onTime}</Ltr>{s.onTime.delivered > 0 && <small> · <Ltr>{pctOf(s.onTime.onTime / s.onTime.delivered)}%</Ltr></small>}</dd></div>
-              <div><dt>סופקו באיחור</dt><dd><Ltr>{s.onTime.late}</Ltr></dd></div>
+              <div><dt>סופקו באיחור</dt><dd><Ltr>{s.onTime.late}</Ltr>{s.onTime.late > 0 && s.onTime.lateMajor !== undefined && (
+                <small> · עד <Ltr>{s.onTime.split ?? 15}</Ltr> דק': <Ltr>{s.onTime.lateMinor}</Ltr> · מעל: <Ltr>{s.onTime.lateMajor}</Ltr>{!!s.onTime.lateUnknown && <> · בלי דקות: <Ltr>{s.onTime.lateUnknown}</Ltr></>}</small>
+              )}</dd></div>
               <div><dt>מתוכן חלקית</dt><dd><Ltr>{s.onTime.partial}</Ltr></dd></div>
             </>
           ) : s.byOutcome && (['ontime', 'late', 'partial'] as const).map((k) => <div key={k}><dt>{OUTCOME_LABEL[k]}</dt><dd><Ltr>{s.byOutcome![k] ?? 0}</Ltr></dd></div>)}

@@ -5,7 +5,7 @@ import { isExpired, type Quote } from '../../data/quotes';
 import { CLOSED, PIZZA, categoryOf } from '../../data/types';
 import { missingOf } from '../../rules-engine/health';
 import { addDays, roundMoney, toISODate } from '../../lib/format';
-import { PRESET_LABEL, isDelivered, onTime, pctOf, presetRange, revenue, revenueOf } from '../../data/metrics';
+import { PRESET_LABEL, isDelivered, lateKind, onTime, pctOf, presetRange, revenue, revenueOf } from '../../data/metrics';
 
 export type Period = 'week' | 'month' | 'prevMonth' | 'd30' | 'custom';
 export const PERIOD_LABEL: Record<Period, string> = { week: PRESET_LABEL.week, month: PRESET_LABEL.month, prevMonth: PRESET_LABEL.prevMonth, d30: PRESET_LABEL.d30, custom: PRESET_LABEL.custom };
@@ -107,19 +107,21 @@ export function byDay(orders: OrderView[], cur: Range, prev: Range): DayPoint[] 
 
 /* ---------- עמידה בזמנים: אותה הגדרה כמו בדוחות (data/metrics.ts) – "בזמן" = סופקה (מלא או חלקי) בלי איחור.
    onTime + late = delivered; partial הוא "מתוכן חלקית" ולא קטגוריה נפרדת ---------- */
-export type Service = { onTime: number; late: number; partial: number; cancelled: number; delivered: number; closed: number; onTimePct: number | null; overdue: number; lateBranches: { name: string; late: number; delivered: number }[] };
+/* late = כל האיחורים; lateMinor / lateMajor / lateUnknown – הפיצול (עד X דק' / מעל X דק' / בלי דקות) */
+export type Service = { onTime: number; late: number; lateMinor: number; lateMajor: number; lateUnknown: number; partial: number; cancelled: number; delivered: number; closed: number; onTimePct: number | null; overdue: number; lateBranches: { name: string; late: number; major: number; delivered: number }[] };
 export function service(orders: OrderView[], r: Range, now: Date): Service {
   const list = orders.filter((o) => inRange(o, r));
   const done = list.filter(isDelivered);
   const t = onTime(list);
   const cancelled = list.filter((o) => o.status === 'cancelled').length;
-  const by = new Map<string, { name: string; late: number; delivered: number }>();
-  done.forEach((o) => { const k = o.branchName || '—'; const e = by.get(k) ?? { name: k, late: 0, delivered: 0 }; e.delivered += 1; if (o.late) e.late += 1; by.set(k, e); });
+  const by = new Map<string, { name: string; late: number; major: number; delivered: number }>();
+  done.forEach((o) => { const k = o.branchName || '—'; const e = by.get(k) ?? { name: k, late: 0, major: 0, delivered: 0 }; e.delivered += 1; if (o.late) e.late += 1; if (lateKind(o) === 'major') e.major += 1; by.set(k, e); });
   return {
-    onTime: t.onTime, late: t.late, partial: t.partial, cancelled, delivered: t.delivered, closed: t.delivered + cancelled,
+    onTime: t.onTime, late: t.late, lateMinor: t.lateMinor, lateMajor: t.lateMajor, lateUnknown: t.lateUnknown, partial: t.partial, cancelled, delivered: t.delivered, closed: t.delivered + cancelled,
     onTimePct: pctOf(t.rate),
     overdue: list.filter((o) => !CLOSED.includes(o.status) && o.date < iso(now)).length,
-    lateBranches: [...by.values()].filter((b) => b.late > 0).sort((a, b) => b.late - a.late || b.late / b.delivered - a.late / a.delivered).slice(0, 3),
+    // קודם האיחורים הארוכים (מעל X דק'), ואז כל האיחורים
+    lateBranches: [...by.values()].filter((b) => b.late > 0).sort((a, b) => b.major - a.major || b.late - a.late || b.late / b.delivered - a.late / a.delivered).slice(0, 3),
   };
 }
 

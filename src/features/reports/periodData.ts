@@ -2,7 +2,7 @@
    כלל אחיד כמו בשאר הדוחות: לפי תאריך אספקה וסכום Q (ואם לא הוקלד – הסכום לחיוב). סכומים בלי הזמנות שבוטלו. */
 import { OUTCOME_LABEL, methodText, PIZZA, STAGE_LABEL, categoryOf, stageOf, type Order } from '../../data/types';
 import { addDays, roundMoney, toISODate } from '../../lib/format';
-import { ON_TIME_HINT, isDelivered, isLive, onTime, revenue, type Preset } from '../../data/metrics';
+import { LATE_SPLIT_HINT, ON_TIME_HINT, isDelivered, isLive, lateKind, lateLabel, lateSplit, onTime, revenue, type Preset } from '../../data/metrics';
 
 /* ---------- תקופות: מתוך הרשימה המשותפת (data/metrics.ts) – אותם שמות ואותה משמעות בכל הדוחות ---------- */
 export const PERIOD_PRESETS: Preset[] = ['lastWeek', 'prevMonth', 'month', 'custom'];
@@ -67,16 +67,16 @@ export const missingQ = (all: Order[]) => all.filter((o) => live(o) && o.qAmount
 /* ---------- לשונית 2: סיכום ---------- */
 export type Summary = { kpis: Kpi[]; tables: STable[] };
 
-type Agg = { name: string; extra?: string; count: number; sum: number; done: number; late: number; lateMin: number; lateMinN: number };
+type Agg = { name: string; extra?: string; count: number; sum: number; done: number; late: number; major: number; lateMin: number; lateMinN: number };
 function aggregate(list: Order[], key: (o: Order) => string, extra?: (o: Order) => string): Agg[] {
   const m = new Map<string, Agg>();
   list.forEach((o) => {
     const k = key(o) || '—';
-    const e = m.get(k) ?? { name: k, extra: extra?.(o) || '—', count: 0, sum: 0, done: 0, late: 0, lateMin: 0, lateMinN: 0 };
+    const e = m.get(k) ?? { name: k, extra: extra?.(o) || '—', count: 0, sum: 0, done: 0, late: 0, major: 0, lateMin: 0, lateMinN: 0 };
     if (live(o)) { e.count += 1; e.sum = roundMoney(e.sum + revenue([o])); }
     if (done(o)) {
       e.done += 1;
-      if (o.late) { e.late += 1; if (o.late.minutes) { e.lateMin += o.late.minutes; e.lateMinN += 1; } }
+      if (o.late) { e.late += 1; if (lateKind(o) === 'major') e.major += 1; if (o.late.minutes) { e.lateMin += o.late.minutes; e.lateMinN += 1; } }
     }
     m.set(k, e);
   });
@@ -121,11 +121,15 @@ export function summary(all: Order[], from: string, to: string): Summary {
   /* אחוזים מתוך ההזמנות שסופקו (כמו בבורד): בזמן + באיחור = 100%. חלקיות, ביטולים ופתוחות – כמות בלבד */
   const service: STable = {
     id: 'service', title: 'עמידה בזמנים',
-    note: t.delivered ? `"סופקו בזמן" – ${ON_TIME_HINT}` : 'אין עדיין הזמנות שסופקו בתקופה',
+    note: t.delivered ? `"סופקו בזמן" – ${ON_TIME_HINT}. ${LATE_SPLIT_HINT()}` : 'אין עדיין הזמנות שסופקו בתקופה',
     cols: [{ label: 'סטטוס', kind: 'text', width: 30 }, { label: 'הזמנות', kind: 'num', width: 14 }, { label: 'מתוך שסופקו', kind: 'pct', width: 14 }, { label: "איחור ממוצע (דק')", kind: 'num', width: 16 }],
     rows: [
       ['סופקו בזמן', closed.length - late.length, frac(closed.length - late.length, closed.length), null],
       ['סופקו באיחור', late.length, frac(late.length, closed.length), avgMin(allLate)],
+      // הפיצול – אחוז מתוך כל מה שסופק, כך ש"בזמן" + שתי שורות האיחור (+ בלי דקות) = 100%
+      [`  מתוכן ${lateLabel('minor')}`, t.lateMinor, frac(t.lateMinor, closed.length), null],
+      [`  מתוכן ${lateLabel('major')}`, t.lateMajor, frac(t.lateMajor, closed.length), null],
+      ...(t.lateUnknown ? [[`  מתוכן ${lateLabel('unknown')}`, t.lateUnknown, frac(t.lateUnknown, closed.length), null] as Cell[]] : []),
       ['מתוכן סופקו חלקית', closed.filter((o) => o.status === 'partial').length, null, null],
       ['בוטלו', cancelled, null, null],
       ...(open ? [['עדיין פתוחות', open, null, null] as Cell[]] : []),
@@ -137,10 +141,10 @@ export function summary(all: Order[], from: string, to: string): Summary {
   const lateBranches: STable = {
     id: 'late', title: 'איפה היו איחורים',
     note: late.length ? undefined : 'לא היו איחורים בתקופה',
-    cols: [{ label: 'סניף', kind: 'text', width: 30 }, { label: 'אשכול', kind: 'text', width: 14 }, { label: 'איחורים', kind: 'num', width: 14 }, { label: 'מתוך שסופקו', kind: 'num', width: 16 }, { label: 'אחוז איחור', kind: 'pct', width: 14 }, { label: "איחור ממוצע (דק')", kind: 'num', width: 14 }],
-    rows: branchAgg.filter((b) => b.late > 0).sort((a, b) => b.late - a.late || b.late / b.done - a.late / a.done)
-      .map((b) => [b.name, b.extra ?? null, b.late, b.done, frac(b.late, b.done), avgMin(b)]),
-    total: late.length ? ['סה"כ', null, late.length, closed.length, frac(late.length, closed.length), avgMin(allLate)] : undefined,
+    cols: [{ label: 'סניף', kind: 'text', width: 30 }, { label: 'אשכול', kind: 'text', width: 14 }, { label: 'איחורים', kind: 'num', width: 14 }, { label: `מעל ${lateSplit()} דק'`, kind: 'num', width: 12 }, { label: 'מתוך שסופקו', kind: 'num', width: 16 }, { label: 'אחוז איחור', kind: 'pct', width: 14 }, { label: "איחור ממוצע (דק')", kind: 'num', width: 14 }],
+    rows: branchAgg.filter((b) => b.late > 0).sort((a, b) => b.major - a.major || b.late - a.late || b.late / b.done - a.late / a.done)
+      .map((b) => [b.name, b.extra ?? null, b.late, b.major, b.done, frac(b.late, b.done), avgMin(b)]),
+    total: late.length ? ['סה"כ', null, late.length, t.lateMajor, closed.length, frac(late.length, closed.length), avgMin(allLate)] : undefined,
   };
 
   const shareRows = (list: Agg[], withExtra: boolean): Cell[][] => list.filter((a) => a.count > 0).sort((a, b) => b.sum - a.sum || b.count - a.count)

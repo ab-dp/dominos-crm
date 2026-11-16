@@ -14,6 +14,7 @@ import { useGoals, type Goals } from '../../data/goals';
 import { usePref } from '../../lib/prefs';
 import { Button, Skeleton } from '../../design/components';
 import { Ltr, addDays, fmtDate, fmtMoney, toISODate } from '../../lib/format';
+import { lateLabel, lateSplit } from '../../data/metrics';
 import {
   NO_FILTERS, PERIOD_LABEL, applyFilters, byDay, collections, delta, goalPace, horizon, periodRanges, quotesSummary, rankings, sales, service,
   type DayPoint, type Filters, type Period, type Range, type Ranked,
@@ -368,8 +369,12 @@ function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string
 /* ---------- עמידה בזמנים ---------- */
 function ServiceSection({ sv, goal, rangeText, go }: { sv: ReturnType<typeof service>; goal?: number; rangeText: ReactNode; go: (to: string) => void }) {
   /* בזמן + באיחור = כל מה שסופק (כמו בדוחות). האחוזים – מתוך מה שסופק, כמו המספר הראשי. חלקית היא "מתוכן", בלי פס משלה */
+  /* כל איחור הוא איחור ("באיחור" = הסכום); בפס ובשורות – הפיצול עד X דק' / מעל X דק' (ובלי דקות, אם נרשם כך) */
   const segs = [
-    { k: 'is-ready', label: 'בזמן', v: sv.onTime, of: sv.delivered }, { k: 'is-customer', label: 'באיחור', v: sv.late, of: sv.delivered },
+    { k: 'is-ready', label: 'בזמן', v: sv.onTime, of: sv.delivered },
+    { k: 'is-late-minor', label: lateLabel('minor'), v: sv.lateMinor, of: sv.delivered },
+    { k: 'is-late-major', label: lateLabel('major'), v: sv.lateMajor, of: sv.delivered },
+    ...(sv.lateUnknown ? [{ k: 'is-late-unknown', label: lateLabel('unknown'), v: sv.lateUnknown, of: sv.delivered }] : []),
     { k: 'is-ops', label: 'מתוכן חלקית', v: sv.partial, of: 0 }, { k: 'is-cancel', label: 'בוטלו', v: sv.cancelled, of: 0 },
   ];
   return (
@@ -377,7 +382,7 @@ function ServiceSection({ sv, goal, rangeText, go }: { sv: ReturnType<typeof ser
       lead={sv.delivered === 0 ? <p>עוד לא סופקו הזמנות בתקופה הזו.</p> : (
         <>
           <p className="bsec__stmt"><b><Ltr>{sv.onTimePct}%</Ltr></b> מההזמנות סופקו בזמן</p>
-          <p className="muted">מתוך {orders$(sv.delivered)} שסופקו (מלא או חלקי){goal ? <> · היעד: <span className={(sv.onTimePct ?? 0) >= goal ? 'is-ok' : 'is-warn'}><Ltr>{goal}%</Ltr></span></> : null}</p>
+          <p className="muted">{sv.late > 0 && <>באיחור <Ltr>{num(sv.late)}</Ltr> (<Ltr>{Math.round((sv.late / sv.delivered) * 100)}%</Ltr>) · </>}מתוך {orders$(sv.delivered)} שסופקו (מלא או חלקי){goal ? <> · היעד: <span className={(sv.onTimePct ?? 0) >= goal ? 'is-ok' : 'is-warn'}><Ltr>{goal}%</Ltr></span></> : null}</p>
         </>
       )}>
       {sv.closed > 0 && (
@@ -394,7 +399,7 @@ function ServiceSection({ sv, goal, rangeText, go }: { sv: ReturnType<typeof ser
         <div className="bsub">
           <p className="bsub__title">איפה היו איחורים</p>
           <ul className="blist">
-            {sv.lateBranches.map((b) => <li key={b.name}><span>{b.name}</span><span className="muted">{b.late === 1 ? 'איחור אחד' : <><Ltr>{b.late}</Ltr> איחורים</>} מתוך <Ltr>{b.delivered}</Ltr></span></li>)}
+            {sv.lateBranches.map((b) => <li key={b.name}><span>{b.name}</span><span className="muted">{b.late === 1 ? 'איחור אחד' : <><Ltr>{b.late}</Ltr> איחורים</>}{b.major > 0 && <> (<Ltr>{b.major}</Ltr> מעל <Ltr>{lateSplit()}</Ltr> דק')</>} מתוך <Ltr>{b.delivered}</Ltr></span></li>)}
           </ul>
         </div>
       )}

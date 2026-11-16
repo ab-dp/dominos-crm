@@ -29,7 +29,7 @@ import '../reports/ReportsPage.css';
 import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { cleanAmount, Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
-import { isLive, onTime, revenue, revenueOf } from '../../data/metrics';
+import { isLive, lateSplit, onTime, revenue, revenueOf } from '../../data/metrics';
 import { cleanPhone, phoneError } from '../../lib/names';
 import { CustomerForm } from './CustomerForm';
 import { MergeDialog } from './MergeDialog';
@@ -315,8 +315,11 @@ function lastMonths(orders: OrderView[], now: Date): MonthRow[] {
   });
 }
 
-// הזמנות שסופקו (או סופקו חלקית) באיחור
-const lateOf = (list: OrderView[]) => onTime(list).late;
+// הזמנות שסופקו (או סופקו חלקית) באיחור; בסוגריים – כמה מהן מעל גבול הפיצול (15 דק' כברירת מחדל)
+function LateCell({ list }: { list: OrderView[] }) {
+  const t = onTime(list);
+  return <td className={`num ${t.late ? 'monthly__warn' : ''}`}><Ltr>{t.late}</Ltr>{t.lateMajor > 0 && <span className="monthly__major" title={`מעל ${lateSplit()} דקות`}> (<Ltr>{t.lateMajor}</Ltr> מעל <Ltr>{lateSplit()}</Ltr>)</span>}</td>;
+}
 
 function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean }) {
   const { now } = useStore();
@@ -353,14 +356,14 @@ function MonthlyTab({ orders, loading }: { orders: OrderView[]; loading: boolean
                 <td className="num"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
                 <td className="num"><Ltr>{r.count ? fmtMoney(r.avg) : '—'}</Ltr></td>
                 <td className="num"><Ltr>{r.cancelled}</Ltr></td>
-                <td className={`num ${lateOf(r.orders) ? 'monthly__warn' : ''}`}><Ltr>{lateOf(r.orders)}</Ltr></td>
+                <LateCell list={r.orders} />
                 <td className="num"><Ltr>{r.orders.filter((o) => o.status === 'partial').length}</Ltr></td>
                 <td className={`num ${r.gaps ? 'monthly__warn' : ''}`}><Ltr>{r.gaps}</Ltr></td>
                 <td className={`num ${r.unpaid ? 'monthly__warn' : ''}`}><Ltr>{fmtMoney(r.unpaid)}</Ltr></td>
               </tr>
             )))}
           </tbody>
-          <tfoot><tr><td>סה"כ</td><td className="num"><Ltr>{total.count}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.sum)}</Ltr></td><td className="num"><Ltr>{total.count ? fmtMoney(Math.round(total.sum / total.count)) : '—'}</Ltr></td><td className="num"><Ltr>{total.cancelled}</Ltr></td><td className="num"><Ltr>{lateOf(rows.flatMap((r) => r.orders))}</Ltr></td><td className="num"><Ltr>{rows.flatMap((r) => r.orders).filter((o) => o.status === 'partial').length}</Ltr></td><td className="num"><Ltr>{total.gaps}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.unpaid)}</Ltr></td></tr></tfoot>
+          <tfoot><tr><td>סה"כ</td><td className="num"><Ltr>{total.count}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.sum)}</Ltr></td><td className="num"><Ltr>{total.count ? fmtMoney(Math.round(total.sum / total.count)) : '—'}</Ltr></td><td className="num"><Ltr>{total.cancelled}</Ltr></td><LateCell list={rows.flatMap((r) => r.orders)} /><td className="num"><Ltr>{rows.flatMap((r) => r.orders).filter((o) => o.status === 'partial').length}</Ltr></td><td className="num"><Ltr>{total.gaps}</Ltr></td><td className="num"><Ltr>{fmtMoney(total.unpaid)}</Ltr></td></tr></tfoot>
         </table>
       </div>
       {picked && (
