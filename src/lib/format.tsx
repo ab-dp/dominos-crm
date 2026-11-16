@@ -24,8 +24,22 @@ export function fmtDate(iso: string): string {
   return `${d}.${m}.${y}`;
 }
 
+/* סכום שלם בלי אגורות ("₪55"), סכום עם אגורות – תמיד שתי ספרות ("₪54.90") */
 export function fmtMoney(n: number): string {
-  return '₪' + Math.round(n).toLocaleString('en-US');
+  const r = roundMoney(n);
+  return Number.isInteger(r)
+    ? '₪' + r.toLocaleString('en-US')
+    : '₪' + r.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* סכום שהוקלד → מחרוזת מספר נקייה. נקודה או פסיק עשרוני ("54,90" = 54.90);
+   פסיק לפני שלוש ספרות בסוף הוא פסיק אלפים ("1,250" = 1250), וכך גם כשיש נקודה ("1,250.50") */
+export function cleanAmount(s: string): string {
+  let t = s.replace(/[^\d.,]/g, '');
+  if (t.includes('.') || /,\d{3}$/.test(t)) return t.replace(/,/g, '');
+  const i = t.lastIndexOf(',');
+  if (i >= 0) t = `${t.slice(0, i).replace(/,/g, '')}.${t.slice(i + 1)}`;
+  return t;
 }
 
 export function fmtPhone(raw: string): string {

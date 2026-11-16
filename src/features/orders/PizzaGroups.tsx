@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { ChevronDown, ChevronUp, Plus, Trash2, X } from 'lucide-react';
 import { PIZZA, splitPart } from '../../data/types';
-import { Ltr, fmtMoney, roundMoney } from '../../lib/format';
+import { cleanAmount, Ltr, fmtMoney, roundMoney } from '../../lib/format';
 import { newId } from '../../data/customers';
 import { catalogFor, isBlank, lineProblem, type CatalogItem, type Line } from './ItemsBuilder';
 import { RadioSeg } from '../../design/components';
@@ -13,7 +13,7 @@ import { useToast } from '../../design/Toast';
 type Split = 1 | 2 | 4;
 const SPLITS: { n: Split; label: string; aria: string }[] = [{ n: 1, label: 'שלמה', aria: 'שלמה' }, { n: 2, label: '½', aria: 'חצי-חצי' }, { n: 4, label: '¼', aria: 'רבעים' }];
 const PART_PH: Record<number, string[]> = { 2: ['חצי 1', 'חצי 2'], 4: ['רבע 1', 'רבע 2', 'רבע 3', 'רבע 4'] };
-const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
+const money = (s: string) => roundMoney(Number(cleanAmount(s)) || 0);
 
 type Group = { id: string; name: string; raw: string; lines: Line[]; price: number };
 /* מחיר הסוג = המחיר הנפוץ בשורות שלו (שורה במחיר אחר – מחיר ידני של השורה) */

@@ -80,7 +80,7 @@ export function RegisterBlock({ o }: { o: OrderView }) {
         )}
       </div>
       <div className="reg__wide reg__note">
-        {/* המקום היחיד להערות בהזמנה – אותו שדה של "הערות להזמנה" בהזמנה חדשה, ומופיע גם בסיכום לתפעול */}
+        {/* הערות פנימיות להזמנה – אותו שדה של "הערות להזמנה" בהזמנה חדשה. לנציג שמקליד ל-Q; לא מופיעות בסיכום לתפעול */}
         <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
         <EarlierNotes o={o} />
       </div>

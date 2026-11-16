@@ -118,7 +118,7 @@ export function MonthClosePage() {
           {step === 2 && (
             <>
               <StepIntro done={done[2]} doneText={credit.length ? 'כל הזמנות ההקפה סומנו כשולמו.' : 'אין הזמנות הקפה בחודש הזה.'}>
-                משווים לדוח ההקפות מהקופה: מסמנים ✓ ליד כל שורה שנמצאה, משלימים בתיק ההזמנה תעודת רכש, סכום והערות לחיוב, ובסוף "סמן כשולם".
+                משווים לדוח ההקפות מהקופה: מסמנים ✓ ליד כל שורה שנמצאה, משלימים בתיק ההזמנה תעודת רכש, סכום והערות להנהלת חשבונות, ובסוף "סמן כשולם".
               </StepIntro>
               <CreditCheck ym={ym} orders={orders} month={month} loading={false} locked={locked} />
             </>
@@ -181,7 +181,7 @@ function Export({ ym, orders, month, locked }: { ym: string; orders: Order[]; mo
             { label: 'הזמנה', kind: 'id', width: 10 }, { label: 'תאריך', kind: 'date', width: 12 }, { label: 'לקוח', kind: 'text', width: 26 }, { label: 'סניף', kind: 'text', width: 22 },
             { label: 'אשכול', kind: 'text', width: 14 }, { label: 'סטטוס', kind: 'text', width: 20 }, { label: 'אמצעי תשלום', kind: 'text', width: 13 }, { label: 'טלפון הקפה', kind: 'code', width: 14 },
             { label: 'מצב תשלום', kind: 'text', width: 14 }, { label: "מס' Q", kind: 'code', width: 11 }, { label: 'סכום הזמנה', kind: 'money', width: 13 }, { label: 'סכום Q', kind: 'money', width: 12 },
-            { label: 'תעודת רכש', kind: 'code', width: 13 }, { label: 'הערות לחיוב', kind: 'text', width: 30 }, { label: 'תיקון לאחר סגירה', kind: 'text', width: 24 },
+            { label: 'תעודת רכש', kind: 'code', width: 13 }, { label: 'הערות להנהלת חשבונות', kind: 'text', width: 30 }, { label: 'תיקון לאחר סגירה', kind: 'text', width: 24 },
           ],
           rows: sorted.map((o) => [o.id, o.date, o.customerName, o.branchName, o.cluster, closeLabel(o), methodText(o),
             o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment], o.qNumber ?? '', o.amount, o.qAmount ?? '', o.poNumber ?? '', o.billingNote ?? '', o.postCloseFix?.reason ?? '']),
@@ -201,14 +201,45 @@ function Export({ ym, orders, month, locked }: { ym: string; orders: Order[]; mo
   return (
     <>
       <StepIntro done={!!month?.exportedAt} doneText={`הועבר להנהלת חשבונות ${fmtStamp(month?.exportedAt)}${month?.exportedByName ? ` · ${month.exportedByName}` : ''}. אפשר לייצא שוב בכל עת.`}>
-        ייצוא כל הזמנות החודש לאקסל – כולל סטטוס, אמצעי ומצב תשלום, מס' Q, סכומים, תעודות רכש והערות לחיוב. אחרי הייצוא החודש מסומן "הועבר להנהלת חשבונות".
+        ייצוא כל הזמנות החודש לאקסל – כולל סטטוס, אמצעי ומצב תשלום, מס' Q, סכומים, תעודות רכש והערות להנהלת חשבונות. אחרי הייצוא החודש מסומן "הועבר להנהלת חשבונות".
       </StepIntro>
       <div className="card mclose__card">
         <Download size={20} aria-hidden="true" className="mclose__card-icon" />
         <div><b>קובץ להנהלת חשבונות</b><span className="muted"><Ltr>{orders.length}</Ltr> הזמנות · חודש <bdi dir="ltr">{monthLabel(ym)}</bdi></span></div>
         <Button variant="primary" icon={<Download size={16} />} loading={busy} disabled={!orders.length} onClick={run}>{month?.exportedAt ? 'ייצוא מחדש' : 'ייצוא וסימון "הועבר"'}</Button>
       </div>
+      <BillingNotes orders={orders} />
     </>
+  );
+}
+
+/* הערות להנהלת חשבונות של החודש – לבדיקה לפני הייצוא (למשל למי לשלוח חשבונית). לחיצה פותחת את ההזמנה */
+function BillingNotes({ orders }: { orders: Order[] }) {
+  const panel = usePanel();
+  const list = orders.filter((o) => o.billingNote?.trim()).sort((a, b) => a.customerName.localeCompare(b.customerName, 'he') || (a.date + a.time).localeCompare(b.date + b.time));
+  if (!list.length) return null;
+  const open = (o: Order, el: HTMLElement) => panel.open(o.id, el);
+  return (
+    <section aria-labelledby="h-billing-notes">
+      <h2 id="h-billing-notes" className="mclose__subtitle">הערות להנהלת חשבונות <span className="muted">· {list.length === 1 ? 'הזמנה אחת' : <><Ltr>{list.length}</Ltr> הזמנות</>}</span></h2>
+      <div className="otable-wrap">
+        <table className="otable creport">
+          <caption className="sr-only">הזמנות החודש עם הערות להנהלת חשבונות</caption>
+          <thead><tr><th>לקוח</th><th>הזמנה</th><th>תאריך</th><th>אמצעי תשלום</th><th>הערות להנהלת חשבונות</th></tr></thead>
+          <tbody>
+            {list.map((o) => (
+              <tr key={o.id} className="orow" tabIndex={0} onClick={(e) => open(o, e.currentTarget)} onKeyDown={(e) => e.key === 'Enter' && open(o, e.currentTarget)}>
+                <td>{o.customerName}</td>
+                <td className="num"><Ltr>{o.id}</Ltr></td>
+                <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>
+                <td>{methodText(o)}</td>
+                <td className="mclose__bnote">{o.billingNote}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 

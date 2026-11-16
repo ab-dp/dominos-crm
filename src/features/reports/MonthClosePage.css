@@ -38,6 +38,9 @@
 .mclose__card > div { flex: 1; display: grid; gap: 2px; font-size: var(--text-table); }
 .mclose__card-icon { flex: none; color: var(--brand-600); }
 .mclose__need { color: var(--urgent-fg); }
+.mclose__subtitle { margin: var(--space-5) 0 var(--space-2); font-size: var(--text-card-title); font-weight: 600; }
+.mclose__subtitle .muted { font-weight: 400; font-size: var(--text-table); }
+.mclose__bnote { white-space: pre-line; color: var(--gray-700); max-width: 420px; }
 
 .msum { margin-bottom: var(--space-4); }
 .msum__note { font-size: var(--text-label); }

@@ -99,8 +99,6 @@
 .os-extra { color: var(--os-text); }
 .os-extra span + span { margin-inline-start: var(--space-3); }
 .os-extra b { font-weight: 500; color: var(--os-sub); }
-.os-note { margin: 2px 0 0; color: var(--ink); white-space: pre-line; }
-.os-note b { font-weight: 500; color: var(--day-dk); }
 .os-dlv { font-size: var(--text-label); }
 .os-dlv b { font-weight: 500; color: var(--ink); }
 .os-tag { display: inline-block; margin-inline-end: var(--space-1); padding: 0 var(--space-2); border-radius: 4px; font-size: var(--text-micro); font-weight: 600; }

@@ -176,7 +176,7 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
         {removed.length > 0 && <p className="os-removed">ירדו מהסיכום מאז השליחה הקודמת (בוטלו, נסגרו או הוזזו): {removed.join(' · ')}</p>}
         <table className="os-table">
           <colgroup><col className="c-when" /><col className="c-pz" /><col className="c-cust" /><col className="c-items" /><col className="c-dlv" /><col className="c-sum" /></colgroup>
-          <thead><tr><th scope="col">שעה</th><th scope="col" className="c">פיצות</th><th scope="col">לקוח ואיש קשר</th><th scope="col">פירוט ההזמנה והערות לסניף</th><th scope="col">אספקה</th><th scope="col" className="m">סכום</th></tr></thead>
+          <thead><tr><th scope="col">שעה</th><th scope="col" className="c">פיצות</th><th scope="col">לקוח ואיש קשר</th><th scope="col">פירוט ההזמנה</th><th scope="col">אספקה</th><th scope="col" className="m">סכום</th></tr></thead>
           {days.map((d) => (
             <tbody key={d.date} className={`os-day os-day--${new Date(`${d.date}T12:00`).getDay()}`}>
               {multiDay && (
@@ -205,7 +205,8 @@ const totals = (os: Order[]) => `${os.length === 1 ? 'הזמנה אחת' : `${os
 
 function OrderRow({ o, wash, mark }: { o: Order; wash: boolean; mark?: 'new' | 'changed' }) {
   const pz = pizzasIn([o]);
-  const name = o.contactName?.trim(), phone = o.contactPhone?.trim(), note = o.instructions?.trim();
+  // "הערות להזמנה" פנימיות (לנציג שמקליד ל-Q) – לא מופיעות בסיכום לתפעול
+  const name = o.contactName?.trim(), phone = o.contactPhone?.trim();
   return (
     <tr className={[wash && 'is-wash', mark && `is-${mark}`].filter(Boolean).join(' ') || undefined}>
       <td className="os-when"><b><Ltr>{o.time}</Ltr></b></td>
@@ -215,7 +216,7 @@ function OrderRow({ o, wash, mark }: { o: Order; wash: boolean; mark?: 'new' | '
         <b>{o.customerName}</b>
         {(name || phone) && <span className="os-sub">{name}{name && phone && ' · '}{phone && <Ltr>{fmtPhone(phone)}</Ltr>}</span>}
       </td>
-      <td className="os-items"><Items o={o} />{note && <p className="os-note"><b>הערה לסניף:</b> {note}</p>}</td>
+      <td className="os-items"><Items o={o} /></td>
       <td className="os-dlv">{o.delivery === 'pickup' ? <b>איסוף עצמי</b> : (o.address?.trim() || <b>משלוח</b>)}</td>
       <td className="m"><Ltr>{fmtMoney(o.amount)}</Ltr></td>
     </tr>

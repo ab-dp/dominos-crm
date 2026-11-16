@@ -47,13 +47,24 @@ export function weekendRange(now: Date) {
   return { from: toISODate(fri), to: toISODate(plus(fri, 1)) };
 }
 
-/* "חתימה" של מה שהתפעול רואה בהזמנה – שינוי בשדה שמופיע בסיכום משנה אותה */
-export function orderSig(o: Order): string {
-  const s = JSON.stringify([o.date, o.time, o.branchId, o.customerName, o.contactName ?? '', o.contactPhone ?? '', o.delivery, o.address ?? '', o.amount, o.instructions ?? '', o.contents ?? '',
-    o.items.map((i) => [i.group ?? '', i.name, i.toppings ?? [], i.parts ?? [], i.detail ?? '', i.qty])]);
+/* "חתימה" של מה שהתפעול רואה בהזמנה – שינוי בשדה שמופיע בסיכום משנה אותה.
+   גרסה 2 (עם הקידומת "2:"): בלי "הערות להזמנה" – הן פנימיות ולא מופיעות בסיכום, ולכן שינוי בהן לא מסמן "עודכן".
+   סיכום שסומן כנשלח לפני כן נשמר עם חתימה בגרסה 1 ומושווה אליה – כדי שלא כל ההזמנות שיש בהן הערה יסומנו "עודכן" */
+function hash(s: string) {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
   return (h >>> 0).toString(36);
+}
+function sigFields(o: Order, withNotes: boolean) {
+  return [o.date, o.time, o.branchId, o.customerName, o.contactName ?? '', o.contactPhone ?? '', o.delivery, o.address ?? '', o.amount, ...(withNotes ? [o.instructions ?? ''] : []), o.contents ?? '',
+    o.items.map((i) => [i.group ?? '', i.name, i.toppings ?? [], i.parts ?? [], i.detail ?? '', i.qty])];
+}
+export function orderSig(o: Order): string {
+  return `2:${hash(JSON.stringify(sigFields(o, false)))}`;
+}
+/* הזמנה עדיין כמו שנשלחה – לפי גרסת החתימה ששמורה בסימון */
+function sameAsSent(was: string, o: Order) {
+  return was.startsWith('2:') ? was === orderSig(o) : was === hash(JSON.stringify(sigFields(o, true)));
 }
 
 export type OpsSend = { id: string; cluster: string; from: string; to: string; snap: Record<string, string>; by: string; byName: string; at?: Timestamp };
@@ -81,7 +92,7 @@ export function diffSince(send: OpsSend | undefined, orders: Order[]) {
   orders.forEach((o) => {
     const was = send.snap[String(o.id)];
     if (!was) mark.set(o.id, 'new');
-    else if (was !== orderSig(o)) mark.set(o.id, 'changed');
+    else if (!sameAsSent(was, o)) mark.set(o.id, 'changed');
   });
   const now = new Set(orders.map((o) => String(o.id)));
   return { mark, removed: Object.keys(send.snap).filter((id) => !now.has(id)) };

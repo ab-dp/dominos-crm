@@ -53,7 +53,7 @@ export function CreditCheck({ ym, orders, month, loading, locked }: { ym: string
           cols: [
             { label: 'לקוח', kind: 'text', width: 26 }, { label: 'טלפון הקפה', kind: 'code', width: 14 }, { label: 'הזמנה', kind: 'id', width: 10 }, { label: 'תאריך', kind: 'date', width: 12 },
             { label: 'סניף', kind: 'text', width: 22 }, { label: "מס' Q", kind: 'code', width: 11 }, { label: 'סכום', kind: 'money', width: 12 }, { label: 'סטטוס', kind: 'text', width: 14 },
-            { label: 'תשלום', kind: 'text', width: 14 }, { label: 'תעודת רכש', kind: 'code', width: 13 }, { label: 'הערות לחיוב', kind: 'text', width: 30 }, { label: 'נמצא בדוח הקופה', kind: 'text', width: 12 },
+            { label: 'תשלום', kind: 'text', width: 14 }, { label: 'תעודת רכש', kind: 'code', width: 13 }, { label: 'הערות להנהלת חשבונות', kind: 'text', width: 30 }, { label: 'נמצא בדוח הקופה', kind: 'text', width: 12 },
           ],
           rows: groups.flatMap(([, list]) => list.map((o) => [o.customerName, o.accountPhone ? fmtPhone(o.accountPhone) : '', o.id, o.date, o.branchName, o.qNumber ?? '', o.qAmount ?? o.amount, STATUS_LABEL[o.status], PAYMENT_LABEL[o.payment], o.poNumber ?? '', o.billingNote ?? '', checked[o.id] ? '✓' : ''])),
           total: ['סה"כ', '', rows.length, '', '', '', sum(rows)],
@@ -109,7 +109,7 @@ export function CreditCheck({ ym, orders, month, loading, locked }: { ym: string
             <thead>
               <tr>
                 <th className="col-check"><span className="sr-only">נמצא בדוח הקופה</span>✓</th>
-                <th>תאריך</th><th>סניף</th><th>מס' Q</th><th className="num">סכום</th><th>סטטוס</th><th>תשלום</th><th>תעודת רכש</th><th>הערות לחיוב</th>
+                <th>תאריך</th><th>סניף</th><th>מס' Q</th><th className="num">סכום</th><th>סטטוס</th><th>תשלום</th><th>תעודת רכש</th><th>הערות להנהלת חשבונות</th>
               </tr>
             </thead>
             {groups.map(([name, list]) => (

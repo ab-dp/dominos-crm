@@ -12,14 +12,14 @@ import {
 import { newId, useCustomers, type Customer } from '../../data/customers';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtMoney } from '../../lib/format';
+import { cleanAmount, Ltr, fmtMoney } from '../../lib/format';
 import '../pages.css';
 import '../branches/BranchesPage.css';
 import '../orders/ItemsBuilder.css';
 import './PriceListsPage.css';
 
-const num = (s: string) => { const v = Number(s.replace(/[^\d.]/g, '')); return s.trim() && Number.isFinite(v) && v > 0 ? v : undefined; };
-const txt = (v?: number) => (v === undefined ? '' : String(v));
+const num = (s: string) => { const v = Number(cleanAmount(s)); return s.trim() && Number.isFinite(v) && v > 0 ? v : undefined; };
+const txt = (v?: number) => (v === undefined ? '' : Number.isInteger(v) ? String(v) : v.toFixed(2)); // 54.9 ← "54.90"
 // שם כפול בקטגוריה: אותו שם בדיוק (בלי רווחים וגרשיים). שמות שנבדלים במספר – "עד 8" ו"עד 24" – אינם כפולים
 const sameName = (a: string, b: string) => { const k = (x: string) => x.replace(/["'׳״\s\-–]/g, ''); return !!k(a) && k(a) === k(b); };
 

@@ -27,7 +27,7 @@ import { BarChart } from '../reports/BarChart';
 import '../reports/ReportsPage.css';
 import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
+import { cleanAmount, Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
 import { isLive, onTime, revenue, revenueOf } from '../../data/metrics';
 import { cleanPhone, phoneError } from '../../lib/names';
 import { CustomerForm } from './CustomerForm';
@@ -462,7 +462,7 @@ function PricesTab({ c }: { c: Customer }) {
   // editing = "<itemId>:d" (משלוח) או "<itemId>:p" (איסוף עצמי)
   const save = async (key: string) => {
     const [itemId, mode] = key.split(':');
-    const v = Number(draft.replace(/[^\d.]/g, ''));
+    const v = Number(cleanAmount(draft));
     setEditing(null);
     const item = pl.items.find((i) => i.id === itemId);
     if (!item) return;
@@ -542,7 +542,7 @@ function PaymentTab({ c, sharing, method, onEdit }: { c: Customer; sharing: Cust
         <div className="kv"><span className="kv__k">טלפון הקפה</span><span className="kv__v">{c.accountPhone ? <><Ltr>{fmtPhone(c.accountPhone)}</Ltr> · {sharing.length ? <>כללי – משמש גם את {sharing.map((s, i) => <span key={s.id}>{i > 0 && ', '}<Link to={`/customers/${s.id}`}>{s.name}</Link></span>)}</> : 'ייעודי ללקוח הזה'}</> : '—'}</span></div>
         <div className="kv"><span className="kv__k">תעודת רכש</span><span className="kv__v">{c.poRequired ? 'נדרשת לכל הזמנה' : 'לא נדרשת'}</span></div>
         <div className="kv"><span className="kv__k">הנחיות חיוב קבועות</span><span className="kv__v">{c.billingInstructions || <span className="warn-text">לא הוגדרו</span>}</span></div>
-        <p className="muted cfile__plhint">ההנחיות נטענות אוטומטית ל"הערות לחיוב" בדוח ההקפות בסוף החודש.</p>
+        <p className="muted cfile__plhint">ההנחיות נטענות אוטומטית ל"הערות להנהלת חשבונות" בכל הזמנה חדשה, ומופיעות בדוח ההקפות ובקובץ סגירת החודש.</p>
       </div>
     </div>
   );
