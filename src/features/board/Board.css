@@ -190,3 +190,8 @@
   .bchart__col:nth-child(even) .bchart__x { visibility: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .bchart__bar, .bday { transition: none; } }
+
+/* פיצול איחורים: עד X דק' – כתום בהיר, מעל X דק' – כתום כהה, בלי דקות – צהוב */
+.board i.is-late-minor, .board span.is-late-minor { background: var(--urgent-edge); }
+.board i.is-late-major, .board span.is-late-major { background: var(--urgent-fg); }
+.board i.is-late-unknown, .board span.is-late-unknown { background: var(--missing-edge); }

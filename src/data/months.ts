@@ -6,7 +6,7 @@ import { collection, doc, onSnapshot, query, serverTimestamp, where, writeBatch 
 import { auth, db } from '../lib/firebase';
 import { fromDoc } from './orders';
 import { outcomeOf, type Order } from './types';
-import { isLive, onTime, revenue, revenueOf } from './metrics';
+import { isLive, lateSplit, onTime, revenue, revenueOf } from './metrics';
 
 export type MonthSummary = {
   count: number; sum: number; cancelled: number;
@@ -15,7 +15,8 @@ export type MonthSummary = {
   /* פילוח אספקה: בזמן / באיחור / חלקית / בוטלה (סיכומים שננעלו לפני שהיה onTime) */
   byOutcome?: Record<string, number>;
   /* סופקו בזמן – אותה הגדרה כמו בבורד ובדוחות (data/metrics.ts) */
-  onTime?: { delivered: number; onTime: number; late: number; partial: number };
+  /* פיצול האיחורים (עד split דק' / מעל / בלי דקות) – נשמר מנעילות מנובמבר 2026; חודשים שננעלו לפני כן – רק הסה"כ */
+  onTime?: { delivered: number; onTime: number; late: number; partial: number; lateMinor?: number; lateMajor?: number; lateUnknown?: number; split?: number };
 };
 export type MonthDoc = {
   status: 'open' | 'locked';
@@ -113,6 +114,6 @@ export function summarize(orders: Order[]): MonthSummary {
     count: live.length, sum: revenue(live), cancelled: orders.length - live.length,
     byMethod, byCustomer: [...byCust.values()].sort((a, b) => b.sum - a.sum),
     byOutcome: orders.reduce<Record<string, number>>((m, o) => { const k = outcomeOf(o); m[k] = (m[k] ?? 0) + 1; return m; }, {}),
-    onTime: { delivered: t.delivered, onTime: t.onTime, late: t.late, partial: t.partial },
+    onTime: { delivered: t.delivered, onTime: t.onTime, late: t.late, partial: t.partial, lateMinor: t.lateMinor, lateMajor: t.lateMajor, lateUnknown: t.lateUnknown, split: lateSplit() },
   };
 }

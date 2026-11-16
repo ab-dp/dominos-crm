@@ -1,7 +1,7 @@
 /* הגדרות הדוחות (אפיון 10). כל דוח: פונקציה טהורה מהזמנות לשורות וסיכום – קל לבדוק מול חישוב ידני.
    כלל אחיד: לפי תאריך אספקה וסכום Q (ואם לא הועברה – סכום לחיוב). סכומים בלי הזמנות שבוטלו; הביטולים נספרים בנפרד. */
 import { OUTCOME_LABEL, methodText, PAYMENT_LABEL, itemsText, outcomeOf, type Order, type Outcome } from '../../data/types';
-import { ON_TIME_HINT, isDelivered, isLive, onTime, pctOf, revenue, revenueOf } from '../../data/metrics';
+import { LATE_SPLIT_HINT, ON_TIME_HINT, isDelivered, isLive, lateSplit, onTime, pctOf, revenue, revenueOf } from '../../data/metrics';
 
 export const qVal = revenueOf;
 export const live = (list: Order[]) => list.filter(isLive);
@@ -9,7 +9,9 @@ export const live = (list: Order[]) => list.filter(isLive);
 export const missingQNote = (list: Order[]) => { const n = list.filter((o) => isLive(o) && o.qAmount == null).length; return n ? `${n} הזמנות בלי סכום Q – בסה"כ נלקח במקומן הסכום לחיוב` : undefined; };
 /* סטטוס אספקה לשורה: חלקית שאיחרה מסומנת גם כאיחור */
 const deliveryText = (o: Order) => (o.status === 'partial' && o.late ? 'חלקית, באיחור' : OUTCOME_LABEL[outcomeOf(o)]);
-const ON_TIME_NOTE = `"סופקו בזמן" – ${ON_TIME_HINT}`;
+const ON_TIME_NOTE = () => `"סופקו בזמן" – ${ON_TIME_HINT}. ${LATE_SPLIT_HINT()}`;
+/* "עד 15: 3 · מעל 15: 2" – פיצול האיחורים לשורת סיכום */
+const splitSub = (t: { lateMinor: number; lateMajor: number; lateUnknown: number }) => `עד ${lateSplit()}: ${t.lateMinor} · מעל ${lateSplit()}: ${t.lateMajor}${t.lateUnknown ? ` · בלי דקות: ${t.lateUnknown}` : ''}`;
 
 export type Col = { key: string; label: string; kind?: 'text' | 'num' | 'money' | 'pct' | 'date' };
 export type Row = { id: string; cells: Record<string, string | number>; orders: Order[] };
@@ -66,7 +68,7 @@ export const REPORTS: ReportDef[] = [
           { label: 'הזמנות', value: l.length, sub: canc.length ? `+ ${canc.length} בוטלו` : undefined },
           { label: 'סך (לפי Q)', value: sum(l), money: true },
           { label: 'סופקו בזמן', value: t.onTime, sub: t.delivered ? `${pctOf(t.rate)}%` : undefined },
-          { label: 'סופקו באיחור', value: t.late, alert: t.late > 0, sub: t.late ? `ממוצע ${avgLate(late)} דק'` : undefined },
+          { label: 'סופקו באיחור', value: t.late, alert: t.late > 0, sub: t.late ? `${splitSub(t)} · ממוצע ${avgLate(late)} דק'` : undefined },
           { label: 'מתוכן חלקית', value: t.partial, alert: t.partial > 0 },
           { label: 'בוטלו', value: canc.length, alert: canc.length > 0 },
           { label: 'עדיין פתוחות', value: open.length },
@@ -79,7 +81,7 @@ export const REPORTS: ReportDef[] = [
           { key: 'reason', label: 'סיבה / מה סופק' }, { key: 'po', label: 'תעודת רכש', kind: 'date' }, { key: 'notes', label: 'הערות' },
         ],
         rows,
-        note: [ON_TIME_NOTE, missingQNote(all)].filter(Boolean).join(' · '),
+        note: [ON_TIME_NOTE(), missingQNote(all)].filter(Boolean).join(' · '),
         totals: { date: 'סה"כ', id: '', customer: `${l.length} הזמנות${canc.length ? ` · ${canc.length} בוטלו` : ''}`, amount: l.reduce((s, o) => s + o.amount, 0), qAmount: sum(l), outcome: `${t.onTime} בזמן · ${t.late} באיחור · מתוכן ${t.partial} חלקית`, lateMin: '' },
       };
     },
@@ -103,14 +105,14 @@ export const REPORTS: ReportDef[] = [
     compute: (all) => {
       const rows = [...groupBy(all, (o) => o.branchName).entries()].map(([name, list]) => {
         const l = live(list); const t = onTime(list);
-        return { id: name, orders: list, cells: { cluster: list[0].cluster || '—', name, count: l.length, sum: sum(l), avg: avg(l), ontime: onTimeCell(list), late: t.late, partial: t.partial, cancelled: list.length - l.length } };
+        return { id: name, orders: list, cells: { cluster: list[0].cluster || '—', name, count: l.length, sum: sum(l), avg: avg(l), ontime: onTimeCell(list), late: t.late, lateMajor: t.lateMajor, partial: t.partial, cancelled: list.length - l.length } };
       }).sort((a, b) => String(a.cells.cluster).localeCompare(String(b.cells.cluster), 'he') || (b.cells.sum as number) - (a.cells.sum as number));
       const l = live(all); const t = onTime(all);
       return {
         cols: [{ key: 'cluster', label: 'אשכול' }, { key: 'name', label: 'סניף' }, { key: 'count', label: 'הזמנות', kind: 'num' }, { key: 'sum', label: 'סך', kind: 'money' }, { key: 'avg', label: 'ממוצע', kind: 'money' },
-          { key: 'ontime', label: 'סופקו בזמן', kind: 'pct' }, { key: 'late', label: 'באיחור', kind: 'num' }, { key: 'partial', label: 'מתוכן חלקית', kind: 'num' }, { key: 'cancelled', label: 'בוטלו', kind: 'num' }],
-        note: ON_TIME_NOTE,
-        rows, totals: { cluster: 'סה"כ', name: '', count: l.length, sum: sum(l), avg: avg(l), ontime: onTimeCell(all), late: t.late, partial: t.partial, cancelled: all.length - l.length },
+          { key: 'ontime', label: 'סופקו בזמן', kind: 'pct' }, { key: 'late', label: 'באיחור', kind: 'num' }, { key: 'lateMajor', label: `מתוכם מעל ${lateSplit()} דק'`, kind: 'num' }, { key: 'partial', label: 'מתוכן חלקית', kind: 'num' }, { key: 'cancelled', label: 'בוטלו', kind: 'num' }],
+        note: ON_TIME_NOTE(),
+        rows, totals: { cluster: 'סה"כ', name: '', count: l.length, sum: sum(l), avg: avg(l), ontime: onTimeCell(all), late: t.late, lateMajor: t.lateMajor, partial: t.partial, cancelled: all.length - l.length },
         chart: { valueKey: 'sum', labelKey: 'name', title: 'סך לפי סניף', kind: 'category', money: true },
       };
     },
@@ -122,12 +124,12 @@ export const REPORTS: ReportDef[] = [
       const l = live(all);
       const rows = [...groupBy(all, (o) => o.handler || o.createdBy).entries()].map(([name, list]) => {
         const lv = live(list);
-        return { id: name, orders: list, cells: { name, count: lv.length, sum: sum(lv), avg: avg(lv), late: onTime(list).late, partial: onTime(list).partial, cancelled: list.length - lv.length } };
+        return { id: name, orders: list, cells: { name, count: lv.length, sum: sum(lv), avg: avg(lv), late: onTime(list).late, lateMajor: onTime(list).lateMajor, partial: onTime(list).partial, cancelled: list.length - lv.length } };
       }).sort((a, b) => (b.cells.count as number) - (a.cells.count as number));
       return {
         cols: [{ key: 'name', label: 'עובד' }, { key: 'count', label: 'הזמנות', kind: 'num' }, { key: 'sum', label: 'סך', kind: 'money' }, { key: 'avg', label: 'ממוצע', kind: 'money' },
-          { key: 'late', label: 'באיחור', kind: 'num' }, { key: 'partial', label: 'מתוכן חלקית', kind: 'num' }, { key: 'cancelled', label: 'בוטלו', kind: 'num' }],
-        rows, totals: { name: 'סה"כ', count: l.length, sum: sum(l), avg: avg(l), late: onTime(all).late, partial: onTime(all).partial, cancelled: all.length - l.length },
+          { key: 'late', label: 'באיחור', kind: 'num' }, { key: 'lateMajor', label: `מתוכם מעל ${lateSplit()} דק'`, kind: 'num' }, { key: 'partial', label: 'מתוכן חלקית', kind: 'num' }, { key: 'cancelled', label: 'בוטלו', kind: 'num' }],
+        rows, totals: { name: 'סה"כ', count: l.length, sum: sum(l), avg: avg(l), late: onTime(all).late, lateMajor: onTime(all).lateMajor, partial: onTime(all).partial, cancelled: all.length - l.length },
         chart: { valueKey: 'count', labelKey: 'name', title: 'הזמנות לפי עובד', kind: 'category' },
       };
     },

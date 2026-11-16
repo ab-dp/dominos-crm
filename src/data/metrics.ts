@@ -15,12 +15,28 @@ export const revenue = <T extends Pick<Order, 'status' | 'qAmount' | 'amount'>>(
   roundMoney(list.filter(isLive).reduce((t, o) => t + revenueOf(o), 0));
 export const REVENUE_HINT = 'סכום Q, ואם לא הוקלד – הסכום לחיוב. בלי ביטולים';
 
+/* ---------- פיצול איחורים: עד X דקות / מעל X דקות / בלי דקות (כל איחור נשאר איחור) ----------
+   X מספי ההתראות (lateSplitMinutes, ברירת מחדל 15). נקבע פעם אחת כשהספים נטענים (data/store.tsx), כדי שכל מסך – בורד, דוחות,
+   סגירת חודש ותיק לקוח – יחלק באותו גבול בלי להעביר אותו לכל פונקציה. 15 דקות בדיוק = "עד 15". */
+let SPLIT = 15;
+export const lateSplit = () => SPLIT;
+export function setLateSplit(n: number) { if (Number.isFinite(n) && n > 0) SPLIT = Math.round(n); }
+export type LateKind = 'minor' | 'major' | 'unknown';
+export const lateKind = (o: Pick<Order, 'late'>): LateKind | null => (!o.late ? null : !o.late.minutes ? 'unknown' : o.late.minutes <= SPLIT ? 'minor' : 'major');
+export const lateLabel = (k: LateKind) => (k === 'minor' ? `איחור עד ${SPLIT} דק'` : k === 'major' ? `איחור מעל ${SPLIT} דק'` : 'איחור בלי דקות');
+export const LATE_SPLIT_HINT = () => `כל איחור נספר כאיחור; הפיצול – עד ${SPLIT} דקות / מעל ${SPLIT} דקות (לפי מה שנרשם בסגירה)`;
+
 /* ---------- סופקו בזמן: הזמנות שסופקו (מלא או חלקי) בלי איחור, מתוך כל ההזמנות שסופקו ---------- */
-export type OnTime = { delivered: number; onTime: number; late: number; partial: number; rate: number | null };
+export type OnTime = { delivered: number; onTime: number; late: number; partial: number; rate: number | null; lateMinor: number; lateMajor: number; lateUnknown: number };
 export function onTime(list: Pick<Order, 'status' | 'late'>[]): OnTime {
   const done = list.filter(isDelivered);
-  const late = done.filter((o) => !!o.late).length;
-  return { delivered: done.length, onTime: done.length - late, late, partial: done.filter((o) => o.status === 'partial').length, rate: done.length ? (done.length - late) / done.length : null };
+  const lates = done.filter((o) => !!o.late);
+  const late = lates.length;
+  const of = (k: LateKind) => lates.filter((o) => lateKind(o) === k).length;
+  return {
+    delivered: done.length, onTime: done.length - late, late, partial: done.filter((o) => o.status === 'partial').length, rate: done.length ? (done.length - late) / done.length : null,
+    lateMinor: of('minor'), lateMajor: of('major'), lateUnknown: of('unknown'),
+  };
 }
 /* אחוז שלם – אותו עיגול בכל מסך */
 export const pctOf = (rate: number | null) => (rate === null ? null : Math.round(rate * 100));

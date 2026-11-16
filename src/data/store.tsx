@@ -10,6 +10,7 @@ import { ConflictError, fromDoc, updateOrderSafe, updateOrders, useLiveOrders } 
 import { LOCKED_FIELDS, monthOf, useLockedMonths } from './months';
 import { STATUS_LABEL } from './types';
 import { useThresholds, type Thresholds } from './thresholds';
+import { setLateSplit } from './metrics';
 import { useOpenTasks, type Task } from './tasks';
 import { needsFollowup, useQuotes, type Quote } from './quotes';
 import { toISODate } from '../lib/format';
@@ -74,6 +75,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const toast = useToast();
   const { orders: raw, loading, error } = useLiveOrders();
   const { th: thresholds } = useThresholds();
+  // גבול פיצול האיחורים לכל המסכים (data/metrics.ts) – נקבע כבר ברינדור, לפני שהמסכים מחשבים
+  setLateSplit(thresholds.lateSplitMinutes);
   const tasks = useOpenTasks();
   const { items: quotes } = useQuotes('open');
   const [now, setNow] = useState(() => new Date());
