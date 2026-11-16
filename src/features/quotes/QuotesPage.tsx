@@ -92,17 +92,17 @@ export function QuotesPage() {
                 const exp = isExpired(q, today);
                 const h = staleHours(q, now);
                 return (
-                  <tr key={q.id} className={`qrow ${late ? 'is-late' : ''}`} onClick={(e) => { if (!(e.target as HTMLElement).closest('button, a')) nav(`/quotes/${q.id}`); }}>
-                    <td><button className="link qrow__num" onClick={() => nav(`/quotes/${q.id}`)} aria-label={`פתח הצעה ${q.id}`}><Ltr>{q.id}</Ltr></button></td>
+                  <tr key={q.id} className={`qlrow ${late ? 'is-late' : ''}`} onClick={(e) => { if (!(e.target as HTMLElement).closest('button, a')) nav(`/quotes/${q.id}`); }}>
+                    <td><button className="link qlrow__num" onClick={() => nav(`/quotes/${q.id}`)} aria-label={`פתח הצעה ${q.id}`}><Ltr>{q.id}</Ltr></button></td>
                     <td className="strong">{q.customer.name || <span className="muted">ללא שם</span>}{q.customer.contact && <span className="muted"> · {q.customer.contact}</span>}</td>
-                    <td><Ltr>{fmtDate(q.issueDate)}</Ltr>{q.date && <span className="muted qrow__sub">אספקה <Ltr>{fmtDate(q.date)}</Ltr></span>}</td>
+                    <td><Ltr>{fmtDate(q.issueDate)}</Ltr>{q.date && <span className="muted qlrow__sub">אספקה <Ltr>{fmtDate(q.date)}</Ltr></span>}</td>
                     <td className="num"><Ltr>{fmtMoney(q.total)}</Ltr></td>
                     <td><span className={`qstat qstat--${exp ? 'expired' : q.status}`}>{exp ? 'פג תוקף' : SHORT_STATUS[q.status]}</span></td>
-                    <td className="qrow__last">
-                      {late && <span className="qrow__late"><BellRing size={14} aria-hidden="true" /> אין עדכון {ago(h!)}</span>}
-                      <span className="qrow__note" title={q.lastNote}>{q.lastNote || <span className="muted">—</span>}</span>
+                    <td className="qlrow__last">
+                      {late && <span className="qlrow__late"><BellRing size={14} aria-hidden="true" /> אין עדכון {ago(h!)}</span>}
+                      <span className="qlrow__note" title={q.lastNote}>{q.lastNote || <span className="muted">—</span>}</span>
                     </td>
-                    <td className="qrow__act"><QuoteActions q={q} compact /></td>
+                    <td className="qlrow__act"><QuoteActions q={q} compact /></td>
                   </tr>
                 );
               })}

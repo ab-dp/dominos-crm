@@ -8,14 +8,14 @@
 
 /* ---------- רשימת ההצעות ---------- */
 .qlist { padding: 0; }
-.qrow { cursor: pointer; }
-.qrow:hover td { background: var(--gray-50); }
-.qrow__num { font-family: var(--font-mono); font-weight: 600; }
-.qrow__sub { display: block; font-size: var(--text-micro); }
-.qrow__last { max-width: 280px; }
-.qrow__late { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-end: var(--space-2); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
-.qrow__note { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--text-label); color: var(--gray-600); }
-.qrow__act { text-align: end; white-space: nowrap; }
+.qlrow { cursor: pointer; }
+.qlrow:hover td { background: var(--gray-50); }
+.qlrow__num { font-family: var(--font-mono); font-weight: 600; }
+.qlrow__sub { display: block; font-size: var(--text-micro); }
+.qlrow__last { max-width: 280px; }
+.qlrow__late { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-end: var(--space-2); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
+.qlrow__note { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--text-label); color: var(--gray-600); }
+.qlrow__act { text-align: end; white-space: nowrap; }
 .qact { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 
 /* ---------- מסך ההצעה: עריכה + תצוגה חיה ---------- */
@@ -46,8 +46,7 @@
 
 .qe-r { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 120px) 72px 96px 36px; gap: var(--space-2); align-items: center; }
 .qe-r--head { padding: 2px 0 var(--space-2); font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
-.qe-r--head small { font-weight: 500; }
-.qe-g { padding: var(--space-1) 0; }
+.qe-r--head small { font-weight: 500; }.qe-g { padding: var(--space-1) 0; }
 .qe-g + .qe-g { border-top: 1px dashed var(--gray-100); }
 .qe-r .input { width: 100%; min-width: 0; }
 .qe-r.is-draft .input { background: var(--gray-50); }
@@ -57,7 +56,7 @@
 .qe-price .is-changed { border-color: var(--urgent-edge); background: var(--urgent-bg); padding-inline-start: var(--space-5); }
 .qe-revert { position: absolute; top: 50%; inset-inline-start: 4px; transform: translateY(-50%); display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 50%; background: transparent; color: var(--urgent-fg); cursor: pointer; }
 .qe-revert:hover { background: var(--white); }
-.qe-sum { font-family: var(--font-mono); font-size: var(--text-table); text-align: end; }
+.qe-sum { font-family: var(--font-mono); font-size: var(--text-table); text-align: start; } /* מיושר לכותרת "סה"כ" ולמחיר ולכמות שמעליו */
 .qe-tag { margin: var(--space-1) 0 0; font-size: var(--text-micro); color: var(--urgent-fg); }
 .qe-sug { margin: var(--space-1) 0 2px; }
 
@@ -92,7 +91,6 @@
 
 /* ---------- מעקב ---------- */
 .qtrack { padding: var(--space-4) var(--space-4); }
-.qtrack.is-late { box-shadow: var(--shadow-card), inset 3px 0 0 var(--urgent-edge); }
 .qtrack__head { display: flex; align-items: center; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
 .qtrack__head .qe-sec__title { margin: 0; }
 .qtrack__late { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--urgent-fg); font-size: var(--text-label); font-weight: 500; }
@@ -169,7 +167,6 @@
   .qe-r > :first-child { grid-column: 1 / -1; }
   .qe-r--head > :first-child { display: none; }
   .qe-g { padding: var(--space-2) 0; }
-  .qrow__last { display: none; }
   .qe-bar { padding: var(--space-3) var(--space-3); }
   .qtrack__add { flex-direction: column; align-items: stretch; }
 }

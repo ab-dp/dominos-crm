@@ -175,7 +175,7 @@
 @media (max-width: 600px) {
   .bsec { padding: var(--space-4) var(--space-4) var(--space-4); }
   .board__bar > .seg { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
-  .board__bar > .seg button { flex: none; white-space: nowrap; }
+  .board__bar > .seg button { flex: none; white-space: nowrap; padding: 0 var(--space-2); } /* חמש התקופות נכנסות ב-390 בלי לחתוך את "תאריכים" */
   .board__bar > .btn--secondary { margin-inline-start: 0; }
   .bdays { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 -8px; }
   .bday::before { display: none; }
