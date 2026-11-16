@@ -201,5 +201,8 @@ export type OrderHold = {
   attempts: number; // כמה ניסיונות נרשמו (הסימון הראשון = 1)
 };
 export const HOLD_REASONS = ['הלקוח לא עונה', 'ממתין לפרטי אשראי', 'ממתין לאישור הלקוח', 'אחר'];
-/* הגיע הזמן לחזור להזמנה שבהמתנה (או שלא נקבע זמן ועבר) */
-export const holdDue = (h: OrderHold | undefined, now: Date) => !!h?.remindAt && new Date(h.remindAt).getTime() <= now.getTime();
+/* הזמנה שהושהתה "בלי תזכורת" לא נתקעת בהמתנה: אחרי שעה היא חוזרת ל"להקליד ל-Q" (בלי הודעה קופצת) */
+export const HOLD_NO_REMIND_MIN = 60;
+/* הגיע הזמן לחזור להזמנה שבהמתנה – לפי זמן החזרה שנקבע, או שעה אחרי הסימון כשלא נקבע זמן */
+export const holdDue = (h: OrderHold | undefined, now: Date) => !!h
+  && (h.remindAt ? new Date(h.remindAt).getTime() : new Date(h.at).getTime() + HOLD_NO_REMIND_MIN * 60000) <= now.getTime();

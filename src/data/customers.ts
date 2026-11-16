@@ -2,7 +2,7 @@
    ח.פ ייחודי נאכף בשרת דרך אוסף taxIds/{ח.פ} שנוצר יחד עם הלקוח (batch). */
 import { useEffect, useState } from 'react';
 import {
-  collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch, type DocumentData, type Timestamp, type WriteBatch,
+  collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where, writeBatch, type DocumentData, type Timestamp, type WriteBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { cleanTaxId } from '../lib/taxid';
@@ -228,9 +228,13 @@ export async function mergeCustomers(source: Customer, target: Customer, note: s
     (b) => { addTaskTo(b, { customerId: target.id, customerName: target.name, text: String(d.data().text), due: String(d.data().due) }); },
     (b) => b.update(d.ref, { done: true, doneBy: u.uid, doneByName: byName, doneAt: serverTimestamp() }),
   ]));
+  /* 0. הכפול מסומן קודם "ממוזג אל" הלקוח שנשאר (עדיין פעיל עד שלב 3). הכללים מאשרים העברת הזמנה מחודש נעול
+        רק כשהלקוח הקודם כבר מסומן כך – ולכן הסימון חייב להיות שמור לפני שההזמנות עוברות */
+  if (source.mergedInto !== target.id) await updateDoc(doc(db, 'customers', source.id), { mergedInto: target.id, ...stamp });
+  /* כללי השרת קוראים לכל הזמנה מסמכים נוספים (לקוח, סניף, חודש) ויש מגבלת קריאות לכל פעולה – לכן מנות קטנות (5 הזמנות) */
   let batch = writeBatch(db); let n = 0;
   for (const g of groups) {
-    if (n + g.length > 400) { await batch.commit(); batch = writeBatch(db); n = 0; }
+    if (n + g.length > 10) { await batch.commit(); batch = writeBatch(db); n = 0; }
     g.forEach((op) => op(batch)); n += g.length;
   }
   if (n) await batch.commit();

@@ -23,8 +23,8 @@ export function agoText(iso: string, now: Date): ReactNode {
 }
 /* "חזרה בעוד 3 דק'" / "הגיע הזמן לחזור" */
 export function remindText(h: OrderHold, now: Date): ReactNode {
-  if (!h.remindAt) return null;
   if (holdDue(h, now)) return 'הגיע הזמן לחזור';
+  if (!h.remindAt) return null;
   const m = Math.max(1, Math.round((new Date(h.remindAt).getTime() - now.getTime()) / 60000));
   const at = new Date(h.remindAt);
   return <>חזרה בעוד <Ltr>{m}</Ltr>&nbsp;דק' · <Ltr>{`${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`}</Ltr></>;
@@ -140,7 +140,7 @@ export function HoldBanner({ o }: { o: OrderView }) {
       <div className="hold-banner__main">
         <b className="hold-banner__title"><PauseCircle size={16} aria-hidden="true" /> בהמתנה · {h.reason}{h.attempts > 1 && <> · ניסיון <Ltr>{h.attempts}</Ltr></>}</b>
         {h.note && <span className="hold-banner__note">{h.note}</span>}
-        <span className="hold-banner__meta">{h.byName} · {agoText(h.at, now)}{h.remindAt && <> · <span className={due ? 'hold-due' : ''}>{remindText(h, now)}</span></>}</span>
+        <span className="hold-banner__meta">{h.byName} · {agoText(h.at, now)}{(h.remindAt || due) && <> · <span className={due ? 'hold-due' : ''}>{remindText(h, now)}</span></>}</span>
       </div>
       <HoldActions o={o} />
     </div>

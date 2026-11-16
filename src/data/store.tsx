@@ -146,17 +146,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
   }, [toast]);
 
+  // השמירה מחוץ ל-setState: פונקציית עדכון של state חייבת להיות טהורה (ב-StrictMode היא רצה פעמיים)
   const resolveConflict = useCallback((keepMine: boolean) => {
-    setConflict((c) => {
-      if (c && keepMine) {
-        // נשמר על בסיס הערכים העדכניים, כך שרק השדות שבחרתי משתנים
-        updateOrderSafe(c.error.current, c.patch, 'inline', 'נשמר אחרי התנגשות')
-          .then(() => toast({ message: c.message }))
-          .catch(() => toast({ tone: 'error', message: 'השמירה נכשלה שוב – פתח את התיק מחדש ונסה' }));
-      }
-      return null;
-    });
-  }, [toast]);
+    const c = conflict;
+    setConflict(null);
+    if (c && keepMine) {
+      // נשמר על בסיס הערכים העדכניים, כך שרק השדות שבחרתי משתנים
+      updateOrderSafe(c.error.current, c.patch, 'inline', 'נשמר אחרי התנגשות')
+        .then(() => toast({ message: c.message }))
+        .catch(() => toast({ tone: 'error', message: 'השמירה נכשלה שוב – פתח את התיק מחדש ונסה' }));
+    }
+  }, [conflict, toast]);
 
   const update = useCallback((id: number, patch: Partial<Order>, message: ReactNode) => updateMany([id], patch, message), [updateMany]);
   const openNewOrder = useCallback((r: NewOrderRequest = {}) => setNewOrder(r), []);
@@ -179,15 +179,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [updateMany]);
   const endChange = useCallback(() => setChangeReq(null), []);
   const confirmLockFix = useCallback((reason: string) => {
-    setLockFix((r) => { if (r) updateMany(r.ids, r.patch, r.message, reason); return null; });
-  }, [updateMany]);
+    const r = lockFix;
+    setLockFix(null);
+    if (r) updateMany(r.ids, r.patch, r.message, reason);
+  }, [lockFix, updateMany]);
   const endLockFix = useCallback(() => setLockFix(null), []);
   const today = toISODate(now);
   const dueTasks = useMemo(() => tasks.filter((t) => t.due <= today), [tasks, today]);
   const quoteFollowups = useMemo(() => quotes.filter((q) => needsFollowup(q, now, thresholds.quoteFollowupHours)), [quotes, now, thresholds.quoteFollowupHours]);
 
+  // ערך קבוע בין רינדורים כשדבר לא השתנה – כדי שכל מי שקורא מה-store לא יתרנדר סתם
+  const value = useMemo(() => ({ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }), [now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix]);
+
   return (
-    <Ctx.Provider value={{ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }}>
+    <Ctx.Provider value={value}>
       {children}
     </Ctx.Provider>
   );
