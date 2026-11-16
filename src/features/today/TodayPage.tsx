@@ -34,6 +34,8 @@ export function TodayPage() {
 
   /* משימות לפי ציר ההזמנה: לקוח ← תפעול ← Q ← קבוצת תפעול ← סגירה. מופיעה רק משימה שיש בה מה לעשות.
      הספירה משותפת לתפריט (todayTasks.ts) – המספר ליד "היום" הוא בדיוק מספר המשימות כאן */
+  // הזמנות של היום שבהמתנה – נספרות ב'להקליד ל-Q' (הן עוד לא ירדו), ומצוינות בנפרד
+  const held = scope.filter((o) => o.date === today && !o.qNumber && !!o.hold && o.status !== 'cancelled').length;
   const c = todayTaskCounts(scope, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 });
   const red = redTasks(scope, c);
   const tasks: { key: TaskKey; title: string; sub?: string; icon: ReactNode; count: number; to: string; unit: [string, string] }[] = [
@@ -41,7 +43,7 @@ export function TodayPage() {
     { key: 'yesterday', title: 'לסגור הזמנות שמועדן עבר', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, count: c.yesterday, to: '/orders?tab=overdue', unit: ['הזמנה', 'הזמנות'] },
     { key: 'customer', title: 'לאשר מול הלקוח', sub: 'הזמנות של היום ומחר', icon: <UserCheck size={20} />, count: c.customer, to: '/exceptions?rule=6', unit: ['הזמנה', 'הזמנות'] },
     { key: 'branch', title: 'לעדכן בתפעול', sub: 'הזמנות של היום ומחר', icon: <Store size={20} />, count: c.branch, to: '/orders?tab=today&filter=branch', unit: ['הזמנה', 'הזמנות'] },
-    { key: 'q', title: 'להקליד ל-Q', sub: 'הזמנות של היום', icon: <Send size={20} />, count: c.q, to: '/orders?tab=today&filter=q', unit: ['הזמנה', 'הזמנות'] },
+    { key: 'q', title: 'להקליד ל-Q', sub: held ? `הזמנות של היום · מתוכן ${held} בהמתנה` : 'הזמנות של היום', icon: <Send size={20} />, count: c.q, to: '/orders?tab=today&filter=q', unit: ['הזמנה', 'הזמנות'] },
     { key: 'ops', title: 'לשלוח בקבוצת תפעול', sub: 'הוקלדו ל-Q ועוד לא נשלחו', icon: <BellRing size={20} />, count: c.ops, to: '/exceptions?rule=12', unit: ['הזמנה', 'הזמנות'] },
     { key: 'other', title: 'לבדוק מול הקופה', sub: 'פער מול Q, אשראי שלא חויב, שינוי שלא עודכן', icon: <Scale size={20} />, count: c.other, to: '/exceptions', unit: ['הזמנה', 'הזמנות'] },
     { key: 'missing', title: 'להשלים פרטים חסרים', icon: <ClipboardX size={20} />, count: c.missing, to: '/exceptions?rule=8', unit: ['הזמנה', 'הזמנות'] },
@@ -55,8 +57,8 @@ export function TodayPage() {
   const laterTasks = open.filter((t) => !red.has(t.key));
   const openCount = open.length;
 
-  const lanes = todayLanes(scope, today);
-  const todayCount = lanes.todo.length + lanes.customer.length + lanes.inq.length + lanes.closed.length;
+  const lanes = todayLanes(scope, today, now);
+  const todayCount = lanes.todo.length + lanes.hold.length + lanes.customer.length + lanes.inq.length + lanes.closed.length;
 
   /* "הורד היום ומחר" (אפיון 16): כל הזמנות היום ומחר לאקסל – לעבודה גם אם המערכת לא זמינה. תמיד של כולם, לא רק "שלי". */
   const downloadTodayTomorrow = () => {

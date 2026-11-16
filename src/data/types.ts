@@ -182,4 +182,20 @@ export type Order = {
   opsNotified?: boolean;
   /* הוזנה בדיעבד – תאריך שעבר, לתיעוד בלבד */
   backfill?: boolean;
+  /* "בהמתנה": ההזמנה ממתינה לטיפול (למשל הלקוח לא עונה לחיוב) – עוברים להזמנה הבאה וחוזרים אליה.
+     אחת פעילה לכל היותר; משתחררת ידנית או כשרושמים Q. ההיסטוריה ביומן ההזמנה */
+  hold?: OrderHold;
 };
+
+export type OrderHold = {
+  reason: string;
+  note?: string;
+  by: string; // uid
+  byName: string;
+  at: string; // ISO – מתי סומנה (או מתי נוסף הניסיון האחרון)
+  remindAt?: string; // ISO – מתי לחזור
+  attempts: number; // כמה ניסיונות נרשמו (הסימון הראשון = 1)
+};
+export const HOLD_REASONS = ['הלקוח לא עונה', 'ממתין לפרטי אשראי', 'ממתין לאישור הלקוח', 'אחר'];
+/* הגיע הזמן לחזור להזמנה שבהמתנה (או שלא נקבע זמן ועבר) */
+export const holdDue = (h: OrderHold | undefined, now: Date) => !!h?.remindAt && new Date(h.remindAt).getTime() <= now.getTime();

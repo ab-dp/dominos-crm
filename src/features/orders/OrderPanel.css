@@ -174,7 +174,8 @@
 .reg { margin: var(--space-4) 0 var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--white); }
 .reg__head { display: flex; align-items: center; gap: var(--space-3); padding-bottom: var(--space-2); margin-bottom: 2px; border-bottom: 1px solid var(--line); }
 .reg__title { margin: 0; font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
-.reg__copy { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: auto; font-size: var(--text-label); }
+.reg__head-end { display: inline-flex; align-items: center; gap: var(--space-3); margin-inline-start: auto; }
+.reg__copy { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-label); }
 
 .reg__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 var(--space-4); }
 .reg__grid > * { padding: var(--space-2) 0; border-bottom: 1px solid var(--line-soft); }

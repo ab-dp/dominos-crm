@@ -76,6 +76,15 @@
 .qrow--todo.is-late { border-inline-start-color: var(--danger-fg); }
 .qrow--todo.is-late .qrow__time { color: var(--danger-fg); }
 .qrow--customer { border-inline-start-color: var(--gray-300); }
+/* בהמתנה – סגול; חזרה מהמתנה (הגיע הזמן) – בראש "להקליד" עם תג כחול */
+.qrow--hold { border-inline-start-color: var(--hold-edge); background: var(--hold-bg); }
+.qrow--hold:hover { background: color-mix(in srgb, var(--hold-bg) 92%, var(--hold-fg)); }
+/* פרטי ההמתנה – שורה שנייה ברוחב מלא, מתחת לשם */
+.qrow:has(.qrow__hold) { flex-wrap: wrap; row-gap: 2px; }
+.qrow__hold { flex-basis: 100%; padding-inline-start: calc(62px + var(--space-3) + var(--space-1)); padding-bottom: var(--space-1); font-size: var(--text-label); color: var(--gray-900); overflow-wrap: anywhere; }
+.qrow__hold b { font-weight: 600; color: var(--hold-fg); }
+.qrow__hold-meta { color: var(--gray-600); }
+.qrow.is-back .qrow__hold b { color: var(--brand-700); }
 .qrow--inq { background: var(--ok-bg); }
 .qrow--inq:hover { background: color-mix(in srgb, var(--ok-bg) 92%, var(--ok-fg)); }
 .qrow--closed { min-height: 40px; }
@@ -92,6 +101,9 @@
 .qtag { padding: 1px var(--space-2); border-radius: var(--radius-panel); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
 .qtag--late { background: var(--danger-bg); color: var(--danger-fg); }
 .qtag--credit { background: var(--gray-100); color: var(--gray-700); }
+.qtag--back { background: var(--brand-600); color: var(--white); }
+.tlane--hold .tlane__head { color: var(--hold-fg); }
+.tlane--hold .tlane__n { background: var(--hold-bg); color: var(--hold-fg); }
 .qrow__act { display: inline-flex; flex: none; }
 
 @media (max-width: 1200px) {
@@ -111,4 +123,5 @@
   /* שורה שנייה: התגים, ובקצה – הצעד הבא */
   .qrow__tags { grid-column: 2; grid-row: 2; align-self: center; flex-wrap: wrap; flex: initial; }
   .qrow__act { grid-column: 3; grid-row: 2; }
+  .qrow__hold { grid-column: 2 / -1; grid-row: 3; padding: 0; }
 }

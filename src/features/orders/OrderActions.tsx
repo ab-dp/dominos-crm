@@ -58,7 +58,8 @@ export function QForm({ o, done, inline, primary = true, onCancel }: { o: OrderV
     if (!(qAmount > 0)) { setErr('חובה: הסכום שירד בקופה'); amtRef.current?.focus(); return; }
     // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
     const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
-    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...(custPending ? { status: 'approved' as const } : {}) }, !sameMoney(qAmount, o.amount)
+    // רישום Q משחרר את ההזמנה מהמתנה (אם הייתה) – הטיפול הסתיים
+    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...(custPending ? { status: 'approved' as const } : {}), ...(o.hold ? { hold: undefined } : {}) }, !sameMoney(qAmount, o.amount)
       ? <>הועברה ל-Q · <b>פער מול Q</b>: <Ltr>{fmtMoney(qAmount)}</Ltr> מול <Ltr>{fmtMoney(o.amount)}</Ltr></>
       : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם{!ops && ' · הצעד הבא: לשלוח בקבוצת תפעול'}</>);
     done();

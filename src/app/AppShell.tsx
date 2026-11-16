@@ -25,6 +25,7 @@ import { StatusDialogs } from '../features/orders/StatusDialogs';
 import { ConflictDialog } from '../features/orders/ConflictDialog';
 import { ChangeDialog } from '../features/orders/ChangeDialog';
 import { LockFixDialog } from '../features/orders/LockFixDialog';
+import { HoldReminders } from '../features/orders/HoldReminders';
 import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -220,6 +221,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} onPick={(id) => { setSearchOpen(false); panel.open(id, null); }} />
       <OrderPanel />
+      <HoldReminders />
       <NewOrderDialog />
       <StatusDialogs />
       <ConflictDialog />
