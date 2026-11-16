@@ -41,7 +41,12 @@ export type Customer = {
 
 export type CustomerInput = Omit<Customer, 'id' | 'status' | 'createdAt' | 'createdBy' | 'updatedAt' | 'mergedInto' | 'mergedFrom'>;
 
-export type Activity = { id: string; kind: 'note' | 'call' | 'followup'; text: string; due?: string; by: string; byName: string; at?: Timestamp };
+/* care – תיעוד טיפול בהזמנה שנסגרה (נוצר מכרטיס ההזמנה, data/care.ts): נושא, פיצוי ותמונת מצב של ההזמנה */
+export type CareOrder = { id: number; date: string; time: string; branchName: string; amount: number; outcome: string };
+export type Activity = {
+  id: string; kind: 'note' | 'call' | 'followup' | 'care'; text: string; due?: string; by: string; byName: string; at?: Timestamp;
+  orderId?: string; order?: CareOrder; topic?: string; comp?: string; compAmount?: number;
+};
 
 export const EMPTY_CUSTOMER: CustomerInput = {
   name: '', type: 'regular', taxId: '', businessAddress: '', paymentMethod: 'account', accountPhone: '', poRequired: false,

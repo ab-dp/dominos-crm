@@ -7,6 +7,7 @@ import { usePref } from '../../lib/prefs';
 import { useStore, type OrderView } from '../../data/store';
 import { liveSince, useOrdersRange } from '../../data/orders';
 import { CLOSED } from '../../data/types';
+import { needsCare } from '../../data/care';
 import { HEALTH_RANK, healthOf, issuesFor } from '../../rules-engine/health';
 import { Ltr, addDays, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { OrdersTable } from './OrdersTable';
@@ -21,6 +22,7 @@ const RANGES = [3, 7, 14, 30, 0] as const;
 const MAX_DAYS = 366; // טווח ארוך יותר – לדוחות
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
+const CARE_FILTER = { label: 'איחור / חלקית בלי תיעוד', test: (o: OrderView) => needsCare(o) };
 export const FILTERS: Record<string, { label: string; test: (o: OrderView) => boolean }> = {
   branch: { label: 'לא עודכן בתפעול', test: (o) => !o.branchApproval },
   q: { label: 'לא הועברו ל-Q', test: (o) => !o.qNumber },
@@ -41,7 +43,9 @@ export function OrdersPage() {
   const tab: Tab = raw && TABS.some(([k]) => k === raw) ? raw : 'today';
   const range = Number(params.get('range') ?? 7);
   const filterKey = params.get('filter');
-  const filter = filterKey ? FILTERS[filterKey] : undefined;
+  // בארכיון ובטווח תאריכים – גם "בלי תיעוד": איחור או חלקית שעוד לא תועד איך טיפלנו בלקוח
+  const filters = raw === 'archive' || raw === 'range' ? { ...FILTERS, care: CARE_FILTER } : FILTERS;
+  const filter = filterKey ? filters[filterKey] : undefined;
 
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
@@ -164,7 +168,7 @@ export function OrdersPage() {
           </div>
         )}
         <div className="chips" role="group" aria-label="סינון מהיר">
-          {Object.entries(FILTERS).map(([k, f]) => (
+          {Object.entries(filters).map(([k, f]) => (
             <button key={k} className={`chip ${filterKey === k ? 'is-on' : ''}`} aria-pressed={filterKey === k} onClick={() => set('filter', filterKey === k ? null : k)}>
               {f.label}
               {filterKey === k && <X size={14} aria-hidden="true" />}

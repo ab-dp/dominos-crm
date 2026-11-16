@@ -146,10 +146,20 @@ service cloud.firestore {
         allow read: if isActive();
         allow create: if isActive()
           && request.resource.data.by == request.auth.uid
-          && request.resource.data.kind in ['note', 'call', 'followup']
-          && noCard(request.resource.data.text) && request.resource.data.text.size() > 0;
+          && request.resource.data.kind in ['note', 'call', 'followup', 'care']
+          && noCard(request.resource.data.text) && request.resource.data.text.size() > 0
+          // תיעוד טיפול: שייך להזמנה קיימת של הלקוח הזה, עם נושא, פיצוי ותמונת מצב של ההזמנה
+          && (request.resource.data.kind != 'care' || validCare(request.resource.data, cid));
         allow update, delete: if false;
       }
+    }
+    function validCare(d, cid) {
+      return d.orderId is string && exists(/databases/$(database)/documents/orders/$(d.orderId))
+        && get(/databases/$(database)/documents/orders/$(d.orderId)).data.customerId == cid
+        && d.topic is string && d.topic.size() > 0 && d.topic.size() <= 40
+        && d.get('comp', '') is string && d.get('comp', '').size() <= 40
+        && (!('compAmount' in d) || (d.compAmount is number && d.compAmount >= 0 && d.compAmount < 100000))
+        && d.order is map && d.text.size() <= 2000;
     }
 
     // ח.פ ייחודי: מסמך לכל ח.פ. יצירה כפולה נכשלת (נחשבת עדכון, ועדכון אסור).

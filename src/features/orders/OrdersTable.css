@@ -125,3 +125,5 @@
 
 /* "בהמתנה" ליד שם הלקוח */
 .hold-tag { display: inline-block; margin-inline-start: var(--space-2); padding: 0 6px; border-radius: var(--radius-tag); background: var(--hold-bg); color: var(--hold-fg); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; }
+/* יש תיעוד טיפול בתיק הלקוח */
+.care-tag { display: inline-block; margin-inline-start: var(--space-2); padding: 0 6px; border-radius: var(--radius-tag); background: var(--brand-50); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; }
