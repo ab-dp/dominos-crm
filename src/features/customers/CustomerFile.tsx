@@ -21,6 +21,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { CATEGORIES, CLOSED } from '../../data/types';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { usePanel } from '../../app/PanelContext';
+import { needsCare } from '../../data/care';
 import { OrdersTable } from '../orders/OrdersTable';
 import { CustomerDocsSection } from '../orders/OrderDocs';
 import { BarChart } from '../reports/BarChart';
@@ -212,6 +213,22 @@ const PERIODS: [number, string][] = [[1, 'החודש'], [3, '3 חודשים'], [
 /* הכנסות – מ-data/metrics.ts, כמו בבורד ובדוחות. "החודש" = מה-1 ועד היום, גם בסקירה וגם בסיכומים החודשיים */
 const qSum = (list: OrderView[]) => revenue(list);
 
+/* סקירה: כמה תיעודי טיפול יש ללקוח (מהמונה שעל ההזמנות), ואיחורים / חלקיות שעוד לא תועדו */
+function CareCard({ orders, onTab }: { orders: OrderView[]; onTab: (t: Tab) => void }) {
+  const n = orders.reduce((t, o) => t + (o.careCount ?? 0), 0);
+  const last = orders.reduce((m, o) => (o.careAt && o.careAt > m ? o.careAt : m), '');
+  const open = orders.filter(needsCare).length;
+  return (
+    <div className="card ov__card">
+      <span className="kpi__label">תיעודי טיפול</span>
+      {n
+        ? <button className="link ov__care" onClick={() => onTab('activity')}><Ltr>{n}</Ltr> {n === 1 ? 'תיעוד' : 'תיעודים'}{last && <> · האחרון <Ltr>{fmtDate(toISODate(new Date(last)))}</Ltr></>}</button>
+        : <span className="muted">אין</span>}
+      {open > 0 && <span className="ov__care-open">{open === 1 ? 'הזמנה אחת' : <><Ltr>{open}</Ltr> הזמנות</>} באיחור / חלקית בלי תיעוד</span>}
+    </div>
+  );
+}
+
 function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) => void; orders: OrderView[]; loading: boolean }) {
   const { now } = useStore();
   const panel = usePanel();
@@ -266,6 +283,7 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
       <div className="ov__cards">
         {card('הזמנה אחרונה', last, 'אין עדיין הזמנות')}
         {card('הזמנה הבאה', next, 'אין הזמנה פתוחה')}
+        <CareCard orders={orders} onTab={onTab} />
         <div className="card ov__card">
           <span className="kpi__label">פרטים חסרים</span>
           {missingOf(c).length === 0 ? <span className="ok-text"><Check size={14} aria-hidden="true" /> התיק מלא</span> : (
@@ -664,7 +682,12 @@ function AddressEditor({ value, branches, branchLabel, onSave, onCancel }: { val
 
 /* ---------- פעילות: הערות, שיחות, משימות חזרה ---------- */
 function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextAreaElement> }) {
-  const items = useActivity(withMerged(c));
+  const all = useActivity(withMerged(c));
+  const panel = usePanel();
+  // הכל / הערות ושיחות / תיעודי טיפול (נוצרים מכרטיס של הזמנה שנסגרה)
+  const [show, setShow] = useState<'all' | 'notes' | 'care'>('all');
+  const careN = all.filter((a) => a.kind === 'care').length;
+  const items = show === 'all' ? all : all.filter((a) => (show === 'care') === (a.kind === 'care'));
   const toast = useToast();
   const [kind, setKind] = useState<'note' | 'call' | 'followup'>('note');
   const [text, setText] = useState('');
@@ -692,12 +715,36 @@ function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextA
           <Button size="sm" variant="primary" type="submit" className="composer__send" kbd="Ctrl+Enter">שמור</Button>
         </div>
       </form>
+      {careN > 0 && (
+        <div className="seg seg--sm cfile__afilter" role="group" aria-label="הצג">
+          {([['all', 'הכל'], ['notes', 'הערות ושיחות'], ['care', `תיעודי טיפול (${careN})`]] as const).map(([k, l]) => (
+            <button key={k} className={show === k ? 'is-on' : ''} aria-pressed={show === k} onClick={() => setShow(k)}>{l}</button>
+          ))}
+        </div>
+      )}
       <ol className="timeline cfile__timeline">
-        {items.length === 0 && <li className="muted">אין עדיין פעילות. הערות, שיחות ומשימות חזרה יופיעו כאן.</li>}
+        {items.length === 0 && <li className="muted">אין עדיין פעילות. הערות, שיחות ומשימות חזרה יופיעו כאן; תיעודי טיפול – מכרטיס של הזמנה שנסגרה.</li>}
         {items.map((a) => (
           <li key={a.id}>
             <span className="timeline__at"><Ltr>{a.at ? fmtTs(a.at.toDate()) : '…'}</Ltr></span>
-            <span><span className={`akind akind--${a.kind}`}>{KIND[a.kind]}</span> <b>{a.byName}</b>{a.due && <span className="muted"> · לחזור ב-<Ltr>{a.due.split('-').reverse().join('.')}</Ltr></span>}<br />{a.text}</span>
+            {a.kind === 'care' ? (
+              /* תיעוד טיפול: הנושא והפיצוי, כרטיס ההזמנה (לחיצה פותחת אותה), ואיך טיפלנו */
+              <span className="acare">
+                <span>
+                  <span className="akind akind--care">תיעוד טיפול</span> <b>{a.byName}</b>
+                  {a.topic && <span className="acare__tag">{a.topic}</span>}
+                  {a.comp && a.comp !== 'ללא' && <span className="acare__tag acare__tag--comp">פיצוי: {a.comp}{a.compAmount ? <> · <Ltr>{fmtMoney(a.compAmount)}</Ltr></> : null}</span>}
+                </span>
+                {a.order && (
+                  <button type="button" className="acare__order" onClick={(e) => panel.open(a.order!.id, e.currentTarget)}>
+                    הזמנה <Ltr>{a.order.id}</Ltr> · <Ltr>{fmtDate(a.order.date)}</Ltr> <Ltr>{a.order.time}</Ltr> · {a.order.branchName} · <Ltr>{fmtMoney(a.order.amount)}</Ltr> · {a.order.outcome}
+                  </button>
+                )}
+                <span className="acare__text">{a.text}</span>
+              </span>
+            ) : (
+              <span><span className={`akind akind--${a.kind}`}>{KIND[a.kind]}</span> <b>{a.byName}</b>{a.due && <span className="muted"> · לחזור ב-<Ltr>{a.due.split('-').reverse().join('.')}</Ltr></span>}<br />{a.text}</span>
+            )}
           </li>
         ))}
       </ol>

@@ -126,3 +126,15 @@
 .merge__val { font-size: var(--text-table); font-weight: 500; overflow-wrap: anywhere; }
 .merge__who { grid-column: 2; font-size: var(--text-micro); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 560px) { .merge__conflict { grid-template-columns: minmax(0, 1fr); } .merge__fills > div { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+
+/* תיעוד טיפול בתיק הלקוח */
+.cfile__afilter { margin: 0 var(--space-4) var(--space-2); }
+.akind--care { background: var(--brand-50); color: var(--brand-700); }
+.acare { display: grid; gap: 4px; min-width: 0; }
+.acare__tag { display: inline-block; margin-inline-start: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; }
+.acare__tag--comp { background: var(--ok-bg); color: var(--ok-fg); }
+.acare__order { justify-self: start; max-width: 100%; padding: 2px var(--space-2); border: 1px solid var(--line); border-radius: var(--radius); background: var(--gray-25); font: inherit; font-size: var(--text-label); color: var(--gray-700); text-align: start; cursor: pointer; overflow-wrap: anywhere; }
+.acare__order:hover { border-color: var(--brand-100); color: var(--brand-700); }
+.acare__text { white-space: pre-line; overflow-wrap: anywhere; }
+.ov__care { justify-self: start; }
+.ov__care-open { font-size: var(--text-label); color: var(--gray-600); }

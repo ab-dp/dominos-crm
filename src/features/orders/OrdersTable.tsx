@@ -13,6 +13,7 @@ import { STAGE_LABEL, closeLabel, methodText, stageOf, type Order } from '../../
 import { FixButton } from './OrderActions';
 import { NextStep, StageTrack, nextStepLabel, opsPending } from './OrderTimeline';
 import './OrdersTable.css';
+import { canCare } from '../../data/care';
 
 const PAGE = 150;
 // פעולות שהן חלק מהציר – מופיעות ככפתור "הצעד הבא", לא ככפתור תיקון נוסף
@@ -181,6 +182,7 @@ function RowMenu({ o, next, onOpen, onCancel }: { o: OrderView; next: string | n
       <Dropdown.Portal>
         <Dropdown.Content className="menu" align="end" sideOffset={4} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           {next && <Dropdown.Item className="menu__item" onSelect={onOpen}>{next} – בכרטיס ההזמנה</Dropdown.Item>}
+          {canCare(o) && <Dropdown.Item className="menu__item" onSelect={onOpen}>{o.careCount ? 'תיעוד טיפול' : 'הוסף תיעוד טיפול'} – בכרטיס ההזמנה</Dropdown.Item>}
           <Dropdown.Item className="menu__item" onSelect={onOpen}>פתח את ההזמנה</Dropdown.Item>
           {open && <Dropdown.Separator className="menu__sep" />}
           {open && <Dropdown.Item className="menu__item menu__item--danger" onSelect={onCancel}>ביטול הזמנה</Dropdown.Item>}
@@ -219,7 +221,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, 
       <td className="num strong c-time">{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</td>
       {showDate && <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>}
       <td className="c-cust">
-        <span className="orow__cust">{o.customerName}{o.changedAfterApproval && <span className="changed-tag changed-tag--sm" title="שונתה לאחר אישור">שונתה</span>}{o.hold && <span className="hold-tag" title={[o.hold.reason, o.hold.note].filter(Boolean).join(' · ')}>בהמתנה</span>}</span>
+        <span className="orow__cust">{o.customerName}{o.changedAfterApproval && <span className="changed-tag changed-tag--sm" title="שונתה לאחר אישור">שונתה</span>}{!!o.careCount && <span className="care-tag" title="יש תיעוד טיפול בתיק הלקוח">תועד</span>}{o.hold && <span className="hold-tag" title={[o.hold.reason, o.hold.note].filter(Boolean).join(' · ')}>בהמתנה</span>}</span>
         {/* הסיבות גלויות בשורה, לא רק בריחוף: שתיים ראשונות, ומספר הנוספות */}
         {top && o.health !== 'ok' && (
           <span className={`orow__why orow__why--${o.health}`} title={o.issues.map((i) => i.label).join(' · ')}>

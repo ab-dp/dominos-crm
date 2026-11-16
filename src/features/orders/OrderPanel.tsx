@@ -18,6 +18,8 @@ import { FixButton, PoEdit } from './OrderActions';
 import { OrderTimeline } from './OrderTimeline';
 import { RegisterBlock, RegisterLocked } from './OrderRegister';
 import { HoldBanner } from './Hold';
+import { CareSection } from './Care';
+import { canCare } from '../../data/care';
 import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
@@ -167,6 +169,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         )}
         {cancelled && <CancelledNote o={o} />}
         <HoldBanner o={o} />
+        {/* הזמנה שנסגרה: תיעוד הטיפול בלקוח – בראש הכרטיס */}
+        {canCare(o) && <CareSection o={o} />}
         {/* קודם כל: מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q. בהזמנה מבוטלת – לקריאה בלבד */}
         {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} />}
 
@@ -270,13 +274,13 @@ export const FIELD: Record<string, string> = {
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', methodNote: 'פירוט אמצעי התשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
-  opsNotified: 'נשלח בקבוצת תפעול', hold: 'בהמתנה', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות',
+  opsNotified: 'נשלח בקבוצת תפעול', hold: 'בהמתנה', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות', careCount: 'תיעודי טיפול', topic: 'נושא', comp: 'פיצוי', compAmount: 'סכום הפיצוי', text: 'איך טיפלנו',
 };
 export function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
   if (k === 'status') return STATUS_LABEL[v as keyof typeof STATUS_LABEL] ?? String(v);
   if (k === 'payment') return PAYMENT_LABEL[v as keyof typeof PAYMENT_LABEL] ?? String(v);
-  if (k === 'amount' || k === 'qAmount') return fmtMoney(Number(v));
+  if (k === 'amount' || k === 'qAmount' || k === 'compAmount') return fmtMoney(Number(v));
   if (k === 'branchApproval') return `עודכן בתפעול${(v as { manager?: string }).manager ? ` · ${(v as { manager: string }).manager}` : ''}`;
   if (k === 'date') return fmtDate(String(v));
   if (k === 'qGapAck') return v ? `אושר שהפער מוסבר: ${(v as { note?: string }).note ?? ''}` : '—';
@@ -306,7 +310,7 @@ function History({ o }: { o: OrderView }) {
         <li key={r.id}>
           <span className="timeline__at"><Ltr>{r.at ? fmtAt(r.at.toDate()) : '…'}</Ltr></span>
           <span>
-            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.action === 'doc' ? 'צירוף תעודת רכש' : r.action === 'note' ? 'הערה פנימית' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.after?.opsNotified === true && Object.keys(r.after).length === 1 ?'נשלח בקבוצת תפעול' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
+            <b>{r.byName}</b> · {r.action === 'create' ? 'ההזמנה נוצרה' : r.action === 'doc' ? 'צירוף תעודת רכש' : r.action === 'note' ? 'הערה פנימית' : r.action === 'care' ? 'תיעוד טיפול (בתיק הלקוח)' : r.note === 'ביטול פעולה' ? 'ביטול פעולה' : r.action === 'status' ? 'שינוי סטטוס' : r.after?.opsNotified === true && Object.keys(r.after).length === 1 ?'נשלח בקבוצת תפעול' : r.source === 'bulk' ? 'עדכון מרובה' : 'עדכון'}
             {r.action !== 'create' && r.action !== 'doc' && r.after && Object.keys(r.after).filter((k) => FIELD[k]).map((k) => (
               <span key={k} className="hist__change">{FIELD[k]}: <span className="muted">{showVal(k, r.before?.[k])}</span> ← {showVal(k, r.after?.[k])}</span>
             ))}
