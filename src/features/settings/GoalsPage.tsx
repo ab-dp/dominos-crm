@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { GOAL_META, saveGoals, useGoals, type Goals } from '../../data/goals';
 import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
+import { cleanAmount } from '../../lib/format';
 import '../pages.css';
 import './ThresholdsPage.css';
 
@@ -17,7 +18,7 @@ export function GoalsPage() {
   const [err, setErr] = useState('');
   useEffect(() => setDraft(toText(goals)), [goals]);
 
-  const parse = (k: keyof Goals) => { const v = Number(draft[k].replace(/[^\d.]/g, '')); return draft[k].trim() ? v : 0; };
+  const parse = (k: keyof Goals) => { const v = Number(cleanAmount(draft[k])); return draft[k].trim() ? v : 0; };
   const dirty = KEYS.some((k) => parse(k) !== (goals[k] ?? 0));
   const save = async () => {
     for (const k of KEYS) {

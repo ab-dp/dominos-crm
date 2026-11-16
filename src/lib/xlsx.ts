@@ -31,7 +31,8 @@ function put(cell: XCell, v: XValue, col: XCol) {
   const d = col.kind === 'date' && typeof v === 'string' ? asDate(v) : null;
   if (d) { cell.value = d; cell.numFmt = col.fmt ?? FMT.date!; }
   else if (col.kind === 'code' || col.kind === 'text') cell.value = String(v);
-  else if (typeof v === 'number') { cell.value = v; cell.numFmt = col.fmt ?? FMT[col.kind] ?? '#,##0'; }
+  // סכום עם אגורות – שתי ספרות אחרי הנקודה, כמו במסך; סכום שלם – בלי
+  else if (typeof v === 'number') { cell.value = v; cell.numFmt = col.fmt ?? (col.kind === 'money' && !Number.isInteger(v) ? '"₪"#,##0.00' : FMT[col.kind]) ?? '#,##0'; }
   else cell.value = v;
   const center = col.kind !== 'text' && col.kind !== 'code';
   cell.alignment = { horizontal: center ? 'center' : 'right', vertical: 'middle', readingOrder: 'rtl', wrapText: col.width >= 30 };

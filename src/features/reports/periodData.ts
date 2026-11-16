@@ -97,7 +97,7 @@ export function summary(all: Order[], from: string, to: string): Summary {
   const kpis: Kpi[] = [
     { label: 'הכנסות', value: total, kind: 'money' },
     { label: 'הזמנות', value: l.length, kind: 'num', sub: cancelled ? `ועוד ${cancelled} שבוטלו` : undefined },
-    { label: 'ממוצע להזמנה', value: l.length ? roundMoney(total / l.length) : 0, kind: 'money' },
+    { label: 'ממוצע להזמנה', value: l.length ? Math.round(total / l.length) : 0, kind: 'money' },
     { label: 'סופקו בזמן', value: t.rate ?? 0, kind: 'pct', sub: t.delivered ? `מתוך ${t.delivered} שסופקו` : 'אין הזמנות שסופקו' },
     { label: 'פיצות', value: l.reduce((t, o) => t + pizzaCount(o), 0), kind: 'num' },
     { label: 'לקוחות שהזמינו', value: new Set(l.map((o) => o.customerId || o.customerName)).size, kind: 'num' },

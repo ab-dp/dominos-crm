@@ -110,3 +110,5 @@
 .norder .cform__err--miss { color: var(--missing-fg); }
 .no-method, .no-outcome { max-width: 240px; }
 .no-approved { min-height: var(--control-md); }
+.no-billing { margin: var(--space-2) 0 0; font-size: var(--text-table); }
+.no-billing-f { margin-top: var(--space-3); }

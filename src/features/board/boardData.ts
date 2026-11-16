@@ -85,7 +85,7 @@ export type Sales = { count: number; sum: number; avg: number; pizzas: number; c
 export function sales(orders: OrderView[], r: Range): Sales {
   const list = orders.filter((o) => inRange(o, r) && live(o));
   const sum = sumOf(list);
-  return { count: list.length, sum, avg: list.length ? roundMoney(sum / list.length) : 0, pizzas: list.reduce((t, o) => t + pizzasOf(o), 0), customers: new Set(list.map((o) => o.customerId)).size };
+  return { count: list.length, sum, avg: list.length ? Math.round(sum / list.length) : 0, pizzas: list.reduce((t, o) => t + pizzasOf(o), 0), customers: new Set(list.map((o) => o.customerId)).size };
 }
 /* לפי יום – התקופה, ולצידה היום המקביל בתקופה הקודמת */
 export type DayPoint = { date: string; count: number; sum: number; prevCount: number; prevSum: number };
@@ -185,5 +185,5 @@ export function goalPace(value: number, goal: number, r: Range, now: Date, curre
   const p = Math.round((value / goal) * 100);
   if (!current) return { pct: p, projected: null as number | null };
   const total = monthEnd(new Date(r.from + 'T12:00')).getDate();
-  return { pct: p, projected: roundMoney((value / Math.max(1, now.getDate())) * total) };
+  return { pct: p, projected: Math.round((value / Math.max(1, now.getDate())) * total) };
 }

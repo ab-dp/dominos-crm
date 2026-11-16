@@ -195,6 +195,9 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
               {o.branchPhone && <Kv k="טלפון הסניף" v={<Ltr>{fmtPhone(o.branchPhone)}</Ltr>} />}
               {o.cluster && <Kv k="אשכול" v={o.cluster} />}
+              {/* פנימי להנהלת החשבונות (למשל למי לשלוח חשבונית בסוף החודש) – נפרד מ"הערות להזמנה" שלמעלה,
+                  ולא מופיע בהעברה לקופה ובסיכום לתפעול. נטען מ"הנחיות חיוב" של הלקוח ביצירה */}
+              <EditKv k="הערות להנהלת חשבונות" kind="textarea" value={o.billingNote ?? ''} placeholder="אין" onSave={(v) => save({ billingNote: v || undefined }, 'ההערות להנהלת חשבונות')} />
             </Section>
           )}
           {tab === 'pay' && (
@@ -202,7 +205,6 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <Section id="payment" title="תשלום">
                 <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
                 <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} {!cancelled && <PoEdit o={o} />}</span>} />
-                {o.billingNote && <Kv k="הערות לחיוב" v={o.billingNote} />}
                 <div className="sums">
                   <div><span>סכום לחיוב</span><b>{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</b></div>
                   <div className={gap ? 'is-gap' : ''}>
@@ -263,7 +265,7 @@ export const FIELD: Record<string, string> = {
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', methodNote: 'פירוט אמצעי התשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
-  opsNotified: 'נשלח בקבוצת תפעול', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי',
+  opsNotified: 'נשלח בקבוצת תפעול', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות',
 };
 export function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';

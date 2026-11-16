@@ -11,12 +11,12 @@ import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, use
 import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, type Order } from '../../data/types';
 import { Button, Missing } from '../../design/components';
-import { Ltr, fmtDate, fmtMoney, fmtPhone, roundMoney, sameMoney, toISODate } from '../../lib/format';
+import { cleanAmount, Ltr, fmtDate, fmtMoney, fmtPhone, roundMoney, sameMoney, toISODate } from '../../lib/format';
 import { cleanPhone, phoneError } from '../../lib/names';
 import { BranchPicker } from '../branches/BranchPicker';
 
 const CARD_RE = /\d{13,}/;
-const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
+const money = (s: string) => roundMoney(Number(cleanAmount(s)) || 0);
 
 /* ---------- שדה אחד שנערך במקום ---------- */
 type Kind = 'text' | 'textarea' | 'date' | 'time' | 'phone' | 'money';

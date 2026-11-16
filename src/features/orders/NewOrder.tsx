@@ -21,7 +21,7 @@ import { setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, categoryOf, type OrderStatus } from '../../data/types';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday } from '../../lib/format';
+import { cleanAmount, Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday } from '../../lib/format';
 import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
@@ -43,7 +43,7 @@ const MISS_LABEL: Record<string, string> = {
   channel: 'ערוץ / מספר פניה', methodNote: 'פירוט אמצעי התשלום', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש', prices: 'מחיר',
 };
 
-const money = (s: string) => roundMoney(Number(s.replace(/[^\d.]/g, '')) || 0);
+const money = (s: string) => roundMoney(Number(cleanAmount(s)) || 0);
 
 export function NewOrderDialog() {
   const { newOrder, closeNewOrder } = useStore();
@@ -103,6 +103,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const [accountPhone, setAccountPhone] = useState('');
   const [poNumber, setPoNumber] = useState('');
   const [instructions, setInstructions] = useState('');
+  // הערות להנהלת חשבונות: null = כמו 'הנחיות חיוב' של הלקוח; מקופל עד שפותחים
+  const [billing, setBilling] = useState<string | null>(null);
+  const [showBilling, setShowBilling] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveContact, setSaveContact] = useState(false); // לשמור איש קשר חדש גם בתיק הלקוח
   const [saveAddress, setSaveAddress] = useState(false);
@@ -313,7 +316,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       items: useLines ? toSaved(lines) : [],
       deliveryFee: feeValue || undefined,
       instructions: instructions.trim() || undefined,
-      billingNote: c?.billingInstructions || undefined,
+      billingNote: (billing ?? c?.billingInstructions ?? '').trim() || undefined,
     };
     const draft = isNew ? {
       ...EMPTY_CUSTOMER,
@@ -548,6 +551,20 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
         <textarea className="input cform__ta" rows={2} value={instructions} onChange={(e) => { setInstructions(e.target.value); clearErr('instructions'); }} placeholder="למשל: להגיע לשער האחורי, להתקשר 10 דקות לפני" {...inv('instructions')} />
         {err('instructions')}
       </L>
+      {/* פנימי להנהלת החשבונות – מקופל, כדי שלא יתבלבל עם 'הערות להזמנה' */}
+      {showBilling || billing !== null ? (
+        <div className="no-billing-f">
+        <L label="הערות להנהלת חשבונות" wide>
+          <textarea className="input cform__ta" rows={2} value={billing ?? c?.billingInstructions ?? ''} onChange={(e) => setBilling(e.target.value)} placeholder="למשל: למי לשלוח את החשבונית בסוף החודש" />
+          <span className="cform__hint">פנימי – לא מופיע בהעברה לקופה ובסיכום לתפעול</span>
+        </L>
+        </div>
+      ) : (
+        <p className="no-billing">
+          <button type="button" className="link" onClick={() => setShowBilling(true)}>+ הערות להנהלת חשבונות</button>
+          {c?.billingInstructions && <span className="muted"> · מהלקוח: {c.billingInstructions}</span>}
+        </p>
+      )}
     </>
   );
 
