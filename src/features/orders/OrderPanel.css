@@ -232,6 +232,9 @@
 .reg-q__gap { padding: 1px var(--space-2); border-radius: var(--radius-tag); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 500; }
 .reg-q__edit { margin-inline-start: auto; font-size: var(--text-label); }
 .reg-q__ops-state { font-size: var(--text-label); color: var(--gray-600); }
+.reg-q__next { flex-basis: 100%; justify-content: center; }
+.reg-q__next bdi { font-family: var(--font-mono); }
+.reg-q__all { flex-basis: 100%; font-size: var(--text-label); color: var(--ok-fg); font-weight: 500; }
 
 /* מתחת לבלוק: ציר ההזמנה ושאר הבעיות, ואז לשוניות */
 .panel__flow { display: grid; gap: var(--space-3); padding: var(--space-4) 0 var(--space-1); }

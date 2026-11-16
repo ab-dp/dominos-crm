@@ -1,8 +1,8 @@
-/* מסך "היום": שני טורים – משימות פתוחות (בשתי קבוצות: עכשיו / בהמשך היום) וציר הזמנות היום. */
+/* מסך "היום": שני טורים – הזמנות היום כתור הקלדה ל-Q (רחב, ראשון), ומשימות פתוחות (בשתי קבוצות: עכשיו / בהמשך היום). */
 .today { display: flex; flex-direction: column; }
 
 /* ---------- שני הטורים ---------- */
-.today__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-5); align-items: start; }
+.today__grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-5); align-items: start; }
 .today__grid > * { min-width: 0; }
 .pill { min-width: 22px; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-panel); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; background: var(--gray-100); color: var(--gray-700); }
 .calm { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-5) var(--space-4); color: var(--ok-fg); font-weight: 500; }
@@ -44,36 +44,71 @@
 .task__go { color: var(--gray-300); transition: color var(--dur-instant) var(--ease), transform var(--dur-instant) var(--ease); }
 .task:hover .task__go { color: var(--brand-700); transform: translateX(-2px); }
 
-/* ---------- ציר היום ---------- */
-.tl { list-style: none; margin: 0; padding: var(--space-2) var(--space-3) var(--space-3); }
-.tl__row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius); transition: background var(--dur-instant) var(--ease); }
-.tl__row:hover { background: var(--gray-50); }
-.tl__row.is-past .tl__time, .tl__row.is-past .tl__cust { color: var(--gray-600); }
-.tl__row.is-past:not(.is-closed) .tl__meta { color: var(--gray-600); }
-.tl__time { width: 50px; flex: none; font: 500 var(--text-body) var(--font); }
-.tl__main { flex: 1; min-width: 0; display: grid; padding: 2px var(--space-1); border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; border-radius: var(--radius); }
-.tl__cust { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tl__meta { font-size: var(--text-label); color: var(--gray-600); }
-.tl__marks { display: inline-flex; flex: none; }
-.tl__now { position: relative; display: flex; align-items: center; gap: var(--space-2); height: 24px; margin: var(--space-1) 0; color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; }
-.tl__now::after { content: ""; flex: 1; height: 1px; background: var(--brand-600); }
-.tl__now::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand-600); }
-.tl__now bdi { font-family: var(--font-mono); }
-.tl__row.is-next { background: var(--brand-50); }
-.tl__row.is-next .tl__time { color: var(--brand-700); }
-.tl__next { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--white); border: 1px solid var(--brand-100); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; white-space: nowrap; }
+/* ---------- הזמנות היום: תור ההקלדה ל-Q ----------
+   חריגה מתועדת מ-"משטח שטוח" (DESIGN.md, The Q-Lane Rule): צבע השורה אומר מה נשאר לעשות בה –
+   פס כחול = להקליד ל-Q, פס אדום = לא ירדה ל-Q אחרי השעה שנקבעה, רקע ירוק עדין = ירדה ל-Q, אפור = נסגרה. */
+.tq__head { gap: var(--space-3); }
+.tq__count { margin-inline-start: auto; font-size: var(--text-table); color: var(--gray-700); }
+.tq__count b { font-family: var(--font-mono); font-weight: 600; color: var(--ok-fg); }
+.tq__progress { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4) var(--space-3); }
+.tq__bar { flex: 1; height: 8px; border-radius: 4px; background: var(--gray-100); overflow: hidden; }
+.tq__bar > span { display: block; height: 100%; border-radius: 4px; background: var(--ok-mark); transition: width var(--dur-standard) var(--ease); }
+.tq__left { display: inline-flex; align-items: center; gap: var(--space-1); flex: none; font-size: var(--text-label); color: var(--gray-600); }
+.tq__left bdi { font-family: var(--font-mono); }
+
+.tlane { border-top: 1px solid var(--line); padding: var(--space-2) var(--space-3) var(--space-3); }
+.tlane__head { margin: 0 0 var(--space-1); font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
+.tlane__label, .tlane__toggle { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-1); }
+.tlane__toggle { border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; border-radius: var(--radius); }
+.tlane__toggle:hover { color: var(--brand-700); }
+.tlane__chev { transition: transform var(--dur-instant) var(--ease); }
+.tlane__toggle[aria-expanded="false"] .tlane__chev { transform: rotate(90deg); }
+.tlane__n { min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--gray-100); color: var(--gray-700); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; }
+.tlane--todo .tlane__head { color: var(--brand-700); }
+.tlane--todo .tlane__n { background: var(--brand-600); color: var(--white); }
+.tlane--inq .tlane__n { background: var(--ok-bg); color: var(--ok-fg); }
+.tlane__empty { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-2) var(--space-1); color: var(--ok-fg); font-size: var(--text-table); font-weight: 500; }
+.tlane__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+
+.qrow { display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: var(--space-1) var(--space-3); border-radius: var(--radius); border-inline-start: 3px solid transparent; background: var(--white); transition: background var(--dur-instant) var(--ease); }
+.qrow:hover { background: var(--gray-50); }
+.qrow--todo { border-inline-start-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--gray-100); }
+.qrow--todo.is-late { border-inline-start-color: var(--danger-fg); }
+.qrow--todo.is-late .qrow__time { color: var(--danger-fg); }
+.qrow--customer { border-inline-start-color: var(--gray-300); }
+.qrow--inq { background: var(--ok-bg); }
+.qrow--inq:hover { background: color-mix(in srgb, var(--ok-bg) 92%, var(--ok-fg)); }
+.qrow--closed { min-height: 40px; }
+.qrow--closed .qrow__cust, .qrow--closed .qrow__time { color: var(--gray-600); font-weight: 500; }
+.qrow__time { display: inline-flex; align-items: center; gap: 4px; width: 62px; flex: none; font: 600 var(--text-body) var(--font-mono); }
+.qrow__ok { color: var(--ok-fg); flex: none; }
+.qrow__main { flex: 1; min-width: 0; display: grid; padding: 2px var(--space-1); border: 0; background: transparent; font: inherit; color: inherit; text-align: start; cursor: pointer; border-radius: var(--radius); }
+.qrow__cust { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qrow__meta { font-size: var(--text-label); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qrow--inq .qrow__meta { color: var(--gray-700); }
+.qrow__meta bdi { font-family: var(--font-mono); }
+.qrow__next { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; white-space: nowrap; }
+.qrow__tags { display: inline-flex; align-items: center; gap: var(--space-2); flex: none; }
+.qtag { padding: 1px var(--space-2); border-radius: var(--radius-panel); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
+.qtag--late { background: var(--danger-bg); color: var(--danger-fg); }
+.qtag--credit { background: var(--gray-100); color: var(--gray-700); }
+.qrow__act { display: inline-flex; flex: none; }
 
 @media (max-width: 1200px) {
   .today__grid { grid-template-columns: 1fr; }
 }
 
-/* טלפון: ציר היום בשתי שורות – שם הלקוח מקבל את כל הרוחב, השלב יורד מתחתיו */
+/* טלפון: שורת התור בשתי שורות – שם הלקוח מקבל את כל הרוחב, התגים והצעד הבא יורדים מתחתיו */
 @media (max-width: 700px) {
-  .tl__marks { display: none; }
-  .tl { padding: var(--space-1) var(--space-1) var(--space-2); }
-  .tl__row { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: start; gap: 2px var(--space-2); padding: var(--space-3) var(--space-2); }
-  .tl__time { width: auto; padding-top: 2px; }
-  .tl__cust { white-space: normal; }
-  .tl__row > :nth-child(4) { grid-column: 2 / -1; }
-  .tl__next { display: table; margin: var(--space-1) 0 0; }
+  .tlane { padding-inline: var(--space-2); }
+  .tq__progress { flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
+  .tq__bar { flex-basis: 100%; }
+  .qrow { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: start; gap: var(--space-1) var(--space-2); padding: var(--space-2); }
+  .qrow__main { grid-column: 2 / -1; }
+  .qrow__time { width: auto; padding-top: 3px; font-size: var(--text-table); }
+  .qrow__cust { white-space: normal; }
+  .qrow__next { display: table; margin: var(--space-1) 0 0; }
+  /* שורה שנייה: התגים, ובקצה – הצעד הבא */
+  .qrow__tags { grid-column: 2; grid-row: 2; align-self: center; flex-wrap: wrap; flex: initial; }
+  .qrow__act { grid-column: 3; grid-row: 2; }
 }
