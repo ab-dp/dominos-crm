@@ -124,6 +124,7 @@ export function OrdersPage() {
         density={density}
         rows={rows}
         showDate={tab !== 'today' && tab !== 'tomorrow'}
+        qTint={tab === 'today'}
         caption={`הזמנות – ${TABS.find((t) => t[0] === tab)![1]}${filter ? ` – ${filter.label}` : ''}`}
         emptyText={filter ? `אין הזמנות: ${filter.label}` : tab === 'tomorrow' ? 'אין הזמנות למחר' : tab === 'overdue' ? 'אין הזמנות פתוחות שעבר מועדן ✓' : 'אין הזמנות בתצוגה הזו'}
       />}

@@ -1,19 +1,18 @@
-/* מסך "היום" (אפיון 6.1): רק מה שעוד דורש טיפול – משימות פתוחות, ולידן ציר הזמנות היום. משימה שהושלמה יורדת מהמסך. */
+/* מסך "היום" (אפיון 6.1): הזמנות היום כתור הקלדה ל-Q (TodayQueue), ולידן המשימות הפתוחות – רק מה שעוד דורש טיפול. משימה שהושלמה יורדת מהמסך. */
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { UserPlus, UserCheck, BellRing, ChevronLeft, CircleCheckBig, OctagonAlert, PackageCheck, Send, Store, ListChecks, ClipboardX, Download, FileText, Scale } from 'lucide-react';
-import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
-import { useStore, type OrderView } from '../../data/store';
-import { CLOSED, itemsText, methodText } from '../../data/types';
-import { Button, HealthBadge, Missing, Skeleton } from '../../design/components';
-import { orderDateTime } from '../../rules-engine/health';
+import { useStore } from '../../data/store';
+import { itemsText, methodText } from '../../data/types';
+import { Button, Skeleton } from '../../design/components';
 import { NOW_ORDER, redTasks, todayTaskCounts, type TaskKey } from './todayTasks';
 import { usePref } from '../../lib/prefs';
-import { Ltr, Money, addDays, fmtDate, toISODate, weekday } from '../../lib/format';
-import { NextStep, StageTrack } from '../orders/OrderTimeline';
+import { Ltr, addDays, fmtDate, toISODate, weekday } from '../../lib/format';
+import { TodayQueue } from './TodayQueue';
+import { mineOnly, todayLanes } from './qQueue';
 import { downloadCsv } from '../../lib/csv';
 import { PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 import { fmtPhone } from '../../lib/format';
@@ -23,7 +22,6 @@ import './TodayPage.css';
 
 export function TodayPage() {
   const { orders, now, dueTasks, loading, error, quoteFollowups } = useStore();
-  const panel = usePanel();
   const reduce = useReducedMotion();
   // 'כולם / שלי' נשמר לכל משתמש, ומשותף ל'היום' ול'חריגים ומשימות'
   const [mine, setMine] = usePref('scope:mine', false);
@@ -32,7 +30,7 @@ export function TodayPage() {
 
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
-  const scope = mine ? orders.filter((o) => (o.handlerUid ? o.handlerUid === profile?.uid : o.handler === profile?.name)) : orders;
+  const scope = mine ? mineOnly(orders, profile) : orders;
 
   /* משימות לפי ציר ההזמנה: לקוח ← תפעול ← Q ← קבוצת תפעול ← סגירה. מופיעה רק משימה שיש בה מה לעשות.
      הספירה משותפת לתפריט (todayTasks.ts) – המספר ליד "היום" הוא בדיוק מספר המשימות כאן */
@@ -57,9 +55,8 @@ export function TodayPage() {
   const laterTasks = open.filter((t) => !red.has(t.key));
   const openCount = open.length;
 
-  const todays = scope.filter((o) => o.date === today && o.status !== 'cancelled').sort((a, b) => a.time.localeCompare(b.time));
-  const nowIdx = todays.findIndex((o) => orderDateTime(o) > now);
-  const nextUp = todays.find((o) => orderDateTime(o) > now && !CLOSED.includes(o.status));
+  const lanes = todayLanes(scope, today);
+  const todayCount = lanes.todo.length + lanes.customer.length + lanes.inq.length + lanes.closed.length;
 
   /* "הורד היום ומחר" (אפיון 16): כל הזמנות היום ומחר לאקסל – לעבודה גם אם המערכת לא זמינה. תמיד של כולם, לא רק "שלי". */
   const downloadTodayTomorrow = () => {
@@ -81,7 +78,7 @@ export function TodayPage() {
           <h1 className="page__title">היום</h1>
           <p className="page__sub" aria-live="polite">
             יום {weekday(today)} <Ltr>{fmtDate(today)}</Ltr> <span aria-hidden="true">·</span>{' '}
-            {loading ? '…' : <>{openCount ? <><Ltr>{openCount}</Ltr> {openCount === 1 ? 'משימה פתוחה' : 'משימות פתוחות'}</> : 'אין משימות פתוחות'} <span aria-hidden="true">·</span> <Ltr>{todays.length}</Ltr> הזמנות היום</>}
+            {loading ? '…' : <>{openCount ? <><Ltr>{openCount}</Ltr> {openCount === 1 ? 'משימה פתוחה' : 'משימות פתוחות'}</> : 'אין משימות פתוחות'} <span aria-hidden="true">·</span> <Ltr>{todayCount}</Ltr> הזמנות היום</>}
           </p>
         </div>
         <div className="page__head-end">
@@ -94,6 +91,9 @@ export function TodayPage() {
       </header>
 
       <div className="today__grid">
+        {/* ---------- הזמנות היום: תור ההקלדה ל-Q ---------- */}
+        <TodayQueue lanes={lanes} loading={loading} now={now} />
+
         {/* ---------- משימות פתוחות: רק מה שעוד דורש טיפול. משימה שהושלמה יורדת מהרשימה ---------- */}
         <section className="card" aria-labelledby="h-tasks">
           <div className="card__head">
@@ -113,22 +113,6 @@ export function TodayPage() {
             )}
         </section>
 
-        {/* ---------- ציר הזמנות היום ---------- */}
-        <section className="card" aria-labelledby="h-timeline">
-          <div className="card__head">
-            <h2 id="h-timeline" className="card__title">ציר הזמנות היום</h2>
-            <span className="muted"><Ltr>{todays.length}</Ltr> הזמנות</span>
-          </div>
-          {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={34} />)}</div> : todays.length === 0 ? <p className="calm calm--quiet">אין הזמנות להיום</p> : (
-            <ol className="tl">
-              {todays.map((o, i) => (
-                <TimelineRow key={o.id} o={o} isNowBefore={i === nowIdx} isNext={o.id === nextUp?.id} now={now} onOpen={(el) => panel.open(o.id, el)}
-                  status={<StageTrack o={o} />} />
-              ))}
-              {nowIdx === -1 && <NowLine now={now} />}
-            </ol>
-          )}
-        </section>
       </div>
     </div>
   );
@@ -163,44 +147,5 @@ function TaskGroup({ id, title, tone, tasks, red, reduce, empty }: { id: string;
         </ul>
       )}
     </div>
-  );
-}
-
-/* "בעוד 45 דק'" / "בעוד שעה ו-18 דק'" / "בעוד 2 שעות" */
-function inTime(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  const mins = (n: number) => <><Ltr>{n}</Ltr>&nbsp;דק'</>;
-  if (h === 0) return mins(m);
-  const hours = h === 1 ? 'שעה' : h === 2 ? 'שעתיים' : <><Ltr>{h}</Ltr>&nbsp;שעות</>;
-  return m ? <>{hours} ו־{mins(m)}</> : hours;
-}
-
-function NowLine({ now }: { now: Date }) {
-  return <li className="tl__now" aria-label="עכשיו"><span>עכשיו <Ltr>{`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`}</Ltr></span></li>;
-}
-
-function TimelineRow({ o, isNowBefore, isNext, now, onOpen, status }: { o: OrderView; isNowBefore: boolean; isNext: boolean; now: Date; onOpen: (el: HTMLElement) => void; status: ReactNode }) {
-  const past = orderDateTime(o) <= now;
-  const minutes = Math.round((orderDateTime(o).getTime() - now.getTime()) / 60000);
-  return (
-    <>
-      {isNowBefore && <NowLine now={now} />}
-      <li className={`tl__row ${past ? 'is-past' : ''} ${isNext ? 'is-next' : ''} ${CLOSED.includes(o.status) ? 'is-closed' : ''}`}>
-        <span className="tl__time">{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</span>
-        {/* עצירת Tab אחת לשורה (ועוד כפתור הצעד הבא): הבעיות נקראות כחלק מהשם הנגיש של השורה */}
-        <button className="tl__main" onClick={(e) => onOpen(e.currentTarget)}
-          aria-label={`${o.time} ${o.customerName}${isNext ? ', הבאה בתור' : ''}${o.health !== 'ok' ? `, ${o.issues.map((i) => i.label).join(', ')}` : ''}`}>
-          <span className="tl__cust" title={o.customerName}>
-            {o.customerName}
-            {isNext && minutes > 0 && <span className="tl__next">הבאה בתור · בעוד {inTime(minutes)}</span>}
-          </span>
-          <span className="tl__meta">{o.branchName || <Missing>ללא סניף</Missing>} · <Money value={o.amount} /></span>
-        </button>
-        <HealthBadge health={o.health} issues={o.issues} compact focusable={false} />
-        {status}
-        <span className="tl__marks"><NextStep o={o} /></span>
-      </li>
-    </>
   );
 }

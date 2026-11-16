@@ -18,7 +18,8 @@ const PAGE = 150;
 // פעולות שהן חלק מהציר – מופיעות ככפתור "הצעד הבא", לא ככפתור תיקון נוסף
 const STEP_ACTIONS = ['q', 'branch', 'status', 'close', 'ops'];
 
-export function OrdersTable({ rows, showDate = true, emptyText, caption, density = 'dense' }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string; density?: 'dense' | 'comfy' }) {
+/* qTint: בטאב 'היום' – צבע לפי מצב Q (פס כחול = עוד לא ירדה ל-Q, ירוק עדין = ירדה), כמו בתור של מסך היום */
+export function OrdersTable({ rows, showDate = true, emptyText, caption, density = 'dense', qTint = false }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string; density?: 'dense' | 'comfy'; qTint?: boolean }) {
   const panel = usePanel();
   const { updateMany } = useStore();
   const [selected, setSelected] = useState<number[]>([]);
@@ -82,7 +83,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
             <Fragment key={o.id}>
               {/* בטלפון: כותרת יום בכל פעם שהתאריך מתחלף (עתידיות, ארכיון) – נשארת למעלה בגלילה */}
               {showDate && (i === 0 || shown[i - 1].date !== o.date) && <DayRow date={o.date} rows={rows} />}
-              <OrderRow o={o} showDate={showDate} flash={flash === o.id} selected={selected.includes(o.id)} toggle={toggle} />
+              <OrderRow o={o} showDate={showDate} flash={flash === o.id} selected={selected.includes(o.id)} toggle={toggle} qTint={qTint} />
             </Fragment>
           ))}
         </tbody>
@@ -190,7 +191,7 @@ function RowMenu({ o, next, onOpen, onCancel }: { o: OrderView; next: string | n
 }
 
 /* שורה ממוזכרת: מתרנדרת מחדש רק כשההזמנה שלה, הסימון או ההבהוב משתנים */
-const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }: { o: OrderView; showDate: boolean; flash: boolean; selected: boolean; toggle: (id: number) => void }) {
+const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, qTint }: { o: OrderView; showDate: boolean; flash: boolean; selected: boolean; toggle: (id: number) => void; qTint: boolean }) {
   const panel = usePanel();
   const { requestStatus } = useStore();
   const top = o.issues[0];
@@ -206,7 +207,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle }
   return (
     <tr
       tabIndex={0}
-      className={`orow orow--${o.health} ${flash ? 'is-flash' : ''} ${selected ? 'is-selected' : ''}`}
+      className={`orow orow--${o.health} ${flash ? 'is-flash' : ''} ${selected ? 'is-selected' : ''} ${qTint && o.status !== 'cancelled' ? (o.qNumber ? 'orow--q-done' : 'orow--q-todo') : ''}`}
       onClick={(e) => panel.open(o.id, e.currentTarget)}
       onKeyDown={onRowKey}
       aria-label={`הזמנה ${o.id}, ${o.customerName}, ${showDate ? `${fmtDate(o.date)} ` : ''}${o.time}${o.issues.length ? `, ${o.issues.map((i) => i.label).join(', ')}` : ''}`}

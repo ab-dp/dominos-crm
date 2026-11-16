@@ -22,6 +22,10 @@
 .orow:focus-visible td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
 .orow.is-selected td { background: var(--brand-50); }
 .orow.is-flash td { animation: row-flash 1.2s var(--ease); }
+/* טאב "היום": מצב Q (DESIGN.md, The Q-Lane Rule) – פס כחול בתחילת השורה = להקליד ל-Q, רקע ירוק עדין = ירדה ל-Q */
+.orow--q-todo td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
+.orow--q-done td { background: var(--ok-bg); }
+.orow--q-done:hover td { background: color-mix(in srgb, var(--ok-bg) 92%, var(--ok-fg)); }
 @keyframes row-flash { 0%, 30% { background: var(--brand-100); } 100% { background: transparent; } }
 
 .orow__cust { display: block; font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
@@ -57,6 +61,8 @@
 .otable thead th:last-child { background: var(--white); z-index: 3; }
 .orow:hover td:last-child { background: var(--gray-50); }
 .orow.is-selected td:last-child { background: var(--brand-50); }
+.otable .orow--q-done td:last-child { background: var(--ok-bg); }
+.otable .orow--q-done:hover td:last-child { background: color-mix(in srgb, var(--ok-bg) 92%, var(--ok-fg)); }
 @media (max-width: 1500px) {
   .otable .mark__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .otable .mark-btn { padding: 0 var(--space-1); }
@@ -87,6 +93,9 @@
   }
   /* בטלפון: רשימה אחת עם קווי הפרדה במקום כרטיס לכל הזמנה */
   .otable--orders .orow + .orow { border-top: 1px solid var(--line); }
+  /* מצב Q בטאב "היום": כל הכרטיס בגוון, והפס בתחילת הכרטיס */
+  .otable--orders .orow--q-todo { box-shadow: inset -3px 0 0 var(--brand-600); }
+  .otable--orders .orow--q-done, .otable--orders .orow--q-done td, .otable--orders .orow--q-done td:last-child { background: var(--ok-bg); }
   .otable--orders td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
   .otable--orders td.c-time { display: block; grid-area: time; font-size: var(--text-card-title); }
   .otable--orders td.c-cust { display: block; grid-area: cust; min-width: 0; }

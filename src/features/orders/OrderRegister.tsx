@@ -2,11 +2,15 @@
    ובתחתיתו השורה שבה רושמים שהועברה ל-Q (מספר, סכום, נשלח בקבוצת תפעול). כל ערך נערך בלחיצה, כמו בשאר התיק. */
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, Copy } from 'lucide-react';
-import { type OrderView } from '../../data/store';
+import { useStore, type OrderView } from '../../data/store';
+import { usePanel } from '../../app/PanelContext';
+import { useAuth } from '../../auth/AuthContext';
+import { usePref } from '../../lib/prefs';
+import { mineOnly, nextToType } from '../today/qQueue';
 import { groupItems, itemsText, methodText, typeText, OTHER, categoryOf, stageOf } from '../../data/types';
-import { Missing } from '../../design/components';
+import { Button, Missing } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, sameMoney, weekday } from '../../lib/format';
+import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, sameMoney, toISODate, weekday } from '../../lib/format';
 import { QForm } from './OrderActions';
 import { phoneError } from '../../lib/names';
 import { PriceRows } from './ItemsBuilder';
@@ -100,7 +104,10 @@ export function RegisterBlock({ o }: { o: OrderView }) {
    השליחה בקבוצת התפעול מסומנת בציר (הצעד הבא), לא כאן – מקום אחד לכל פעולה */
 function QRow({ o }: { o: OrderView }) {
   const [editing, setEditing] = useState(!o.qNumber);
+  // נשמר עכשיו בכרטיס הזה – "הבאה להקלדה" הופך לכפתור הראשי ומקבל פוקוס, כך ש-Enter עובר להזמנה הבאה
+  const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setEditing(!o.qNumber), [o.id, o.qNumber]);
+  useEffect(() => setJustSaved(false), [o.id]);
   if (!editing && o.qNumber) {
     const gap = o.qAmount !== undefined && !sameMoney(o.qAmount, o.amount);
     return (
@@ -109,11 +116,31 @@ function QRow({ o }: { o: OrderView }) {
         {gap && <span className="reg-q__gap">פער <Ltr>{fmtMoney(Math.abs((o.qAmount ?? 0) - o.amount))}</Ltr></span>}
         {o.opsNotified === true && <span className="reg-q__ops-state">נשלח בקבוצת תפעול</span>}
         <button type="button" className="link reg-q__edit" onClick={() => setEditing(true)}>תיקון</button>
+        <NextToType o={o} primary={justSaved} />
       </div>
     );
   }
   // הכפתור "הועבר ל-Q" ראשי רק כשהקלדה ל-Q היא באמת הצעד הבא; בשלבים קודמים הצעד הבא הוא בציר
-  return <QForm o={o} inline primary={stageOf(o) === 'approved'} done={() => setEditing(false)} onCancel={o.qNumber ? () => setEditing(false) : undefined} />;
+  return <QForm o={o} inline primary={stageOf(o) === 'approved'} done={() => { setEditing(false); setJustSaved(true); }} onCancel={o.qNumber ? () => setEditing(false) : undefined} />;
+}
+
+/* אחרי שהזמנה של היום ירדה ל-Q: מעבר ישר להזמנה הבאה בתור "להקליד ל-Q" (לפי שעה, באותו סינון "כולם / שלי" של מסך היום),
+   בלי לחזור לרשימה. כשאין עוד – הודעה שהכל ירד */
+function NextToType({ o, primary }: { o: OrderView; primary: boolean }) {
+  const { orders, now } = useStore();
+  const panel = usePanel();
+  const { profile } = useAuth();
+  const [mine] = usePref('scope:mine', false);
+  const today = toISODate(now);
+  if (o.date !== today) return null;
+  const next = nextToType(mine ? mineOnly(orders, profile) : orders, today, o.id);
+  if (!next) return <span className="reg-q__all">אין עוד הזמנות להקליד היום</span>;
+  return (
+    <Button size="sm" variant={primary ? 'primary' : 'secondary'} autoFocus={primary} className="reg-q__next" onClick={() => panel.open(next.id)}
+      aria-label={`להזמנה הבאה להקלדה: ${next.time} ${next.customerName}`}>
+      הבאה להקלדה: <Ltr>{next.time}</Ltr> {next.customerName} <ChevronLeft size={16} aria-hidden="true" />
+    </Button>
+  );
 }
 
 /* הזמנה מבוטלת: הפרטים לקריאה בלבד ומקופלים – בלי "העתק הכל" ובלי עריכה, כדי שלא יוקלדו לקופה בטעות */

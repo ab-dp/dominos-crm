@@ -72,7 +72,8 @@ export function OrderPanel() {
                 exit={reduce ? { opacity: 0 } : { x: '-100%' }}
                 transition={{ type: 'tween', duration: 0.24, ease: [0.2, 0, 0, 1] }}
               >
-                <PanelBody o={o} full={full} setFull={setFull} />
+                {/* key: מעבר להזמנה אחרת ("הבאה להקלדה") בונה את התוכן מחדש – גלילה לראש, לשונית ראשונה, פוקוס בכותרת */}
+                <PanelBody key={o.id} o={o} full={full} setFull={setFull} />
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>
@@ -99,6 +100,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   }, [o, profile?.uid]);
   const panel = usePanel();
   const nav = useNavigate();
+  // פוקוס בכותרת גם כשעוברים ישר להזמנה אחרת בלי לסגור (הכפתור שנלחץ כבר לא קיים)
+  useEffect(() => { document.getElementById('panel-title')?.focus({ preventScroll: true }); }, []);
   const [tab, setTab] = useState<Tab>('more');
   useEffect(() => setTab('more'), [o.id]);
   const [scrolled, setScrolled] = useState(false);
