@@ -125,6 +125,6 @@
 }
 
 /* "בהמתנה" ליד שם הלקוח */
-.hold-tag { display: inline-block; margin-inline-start: var(--space-2); padding: 0 6px; border-radius: var(--radius-tag); background: var(--hold-bg); color: var(--hold-fg); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; }
+.hold-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; margin-inline-start: var(--space-2); background: var(--hold-bg); color: var(--hold-fg); }
 /* יש תיעוד טיפול בתיק הלקוח */
-.care-tag { display: inline-block; margin-inline-start: var(--space-2); padding: 0 6px; border-radius: var(--radius-tag); background: var(--brand-50); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; }
+.care-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; margin-inline-start: var(--space-2); background: var(--brand-50); color: var(--brand-700); }

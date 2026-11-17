@@ -98,7 +98,7 @@
 .qrow__meta bdi { font-family: var(--font-mono); }
 .qrow__next { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; white-space: nowrap; }
 .qrow__tags { display: inline-flex; align-items: center; gap: var(--space-2); flex: none; }
-.qtag { padding: 1px var(--space-2); border-radius: var(--radius-panel); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
+.qtag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; }
 .qtag--late { background: var(--danger-bg); color: var(--danger-fg); }
 .qtag--credit { background: var(--gray-100); color: var(--gray-700); }
 .qtag--back { background: var(--brand-600); color: var(--white); }

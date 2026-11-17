@@ -164,8 +164,8 @@
 @media (prefers-reduced-motion: reduce) { .viewers__dot { animation: none; } }
 .changed-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--gray-25); border: 1px solid var(--gray-100); font-size: var(--text-label); }
 .changed-note__item s { color: var(--gray-600); text-decoration-color: var(--gray-300); }
-.changed-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-panel); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
-.changed-tag--sm { height: 18px; margin-inline-start: var(--space-2); padding: 0 var(--space-2); vertical-align: 1px; }
+.changed-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--urgent-bg); color: var(--urgent-fg); }
+.changed-tag--sm { margin-inline-start: var(--space-2); }
 .del-order { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: auto; margin-inline-end: var(--space-4); color: var(--danger-fg); font-size: var(--text-label); }
 
 /* ---------- "להעברה לקופה": הבלוק הראשון בתיק – כל מה שמקלידים ל-Q.
@@ -217,7 +217,7 @@
 .reg__sum .kv__k { order: -1; }
 .reg__sum > b { font: 600 var(--text-screen-title) var(--font); }
 .reg__sum .muted { font-size: var(--text-label); }
-.reg__tag { padding: 1px var(--space-2); border-radius: var(--radius-tag); background: var(--missing-bg); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 500; }
+.reg__tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--missing-bg); color: var(--missing-fg); }
 
 /* שורת Q */
 .reg-q { display: flex; align-items: flex-end; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) 0 var(--space-1); border-top: 1px solid var(--line); }
