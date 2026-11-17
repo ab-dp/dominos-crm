@@ -2,7 +2,7 @@
    מקובץ לפי החומרה; ובצד – משימות המעקב מתיקי הלקוחות. מבוסס על אותו מנוע של מסך "היום". */
 import { useMemo } from 'react';
 import { ordersWithSeverity, topSeverity } from '../../data/metrics';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { CalendarClock, CircleCheckBig, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
@@ -162,9 +162,15 @@ export function ExceptionsPage() {
 
 function TaskGroup({ title, tone, list, when }: { title: string; tone: 'orange' | 'brand' | 'muted'; list: Task[]; when: (iso: string) => React.ReactNode }) {
   const toast = useToast();
+  const nav = useNavigate();
   if (!list.length) return null;
+  /* משימה של ליד: הצעד הבא שלו עדיין רשום – ההודעה מציעה לעבור לליד ולקבוע צעד חדש */
   const done = (t: Task, box: HTMLInputElement) => setTaskDone(t, true)
-    .then(() => toast({ message: <>משימה סומנה כבוצעה · {t.customerName}</>, onUndo: () => { setTaskDone({ ...t, done: true }, false).catch(() => undefined); } }))
+    .then(() => toast({
+      message: <>משימה סומנה כבוצעה · {t.customerName}</>,
+      onUndo: () => { setTaskDone({ ...t, done: true }, false).catch(() => undefined); },
+      ...(t.leadId ? { action: { label: 'קבע צעד הבא', run: () => nav(`/leads/${t.leadId}`) } } : {}),
+    }))
     // סימון שנכשל – התיבה חוזרת לריקה, כדי שלא תיראה כמו משימה שבוצעה
     .catch(() => { box.checked = false; toast({ tone: 'error', message: 'הסימון נכשל – בדוק חיבור' }); });
   return (

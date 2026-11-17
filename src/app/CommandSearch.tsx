@@ -1,9 +1,15 @@
-/* חיפוש גלובלי כפלטת פקודות: הזמנות (מס' הזמנה, מס' Q, שם, טלפון), לקוחות ולקוחות פוטנציאליים. חיצים + Enter.
-   לקוחות ולידים נטענים רק כשהחלון פתוח – בלי קריאות מהשרת כל עוד לא מחפשים. */
-import { useMemo, useState, type ReactNode } from 'react';
+/* חיפוש גלובלי כפלטת פקודות: הזמנות (מס' הזמנה, מס' Q, שם, טלפון), הצעות מחיר, לקוחות ולקוחות פוטנציאליים. חיצים + Enter.
+   לקוחות ולידים נטענים רק כשהחלון פתוח – בלי קריאות מהשרת כל עוד לא מחפשים.
+   מספר הזמנה/הצעה או מס' Q שלא נמצאים ברשימה החיה (מלפני החודש הקודם) – נבדקים מול השרת, קריאה אחת או שתיים לחיפוש */
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { fromDoc as orderFromDoc } from '../data/orders';
+import { SHORT_STATUS, fromDoc as quoteFromDoc, type Quote } from '../data/quotes';
+import type { Order } from '../data/types';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
-import { CornerDownLeft, FileText, Search, Target, UserPlus, UserRound } from 'lucide-react';
+import { CornerDownLeft, FileSignature, FileText, Search, Target, UserPlus, UserRound } from 'lucide-react';
 import { useStore } from '../data/store';
 import { useCustomers } from '../data/customers';
 import { STAGE_LABEL, useLeads } from '../data/leads';
@@ -27,26 +33,61 @@ export function CommandSearch({ open, onOpenChange, onPick }: { open: boolean; o
 }
 
 function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number) => void }) {
-  const { orders, openNewOrder } = useStore();
+  const { orders, quotes, openNewOrder } = useStore();
   const { items: customers } = useCustomers();
   const { items: leads } = useLeads();
   const nav = useNavigate();
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
+  const [remote, setRemote] = useState<Item[]>([]);
+
+  const orderItem = (o: Order, group: string): Item => ({
+    key: `o${o.id}`, group, icon: <FileText size={16} aria-hidden="true" />, title: o.customerName,
+    meta: <>הזמנה <Ltr>{o.id}</Ltr> · <Ltr>{fmtDate(o.date)}</Ltr> <Ltr>{o.time}</Ltr> · {o.branchName}{o.qNumber && <> · <Ltr>{o.qNumber}</Ltr></>}</>,
+    tag: ORDER_STAGE[stageOf(o)], run: () => onPick(o.id),
+  });
+  const quoteItem = (x: Quote): Item => ({
+    key: `q${x.id}`, group: 'הצעות מחיר', icon: <FileSignature size={16} aria-hidden="true" />, title: x.customer.name || 'ללא לקוח',
+    meta: <>הצעה <Ltr>{x.id}</Ltr>{x.date && <> · <Ltr>{fmtDate(x.date)}</Ltr></>}</>, tag: SHORT_STATUS[x.status],
+    run: () => { close(); nav(`/quotes/${x.id}`); },
+  });
+
+  /* חיפוש בשרת: מספר (4–7 ספרות) – הזמנה והצעה באותו מספר; מס' Q (אותיות ואז ספרות, למשל cs669) – הזמנה לפי Q */
+  useEffect(() => {
+    const raw = q.trim();
+    setRemote([]);
+    const isNum = /^\d{4,7}$/.test(raw);
+    const isQ = !isNum && /^[a-z]{1,4}\d{2,}$/i.test(raw);
+    if (!isNum && !isQ) return;
+    let alive = true;
+    const t = setTimeout(async () => {
+      try {
+        const out: Item[] = [];
+        if (isNum) {
+          const [o, qt] = await Promise.all([getDoc(doc(db, 'orders', raw)), getDoc(doc(db, 'quotes', raw))]);
+          if (o.exists()) out.push(orderItem(orderFromDoc(o.id, o.data()), 'הזמנות'));
+          if (qt.exists()) out.push(quoteItem(quoteFromDoc(qt.id, qt.data())));
+        } else {
+          const snap = await getDocs(query(collection(db, 'orders'), where('qNumber', 'in', [...new Set([raw, raw.toLowerCase(), raw.toUpperCase()])]), limit(3)));
+          snap.docs.forEach((d) => out.push(orderItem(orderFromDoc(d.id, d.data()), 'הזמנות')));
+        }
+        if (alive) setRemote(out);
+      } catch { /* בלי חיבור – נשארות התוצאות מהרשימה החיה */ }
+    }, 300);
+    return () => { alive = false; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
 
   const results = useMemo<Item[]>(() => {
     const s = q.trim().toLowerCase();
     const digits = s.replace(/\D/g, '');
     const phoneHit = (p?: string) => digits.length >= 3 && !!p && p.includes(digits);
-    const orderItem = (o: (typeof orders)[number]): Item => ({
-      key: `o${o.id}`, group: s ? 'הזמנות' : 'דורש טיפול עכשיו', icon: <FileText size={16} aria-hidden="true" />, title: o.customerName,
-      meta: <>הזמנה <Ltr>{o.id}</Ltr> · <Ltr>{fmtDate(o.date)}</Ltr> <Ltr>{o.time}</Ltr> · {o.branchName}{o.qNumber && <> · <Ltr>{o.qNumber}</Ltr></>}</>,
-      tag: ORDER_STAGE[stageOf(o)], run: () => onPick(o.id),
-    });
-    if (!s) return orders.filter((o) => o.health === 'critical' || o.health === 'urgent').slice(0, 6).map(orderItem);
+    if (!s) return orders.filter((o) => o.health === 'critical' || o.health === 'urgent').slice(0, 6).map((o) => orderItem(o, 'דורש טיפול עכשיו'));
     const os = orders.filter((o) =>
       String(o.id).includes(s) || o.customerName.toLowerCase().includes(s) || (o.qNumber ?? '').toLowerCase().includes(s)
-      || phoneHit(o.contactPhone) || phoneHit(o.accountPhone)).slice(0, 6).map(orderItem);
+      || phoneHit(o.contactPhone) || phoneHit(o.accountPhone)).slice(0, 6).map((o) => orderItem(o, 'הזמנות'));
+    const qs = quotes.filter((x) => (digits.length >= 3 && String(x.id).includes(digits)) || (s.length >= 2 && x.customer.name.toLowerCase().includes(s)))
+      .slice(0, 3).map(quoteItem);
     const cs = customers.filter((c) => c.status !== 'merged' && (c.name.toLowerCase().includes(s) || (digits.length >= 5 && c.taxId.includes(digits))
       || phoneHit(c.accountPhone) || c.contacts.some((x) => phoneHit(x.phone) || (s.length >= 2 && x.name.toLowerCase().includes(s)))))
       .slice(0, 4).map<Item>((c) => ({
@@ -60,8 +101,11 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
         meta: <>{l.nextStep ? <>צעד הבא: {l.nextStep.text}</> : STAGE_LABEL[l.stage]}</>, tag: STAGE_LABEL[l.stage],
         run: () => { close(); nav(`/leads/${l.id}`); },
       }));
-    return [...os, ...cs, ...ls];
-  }, [q, orders, customers, leads, onPick, close, nav]);
+    /* מהשרת – רק מה שלא נמצא כבר ברשימה, בקבוצה שלו */
+    const extra = remote.filter((r) => ![...os, ...qs].some((x) => x.key === r.key));
+    return [...os, ...extra.filter((r) => r.key.startsWith('o')), ...qs, ...extra.filter((r) => r.key.startsWith('q')), ...cs, ...ls];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, orders, quotes, customers, leads, remote, onPick, close, nav]);
 
   const total = results.length + 1; // + "הזמנה ללקוח חדש"
   const pick = (i: number) => {
@@ -77,7 +121,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
           autoFocus
           value={q}
           onChange={(e) => { setQ(e.target.value); setActive(0); }}
-          placeholder="מס' הזמנה, מס' Q, לקוח, ליד או טלפון"
+          placeholder="מס' הזמנה, מס' Q, הצעה, לקוח, ליד או טלפון"
           aria-label="חיפוש"
           role="combobox"
           aria-expanded="true"

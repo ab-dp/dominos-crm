@@ -69,7 +69,7 @@ export function staleHours(q: Quote, now: Date): number | null {
 }
 export const needsFollowup = (q: Quote, now: Date, hours: number) => { const h = staleHours(q, now); return h !== null && h >= hours; };
 
-const fromDoc = (id: string, d: DocumentData): Quote => ({
+export const fromDoc = (id: string, d: DocumentData): Quote => ({
   status: 'draft', customer: EMPTY_QUOTE_CUSTOMER, delivery: 'delivery', lines: [], validDays: 14, validUntil: '', issueDate: '', itemsTotal: 0, total: 0, handler: '', handlerUid: '',
   ...d, id: Number(id),
 }) as Quote;

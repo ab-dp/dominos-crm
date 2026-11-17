@@ -49,6 +49,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useHotkey('/', () => setSearchOpen(true));
   useHotkey('n', () => newOrder());
+  /* Ctrl+K / ⌘K – הקיצור המוכר לחיפוש, עובד גם מתוך שדה ובמקלדת עברית (לפי מיקום המקש) */
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.code === 'KeyK' || e.key.toLowerCase() === 'k')) { e.preventDefault(); setSearchOpen(true); }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
 
   /* אין פעמון: מסך "היום" הוא המקום שמראה מה לעשות. המספרים בתפריט = המספר הראשי של המסך.
      אדום בתפריט רק לקטגוריה שיש בה משהו קריטי שלא טופל: חריגות (אדום) והצעות מחיר שלא חזרו אליהן */

@@ -14,6 +14,7 @@ import type { CustomerInput } from './customers';
 export const FIRST_ORDER_NUMBER = 1001;
 const OPEN: OrderStatus[] = ['new', 'pending_customer', 'approved'];
 
+const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 /* מסמך → הזמנה לתצוגה. createdAt נשמר כחותמת זמן של השרת ומוצג כתאריך. */
 export function fromDoc(id: string, d: DocumentData): Order {
   const at = d.createdAt as Timestamp | null | undefined;
@@ -22,6 +23,7 @@ export function fromDoc(id: string, d: DocumentData): Order {
     ...d,
     id: Number(id),
     createdAt: at?.toDate ? toISODate(at.toDate()) : toISODate(new Date()),
+    createdTime: hhmm(at?.toDate ? at.toDate() : new Date()),
   } as unknown as Order;
 }
 
@@ -90,7 +92,7 @@ export function useOrderHistory(orderId: number) {
 }
 
 /* ---------- יצירה ---------- */
-export type NewOrderInput = Omit<Order, 'id' | 'createdAt' | 'createdBy' | 'createdByUid' | 'notes'>;
+export type NewOrderInput = Omit<Order, 'id' | 'createdAt' | 'createdTime' | 'createdBy' | 'createdByUid' | 'notes'>;
 export type NewCustomerDraft = CustomerInput;
 
 /* יוצר הזמנה (ואם צריך – גם לקוח חדש) בפעולה אחת. מחזיר את מספר ההזמנה. */

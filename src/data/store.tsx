@@ -135,9 +135,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             if (!cur) return undefined;
             const back = Object.fromEntries(Object.keys(patch).map((k) => [k, b[k as keyof Order]])) as Partial<Order>;
             // ביטול של תיקון בחודש נעול הוא גם תיקון – עם סיבה, אחרת השרת חוסם
-            if (fixReason) back.postCloseFix = { reason: `ביטול תיקון: ${fixReason}`, by: auth.currentUser?.displayName ?? '', at: serverTimestamp() };
-            return updateOrders([cur], back, source, 'ביטול פעולה');
-          })).catch(() => toast({ tone: 'error', message: 'הביטול נכשל – בדוק חיבור' }));
+            if (fixReason) {
+              back.postCloseFix = { reason: `ביטול תיקון: ${fixReason}`, by: auth.currentUser?.displayName ?? '', at: serverTimestamp() };
+              return updateOrders([cur], back, source, 'ביטול פעולה');
+            }
+            /* שמירה בטוחה: הבסיס הוא מה שאני כתבתי. אם מישהו אחר שינה את אותו שדה מאז – לא דורסים אותו */
+            return updateOrderSafe({ ...b, ...patch } as Order, back, 'inline', 'ביטול פעולה');
+          })).catch((e) => toast({ tone: 'error', message: e instanceof ConflictError
+            ? <>הביטול לא בוצע – {e.byName || 'משתמש אחר'} שינה את ההזמנה בינתיים</>
+            : 'הביטול נכשל – בדוק חיבור' }));
         },
       }))
       .catch((e) => {

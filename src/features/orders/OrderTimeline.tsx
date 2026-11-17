@@ -6,38 +6,49 @@ import * as Popover from '@radix-ui/react-popover';
 import { Check, CircleAlert } from 'lucide-react';
 import { useStore, type OrderView } from '../../data/store';
 import { STAGE_LABEL, closeLabel, stageOf, type Stage } from '../../data/types';
-import { Button, Field } from '../../design/components';
-import { Ltr, fmtMoney } from '../../lib/format';
+import { Button, Field, keepOpenOnOutside } from '../../design/components';
+import { Ltr, fmtMoney, toISODate } from '../../lib/format';
+import { orderDateTime } from '../../rules-engine/health';
 import { BranchForm, QForm } from './OrderActions';
 import './OrderTimeline.css';
 
 const STEP_ORDER: Stage[] = ['pending_customer', 'pending_branch', 'approved', 'in_q'];
 const rank = (s: Stage) => (s === 'delivered' || s === 'partial' ? 4 : s === 'cancelled' ? -1 : STEP_ORDER.indexOf(s));
 
-/* סגירת הזמנה: סופקה או סופקה חלקית, ואם היה איחור – כמה דקות */
+/* סגירת הזמנה: סופקה או סופקה חלקית, ואם היה איחור – כמה דקות.
+   לפני מועד האספקה: אין "באיחור", ויש אזהרה ולחיצה שנייה – כדי לא לסגור בטעות הזמנה אחרת */
 export function CloseForm({ o, done }: { o: OrderView; done: () => void }) {
-  const { update, requestStatus } = useStore();
+  const { update, requestStatus, now } = useStore();
   const closed = o.status === 'delivered' || o.status === 'partial';
+  const early = !closed && orderDateTime(o).getTime() > now.getTime();
+  const [sure, setSure] = useState(false);
   const [late, setLate] = useState(!!o.late);
   const [mins, setMins] = useState(o.late?.minutes ? String(o.late.minutes) : '');
-  const lateVal = late ? { minutes: Number(mins.replace(/\D/g, '')) || 0 } : undefined;
+  const lateVal = late && !early ? { minutes: Number(mins.replace(/\D/g, '')) || 0 } : undefined;
   const deliver = (e?: FormEvent) => {
     e?.preventDefault();
+    if (early && !sure) { setSure(true); return; }
     update(o.id, { status: 'delivered', late: lateVal }, <>הזמנה <Ltr>{o.id}</Ltr> סומנה {late ? 'סופקה באיחור' : 'סופקה'} ועברה לארכיון</>);
     done();
   };
   return (
     <form onSubmit={deliver} className="close-form">
-      <label className="check-inline close-form__late">
-        <input type="checkbox" checked={late} onChange={(e) => setLate(e.target.checked)} /> סופקה באיחור
-      </label>
-      {late && (
+      {early ? (
+        <p className="close-form__warn" role="status">
+          מועד האספקה עוד לא הגיע · <Ltr>{o.date === toISODate(now) ? o.time : `${o.date.slice(8, 10)}.${o.date.slice(5, 7)} ${o.time}`}</Ltr>
+        </p>
+      ) : (
+        <label className="check-inline close-form__late">
+          <input type="checkbox" checked={late} onChange={(e) => setLate(e.target.checked)} /> סופקה באיחור
+        </label>
+      )}
+      {late && !early && (
         <Field label="זמן האיחור (דקות)">
           <input className="input input--ltr close-form__mins" inputMode="numeric" autoFocus value={mins} onChange={(e) => setMins(e.target.value)} placeholder="למשל 20" />
         </Field>
       )}
       <div className="close-form__btns">
-        <Button variant="primary" size="sm" type="submit">{late ? 'סופקה באיחור' : 'סופקה'}</Button>
+        <Button variant="primary" size="sm" type="submit">{early ? (sure ? 'כן, סופקה' : 'סופקה') : late ? 'סופקה באיחור' : 'סופקה'}</Button>
         <Button variant="secondary" size="sm" type="button" onClick={() => { done(); requestStatus({ ...o, late: lateVal }, 'partial'); }}>סופקה חלקית</Button>
       </div>
       {closed && (
@@ -52,7 +63,7 @@ function Pop({ trigger, title, children, open, setOpen, align = 'start' }: { tri
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>{trigger}</Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="pop" aria-label={title} sideOffset={6} align={align} dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        <Popover.Content className="pop" aria-label={title} sideOffset={6} align={align} dir="rtl" onInteractOutside={keepOpenOnOutside} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <p className="pop__title">{title}</p>
           {children}
         </Popover.Content>

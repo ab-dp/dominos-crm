@@ -38,6 +38,7 @@
 .close-form { display: grid; gap: var(--space-3); min-width: 230px; }
 .close-form__btns { display: flex; gap: var(--space-2); }
 .close-form__mins { max-width: 120px; }
+.close-form__warn { margin: 0; color: var(--urgent-fg); font-size: var(--text-label); }
 .close-form__reopen { justify-self: start; font-size: var(--text-label); }
 
 @media (max-width: 700px) {
