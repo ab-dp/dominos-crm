@@ -9,7 +9,7 @@ import { SHORT_STATUS, fromDoc as quoteFromDoc, type Quote } from '../data/quote
 import type { Order } from '../data/types';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
-import { CornerDownLeft, FileSignature, FileText, Search, Target, UserPlus, UserRound } from 'lucide-react';
+import { CornerDownLeft, FileSignature, FileText, History, Search, Target, UserPlus, UserRound } from 'lucide-react';
 import { useStore } from '../data/store';
 import { useCustomers } from '../data/customers';
 import { STAGE_LABEL, useLeads } from '../data/leads';
@@ -95,6 +95,12 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
         meta: <>{c.type === 'regular' ? 'לקוח קבוע' : 'לקוח מזדמן'}{c.taxId && <> · ח.פ <Ltr>{c.taxId}</Ltr></>}{c.status === 'inactive' && ' · לא פעיל'}</>,
         run: () => { close(); nav(`/customers/${c.id}`); },
       }));
+    /* הזמנות ישנות לפי שם לקוח: תיק הלקוח מכיל את כל ההיסטוריה – קיצור ישר ללשונית ההזמנות, בלי קריאות נוספות */
+    const top = cs[0] && customers.find((c) => `c${c.id}` === cs[0].key);
+    const history: Item[] = top && s.length >= 2 && !/^\d+$/.test(s) ? [{
+      key: `h${top.id}`, group: 'הזמנות', icon: <History size={16} aria-hidden="true" />, title: `כל ההזמנות של ${top.name}`,
+      meta: 'כולל הזמנות ישנות – בתיק הלקוח', run: () => { close(); nav(`/customers/${top.id}?tab=orders`); },
+    }] : [];
     const ls = leads.filter((l) => l.stage !== 'won' && (l.name.toLowerCase().includes(s) || l.contacts.some((x) => phoneHit(x.phone) || (s.length >= 2 && x.name.toLowerCase().includes(s)))))
       .slice(0, 3).map<Item>((l) => ({
         key: `l${l.id}`, group: 'לקוחות פוטנציאליים', icon: <Target size={16} aria-hidden="true" />, title: l.name,
@@ -103,7 +109,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
       }));
     /* מהשרת – רק מה שלא נמצא כבר ברשימה, בקבוצה שלו */
     const extra = remote.filter((r) => ![...os, ...qs].some((x) => x.key === r.key));
-    return [...os, ...extra.filter((r) => r.key.startsWith('o')), ...qs, ...extra.filter((r) => r.key.startsWith('q')), ...cs, ...ls];
+    return [...os, ...extra.filter((r) => r.key.startsWith('o')), ...history, ...qs, ...extra.filter((r) => r.key.startsWith('q')), ...cs, ...ls];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, orders, quotes, customers, leads, remote, onPick, close, nav]);
 

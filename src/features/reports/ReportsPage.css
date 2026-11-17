@@ -112,3 +112,17 @@
 
 /* דוח ארוך: "הצג עוד" מתחת לטבלה */
 .report__more { display: flex; justify-content: center; padding: var(--space-4) var(--space-4); border-top: 1px solid var(--gray-100); font-size: var(--text-label); }
+
+/* ---------- טבלה מוערמת בטלפון (rtable--stack): שורה = כרטיס, כל תא = "תווית ... ערך" ---------- */
+@media (max-width: 600px) {
+  .rtable--stack, .rtable--stack tbody, .rtable--stack tfoot, .rtable--stack tr, .rtable--stack td { display: block; width: 100%; }
+  .rtable--stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .rtable--stack tr { padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+  .rtable--stack tbody tr:focus-visible td:first-child { box-shadow: none; }
+  .rtable--stack td, .rtable--stack tfoot td { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); height: auto; padding: 3px 0; border: 0; white-space: normal; text-align: start; background: none; }
+  .rtable--stack td::before { content: attr(data-label); flex: none; font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+  .rtable--stack td:first-child { padding-bottom: var(--space-1); font-weight: 600; font-size: var(--text-table); }
+  .rtable--stack td:first-child::before { display: none; }
+  .rtable--stack td:empty { display: none; }
+  .rtable--stack tfoot tr { border-bottom: 0; background: var(--gray-25); padding-inline: var(--space-3); border-radius: var(--radius); margin-top: var(--space-2); }
+}

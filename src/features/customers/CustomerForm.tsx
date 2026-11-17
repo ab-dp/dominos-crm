@@ -4,7 +4,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
 import { CircleAlert, OctagonAlert, Plus, X } from 'lucide-react';
-import { createCustomer, newId, primaryContact, updateCustomer, type Contact, type Customer, type CustomerInput, EMPTY_CUSTOMER } from '../../data/customers';
+import { createCustomer, newId, primaryContact, updateCustomer, type Address, type Contact, type Customer, type CustomerInput, EMPTY_CUSTOMER } from '../../data/customers';
+import { useBranches, useClusters } from '../../data/branches';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
 import { Button, RadioSeg } from '../../design/components';
@@ -29,6 +30,12 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
   const [contact, setContact] = useState({ name: pc?.name ?? '', phone: pc ? fmtPhone(pc.phone) : '', email: pc?.email ?? '', role: pc?.role ?? '' });
   const [emails, setEmails] = useState<string[]>(pc?.emails ?? []); // מיילים נוספים של איש הקשר הראשי
   const [more, setMore] = useState<Contact[]>([]); // אנשי קשר נוספים שנוספים כאן
+  /* כתובות למשלוח – כבר ביצירה (בעריכה הכתובות מנוהלות בתיק הלקוח). שורה ריקה אחת מוכנה */
+  const [addrs, setAddrs] = useState<Address[]>(() => [{ id: newId(), label: '', address: '', directions: '', preferredBranchId: '' }]);
+  const { items: branches } = useBranches();
+  const { items: clusters } = useClusters();
+  const branchLabel = (id: string) => { const b = branches.find((x) => x.id === id); return b ? `${b.name} · ${clusters.find((x) => x.id === b.clusterId)?.name ?? ''}` : ''; };
+  const setAddr = (id: string, patch: Partial<Address>) => setAddrs((xs) => xs.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [ackWarn, setAckWarn] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -83,7 +90,8 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
     }
     more.filter((m) => m.name.trim() || cleanPhone(m.phone) || m.email.trim())
       .forEach((m) => contacts.push({ ...m, name: m.name.trim(), phone: cleanPhone(m.phone), email: m.email.trim(), role: m.role.trim(), primary: contacts.length === 0 }));
-    const data: CustomerInput = { ...f, priceNote: (f.priceNote ?? '').trim(), accountPhone: f.paymentMethod === 'account' ? f.accountPhone : '', contacts };
+    const addresses = editing ? f.addresses : addrs.filter((a) => a.address.trim()).map((a) => ({ ...a, label: a.label.trim(), address: a.address.trim(), directions: a.directions.trim() }));
+    const data: CustomerInput = { ...f, priceNote: (f.priceNote ?? '').trim(), accountPhone: f.paymentMethod === 'account' ? f.accountPhone : '', contacts, addresses };
     setBusy(true);
     try {
       if (editing) {
@@ -180,6 +188,35 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
                 <button type="button" className="link" onClick={() => setEmails((xs) => [...xs, ''])}><Plus size={14} aria-hidden="true" /> מייל נוסף</button>
               </div>
             </Section>
+
+            {!editing && (
+              <Section title="כתובות למשלוח">
+                {addrs.map((a, i) => (
+                  <div key={a.id} className={i ? 'cform__more' : undefined}>
+                    {i > 0 && <div className="cform__more-head"><span className="field__label">כתובת נוספת</span>
+                      <button type="button" className="icon-btn icon-btn--sm" aria-label="הסר כתובת" onClick={() => setAddrs((xs) => xs.filter((x) => x.id !== a.id))}><X size={16} /></button></div>}
+                    <Row>
+                      <L label="כתובת מלאה" wide><input className="input" value={a.address} onChange={(e) => setAddr(a.id, { address: e.target.value })} placeholder="רחוב ומספר, עיר" /></L>
+                    </Row>
+                    <Row>
+                      <L label="כינוי"><input className="input" value={a.label} onChange={(e) => setAddr(a.id, { label: e.target.value })} placeholder="משרד ראשי" /></L>
+                      <L label="סניף מועדף">
+                        <select className="input" value={a.preferredBranchId} onChange={(e) => setAddr(a.id, { preferredBranchId: e.target.value })}>
+                          <option value="">ללא</option>
+                          {branches.map((b) => <option key={b.id} value={b.id}>{branchLabel(b.id)}</option>)}
+                        </select>
+                      </L>
+                    </Row>
+                    <Row>
+                      <L label="הוראות הגעה" wide><input className="input" value={a.directions} onChange={(e) => setAddr(a.id, { directions: e.target.value })} placeholder="קומה 3, להתקשר מהלובי" /></L>
+                    </Row>
+                  </div>
+                ))}
+                <div className="cform__adds">
+                  <button type="button" className="link" onClick={() => setAddrs((xs) => [...xs, { id: newId(), label: '', address: '', directions: '', preferredBranchId: '' }])}><Plus size={14} aria-hidden="true" /> כתובת נוספת</button>
+                </div>
+              </Section>
+            )}
 
             <Section title="תשלום ומחירון">
               <Row>

@@ -1,12 +1,13 @@
 /* מאגר הלקוחות (אפיון 6.5). הסינון הראשוני הוא "קבועים", כדי שלקוחות מזדמנים לא יעמיסו על הרשימה. */
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileCheck2, Plus, Search, Users, X } from 'lucide-react';
+import { Download, FileCheck2, Plus, Search, Users, X } from 'lucide-react';
 import { customerGaps, primaryContact, useCustomers, type Customer, type CustomerGap } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
 import { Button, EmptyState, Skeleton, Tip } from '../../design/components';
-import { Ltr, fmtPhone } from '../../lib/format';
+import { Ltr, fmtPhone, toISODate } from '../../lib/format';
+import { useToast } from '../../design/Toast';
 import { usePref } from '../../lib/prefs';
 import { CustomerForm } from './CustomerForm';
 import '../pages.css';
@@ -24,6 +25,8 @@ export function CustomersPage() {
   const [gapsOnly, setGapsOnly] = usePref('customersGapsOnly', false); // "השלמת תיק לקוח": רק לקוחות שחסרים להם פרטים. נשמר בין כניסות
   const [q, setQ] = useState('');
   const [adding, setAdding] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const toast = useToast();
 
   const methodLabel = (id: string) => lists?.paymentMethods.find((m) => m.id === id)?.label ?? id;
   const plName = (id: string) => priceLists.find((p) => p.id === id)?.name ?? '';
@@ -48,6 +51,38 @@ export function CustomersPage() {
   const accountCount = live.filter((c) => c.status === 'active' && c.paymentMethod === 'account').length;
   const counts = { regular: live.filter((c) => c.type === 'regular' && (showInactive || c.status === 'active')).length, occasional: live.filter((c) => c.type === 'occasional' && (showInactive || c.status === 'active')).length };
 
+  /* ייצוא לאקסל: הלקוחות שמוצגים עכשיו (לפי הסינון), וגיליון שני עם כל אנשי הקשר שלהם */
+  const exportXlsx = async () => {
+    setExporting(true);
+    try {
+      const { downloadXlsx } = await import('../../lib/xlsx');
+      const list = rows;
+      await downloadXlsx(`לקוחות-${toISODate(new Date())}.xlsx`, [
+        { name: 'לקוחות', title: 'לקוחות', notes: [`${list.length} לקוחות לפי הסינון שבמסך`], tables: [{ main: true,
+          cols: [
+            { label: 'שם', kind: 'text', width: 30 }, { label: 'סוג', kind: 'text', width: 10 }, { label: 'ח.פ', kind: 'code', width: 13 },
+            { label: 'סטטוס', kind: 'text', width: 10 }, { label: 'אמצעי תשלום', kind: 'text', width: 14 }, { label: 'טלפון הקפה', kind: 'code', width: 14 },
+            { label: 'מחירון', kind: 'text', width: 18 }, { label: 'תעודת רכש', kind: 'text', width: 11 },
+            { label: 'איש קשר ראשי', kind: 'text', width: 20 }, { label: 'טלפון', kind: 'code', width: 14 }, { label: 'מייל', kind: 'code', width: 26 },
+            { label: 'כתובת ראשית', kind: 'text', width: 34 }, { label: 'הנחיות חיוב', kind: 'text', width: 34 },
+          ],
+          rows: list.map((c) => { const pc = primaryContact(c); return [
+            c.name, c.type === 'regular' ? 'קבוע' : 'מזדמן', c.taxId, c.status === 'active' ? 'פעיל' : 'לא פעיל', methodLabel(c.paymentMethod),
+            c.accountPhone ? fmtPhone(c.accountPhone) : '', plName(c.priceListId), c.poRequired ? 'נדרשת' : '',
+            pc?.name ?? '', pc?.phone ? fmtPhone(pc.phone) : '', pc?.email ?? '', c.addresses[0]?.address ?? c.businessAddress ?? '', c.billingInstructions,
+          ]; }),
+        }] },
+        { name: 'אנשי קשר', title: 'אנשי קשר', tables: [{ main: true,
+          cols: [
+            { label: 'לקוח', kind: 'text', width: 30 }, { label: 'שם', kind: 'text', width: 22 }, { label: 'תפקיד', kind: 'text', width: 18 },
+            { label: 'טלפון', kind: 'code', width: 14 }, { label: 'מייל', kind: 'code', width: 28 }, { label: 'ראשי', kind: 'text', width: 8 },
+          ],
+          rows: list.flatMap((c) => c.contacts.map((x) => [c.name, x.name, x.role, x.phone ? fmtPhone(x.phone) : '', x.email, x.primary ? 'כן' : ''])),
+        }] },
+      ]);
+    } catch { toast({ tone: 'error', message: 'הייצוא נכשל – נסה שוב' }); } finally { setExporting(false); }
+  };
+
   return (
     <div className="page">
       <header className="page__head">
@@ -56,6 +91,7 @@ export function CustomersPage() {
           <p className="page__sub">{loading ? ' ' : <><Ltr>{activeCount}</Ltr> פעילים · <Ltr>{accountCount}</Ltr> בהקפה</>}</p>
         </div>
         <div className="page__head-end">
+          <Button variant="secondary" icon={<Download size={16} />} loading={exporting} disabled={loading || !rows.length} onClick={exportXlsx}>ייצוא לאקסל</Button>
           <Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>לקוח חדש</Button>
         </div>
       </header>

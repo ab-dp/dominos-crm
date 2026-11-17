@@ -20,6 +20,7 @@ import {
   type DayPoint, type Filters, type Period, type Range, type Ranked,
 } from './boardData';
 import '../pages.css';
+import '../reports/ReportsPage.css';
 import './Board.css';
 
 type SectionKey = 'upcoming' | 'sales' | 'service' | 'collections' | 'customers' | 'branches' | 'team' | 'quotes';
@@ -563,17 +564,17 @@ function TeamSection({ rows }: { rows: Ranked[] }) {
       lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : <p>הכי הרבה הכנסות בתקופה: <b>{top.name}</b> – {orders$(top.count)}, <Ltr>{fmtMoney(top.sum)}</Ltr>.</p>}>
       {top && (
         <div className="report__scroll">
-          <table className="rtable bteam">
+          <table className="rtable rtable--stack bteam">
             <thead><tr><th>נציג</th><th className="num">הזמנות</th><th className="num">הכנסות</th><th className="num">חלק מההכנסות</th><th className="num">סופקו בזמן</th><th className="num">עם פרטים חסרים</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.name}>
-                  <td>{r.name}</td>
-                  <td className="num"><Ltr>{num(r.count)}</Ltr></td>
-                  <td className="num"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
-                  <td className="num"><Ltr>{r.share}%</Ltr></td>
-                  <td className="num">{r.onTimePct === null ? <span className="muted">—</span> : <Ltr>{r.onTimePct}%</Ltr>}</td>
-                  <td className="num">{r.missing ? <span className="is-warn"><Ltr>{num(r.missing)}</Ltr></span> : <span className="muted">0</span>}</td>
+                  <td data-label="נציג">{r.name}</td>
+                  <td className="num" data-label="הזמנות"><Ltr>{num(r.count)}</Ltr></td>
+                  <td className="num" data-label="הכנסות"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
+                  <td className="num" data-label="חלק מההכנסות"><Ltr>{r.share}%</Ltr></td>
+                  <td className="num" data-label="סופקו בזמן">{r.onTimePct === null ? <span className="muted">—</span> : <Ltr>{r.onTimePct}%</Ltr>}</td>
+                  <td className="num" data-label="עם פרטים חסרים">{r.missing ? <span className="is-warn"><Ltr>{num(r.missing)}</Ltr></span> : <span className="muted">0</span>}</td>
                 </tr>
               ))}
             </tbody>

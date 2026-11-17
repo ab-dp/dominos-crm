@@ -32,18 +32,18 @@ function Table({ t, onRow }: { t: STable; onRow?: (i: number, el: HTMLElement) =
   return (
     <>
     <div className="report__scroll">
-      <table className={`rtable ${onRow ? '' : 'rtable--static'}`}>
+      <table className={`rtable rtable--stack ${onRow ? '' : 'rtable--static'}`}>
         <caption className="sr-only">{t.title}</caption>
         <thead><tr>{t.cols.map((c) => <th key={c.label} className={cls(c.kind)}>{c.label}</th>)}</tr></thead>
         <tbody>
           {t.rows.slice(0, prog.limit).map((r, i) => (
             <tr key={t.ids?.[i] ?? i} className={r.includes('בוטלה') ? 'is-cancelled' : ''}
               {...(onRow ? { tabIndex: 0, onClick: (e) => onRow(i, e.currentTarget), onKeyDown: (e) => { if (e.key === 'Enter') onRow(i, e.currentTarget); }, 'aria-label': `הזמנה ${t.ids?.[i]} – פתח את תיק ההזמנה` } : {})}>
-              {r.map((v, j) => <td key={j} className={cls(t.cols[j].kind)}>{show(v, t.cols[j].kind)}</td>)}
+              {r.map((v, j) => <td key={j} className={cls(t.cols[j].kind)} data-label={t.cols[j].label}>{show(v, t.cols[j].kind)}</td>)}
             </tr>
           ))}
         </tbody>
-        {t.total && <tfoot><tr>{t.total.map((v, j) => <td key={j} className={cls(t.cols[j].kind)}>{show(v, j === 0 || typeof v === 'string' ? 'text' : t.cols[j].kind)}</td>)}</tr></tfoot>}
+        {t.total && <tfoot><tr>{t.total.map((v, j) => <td key={j} className={cls(t.cols[j].kind)} data-label={t.cols[j].label}>{show(v, j === 0 || typeof v === 'string' ? 'text' : t.cols[j].kind)}</td>)}</tr></tfoot>}
       </table>
     </div>
     {prog.hasMore && (
