@@ -17,14 +17,20 @@ export function AuthScreens() {
 
   return (
     <div className="auth">
+      {/* צד המותג: סימן מילולי בפינה, האריח והכותרת במרכז, שורה שקטה למטה */}
       <section className="auth__brand" aria-hidden="true" style={{ ['--login-photo' as string]: `url(${BASE}brand/login.webp)` }}>
-        <DominoTile size={176} animate />
-        <p className="auth__brand-title">מערכת CRM</p>
-        <p className="auth__brand-sub">לקוחות עסקיים והזמנות</p>
+        <img className="auth__wordmark" src={`${BASE}logo-horizontal-white.svg`} alt="" />
+        <div className="auth__brand-mid">
+          <DominoTile size={152} animate />
+          <p className="auth__brand-title">מערכת CRM</p>
+          <p className="auth__brand-sub">לקוחות עסקיים והזמנות</p>
+        </div>
+        <p className="auth__brand-foot">מוקד הזמנות עסקיות</p>
       </section>
 
       <main className="auth__panel">
         <img className="auth__mobile-logo" src={`${BASE}logo-vertical.svg`} alt="Domino's Pizza" />
+        <div className="auth__panel-mid">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={screen}
@@ -37,6 +43,8 @@ export function AuthScreens() {
             {screen === 'pending' ? <Pending /> : screen === 'register' ? <Register onBack={() => setView('login')} /> : <Login onRegister={() => setView('register')} />}
           </motion.div>
         </AnimatePresence>
+        </div>
+        <p className="auth__foot">גישה לצוות המוקד בלבד · כל חשבון מאושר על ידי מנהל</p>
       </main>
     </div>
   );
@@ -66,7 +74,7 @@ function Login({ onRegister }: { onRegister: () => void }) {
   return (
     <>
       <h1 className="auth__title">כניסה למערכת</h1>
-      <p className="auth__lead">ברוך הבא. היכנס כדי לראות מה צריך לטפל בו עכשיו.</p>
+      <p className="auth__lead">היכנס כדי לראות מה צריך לטפל בו עכשיו.</p>
 
       {notice && <Notice tone="danger" onClose={clearNotice}>{notice}</Notice>}
 
