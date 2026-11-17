@@ -52,6 +52,7 @@ function dayDiff(iso: string, now: Date): number {
 }
 const minutesOfDay = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
 const nowMinutes = (d: Date) => d.getHours() * 60 + d.getMinutes();
+const CREDIT_GRACE_MIN = 30; // הזמנה שנפתחה אחרי מועד חיוב האשראי – זמן לחייב לפני "עבר המועד"
 
 export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOLDS): Issue[] {
   const out: Issue[] = [];
@@ -96,7 +97,12 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
     out.push({ rule: 4, severity: 'orange', label: 'לא עודכן בתפעול', action: 'branch', actionLabel: 'סמן עודכן' });
   }
   if (diff === 0 && o.method === 'credit' && o.payment === 'pending' && !o.qNumber) {
-    const late = minutesOfDay(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`) >= minutesOfDay(th.creditDeadline);
+    /* הזמנה שנפתחה ביום האספקה אחרי מועד החיוב לא "איחרה" ברגע שנפתחה: יש לה חצי שעה מהפתיחה,
+       או עד תחילת חלון ההקלדה ל-Q לפני האספקה – המאוחר מביניהם */
+    const openedAfter = o.createdAt === o.date && !!o.createdTime && minutesOfDay(o.createdTime) >= minutesOfDay(th.creditDeadline);
+    const late = openedAfter
+      ? nowMinutes(now) >= Math.max(minutesOfDay(o.createdTime!) + CREDIT_GRACE_MIN, minutesOfDay(o.time || '23:59') - th.qLeadMinutes)
+      : nowMinutes(now) >= minutesOfDay(th.creditDeadline);
     out.push({ rule: 5, severity: 'orange', label: late ? 'אשראי לא חויב – עבר המועד' : 'אשראי לא חויב', action: 'pay', actionLabel: 'סמן שולם' });
   }
   if (soon && (o.status === 'new' || o.status === 'pending_customer')) {

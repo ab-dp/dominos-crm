@@ -141,6 +141,9 @@ export function MarkGlyph({ done, label, drawKey }: { done: boolean; label: stri
 }
 
 /* פעולה שנפתחת במקום: לחיצה על הסימון → שדה קטן → Enter → ✓ */
+/* חלון קופץ עם טופס שחייבים לסיים או לבטל (data-keep-open): לחיצה מחוץ לו לא סוגרת אותו בשקט. Escape ו"ביטול" סוגרים */
+export const keepOpenOnOutside = (e: Event) => { if (document.querySelector('.pop [data-keep-open]')) e.preventDefault(); };
+
 export function MarkAction({
   done, label, srLabel, title, children, onOpenChange, open,
 }: {
@@ -155,7 +158,7 @@ export function MarkAction({
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="pop" aria-label={title} sideOffset={6} align="start" dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        <Popover.Content className="pop" aria-label={title} sideOffset={6} align="start" dir="rtl" onInteractOutside={keepOpenOnOutside} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <p className="pop__title">{title}</p>
           {children}
         </Popover.Content>

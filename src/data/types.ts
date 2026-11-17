@@ -161,6 +161,7 @@ export type Order = {
   createdBy: string;
   createdByUid?: string;
   createdAt: string; // YYYY-MM-DD
+  createdTime?: string; // HH:MM – נגזר מחותמת היצירה בקריאה, לא נשמר
   updatedBy?: string; // uid של מי ששינה אחרון – לזיהוי שינוי של משתמש אחר בזמן שהתיק פתוח
   updatedByName?: string;
   updatedAt?: { seconds: number };

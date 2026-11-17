@@ -577,8 +577,17 @@ function ContactsTab({ c }: { c: Customer }) {
   const [contactEdit, setContactEdit] = useState<Contact | null>(null);
   const [addrEdit, setAddrEdit] = useState<Address | null>(null);
 
-  const saveContacts = async (next: Contact[], msg: string) => { await updateCustomer(c, { contacts: next }); toast({ message: msg }); };
-  const saveAddresses = async (next: Address[], msg: string) => { await updateCustomer(c, { addresses: next }); toast({ message: msg }); };
+  /* withUndo: הסרה – אפשר להחזיר מההודעה (הרשימה חוזרת למה שהייתה; ההשוואה מול המצב אחרי ההסרה) */
+  const saveContacts = async (next: Contact[], msg: string, withUndo = false) => {
+    const prev = c.contacts;
+    await updateCustomer(c, { contacts: next });
+    toast({ message: msg, ...(withUndo ? { onUndo: () => { updateCustomer({ ...c, contacts: next }, { contacts: prev }).catch(() => toast({ tone: 'error', message: 'ההחזרה נכשלה – בדוק חיבור' })); } } : {}) });
+  };
+  const saveAddresses = async (next: Address[], msg: string, withUndo = false) => {
+    const prev = c.addresses;
+    await updateCustomer(c, { addresses: next });
+    toast({ message: msg, ...(withUndo ? { onUndo: () => { updateCustomer({ ...c, addresses: next }, { addresses: prev }).catch(() => toast({ tone: 'error', message: 'ההחזרה נכשלה – בדוק חיבור' })); } } : {}) });
+  };
   const branchLabel = (id: string) => { const b = branches.find((x) => x.id === id); return b ? `${b.name} · ${clusters.find((x) => x.id === b.clusterId)?.name ?? ''}` : ''; };
 
   return (
@@ -599,7 +608,7 @@ function ContactsTab({ c }: { c: Customer }) {
               </div>
               {!x.primary && <Button size="sm" variant="ghost" onClick={() => saveContacts(c.contacts.map((y) => ({ ...y, primary: y.id === x.id })), `${x.name} הוא עכשיו איש הקשר הראשי`)}>הפוך לראשי</Button>}
               <button className="icon-btn icon-btn--sm" aria-label={`ערוך את ${x.name}`} onClick={() => setContactEdit(x)}><Pencil size={16} /></button>
-              <button className="icon-btn icon-btn--sm" aria-label={`הסר את ${x.name}`} onClick={() => saveContacts(c.contacts.filter((y) => y.id !== x.id).map((y, i, arr) => ({ ...y, primary: x.primary ? i === 0 : y.primary || arr.length === 1 })), `${x.name} הוסר`)}><Trash2 size={16} /></button>
+              <button className="icon-btn icon-btn--sm" aria-label={`הסר את ${x.name}`} onClick={() => saveContacts(c.contacts.filter((y) => y.id !== x.id).map((y, i, arr) => ({ ...y, primary: x.primary ? i === 0 : y.primary || arr.length === 1 })), `${x.name} הוסר`, true)}><Trash2 size={16} /></button>
             </li>
           ))}
         </ul>
@@ -624,7 +633,7 @@ function ContactsTab({ c }: { c: Customer }) {
                 </span>
               </div>
               <button className="icon-btn icon-btn--sm" aria-label={`ערוך כתובת ${a.label}`} onClick={() => setAddrEdit(a)}><Pencil size={16} /></button>
-              <button className="icon-btn icon-btn--sm" aria-label={`הסר כתובת ${a.label}`} onClick={() => saveAddresses(c.addresses.filter((y) => y.id !== a.id), 'הכתובת הוסרה')}><Trash2 size={16} /></button>
+              <button className="icon-btn icon-btn--sm" aria-label={`הסר כתובת ${a.label}`} onClick={() => saveAddresses(c.addresses.filter((y) => y.id !== a.id), 'הכתובת הוסרה', true)}><Trash2 size={16} /></button>
             </li>
           ))}
         </ul>

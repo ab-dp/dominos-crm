@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { TriangleAlert } from 'lucide-react';
-import { Button, Field, MarkAction } from '../../design/components';
+import { Button, Field, MarkAction, keepOpenOnOutside } from '../../design/components';
 import { useStore, type OrderView } from '../../data/store';
 import { PAYMENT_LABEL, type PaymentState } from '../../data/types';
 import { cleanAmount, Ltr, fmtMoney, roundMoney, sameMoney } from '../../lib/format';
@@ -23,14 +23,17 @@ export function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
     done();
   };
   return (
-    <form onSubmit={submit}>
+    /* data-keep-open: לחיצה מחוץ לחלון לא סוגרת אותו – אחרת הסימון הולך לאיבוד בלי שמרגישים */
+    <form onSubmit={submit} data-keep-open="">
       <p className="pop__text">{o.branchName}{o.branchPhone && <> · <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></>}</p>
       <Field label="שם המאשר (לא חובה)">
         <input className="input" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
       <div className="pop__row">
         <Button variant="primary" size="sm" type="submit" kbd="Enter">{o.branchApproval ? 'שמור' : 'סמן עודכן בתפעול'}</Button>
-        {o.branchApproval && <Button size="sm" variant="ghost" type="button" onClick={() => { update(o.id, { branchApproval: undefined }, <>סימון "עודכן בתפעול" בוטל · הזמנה <Ltr>{o.id}</Ltr></>); done(); }}>בטל סימון</Button>}
+        {o.branchApproval
+          ? <Button size="sm" variant="ghost" type="button" onClick={() => { update(o.id, { branchApproval: undefined }, <>סימון "עודכן בתפעול" בוטל · הזמנה <Ltr>{o.id}</Ltr></>); done(); }}>בטל סימון</Button>
+          : <Button size="sm" variant="ghost" type="button" onClick={done}>ביטול</Button>}
       </div>
     </form>
   );
@@ -257,7 +260,7 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
         <Button size="sm" variant="fix" onClick={(e) => e.stopPropagation()}>{issue.actionLabel}</Button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="pop" aria-label={title} sideOffset={6} align="end" dir="rtl" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        <Popover.Content className="pop" aria-label={title} sideOffset={6} align="end" dir="rtl" onInteractOutside={keepOpenOnOutside} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <p className="pop__title">{title}</p>
           {content}
         </Popover.Content>
