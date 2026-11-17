@@ -1,6 +1,6 @@
-/* בורד הנהלה – תדריך ולא לוח אריחים: כל חלק נפתח במשפט שעונה על השאלה, ומתחתיו הנתונים.
-   משטחים שטוחים עם קו (כמו כל המערכת). צבע: כחול הפעולה לסדרה אחת, אפור לתקופה הקודמת,
-   ירוק/כתום/זית לסטטוס (נבדק לעיוורון צבעים – ולצד כל צבע יש תווית ומספר). */
+/* בורד הנהלה – תדריך ולא לוח אריחים: פס תמונת מצב למעלה, ואז כל חלק נפתח במשפט שעונה על השאלה.
+   צבע שקט: כחול בגוונים (כהה = נעשה/הרבה, בהיר = עוד לא/מעט), אפור לתקופה הקודמת.
+   צבעי מצב רק למצב אמיתי – ירוק "בזמן", כתום לאיחור ולחוב ישן. לצד כל צבע יש תווית ומספר. */
 
 /* ---------- ראש המסך ---------- */
 .board__head { margin-bottom: var(--space-3); }
@@ -15,8 +15,33 @@
 .bfilter .field + .field { margin-top: 0; }
 .bfilter__clear { justify-self: start; font-size: var(--text-label); }
 
-.board__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); align-items: start; }
+/* כרטיסים באותה שורה – באותו גובה, בלי חור לבן מתחת לקצר */
+.board__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); align-items: stretch; }
+.board__slot { display: flex; flex-direction: column; min-width: 0; }
+.board__slot > .bsec { flex: 1; }
 .board__slot.is-wide { grid-column: 1 / -1; }
+
+/* ---------- תמונת מצב: ארבעה מספרים ---------- */
+.bpulse { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); margin-bottom: var(--space-4); }
+.bpulse__tile { position: relative; display: grid; align-content: start; gap: var(--space-1); min-width: 0; padding: var(--space-4) var(--space-5) var(--space-4); border: 0; border-radius: var(--radius-panel); background: var(--white); box-shadow: var(--shadow-card); font: inherit; text-align: start; color: var(--gray-900); cursor: pointer; overflow: hidden; transition: box-shadow var(--dur-quick) var(--ease); }
+.bpulse__tile:hover { box-shadow: 0 0 0 1px var(--gray-200), 0 2px 4px rgb(15 27 42 / 0.06), 0 8px 20px -8px rgb(15 27 42 / 0.12); }
+.bpulse__label { font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
+.bpulse__value { font-size: var(--text-kpi); font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.bpulse__none { color: var(--gray-400); }
+.bpulse__foot { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; font-size: var(--text-micro); }
+.bpulse__trend { font-weight: 500; color: var(--gray-600); white-space: nowrap; }
+.bpulse__trend.is-up { color: var(--ok-fg); }
+.bpulse__trend.is-warn { color: var(--urgent-fg); }
+.bpulse__vs { color: var(--gray-600); }
+.bpulse__spark { display: block; width: 100%; height: 28px; margin-top: var(--space-2); }
+.bpulse__line { fill: none; stroke: var(--brand-600); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.bpulse__area { fill: var(--brand-50); }
+/* פס דק בתחתית האריח: אחוז בזמן (עם סימון יעד), או ותק ההקפה – בגובה הגרף הזעיר */
+.bpulse__bar { position: relative; display: flex; gap: 2px; height: 6px; margin-top: calc(var(--space-2) + 22px); border-radius: var(--radius-tag); background: var(--gray-100); }
+.bpulse__bar--stack { background: none; }
+.bpulse__bar > span { display: block; height: 100%; min-width: 3px; border-radius: var(--radius-tag); }
+.bpulse__bar > .is-ok { background: var(--ok-fg); }
+.bpulse__goal { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-inline-start: -1px; border-radius: 1px; background: var(--gray-900); }
 
 /* ---------- חלק ---------- */
 .bsec { background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); padding: var(--space-4) var(--space-5) var(--space-5); }
@@ -36,13 +61,15 @@
 .board p.is-ok, .board span.is-ok { color: var(--ok-fg); }
 
 /* צבעי סטטוס ומדרג ותק – אותם בכל מקום (פס, מקרא, שורה) */
-.board i.is-ready, .board span.is-ready { background: var(--ok-fg); }
-.board i.is-customer, .board span.is-customer { background: var(--urgent-edge); }
-.board i.is-ops, .board span.is-ops { background: var(--missing-fg); }
+.board i.is-ready, .board span.is-ready { background: var(--brand-600); }
+.board i.is-customer, .board span.is-customer { background: var(--brand-300); }
+.board i.is-ops, .board span.is-ops { background: var(--gray-600); }
+/* עמידה בזמנים: "בזמן" הוא מצב תקין – ירוק */
+.board .bstack .is-ready, .board .bstats i.is-ready { background: var(--ok-fg); }
 .board i.is-cancel, .board span.is-cancel { background: var(--gray-300); }
-.board .is-a1 { background: var(--brand-sky); }
+.board .is-a1 { background: var(--brand-300); }
 .board .is-a2 { background: var(--brand-600); }
-.board .is-a3 { background: var(--navy); }
+.board .is-a3 { background: var(--urgent-fg); }
 .board .is-cur { background: var(--brand-600); }
 .board .is-prev { background: var(--gray-200); }
 
@@ -69,13 +96,11 @@
 
 /* ---------- מכירות ---------- */
 .bsales { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: var(--space-6); margin-top: var(--space-3); }
-.bsales__big { margin: 0; font-size: var(--text-kpi); font-weight: 600; line-height: 1.1; letter-spacing: -0.015em; color: var(--gray-900); }
-.bsales__of { margin: var(--space-1) 0 0; font-size: var(--text-table); color: var(--gray-700); }
-.bsales__chg { margin: var(--space-2) 0 0; }
-.bchg { font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
-.bchg.is-up, .bdelta.is-up { color: var(--ok-fg); }
-.bchg.is-down, .bdelta.is-down { color: var(--gray-600); }
+.bdelta.is-up { color: var(--ok-fg); }
+.bdelta.is-down { color: var(--gray-600); }
 .bkv { margin: var(--space-4) 0 0; display: grid; }
+.bkv--first { margin-top: 0; }
+.bkv--first > div:first-child { border-top: 0; padding-top: 0; }
 .bkv > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--line-soft); }
 .bkv dt { font-size: var(--text-label); color: var(--gray-600); }
 .bkv dd { margin: 0; display: inline-flex; align-items: baseline; gap: var(--space-3); font-size: var(--text-table); font-weight: 600; }
@@ -165,6 +190,7 @@
 .blayout .link { font-size: var(--text-label); }
 
 @media (max-width: 1180px) {
+  .bpulse { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bdays { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: var(--space-2); }
   .bday:nth-child(4n+1)::before { display: none; }
   .bsales { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
@@ -174,13 +200,16 @@
 }
 @media (max-width: 600px) {
   .bsec { padding: var(--space-4) var(--space-4) var(--space-4); }
+  .bpulse { gap: var(--space-2); }
+  .bpulse__tile { padding: var(--space-3) var(--space-4); }
+  .bpulse__value { font-size: var(--text-section); }
+  .bpulse__vs--cmp { display: none; }
   .board__bar > .seg { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
   .board__bar > .seg button { flex: none; white-space: nowrap; padding: 0 var(--space-2); } /* חמש התקופות נכנסות ב-390 בלי לחתוך את "תאריכים" */
   .board__bar > .btn--secondary { margin-inline-start: 0; }
   .bdays { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 -8px; }
   .bday::before { display: none; }
   .bday:nth-child(even)::before { display: block; }
-  .bsales__big { font-size: var(--text-kpi); }
   .bstats { grid-template-columns: minmax(0, 1fr); }
   .bchecks--row { grid-template-columns: minmax(0, 1fr); }
   .bchecks--row li + li { border-inline-start: 0; border-top: 1px solid var(--line-soft); }
@@ -189,7 +218,7 @@
   .bchart { height: 180px; }
   .bchart__col:nth-child(even) .bchart__x { visibility: hidden; }
 }
-@media (prefers-reduced-motion: reduce) { .bchart__bar, .bday { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bchart__bar, .bday, .bpulse__tile { transition: none; } }
 
 /* פיצול איחורים: עד X דק' – כתום בהיר, מעל X דק' – כתום כהה, בלי דקות – צהוב */
 .board i.is-late-minor, .board span.is-late-minor { background: var(--urgent-edge); }
