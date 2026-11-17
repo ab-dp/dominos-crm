@@ -6,7 +6,7 @@
 .lcard__hint { margin: 2px 0 0; font-size: var(--text-label); }
 .litems { list-style: none; margin: 0; padding: 0 var(--space-2); }
 .litem { display: flex; align-items: center; gap: var(--space-2); min-height: 42px; padding: 0 var(--space-2); border-radius: var(--radius); }
-.litem:hover { background: var(--gray-25); }
+.litem:hover { background: var(--row-hover); }
 .litem.is-inactive .litem__label { color: var(--gray-600); text-decoration: line-through; text-decoration-color: var(--gray-300); }
 .litem__label { font-size: var(--text-table); }
 .litem__lock { display: inline-grid; place-items: center; color: var(--gray-600); }

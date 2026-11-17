@@ -30,7 +30,7 @@
   border: 0; border-radius: var(--radius); background: none;
   font: inherit; font-size: var(--text-table); color: var(--gray-600); cursor: pointer;
 }
-.auth__back:hover { background: var(--gray-25); color: var(--gray-900); }
+.auth__back:hover { background: var(--surface-hover); color: var(--gray-900); }
 .auth__submit { width: 100%; margin-top: var(--space-4); }
 .auth__switch { margin: var(--space-5) 0 0; text-align: center; }
 .auth__help { margin: var(--space-2) 0 0; text-align: center; font-size: var(--text-label); color: var(--gray-600); }

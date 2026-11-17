@@ -16,7 +16,7 @@
 }
 .tab:hover { color: var(--gray-900); }
 .tab.is-on { color: var(--gray-900); font-weight: 500; box-shadow: inset 0 -2px 0 var(--brand-600); }
-.tab__count { min-width: 20px; height: 18px; padding: 0 var(--space-2); border-radius: var(--radius-panel); background: var(--gray-100); font: 500 var(--text-micro)/18px var(--font-mono); color: var(--gray-600); text-align: center; }
+.tab__count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--gray-100); font: 500 var(--text-micro)/20px var(--font-mono); color: var(--gray-600); text-align: center; }
 .tab.is-on .tab__count { background: var(--brand-50); color: var(--brand-700); }
 .tab--alert .tab__count { background: var(--danger-bg); color: var(--danger-fg); font-weight: 500; }
 
@@ -55,8 +55,8 @@
   border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); color: var(--gray-600);
   transition: border-color var(--dur-instant) var(--ease), box-shadow var(--dur-instant) var(--ease);
 }
-.tablebar__search:hover { border-color: var(--gray-300); }
-.tablebar__search:focus-within { border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(0, 100, 145, 0.16); }
+.tablebar__search:hover { border-color: var(--line-strong); }
+.tablebar__search:focus-within { border-color: var(--brand-600); box-shadow: var(--focus-halo); }
 /* הטבעת על העטיפה בלבד – לא כפולה על השדה */
 .tablebar__search input:focus-visible { box-shadow: none; }
 .tablebar__search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: var(--text-label); color: var(--gray-900); }
@@ -70,9 +70,8 @@
 .subnav a.is-on { color: var(--gray-900); font-weight: 500; box-shadow: inset 0 -2px 0 var(--brand-600); }
 .admin-banner {
   display: flex; align-items: center; gap: var(--space-3);
-  margin-bottom: var(--space-4); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
-  border: 1px solid var(--brand-100); border-radius: var(--radius-panel); background: var(--white); color: var(--gray-900);
-  box-shadow: inset -3px 0 0 var(--brand-600);
+  margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--brand-100); border-radius: var(--radius-panel); background: var(--brand-50); color: var(--gray-900);
 }
 .admin-banner svg { color: var(--brand-600); }
 .admin-banner span { flex: 1; font-weight: 500; font-size: var(--text-table); }

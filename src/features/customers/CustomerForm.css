@@ -22,7 +22,6 @@
 .cform__hint { font-size: var(--text-label); color: var(--brand-800); }
 .cform__twin { font-size: var(--text-label); justify-self: start; }
 .cform__check { height: 42px; }
-.input[aria-invalid="true"] { border-color: var(--danger-fg); box-shadow: 0 0 0 3px var(--danger-bg); }
 .cform__warn {
   display: flex; gap: var(--space-3); margin-top: var(--space-2); padding: var(--space-3) var(--space-4);
   border-radius: var(--radius); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-table);

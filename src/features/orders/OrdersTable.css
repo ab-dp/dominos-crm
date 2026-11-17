@@ -57,12 +57,13 @@
 @media (prefers-reduced-motion: reduce) { .orow.is-flash td, .bulkbar { animation: none; } }
 
 /* עמודת הפעולה נשארת גלויה גם כשהטבלה רחבה מהמסך */
-.otable th:last-child, .otable td:last-child { position: sticky; left: 0; z-index: 1; background: var(--white); }
+.otable th:last-child, .otable td:last-child { position: sticky; inset-inline-end: 0; z-index: 1; background: var(--white); }
 .otable thead th:last-child { background: var(--white); z-index: 3; }
 .orow:hover td:last-child { background: var(--gray-50); }
-.orow.is-selected td:last-child { background: var(--brand-50); }
+.orow.is-selected td:last-child, .orow:focus-visible td:last-child { background: var(--brand-50); }
 .otable .orow--q-done td:last-child { background: var(--ok-bg); }
 .otable .orow--q-done:hover td:last-child { background: color-mix(in srgb, var(--ok-bg) 92%, var(--ok-fg)); }
+.otable .orow:focus-visible td:last-child { background: var(--brand-50); }
 @media (max-width: 1500px) {
   .otable .mark__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .otable .mark-btn { padding: 0 var(--space-1); }
