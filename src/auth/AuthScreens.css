@@ -19,10 +19,10 @@
 }
 .auth__wordmark { position: relative; height: 28px; width: auto; justify-self: start; opacity: 0.95; }
 .auth__brand-mid { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); text-align: center; }
-.auth__brand-title { margin: var(--space-6) 0 0; font-size: 36px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; animation: rise 700ms var(--ease-out) 500ms both; }
+.auth__brand-title { margin: var(--space-6) 0 0; font-size: 40px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; animation: rise 700ms var(--ease-out) 500ms both; }
 .auth__brand-sub { margin: 0; font-size: var(--text-card-title); color: var(--navy-text); animation: rise 700ms var(--ease-out) 600ms both; }
-.auth__brand-foot { position: relative; margin: 0; justify-self: start; font-size: var(--text-label); color: var(--navy-muted); letter-spacing: 0.01em; }
-.auth__brand-foot::before { content: ""; display: inline-block; width: 16px; height: 1px; margin-inline-end: var(--space-2); vertical-align: middle; background: currentColor; opacity: 0.6; }
+/* קו דק מתחת לתת-הכותרת – נגיעה עריכתית שקטה */
+.auth__brand-sub::after { content: ""; display: block; width: 40px; height: 1px; margin: var(--space-4) auto 0; background: var(--brand-sky); opacity: 0.7; }
 
 .auth__panel { display: grid; grid-template-rows: 1fr auto; justify-items: center; padding: 40px var(--space-5) var(--space-5); }
 .auth__panel-mid { display: flex; flex-direction: column; justify-content: center; width: 100%; max-width: 380px; }
@@ -121,4 +121,38 @@
   .auth__panel { grid-template-rows: auto 1fr auto; padding: var(--space-5) var(--space-4) var(--space-5); }
   .auth__panel-mid { justify-content: flex-start; }
   .auth__mobile-logo { display: block; width: 104px; height: auto; margin: 0 0 var(--space-5); }
+}
+
+/* ---------- מסך ההתחברות בלבד: ליטוש (ההרשמה וההמתנה נשארות כמו שהן) ---------- */
+.alogin { animation: rise 520ms var(--ease-out) both; }
+.alogin__eyebrow { margin: 0 0 var(--space-3); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-label); font-weight: 500; color: var(--brand-700); letter-spacing: 0.02em; }
+.alogin__eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-600); }
+.alogin .auth__title { font-size: 34px; letter-spacing: -0.025em; }
+.alogin .auth__lead { margin: var(--space-2) 0 var(--space-6); font-size: var(--text-body); line-height: 1.6; }
+.alogin .gbtn, .alogin .afield .input, .alogin .auth__submit { height: 48px; border-radius: var(--radius-panel); }
+.alogin .gbtn { box-shadow: 0 1px 2px rgb(15 27 42 / 0.04); }
+.alogin .gbtn:hover:not(:disabled) { border-color: var(--line-strong); box-shadow: 0 2px 6px -2px rgb(15 27 42 / 0.12); }
+.alogin .afield { margin-top: var(--space-5); }
+.alogin .adivider { margin: var(--space-6) 0 var(--space-1); font-size: var(--text-micro); letter-spacing: 0.01em; }
+.alogin .pw .input--ltr { padding-left: 48px; }
+.alogin .pw__toggle { left: 6px; }
+/* כפתור ראשי עם עומק עדין: הבזק עליון דק וצל רך בגוון המותג */
+.alogin .auth__submit {
+  margin-top: var(--space-6); font-size: var(--text-body); letter-spacing: 0.01em;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 2px rgb(0 63 92 / 0.24), 0 6px 16px -6px rgb(0 100 145 / 0.45);
+  transition: background var(--dur-instant) var(--ease), box-shadow var(--dur-quick) var(--ease), transform var(--dur-instant) var(--ease);
+}
+.alogin .auth__submit:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 2px 4px rgb(0 63 92 / 0.26), 0 10px 22px -8px rgb(0 100 145 / 0.5); }
+.alogin .auth__switch { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--line); font-size: var(--text-table); color: var(--gray-700); }
+.alogin .auth__help { margin-top: var(--space-1); }
+@media (prefers-reduced-motion: reduce) { .alogin { animation: none; } }
+@media (max-width: 860px) {
+  .alogin .auth__lead { margin-bottom: var(--space-5); }
+  .alogin .afield { margin-top: var(--space-4); }
+  .alogin .adivider { margin: var(--space-5) 0 0; }
+  .alogin .auth__submit { margin-top: var(--space-5); }
+  .alogin .auth__switch { margin-top: var(--space-5); padding-top: var(--space-4); }
+  .auth__mobile-logo { width: 92px; margin-bottom: var(--space-4); }
+  .auth__foot span { display: block; }
+  .auth__foot .auth__foot-sep { display: none; }
 }
