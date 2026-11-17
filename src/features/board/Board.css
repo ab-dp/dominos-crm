@@ -55,7 +55,7 @@
 .bsec__lead .muted { font-size: var(--text-label); color: var(--gray-600); }
 .bsec__stmt { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
 .bsec__stmt b { font-size: var(--text-kpi); font-weight: 500; line-height: 1.15; letter-spacing: -0.01em; }
-.bsec__empty { margin: 0; font-size: var(--text-label); color: var(--gray-600); }
+.bsec__empty { margin: 0; font-size: var(--text-table); color: var(--gray-600); }
 .bsec__alert { margin-top: var(--space-4); font-size: var(--text-label); color: var(--danger-fg); text-decoration-color: currentColor; }
 .board p.is-warn, .board span.is-warn { color: var(--urgent-fg); }
 .board p.is-ok, .board span.is-ok { color: var(--ok-fg); }

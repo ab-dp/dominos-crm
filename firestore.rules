@@ -417,10 +417,16 @@ service cloud.firestore {
             || exists(/databases/$(database)/documents/customers/$(request.resource.data.customerId)))
         && request.resource.data.text is string && request.resource.data.text.size() > 0 && noCard(request.resource.data.text)
         && request.resource.data.due is string && request.resource.data.due.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
-      allow update: if isActive()
-        && onlyChanges(['done', 'doneBy', 'doneByName', 'doneAt'])
-        && request.resource.data.done is bool
-        && (request.resource.data.done == false || request.resource.data.doneBy == request.auth.uid);
+      allow update: if isActive() && (
+        (onlyChanges(['done', 'doneBy', 'doneByName', 'doneAt'])
+          && request.resource.data.done is bool
+          && (request.resource.data.done == false || request.resource.data.doneBy == request.auth.uid))
+        // דחייה / תיקון ניסוח – רק במשימה פתוחה, רק הטקסט והתאריך
+        || (resource.data.done == false
+          && onlyChanges(['text', 'due', 'updatedBy', 'updatedAt'])
+          && request.resource.data.updatedBy == request.auth.uid
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500 && noCard(request.resource.data.text)
+          && request.resource.data.due is string && request.resource.data.due.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')));
       allow delete: if false;
     }
 

@@ -27,6 +27,25 @@ export function addTaskTo(batch: WriteBatch, t: { customerId: string; leadId?: s
   return ref.id;
 }
 
+/* דחייה או תיקון ניסוח של משימה פתוחה – אותה משימה, ההיסטוריה לא מתפצלת. ביומן: הערך הקודם והחדש */
+export async function updateTask(t: Task, next: { text: string; due: string }) {
+  const u = auth.currentUser!;
+  const byName = u.displayName ?? u.email ?? '';
+  const text = next.text.trim();
+  const patch: Record<string, unknown> = {};
+  if (text !== t.text) patch.text = text;
+  if (next.due !== t.due) patch.due = next.due;
+  if (!Object.keys(patch).length) return;
+  const batch = writeBatch(db);
+  batch.update(doc(db, 'tasks', t.id), { ...patch, updatedBy: u.uid, updatedAt: serverTimestamp() });
+  batch.set(doc(collection(db, 'auditLog')), {
+    entity: t.leadId ? 'lead' : 'customer', entityId: t.leadId || t.customerId, action: 'task-update',
+    before: { task: t.text.slice(0, 200), due: t.due }, after: { task: text.slice(0, 200), due: next.due }, source: 'inline',
+    by: u.uid, byName, at: serverTimestamp(), ok: true,
+  });
+  await batch.commit();
+}
+
 export async function setTaskDone(t: Task, done: boolean) {
   const u = auth.currentUser!;
   const byName = u.displayName ?? u.email ?? '';

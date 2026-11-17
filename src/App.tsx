@@ -64,7 +64,13 @@ function ScreenLoading() {
     <div className="page screen-loading" aria-busy="true" aria-label="טוען מסך">
       <Skeleton w={180} h={24} />
       <Skeleton w={260} h={14} />
-      <div className="card screen-loading__rows">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} h={18} />)}</div>
+      {/* סרגל כלים ושורות בצורת טבלה – כמו רוב המסכים, כדי שהמעבר לתוכן לא "יקפוץ" */}
+      <div className="screen-loading__bar"><Skeleton w={220} h={32} /><Skeleton w={160} h={32} /></div>
+      <div className="card screen-loading__rows">
+        {[72, 56, 64, 48, 60, 52].map((w, i) => (
+          <div key={i} className="screen-loading__row"><Skeleton w={`${w}%`} h={14} /><Skeleton w={64} h={14} /></div>
+        ))}
+      </div>
     </div>
   );
 }

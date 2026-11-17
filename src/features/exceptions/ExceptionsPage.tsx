@@ -1,16 +1,17 @@
 /* חריגים ומשימות (אפיון 9): כל מה שדורש טיפול, במקום אחד. שורה לכל הזמנה עם כל הבעיות שלה והכפתור שפותר את העיקרית,
    מקובץ לפי החומרה; ובצד – משימות המעקב מתיקי הלקוחות. מבוסס על אותו מנוע של מסך "היום". */
-import { useMemo } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
+import * as Popover from '@radix-ui/react-popover';
 import { ordersWithSeverity, topSeverity } from '../../data/metrics';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { CalendarClock, CircleCheckBig, X } from 'lucide-react';
+import { CalendarClock, CircleCheckBig, Pencil, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useStore, type OrderView } from '../../data/store';
-import { setTaskDone, type Task } from '../../data/tasks';
+import { setTaskDone, updateTask, type Task } from '../../data/tasks';
 import { useToast } from '../../design/Toast';
-import { Skeleton } from '../../design/components';
+import { Button, Skeleton } from '../../design/components';
 import { Ltr, addDays, fmtDate, toISODate } from '../../lib/format';
 import { usePref } from '../../lib/prefs';
 import { RULE_LABEL, SEVERITY_LABEL, type Issue, type Severity } from '../../rules-engine/health';
@@ -160,6 +161,51 @@ export function ExceptionsPage() {
   );
 }
 
+/* דחייה / תיקון: תאריכים מהירים או תאריך מדויק, והטקסט – באותה משימה */
+function TaskEdit({ t }: { t: Task }) {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState(t.text);
+  const [due, setDue] = useState(t.due);
+  const [busy, setBusy] = useState(false);
+  const today = new Date();
+  const quick: [string, string][] = [['מחר', toISODate(addDays(today, 1))], ['בעוד 3 ימים', toISODate(addDays(today, 3))], ['בעוד שבוע', toISODate(addDays(today, 7))]];
+  const onOpen = (v: boolean) => { setOpen(v); if (v) { setText(t.text); setDue(t.due); } };
+  const save = async (e?: FormEvent, d = due) => {
+    e?.preventDefault();
+    if (!text.trim() || !d) return;
+    setBusy(true);
+    try {
+      await updateTask(t, { text, due: d });
+      setOpen(false);
+      toast({ message: d !== t.due ? <>המשימה נדחתה ל-<Ltr>{fmtDate(d)}</Ltr> · {t.customerName}</> : <>המשימה עודכנה · {t.customerName}</>,
+        onUndo: () => { updateTask({ ...t, text: text.trim(), due: d }, { text: t.text, due: t.due }).catch(() => undefined); } });
+    } catch { toast({ tone: 'error', message: 'השמירה נכשלה – בדוק חיבור' }); } finally { setBusy(false); }
+  };
+  return (
+    <Popover.Root open={open} onOpenChange={onOpen}>
+      <Popover.Trigger asChild>
+        <button type="button" className="icon-btn icon-btn--sm task-row__edit" aria-label={`דחה או ערוך: ${t.text}`}><Pencil size={16} /></button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content className="pop task-edit" align="end" sideOffset={6} dir="rtl">
+          <p className="pop__title">דחייה או עריכה</p>
+          <div className="task-edit__quick" role="group" aria-label="לדחות ל">
+            {quick.map(([l, d]) => <button key={l} type="button" className="chip" disabled={busy} onClick={() => save(undefined, d)}>{l}</button>)}
+          </div>
+          <form onSubmit={save}>
+            <label className="field"><span className="field__label">תאריך</span>
+              <input type="date" className="input" value={due} onChange={(e) => setDue(e.target.value)} required /></label>
+            <label className="field"><span className="field__label">המשימה</span>
+              <input className="input" value={text} maxLength={500} onChange={(e) => setText(e.target.value)} required aria-invalid={!text.trim() || undefined} /></label>
+            <div className="pop__row"><Button variant="primary" size="sm" type="submit" loading={busy} disabled={!text.trim() || !due}>שמור</Button></div>
+          </form>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 function TaskGroup({ title, tone, list, when }: { title: string; tone: 'orange' | 'brand' | 'muted'; list: Task[]; when: (iso: string) => React.ReactNode }) {
   const toast = useToast();
   const nav = useNavigate();
@@ -186,6 +232,7 @@ function TaskGroup({ title, tone, list, when }: { title: string; tone: 'orange' 
               <span className="task-row__text">{t.text}</span>
               <span className="task-row__meta"><Link to={t.leadId ? `/leads/${t.leadId}` : `/customers/${t.customerId}?tab=activity`}>{t.customerName || 'לקוח'}</Link>{t.leadId && <span className="muted"> (ליד)</span>} · {when(t.due)} · {t.byName}</span>
             </span>
+            <TaskEdit t={t} />
           </li>
         ))}
       </ul>
