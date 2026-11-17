@@ -38,12 +38,6 @@ const orders$ = (v: number) => count(v, 'הזמנה אחת', 'הזמנות');
 const pizzas$ = (v: number) => count(v, 'פיצה אחת', 'פיצות');
 const WEEKDAY = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const short = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
-/* "עלייה של 18% לעומת אותם ימים בחודש שעבר" */
-function Change({ d, vs }: { d: number | null; vs: string }) {
-  if (d === null) return <span className="bchg">אין נתונים להשוואה מול {vs}</span>;
-  if (d === 0) return <span className="bchg">ללא שינוי לעומת {vs}</span>;
-  return <span className={`bchg ${d > 0 ? 'is-up' : 'is-down'}`}>{d > 0 ? 'עלייה' : 'ירידה'} של <Ltr>{Math.abs(d)}%</Ltr> לעומת {vs}</span>;
-}
 /* "+18%" קצר לשורות משנה */
 function Delta({ d }: { d: number | null }) {
   if (d === null || d === 0) return <span className="bdelta">{d === 0 ? 'ללא שינוי' : '—'}</span>;
@@ -111,22 +105,24 @@ export function BoardPage() {
   const sp = useMemo(() => sales(scoped, prev), [scoped, prev.from, prev.to]); // eslint-disable-line react-hooks/exhaustive-deps
   const daily = useMemo(() => byDay(scoped, cur, prev), [scoped, cur.from, cur.to, prev.from, prev.to]); // eslint-disable-line react-hooks/exhaustive-deps
   const sv = useMemo(() => service(scoped, cur, now), [scoped, cur.from, cur.to, now]); // eslint-disable-line react-hooks/exhaustive-deps
+  const svp = useMemo(() => service(scoped, prev, now), [scoped, prev.from, prev.to, now]); // eslint-disable-line react-hooks/exhaustive-deps
   const col = useMemo(() => collections(scopedLive, now), [scopedLive, now]);
   const rk = useMemo(() => rankings(scoped, cur), [scoped, cur.from, cur.to]); // eslint-disable-line react-hooks/exhaustive-deps
   const qs = useMemo(() => quotesSummary(quotes, cur, now, quoteFollowups.length), [quotes, cur.from, cur.to, now, quoteFollowups.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const busy = loading || (usingRemote && remote.loading);
-  const rangeText = <><Ltr>{fmtDate(cur.from)}</Ltr>–<Ltr>{fmtDate(cur.to)}</Ltr></>;
+  /* התקופה נבחרת פעם אחת למעלה – לא חוזרת בכל כרטיס */
+  const rangeText = <Ltr>{cur.from === cur.to ? short(cur.from) : `${short(cur.from)}–${short(cur.to)}`}</Ltr>;
   const nowText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   const render: Record<SectionKey, () => JSX.Element> = {
     upcoming: () => <Upcoming h={h} now={now} go={nav} />,
-    sales: () => <SalesSection s={s} sp={sp} prevName={prevName} daily={daily} goals={goals} period={period} cur={cur} now={now} rangeText={rangeText} />,
-    service: () => <ServiceSection sv={sv} goal={goals.onTimePct} rangeText={rangeText} go={nav} />,
+    sales: () => <SalesSection s={s} sp={sp} prevName={prevName} daily={daily} goals={goals} period={period} cur={cur} now={now} />,
+    service: () => <ServiceSection sv={sv} goal={goals.onTimePct} go={nav} />,
     collections: () => <CollectionsSection c={col} go={nav} />,
-    customers: () => <CustomersSection rows={rk.customers} customers={s.customers} rangeText={rangeText} />,
-    branches: () => <BranchesSection clusters={rk.clusters} branches={rk.branches} rangeText={rangeText} />,
-    team: () => <TeamSection rows={rk.team} rangeText={rangeText} />,
-    quotes: () => <QuotesSection q={qs} rangeText={rangeText} go={nav} />,
+    customers: () => <CustomersSection rows={rk.customers} customers={s.customers} />,
+    branches: () => <BranchesSection clusters={rk.clusters} branches={rk.branches} />,
+    team: () => <TeamSection rows={rk.team} />,
+    quotes: () => <QuotesSection q={qs} go={nav} />,
   };
 
   const active = (Object.entries(filters) as [keyof Filters, string][]).filter(([, v]) => v);
@@ -155,7 +151,7 @@ export function BoardPage() {
             <input type="date" className="input input--sm" value={custom.to} min={custom.from} onChange={(e) => e.target.value && setCustom({ ...custom, to: e.target.value })} aria-label="עד תאריך" />
           </span>
         )}
-        <span className="board__vs">לעומת {prevName}</span>
+        <span className="board__vs">{rangeText} · לעומת {prevName}</span>
         <Popover.Root>
           <Popover.Trigger asChild>
             <Button variant="secondary" size="sm" icon={<Filter size={16} />}>סינון{active.length > 0 && <span className="board__fcount"><Ltr>{active.length}</Ltr></span>}</Button>
@@ -199,11 +195,88 @@ export function BoardPage() {
       {busy ? (
         <div className="bsec board__loading" aria-busy="true" aria-label="טוען את הבורד">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={22} />)}</div>
       ) : (
+        <>
+        <Pulse s={s} sp={sp} sv={sv} svp={svp} col={col} daily={daily} prevName={prevName} goal={goals.onTimePct} go={nav} />
         <div className="board__grid">
           {order.filter((k) => !hidden.includes(k)).map((k) => <div key={k} className={`board__slot ${WIDE.includes(k) ? 'is-wide' : ''}`}>{render[k]()}</div>)}
         </div>
+        </>
       )}
     </div>
+  );
+}
+
+/* ---------- תמונת מצב: ארבעה מספרים בראש הבורד, כל אחד עם שינוי מול התקופה הקודמת ומגמה יומית ----------
+   המספרים זהים לאלה שבכרטיסים מתחת (אותן פונקציות), והלחיצה מובילה לרשימה. */
+function Spark({ values }: { values: number[] }) {
+  if (values.length < 2 || values.every((v) => !v)) return null;
+  const max = Math.max(...values, 1);
+  const w = 100, h = 28;
+  const pts = values.map((v, i) => `${(i / (values.length - 1)) * w},${h - 2 - (v / max) * (h - 4)}`);
+  /* ציר הזמן מימין לשמאל, כמו הגרף: היום הראשון בימין */
+  return (
+    <svg className="bpulse__spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}>
+      <polygon className="bpulse__area" points={`0,${h} ${pts.join(' ')} ${w},${h}`} />
+      <polyline className="bpulse__line" points={pts.join(' ')} />
+    </svg>
+  );
+}
+function Trend({ d, unit = '%' }: { d: number | null; unit?: string }) {
+  if (d === null) return null; // אין תקופה קודמת להשוות – לא מציגים כלום
+  if (d === 0) return <span className="bpulse__trend">ללא שינוי</span>;
+  return <span className={`bpulse__trend ${d > 0 ? 'is-up' : 'is-down'}`}><span aria-hidden="true">{d > 0 ? '▲' : '▼'} </span><span className="sr-only">{d > 0 ? 'עלייה של' : 'ירידה של'} </span><Ltr>{Math.abs(d)}{unit === '%' ? '%' : ''}</Ltr>{unit === '%' ? null : unit}</span>;
+}
+function Pulse({ s, sp, sv, svp, col, daily, prevName, goal, go }: {
+  s: ReturnType<typeof sales>; sp: ReturnType<typeof sales>; sv: ReturnType<typeof service>; svp: ReturnType<typeof service>;
+  col: ReturnType<typeof collections>; daily: DayPoint[]; prevName: string; goal?: number; go: (to: string) => void;
+}) {
+  /* הגרף הזעיר – עד אתמול: היום עוד לא נגמר ומושך את הקו למטה */
+  const today = toISODate(new Date());
+  const past = daily.filter((p) => p.date < today);
+  const onTimeD = sv.onTimePct !== null && svp.onTimePct !== null ? sv.onTimePct - svp.onTimePct : null;
+  const old = col.aging[2];
+  return (
+    <section className="bpulse" aria-label="תמונת מצב">
+      <button type="button" className="bpulse__tile" onClick={() => go('/reports')}>
+        <span className="bpulse__label">הכנסות</span>
+        <span className="bpulse__value"><Ltr>{fmtMoney(s.sum)}</Ltr></span>
+        <span className="bpulse__foot"><Trend d={delta(s.sum, sp.sum)} />{sp.sum > 0 && <span className="bpulse__vs bpulse__vs--cmp">מול {prevName}</span>}</span>
+        <Spark values={past.map((p) => p.sum)} />
+      </button>
+      <button type="button" className="bpulse__tile" onClick={() => go('/orders')}>
+        <span className="bpulse__label">הזמנות</span>
+        <span className="bpulse__value"><Ltr>{num(s.count)}</Ltr></span>
+        <span className="bpulse__foot"><Trend d={delta(s.count, sp.count)} />{sp.count > 0 && <span className="bpulse__vs bpulse__vs--cmp">מול {prevName}</span>}</span>
+        <Spark values={past.map((p) => p.count)} />
+      </button>
+      <button type="button" className="bpulse__tile" onClick={() => go('/reports')}>
+        <span className="bpulse__label">סופקו בזמן</span>
+        <span className="bpulse__value">{sv.onTimePct === null ? <span className="bpulse__none">—</span> : <Ltr>{sv.onTimePct}%</Ltr>}</span>
+        <span className="bpulse__foot">
+          <Trend d={onTimeD} unit=" נק'" />
+          <span className="bpulse__vs">{goal ? <>יעד <Ltr>{goal}%</Ltr></> : sv.late ? <>באיחור <Ltr>{num(sv.late)}</Ltr></> : 'בלי איחורים'}</span>
+        </span>
+        {sv.onTimePct !== null && (
+          <span className="bpulse__bar" aria-hidden="true">
+            <span className="is-ok" style={{ width: `${sv.onTimePct}%` }} />
+            {goal ? <i className="bpulse__goal" style={{ insetInlineStart: `${goal}%` }} /> : null}
+          </span>
+        )}
+      </button>
+      <button type="button" className="bpulse__tile" onClick={() => go('/reports/credit')}>
+        <span className="bpulse__label">בהקפה לגבייה · עכשיו</span>
+        <span className="bpulse__value"><Ltr>{fmtMoney(col.open.sum)}</Ltr></span>
+        <span className="bpulse__foot">
+          <span className="bpulse__vs">{col.open.count === 1 ? 'הזמנה אחת' : <><Ltr>{num(col.open.count)}</Ltr> הזמנות</>}</span>
+          {old.count > 0 && <span className="bpulse__trend is-warn"><Ltr>{fmtMoney(old.sum)}</Ltr> מעל 60 יום</span>}
+        </span>
+        {col.open.sum > 0 && (
+          <span className="bpulse__bar bpulse__bar--stack" aria-hidden="true">
+            {col.aging.map((a, i) => (a.sum > 0 ? <span key={a.label} className={['is-a1', 'is-a2', 'is-a3'][i]} style={{ flexGrow: a.sum }} /> : null))}
+          </span>
+        )}
+      </button>
+    </section>
   );
 }
 
@@ -257,23 +330,20 @@ function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go
 }
 
 /* ---------- מכירות: המשפט, שלוש שורות משנה, יעדים, וגרף מול התקופה הקודמת ---------- */
-function SalesSection({ s, sp, prevName, daily, goals, period, cur, now, rangeText }: {
-  s: ReturnType<typeof sales>; sp: ReturnType<typeof sales>; prevName: string; daily: DayPoint[]; goals: Goals; period: Period; cur: Range; now: Date; rangeText: ReactNode;
+function SalesSection({ s, sp, prevName, daily, goals, period, cur, now }: {
+  s: ReturnType<typeof sales>; sp: ReturnType<typeof sales>; prevName: string; daily: DayPoint[]; goals: Goals; period: Period; cur: Range; now: Date;
 }) {
   const monthly = period === 'month' || period === 'prevMonth';
+  const cmp = sp.count > 0; // יש תקופה קודמת להשוות אליה
   const goalRows = monthly ? ([['revenue', 'הכנסות', s.sum], ['orders', 'הזמנות', s.count]] as const).filter(([k]) => goals[k]) : [];
   return (
-    <Section id="sales" title="מכירות" meta={rangeText}>
+    <Section id="sales" title="מכירות">
       <div className="bsales">
         <div className="bsales__sum">
-          <p className="bsales__big"><Ltr>{fmtMoney(s.sum)}</Ltr></p>
-          <p className="bsales__of">מ{s.count === 1 ? 'הזמנה אחת' : <>-<Ltr>{num(s.count)}</Ltr> הזמנות</>}</p>
-          <p className="bsales__chg"><Change d={delta(s.sum, sp.sum)} vs={prevName} /></p>
-          <dl className="bkv">
-            <div><dt>ממוצע להזמנה</dt><dd><Ltr>{fmtMoney(s.avg)}</Ltr><Delta d={delta(s.avg, sp.avg)} /></dd></div>
-            <div><dt>הזמנות</dt><dd><Ltr>{num(s.count)}</Ltr><Delta d={delta(s.count, sp.count)} /></dd></div>
-            <div><dt>פיצות</dt><dd><Ltr>{num(s.pizzas)}</Ltr><Delta d={delta(s.pizzas, sp.pizzas)} /></dd></div>
-            <div><dt>לקוחות שהזמינו</dt><dd><Ltr>{num(s.customers)}</Ltr><Delta d={delta(s.customers, sp.customers)} /></dd></div>
+          <dl className="bkv bkv--first">
+            <div><dt>ממוצע להזמנה</dt><dd><Ltr>{fmtMoney(s.avg)}</Ltr>{cmp && <Delta d={delta(s.avg, sp.avg)} />}</dd></div>
+            {(s.pizzas > 0 || sp.pizzas > 0) && <div><dt>פיצות</dt><dd><Ltr>{num(s.pizzas)}</Ltr>{cmp && <Delta d={delta(s.pizzas, sp.pizzas)} />}</dd></div>}
+            <div><dt>לקוחות שהזמינו</dt><dd><Ltr>{num(s.customers)}</Ltr>{cmp && <Delta d={delta(s.customers, sp.customers)} />}</dd></div>
           </dl>
           {goalRows.length > 0 && (
             <div className="bgoals">
@@ -367,7 +437,7 @@ function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string
 }
 
 /* ---------- עמידה בזמנים ---------- */
-function ServiceSection({ sv, goal, rangeText, go }: { sv: ReturnType<typeof service>; goal?: number; rangeText: ReactNode; go: (to: string) => void }) {
+function ServiceSection({ sv, goal, go }: { sv: ReturnType<typeof service>; goal?: number; go: (to: string) => void }) {
   /* בזמן + באיחור = כל מה שסופק (כמו בדוחות). האחוזים – מתוך מה שסופק, כמו המספר הראשי. חלקית היא "מתוכן", בלי פס משלה */
   /* כל איחור הוא איחור ("באיחור" = הסכום); בפס ובשורות – הפיצול עד X דק' / מעל X דק' (ובלי דקות, אם נרשם כך) */
   const segs = [
@@ -378,7 +448,7 @@ function ServiceSection({ sv, goal, rangeText, go }: { sv: ReturnType<typeof ser
     { k: 'is-ops', label: 'מתוכן חלקית', v: sv.partial, of: 0 }, { k: 'is-cancel', label: 'בוטלו', v: sv.cancelled, of: 0 },
   ];
   return (
-    <Section id="svc" title="עמידה בזמנים" meta={rangeText}
+    <Section id="svc" title="עמידה בזמנים"
       lead={sv.delivered === 0 ? <p>עוד לא סופקו הזמנות בתקופה הזו.</p> : (
         <>
           <p className="bsec__stmt"><b><Ltr>{sv.onTimePct}%</Ltr></b> מההזמנות סופקו בזמן</p>
@@ -460,10 +530,10 @@ function Share({ rows, limit, extra }: { rows: Ranked[]; limit: number; extra?: 
     </ol>
   );
 }
-function CustomersSection({ rows, customers, rangeText }: { rows: Ranked[]; customers: number; rangeText: ReactNode }) {
+function CustomersSection({ rows, customers }: { rows: Ranked[]; customers: number }) {
   const top = rows[0];
   return (
-    <Section id="cust" title="לקוחות" meta={rangeText}
+    <Section id="cust" title="לקוחות"
       lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : (
         <>
           <p><b>{top.name}</b> הוא הלקוח הגדול בתקופה, עם <Ltr>{top.share}%</Ltr> מההכנסות.</p>
@@ -474,22 +544,22 @@ function CustomersSection({ rows, customers, rangeText }: { rows: Ranked[]; cust
     </Section>
   );
 }
-function BranchesSection({ clusters, branches, rangeText }: { clusters: Ranked[]; branches: Ranked[]; rangeText: ReactNode }) {
+function BranchesSection({ clusters, branches }: { clusters: Ranked[]; branches: Ranked[] }) {
   const [by, setBy] = useState<'clusters' | 'branches'>('clusters');
   const rows = by === 'clusters' ? clusters : branches;
   const top = rows[0];
   return (
-    <Section id="br" title="סניפים ואשכולות" meta={rangeText}
+    <Section id="br" title="סניפים ואשכולות"
       tool={<div className="seg seg--sm" role="group" aria-label="פילוח"><button className={by === 'clusters' ? 'is-on' : ''} aria-pressed={by === 'clusters'} onClick={() => setBy('clusters')}>אשכולות</button><button className={by === 'branches' ? 'is-on' : ''} aria-pressed={by === 'branches'} onClick={() => setBy('branches')}>סניפים</button></div>}
       lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : <p>{by === 'clusters' ? 'אשכול' : 'סניף'} <b>{top.name}</b> מוביל, עם <Ltr>{top.share}%</Ltr> מההכנסות.</p>}>
       {top && <Share rows={rows} limit={6} extra={(r) => (r.onTimePct === null ? null : <> · <Ltr>{r.onTimePct}%</Ltr> בזמן</>)} />}
     </Section>
   );
 }
-function TeamSection({ rows, rangeText }: { rows: Ranked[]; rangeText: ReactNode }) {
+function TeamSection({ rows }: { rows: Ranked[] }) {
   const top = rows[0];
   return (
-    <Section id="team" title="צוות" meta={rangeText}
+    <Section id="team" title="צוות"
       lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : <p>הכי הרבה הכנסות בתקופה: <b>{top.name}</b> – {orders$(top.count)}, <Ltr>{fmtMoney(top.sum)}</Ltr>.</p>}>
       {top && (
         <div className="report__scroll">
@@ -515,9 +585,9 @@ function TeamSection({ rows, rangeText }: { rows: Ranked[]; rangeText: ReactNode
 }
 
 /* ---------- הצעות מחיר ---------- */
-function QuotesSection({ q, rangeText, go }: { q: ReturnType<typeof quotesSummary>; rangeText: ReactNode; go: (to: string) => void }) {
+function QuotesSection({ q, go }: { q: ReturnType<typeof quotesSummary>; go: (to: string) => void }) {
   return (
-    <Section id="qs" title="הצעות מחיר" meta={rangeText}
+    <Section id="qs" title="הצעות מחיר"
       lead={(
         <>
           <p>{q.open === 0 ? 'אין הצעות פתוחות.' : <>{count(q.open, 'הצעה אחת פתוחה', 'הצעות פתוחות')} בשווי <Ltr>{fmtMoney(q.openSum)}</Ltr>.</>}</p>
