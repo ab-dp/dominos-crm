@@ -178,11 +178,11 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           <OrderTimeline o={o} onQ={cancelled ? undefined : focusQ} />
           {/* פעולות שהן חלק מהציר מופיעות בציר עצמו – כאן רק שאר הבעיות */}
           {o.issues.some((i) => !STEP_ACTIONS.includes(i.action)) && (
-            <div className="missing" aria-label="מה חסר">
+            <div className="missing" role="list" aria-label="מה חסר">
               {o.issues.filter((i) => !STEP_ACTIONS.includes(i.action)).map((i) => (
-                <div key={i.rule} className={`missing__item missing__item--${i.severity}`}>
+                <div key={i.rule} role="listitem" className={`missing__item missing__item--${i.severity}`}>
                   <span>{i.label}</span>
-                  <FixButton o={o} issue={i} onOpen={() => { if (i.rule === 2 || i.rule === 9) setTab('pay'); else document.querySelector('.reg')?.scrollIntoView({ behavior: 'smooth' }); }} />
+                  <FixButton o={o} issue={i} onOpen={() => { if (i.rule === 2 || i.rule === 9) setTab('pay'); else document.querySelector('.reg')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }} />
                 </div>
               ))}
             </div>

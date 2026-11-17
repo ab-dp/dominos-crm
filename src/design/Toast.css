@@ -1,8 +1,8 @@
 .toasts {
   position: fixed;
-  inset-inline-start: 50%;
+  left: 50%;
   bottom: 24px;
-  transform: translateX(50%);
+  transform: translateX(-50%);
   display: grid;
   gap: var(--space-2);
   z-index: 80;
@@ -31,7 +31,7 @@
   background: var(--ok-mark);
 }
 .toast__ok--error { background: var(--danger-fg); }
-.toast--error { box-shadow: var(--shadow-panel), inset -3px 0 0 var(--danger-fg); }
+.toast--error { box-shadow: var(--shadow-panel); }
 .toast__msg { flex: 1; }
 .toast__undo, .toast__action {
   display: inline-flex;

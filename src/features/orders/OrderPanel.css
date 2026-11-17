@@ -27,8 +27,8 @@
 .missing__item { color: var(--gray-900); }
 .missing__item span::before { background: var(--gray-400); }
 .missing__item--red span::before { background: var(--danger-fg); }
-.missing__item--orange span::before { background: var(--urgent-edge); }
-.missing__item--yellow span::before { background: var(--missing-edge); }
+.missing__item--orange span::before { background: var(--urgent-fg); }
+.missing__item--yellow span::before { background: var(--missing-fg); }
 .panel__tabs { display: flex; gap: var(--space-4); overflow-x: auto; margin: 0 -4px; padding: 0 var(--space-1); scrollbar-width: none; }
 .panel__tabs a, .panel__tabs button {
   flex: none; height: var(--control-md); padding: 0;

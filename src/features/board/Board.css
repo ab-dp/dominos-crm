@@ -61,7 +61,7 @@
 .bday__name small { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 .bday__date { font-size: var(--text-micro); color: var(--gray-600); }
 .bday__count { margin-top: var(--space-2); font-size: var(--text-section); font-weight: 600; line-height: 1.2; }
-.bday.is-empty .bday__count { color: var(--gray-400); }
+.bday.is-empty .bday__count { color: var(--gray-600); }
 .bday__sum { font-size: var(--text-label); color: var(--gray-700); }
 .bday__piz { font-size: var(--text-micro); color: var(--gray-600); }
 .bready { display: flex; gap: 2px; width: 100%; height: 6px; margin-top: var(--space-3); }
@@ -79,7 +79,7 @@
 .bkv > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--line-soft); }
 .bkv dt { font-size: var(--text-label); color: var(--gray-600); }
 .bkv dd { margin: 0; display: inline-flex; align-items: baseline; gap: var(--space-3); font-size: var(--text-table); font-weight: 600; }
-.bdelta { min-width: 46px; text-align: end; font-size: var(--text-micro); font-weight: 500; color: var(--gray-400); }
+.bdelta { min-width: 46px; text-align: end; font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
 .bgoals { display: grid; gap: var(--space-3); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
 .bgoals__title { margin: 0; font-size: var(--text-label); font-weight: 600; color: var(--gray-700); }
 .bgoal { display: grid; gap: var(--space-1); }

@@ -47,7 +47,9 @@
 .rtable .num { text-align: end; }
 .rtable td bdi { font-family: var(--font-mono); font-size: var(--text-label); }
 .rtable tbody tr { cursor: pointer; outline: none; transition: background var(--dur-instant) var(--ease); }
-.rtable tbody tr:hover, .rtable tbody tr:focus-visible { background: var(--gray-50); }
+.rtable tbody tr:hover { background: var(--row-hover); }
+.rtable tbody tr:focus-visible { background: var(--brand-50); }
+.rtable tbody tr:focus-visible td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
 .rtable tbody tr.is-picked { background: var(--brand-50); }
 .rtable tfoot td { font-weight: 600; background: var(--gray-25); border-top: 1px solid var(--gray-200); border-bottom: 0; }
 
@@ -82,6 +84,7 @@
 .cols__bar { width: min(100%, 32px); border-radius: 4px 4px 0 0; background: var(--brand-600); transition: height var(--dur-standard) var(--ease), background var(--dur-instant) var(--ease); }
 .cols__col.is-hover .cols__bar, .cols__col:focus-visible .cols__bar { background: var(--brand-700); }
 .cols__col:focus-visible { box-shadow: none; outline: none; }
+.cols__col:focus-visible .cols__bar { outline: 2px solid var(--brand-600); outline-offset: 2px; }
 .cols__tip { position: absolute; bottom: calc(100% + 6px); z-index: 2; display: grid; gap: 1px; padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--gray-900); color: var(--white); font-size: var(--text-micro); white-space: nowrap; pointer-events: none; text-align: center; }
 .cols__tip b { font: 500 var(--text-label) var(--font-mono); }
 .cols__col.is-hover .cols__tip { bottom: auto; top: 0; transform: translateY(-110%); }

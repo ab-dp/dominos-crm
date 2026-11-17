@@ -43,6 +43,9 @@
   --hold-bg: #F2EEFA;    --hold-fg: #5B3A9E;
   --hold-edge: #8C6BD0;
   --line: var(--gray-100);
+  --line-strong: #A9B3BF; /* גבול שדה בריחוף */
+  --surface-hover: var(--gray-100); /* ריחוף/הדגשה בתפריטים וכפתורי אייקון */
+  --row-hover: var(--gray-50);       /* ריחוף בשורת טבלה */
   --line-soft: #EEF1F4;   /* קו בין שורות טבלה */
 
   /* טיפוגרפיה */
@@ -67,6 +70,11 @@
   --shadow-float: 0 0 0 1px rgba(15, 27, 42, 0.06), 0 4px 8px -2px rgba(15, 27, 42, 0.06), 0 12px 28px -6px rgba(15, 27, 42, 0.16);
   --shadow-panel: 0 0 0 1px rgba(15, 27, 42, 0.06), 0 24px 64px rgba(15, 27, 42, 0.22);
   --focus-ring: 0 0 0 2px var(--white), 0 0 0 4px var(--brand-600);
+  --focus-halo: 0 0 0 3px rgb(0 100 145 / 0.16); /* שדה בפוקוס */
+  --invalid-halo: 0 0 0 3px var(--danger-bg);     /* שדה שגוי */
+  --shadow-sticky: 0 6px 16px -10px rgb(15 27 42 / 0.22); /* כותרת/סרגל דביק מעל תוכן שנגלל */
+  --scrim: rgb(11 35 64 / 0.32); /* רקע מעומעם מאחורי חלון – בלי blur, כבד בטלפון */
+  --radius-pill: 999px;
 
   /* משקלים: 600 רק לכותרות ולערך המרכזי בשורה; 500 לתוויות ולפקדים; 400 לגוף. אין 700/800 */
   --weight-body: 400;
@@ -98,6 +106,7 @@
 
   /* תנועה */
   --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* כניסה של חלונות ותפריטים */
   --dur-instant: 90ms;
   --dur-quick: 150ms;
   --dur-standard: 220ms;

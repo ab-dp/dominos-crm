@@ -4,7 +4,7 @@
 /* ---------- שני הטורים ---------- */
 .today__grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-5); align-items: start; }
 .today__grid > * { min-width: 0; }
-.pill { min-width: 22px; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-panel); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; background: var(--gray-100); color: var(--gray-700); }
+.pill { min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; background: var(--gray-100); color: var(--gray-700); }
 .calm { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-5) var(--space-4); color: var(--ok-fg); font-weight: 500; }
 .calm--quiet { color: var(--gray-600); }
 .calm--error { align-items: flex-start; color: var(--danger-fg); line-height: 1.5; }
@@ -63,7 +63,7 @@
 .tlane__toggle:hover { color: var(--brand-700); }
 .tlane__chev { transition: transform var(--dur-instant) var(--ease); }
 .tlane__toggle[aria-expanded="false"] .tlane__chev { transform: rotate(90deg); }
-.tlane__n { min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--gray-100); color: var(--gray-700); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; }
+.tlane__n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--gray-100); color: var(--gray-700); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; }
 .tlane--todo .tlane__head { color: var(--brand-700); }
 .tlane--todo .tlane__n { background: var(--brand-600); color: var(--white); }
 .tlane--inq .tlane__n { background: var(--ok-bg); color: var(--ok-fg); }

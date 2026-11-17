@@ -14,7 +14,7 @@
   font: inherit; text-align: start; cursor: pointer;
   transition: background var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease);
 }
-.citem:hover { background: var(--gray-25); }
+.citem:hover { background: var(--row-hover); }
 .citem.is-on { background: var(--brand-50); color: var(--brand-800); }
 .citem__name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .citem__count { margin-inline-start: auto; font-size: var(--text-label); color: var(--gray-600); white-space: nowrap; }
@@ -38,7 +38,7 @@
 .br-table-wrap { border: 0; border-radius: 0 0 var(--radius-panel) var(--radius-panel); box-shadow: none; }
 .br-table td:last-child, .br-table th:last-child { position: static; box-shadow: none; }
 .brow { outline: none; }
-.brow:hover td { background: var(--gray-25); }
+.brow:hover td { background: var(--row-hover); }
 .brow:focus-visible td { background: var(--brand-50); }
 .brow:focus-visible td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
 .brow--edit td { background: var(--brand-50) !important; }
