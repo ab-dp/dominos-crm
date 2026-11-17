@@ -17,14 +17,19 @@ export function AuthScreens() {
 
   return (
     <div className="auth">
+      {/* צד המותג: סימן מילולי בפינה, האריח והכותרת במרכז */}
       <section className="auth__brand" aria-hidden="true" style={{ ['--login-photo' as string]: `url(${BASE}brand/login.webp)` }}>
-        <DominoTile size={176} animate />
-        <p className="auth__brand-title">מערכת CRM</p>
-        <p className="auth__brand-sub">לקוחות עסקיים והזמנות</p>
+        <img className="auth__wordmark" src={`${BASE}logo-horizontal-white.svg`} alt="" />
+        <div className="auth__brand-mid">
+          <DominoTile size={152} animate />
+          <p className="auth__brand-title">מערכת CRM</p>
+          <p className="auth__brand-sub">ניהול לקוחות עסקיים והזמנות</p>
+        </div>
       </section>
 
       <main className="auth__panel">
         <img className="auth__mobile-logo" src={`${BASE}logo-vertical.svg`} alt="Domino's Pizza" />
+        <div className="auth__panel-mid">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={screen}
@@ -37,6 +42,8 @@ export function AuthScreens() {
             {screen === 'pending' ? <Pending /> : screen === 'register' ? <Register onBack={() => setView('login')} /> : <Login onRegister={() => setView('register')} />}
           </motion.div>
         </AnimatePresence>
+        </div>
+        <p className="auth__foot"><span>הגישה מיועדת לצוות המוקד בלבד</span><span className="auth__foot-sep" aria-hidden="true"> · </span><span>כל חשבון מאושר על ידי מנהל המערכת</span></p>
       </main>
     </div>
   );
@@ -63,30 +70,32 @@ function Login({ onRegister }: { onRegister: () => void }) {
     try { await loginGoogle(); } catch (err) { setError(authErrorMessage(err)); setBusy(''); }
   };
 
+  /* ניסוח בלשון רבים – פנייה מקצועית וניטרלית מגדרית */
   return (
-    <>
-      <h1 className="auth__title">כניסה למערכת</h1>
-      <p className="auth__lead">ברוך הבא. היכנס כדי לראות מה צריך לטפל בו עכשיו.</p>
+    <div className="alogin">
+      <p className="alogin__eyebrow">מוקד הזמנות עסקיות</p>
+      <h1 className="auth__title">התחברות</h1>
+      <p className="auth__lead">ברוכים הבאים. הזינו את פרטי החשבון כדי להמשיך.</p>
 
       {notice && <Notice tone="danger" onClose={clearNotice}>{notice}</Notice>}
 
-      <GoogleButton onClick={google} busy={busy === 'google'} disabled={!!busy}>המשך עם Google</GoogleButton>
-      <Divider>או עם מייל</Divider>
+      <GoogleButton onClick={google} busy={busy === 'google'} disabled={!!busy}>התחברות עם Google</GoogleButton>
+      <Divider>או באמצעות כתובת מייל</Divider>
 
       <form onSubmit={submit} noValidate>
         <label className="afield">
-          <span className="afield__label">מייל</span>
+          <span className="afield__label">כתובת מייל</span>
           <input ref={emailRef} className="input input--ltr" type="email" autoComplete="username" value={email}
             onChange={(e) => { setEmail(e.target.value); setError(''); }} aria-invalid={!!error} aria-describedby={error ? 'login-err' : undefined} />
         </label>
         <PasswordField label="סיסמה" value={password} onChange={(v) => { setPassword(v); setError(''); }} autoComplete="current-password" invalid={!!error} describedBy={error ? 'login-err' : undefined} />
         <AnimatePresence>{error && <FieldError id="login-err">{error}</FieldError>}</AnimatePresence>
-        <Button variant="primary" size="lg" type="submit" className="auth__submit" loading={busy === 'email'} disabled={!!busy && busy !== 'email'}>כניסה</Button>
+        <Button variant="primary" size="lg" type="submit" className="auth__submit" loading={busy === 'email'} disabled={!!busy && busy !== 'email'}>התחברות</Button>
       </form>
 
-      <p className="auth__switch">אין לך חשבון? <button className="link" onClick={onRegister}>הרשמה</button></p>
-      <p className="auth__help">שכחת סיסמה? פנה למנהל המוקד</p>
-    </>
+      <p className="auth__switch">עדיין אין לכם חשבון? <button className="link" onClick={onRegister}>לבקשת גישה</button></p>
+      <p className="auth__help">שכחתם את הסיסמה? יש לפנות למנהל המוקד.</p>
+    </div>
   );
 }
 
