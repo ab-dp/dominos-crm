@@ -1,7 +1,7 @@
 /* לקוחות פוטנציאליים: לוח, טבלה, משימות ותיק ליד. צבע רק לשלב ולצעד הבא באיחור */
 
 /* ---------- שלב ---------- */
-.lpill { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-panel); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; background: var(--gray-100); color: var(--gray-600); }
+.lpill { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--gray-100); color: var(--gray-600); }
 .lpill--contacted { background: var(--brand-50); color: var(--brand-700); }
 .lpill--proposal { background: var(--brand-100); color: var(--brand-800); }
 .lpill--trial { background: var(--urgent-bg); color: var(--urgent-fg); }

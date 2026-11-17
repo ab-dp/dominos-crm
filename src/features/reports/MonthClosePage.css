@@ -30,7 +30,7 @@
 .mgaps__who b, .mgaps__who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mgaps__who .muted { font-size: var(--text-label); }
 .mgaps__why { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.mgaps__tag { padding: 2px var(--space-2); border-radius: var(--radius-panel); background: var(--danger-bg); color: var(--danger-fg); font-size: var(--text-micro); font-weight: 500; }
+.mgaps__tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--danger-bg); color: var(--danger-fg); }
 .mgaps__sum bdi { font: 500 var(--text-label) var(--font-mono); }
 .mgaps__fix { flex: none; }
 
