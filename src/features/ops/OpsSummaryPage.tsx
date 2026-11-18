@@ -1,4 +1,5 @@
-/* סיכום לתפעול: בוחרים תאריכים (מחר / סופ"ש / טווח) ומקבלים דף מסודר לכל אשכול – סניף ← יום ושעה, פירוט מלא של כל הזמנה.
+/* סיכום לתפעול: בוחרים תאריכים (מחר / סופ"ש / טווח), ואפשר גם לקוח אחד מהרשימה, ומקבלים דף מסודר לכל אשכול – סניף ← יום ושעה, פירוט מלא של כל הזמנה.
+   בסינון לפי לקוח הדף נראה אותו דבר (עם שם הלקוח בראש), אבל לא מסמנים "נשלח" – הסימון שייך לסיכום המלא של האשכול.
    הדף בנוי לצילום מסך או ל-PDF – כתב גדול ושורות צפופות, עמוד אחד לאשכול. נכנסות רק הזמנות שהלקוח אישר; מה שעוד ממתין לאישור הלקוח מוצג באדום למעלה. */
 import { forwardRef, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AlertTriangle, Check, Download, Send } from 'lucide-react';
@@ -9,7 +10,7 @@ import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { OTHER, PIZZA, categoryOf, groupItems, itemsText, typeText, type Order } from '../../data/types';
 import {
-  amountIn, awaitingCustomer, diffSince, groupByCluster, inRange, inSummary, markOpsSent, pizzasIn, tomorrowRange, useOpsSends, weekendRange,
+  amountIn, awaitingCustomer, customersIn, diffSince, groupByCluster, inRange, inSummary, markOpsSent, pizzasIn, tomorrowRange, useOpsSends, weekendRange,
   type ClusterGroup, type OpsSend,
 } from '../../data/opsSummary';
 import { saveError } from '../../lib/saveError';
@@ -36,9 +37,16 @@ export function OpsSummaryPage() {
   const bad = from > to;
   const sends = useOpsSends(from).filter((s) => s.to === to);
   const [busy, setBusy] = useState('');
+  // לקוח אחד מהרשימה (לפי מזהה); השם נשמר כדי שהבחירה תוצג גם כשבתאריכים החדשים אין לו הזמנות
+  const [cust, setCust] = useState<{ id: string; name: string } | null>(null);
   const sheets = useRef(new Map<string, HTMLElement>());
 
-  const inDates = useMemo(() => (bad ? [] : orders.filter((o) => inRange(o, from, to))), [orders, from, to, bad]);
+  const inDatesAll = useMemo(() => (bad ? [] : orders.filter((o) => inRange(o, from, to))), [orders, from, to, bad]);
+  const custOptions = useMemo(() => {
+    const list = customersIn(inDatesAll.filter((o) => inSummary(o) || awaitingCustomer(o)));
+    return cust && !list.some((c) => c.id === cust.id) ? [...list, { ...cust, n: 0 }] : list;
+  }, [inDatesAll, cust]);
+  const inDates = useMemo(() => (cust ? inDatesAll.filter((o) => o.customerId === cust.id) : inDatesAll), [inDatesAll, cust]);
   const clusters = useMemo(() => groupByCluster(inDates.filter(inSummary)), [inDates]);
   const waiting = useMemo(() => inDates.filter(awaitingCustomer).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)), [inDates]);
   const byId = useMemo(() => new Map(orders.map((o) => [String(o.id), o])), [orders]);
@@ -49,7 +57,9 @@ export function OpsSummaryPage() {
     setBusy(`pdf:${name}`);
     try {
       const { downloadOpsPdf } = await import('./opsPdf');
-      await downloadOpsPdf(els, `סיכום לתפעול ${name} ${fmtDate(from)}${from !== to ? ` עד ${fmtDate(to)}` : ''}.pdf`);
+      // תווים שאסורים בשם קובץ (למשל / בשם לקוח) – לרווח
+      const file = `סיכום לתפעול ${cust ? `${cust.name} ` : ''}${name} ${fmtDate(from)}${from !== to ? ` עד ${fmtDate(to)}` : ''}`.replace(/[\\/:*?<>|]+/g, ' ');
+      await downloadOpsPdf(els, `${file}.pdf`);
     } catch (e) {
       logError('ops-pdf', e); // נרשם בהגדרות ← תקלות, כדי שנדע מה נכשל
       toast({ tone: 'error', message: 'הורדת ה-PDF נכשלה. נסו שוב.' });
@@ -95,6 +105,16 @@ export function OpsSummaryPage() {
             <label>עד <input type="date" className="input input--ltr" value={custom.to} min={custom.from} onChange={(e) => e.target.value && setCustom((c) => ({ ...c, to: e.target.value }))} /></label>
           </div>
         ) : <b className="ops-range__text">{rangeText(from, to)}</b>}
+        {(custOptions.length > 0 || cust) && (
+          <div className="ops-cust">
+            <label>לקוח
+              <select className="input" value={cust?.id ?? ''} onChange={(e) => { const c = custOptions.find((x) => x.id === e.target.value); setCust(c ? { id: c.id, name: c.name } : null); }}>
+                <option value="">כל הלקוחות</option>
+                {custOptions.map((c) => <option key={c.id} value={c.id}>{c.name}{c.n ? '' : ' · אין הזמנות בתאריכים'}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
       </div>
 
       {waiting.length > 0 && (
@@ -115,31 +135,32 @@ export function OpsSummaryPage() {
       )}
 
       {bad ? <p className="ops-err">תאריך הסיום לפני תאריך ההתחלה.</p> : !clusters.length ? (
-        <EmptyState icon={<Send size={20} />} title="אין הזמנות מאושרות בתאריכים האלה">
-          {waiting.length ? 'יש הזמנות שממתינות לאישור הלקוח – הן מופיעות למעלה.' : 'בחרו תאריכים אחרים.'}
+        <EmptyState icon={<Send size={20} />} title={cust ? `אין הזמנות מאושרות של ${cust.name} בתאריכים האלה` : 'אין הזמנות מאושרות בתאריכים האלה'}>
+          {waiting.length ? 'יש הזמנות שממתינות לאישור הלקוח – הן מופיעות למעלה.' : cust ? 'בחרו תאריכים אחרים או את כל הלקוחות.' : 'בחרו תאריכים אחרים.'}
         </EmptyState>
       ) : clusters.map((c) => {
-        const send = sends.find((s) => s.cluster === c.name);
+        // בסינון לפי לקוח – בלי מעקב שליחה: הסימון השמור הוא של כל האשכול, והשוואה אליו הייתה מראה את שאר הלקוחות כ"ירדו"
+        const send = cust ? undefined : sends.find((s) => s.cluster === c.name);
         const { mark, removed } = diffSince(send, c.orders);
         const dirty = !!send && (mark.size > 0 || removed.length > 0);
         return (
           <section key={c.name} className="ops-card" aria-label={`אשכול ${c.name}`}>
             <div className="ops-card__bar">
               <h2>{c.name}</h2>
-              <span className={`ops-sent ${send ? (dirty ? 'is-dirty' : 'is-sent') : ''}`}>
+              {!cust && <span className={`ops-sent ${send ? (dirty ? 'is-dirty' : 'is-sent') : ''}`}>
                 {!send ? 'עוד לא נשלח' : dirty ? <>נשלח {sentAt(send)} · יש שינויים מאז – לשלוח שוב</> : <><Check size={14} aria-hidden="true" /> נשלח {sentAt(send)}{send.byName && ` · ${send.byName}`}</>}
-              </span>
+              </span>}
               <div className="ops-card__actions">
                 <Button size="sm" icon={<Download size={16} />} loading={busy === `pdf:${c.name}`} onClick={() => pdf([c], c.name)}>PDF</Button>
-                <Button size="sm" variant={send && !dirty ? 'secondary' : 'primary'} icon={<Check size={16} />} loading={busy === `sent:${c.name}`} onClick={() => markSent(c)}>
+                {!cust && <Button size="sm" variant={send && !dirty ? 'secondary' : 'primary'} icon={<Check size={16} />} loading={busy === `sent:${c.name}`} onClick={() => markSent(c)}>
                   {send ? 'סמן שנשלח שוב' : 'סמן שנשלח'}
-                </Button>
+                </Button>}
               </div>
             </div>
             <p className="ops-phone">בטלפון הדף מוקטן – לשליחה עדיף להוריד PDF.</p>
             <FitWidth>
               <OpsSheet ref={(el) => { if (el) sheets.current.set(c.name, el); else sheets.current.delete(c.name); }}
-                c={c} from={from} to={to} now={now} mark={mark}
+                c={c} from={from} to={to} now={now} mark={mark} customer={cust?.name}
                 removed={removed.map((id) => byId.get(id)).map((o, i) => (o ? `${o.customerName} (${weekday(o.date)} ${dm(o.date)})` : `הזמנה ${removed[i]}`))} />
             </FitWidth>
           </section>
@@ -150,8 +171,8 @@ export function OpsSummaryPage() {
 }
 
 /* הדף עצמו – רוחב קבוע, כדי שצילום מסך ו-PDF ייראו אותו דבר */
-const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: string; now: Date; mark: Map<number, 'new' | 'changed'>; removed: string[] }>(
-  function OpsSheet({ c, from, to, now, mark, removed }, ref) {
+const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: string; now: Date; mark: Map<number, 'new' | 'changed'>; removed: string[]; customer?: string }>(
+  function OpsSheet({ c, from, to, now, mark, removed, customer }, ref) {
     const multiDay = from !== to;
     // יום ← סניף: כל יום בפני עצמו, ובתוכו הסניפים באותו סדר כמו בכל הסיכום
     const days = multiDay
@@ -164,6 +185,7 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
           <div className="os-title">
             <p>סיכום הזמנות לתפעול</p>
             <p className="os-range">{rangeText(from, to)}</p>
+            {customer && <p className="os-customer">לקוח: <b>{customer}</b></p>}
           </div>
           <div className="os-stats">
             <Stat n={c.branches.length} l={c.branches.length === 1 ? 'סניף' : 'סניפים'} />

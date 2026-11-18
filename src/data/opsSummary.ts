@@ -13,6 +13,22 @@ export const inSummary = (o: Pick<Order, 'status'>) => o.status === 'approved';
 export const awaitingCustomer = (o: Pick<Order, 'status'>) => o.status === 'new' || o.status === 'pending_customer';
 export const inRange = (o: Pick<Order, 'date'>, from: string, to: string) => o.date >= from && o.date <= to;
 
+/* הלקוחות שיש להם הזמנות ברשימה – לבחירת לקוח אחד בסיכום. n = כמה הזמנות.
+   השם נשמר בכל הזמנה כפי שהיה ביום ההזמנה – לוקחים את השם מההזמנה האחרונה (אם הלקוח שינה שם) */
+export function customersIn(list: Pick<Order, 'customerId' | 'customerName' | 'date' | 'time'>[]) {
+  const m = new Map<string, { id: string; name: string; n: number; at: string }>();
+  list.forEach((o) => {
+    if (!o.customerId) return;
+    const c = m.get(o.customerId) ?? { id: o.customerId, name: '', n: 0, at: '' };
+    const at = o.date + o.time, name = o.customerName?.trim();
+    if (name && at >= c.at) { c.name = name; c.at = at; }
+    c.n++;
+    m.set(o.customerId, c);
+  });
+  m.forEach((c) => { c.name ||= 'ללא שם'; });
+  return [...m.values()].sort((a, b) => a.name.localeCompare(b.name, 'he'));
+}
+
 export type BranchGroup = { name: string; orders: Order[] };
 export type ClusterGroup = { name: string; branches: BranchGroup[]; orders: Order[] };
 const byWhen = (a: Order, b: Order) => (a.date + a.time).localeCompare(b.date + b.time) || a.id - b.id;
