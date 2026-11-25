@@ -1,0 +1,5330 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`בורד > מדדים 1`] = `
+{
+  "byDay": [
+    {
+      "count": 0,
+      "date": "2026-11-01",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-02",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-03",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-04",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-05",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 360,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-06",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-07",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-08",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-09",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-10",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 420,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-11",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-12",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 550,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-13",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-14",
+      "prevCount": 1,
+      "prevSum": 800,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-15",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-16",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-17",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 470,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-18",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 990,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-19",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 550,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-20",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-21",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-22",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-23",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 1,
+      "date": "2026-11-24",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 330,
+    },
+    {
+      "count": 8,
+      "date": "2026-11-25",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 3065,
+    },
+    {
+      "count": 7,
+      "date": "2026-11-26",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 3660,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-27",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-28",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-29",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+    {
+      "count": 0,
+      "date": "2026-11-30",
+      "prevCount": 0,
+      "prevSum": 0,
+      "sum": 0,
+    },
+  ],
+  "collections": {
+    "aging": [
+      {
+        "count": 10,
+        "label": "עד 30 יום",
+        "sum": 4200,
+      },
+      {
+        "count": 0,
+        "label": "31–60 יום",
+        "sum": 0,
+      },
+      {
+        "count": 0,
+        "label": "מעל 60 יום",
+        "sum": 0,
+      },
+    ],
+    "failed": {
+      "count": 0,
+      "sum": 0,
+    },
+    "gaps": {
+      "count": 3,
+      "sum": 175,
+    },
+    "open": {
+      "count": 10,
+      "sum": 4200,
+    },
+  },
+  "horizon": {
+    "days": [
+      {
+        "count": 8,
+        "customer": 1,
+        "date": "2026-11-25",
+        "ops": 4,
+        "pizzas": 52,
+        "ready": 3,
+        "sum": 3065,
+        "weekend": false,
+      },
+      {
+        "count": 7,
+        "customer": 3,
+        "date": "2026-11-26",
+        "ops": 3,
+        "pizzas": 51,
+        "ready": 1,
+        "sum": 3660,
+        "weekend": false,
+      },
+      {
+        "count": 0,
+        "customer": 0,
+        "date": "2026-11-27",
+        "ops": 0,
+        "pizzas": 0,
+        "ready": 0,
+        "sum": 0,
+        "weekend": true,
+      },
+      {
+        "count": 0,
+        "customer": 0,
+        "date": "2026-11-28",
+        "ops": 0,
+        "pizzas": 0,
+        "ready": 0,
+        "sum": 0,
+        "weekend": true,
+      },
+      {
+        "count": 0,
+        "customer": 0,
+        "date": "2026-11-29",
+        "ops": 0,
+        "pizzas": 0,
+        "ready": 0,
+        "sum": 0,
+        "weekend": false,
+      },
+      {
+        "count": 0,
+        "customer": 0,
+        "date": "2026-11-30",
+        "ops": 0,
+        "pizzas": 0,
+        "ready": 0,
+        "sum": 0,
+        "weekend": false,
+      },
+      {
+        "count": 0,
+        "customer": 0,
+        "date": "2026-12-01",
+        "ops": 0,
+        "pizzas": 0,
+        "ready": 0,
+        "sum": 0,
+        "weekend": false,
+      },
+    ],
+    "later": {
+      "count": 0,
+      "sum": 0,
+    },
+    "week": {
+      "count": 15,
+      "customer": 4,
+      "ops": 7,
+      "pizzas": 103,
+      "sum": 6725,
+    },
+  },
+  "rankings": {
+    "branches": [
+      {
+        "count": 17,
+        "missing": 3,
+        "name": "רמת גן – ביאליק",
+        "onTimePct": 60,
+        "share": 81,
+        "sum": 8420,
+      },
+      {
+        "count": 3,
+        "missing": 0,
+        "name": "חיפה – חורב",
+        "onTimePct": 0,
+        "share": 13,
+        "sum": 1325,
+      },
+      {
+        "count": 3,
+        "missing": 3,
+        "name": "—",
+        "onTimePct": 100,
+        "share": 6,
+        "sum": 650,
+      },
+    ],
+    "clusters": [
+      {
+        "count": 17,
+        "missing": 3,
+        "name": "מרכז",
+        "onTimePct": 60,
+        "share": 81,
+        "sum": 8420,
+      },
+      {
+        "count": 3,
+        "missing": 0,
+        "name": "צפון",
+        "onTimePct": 0,
+        "share": 13,
+        "sum": 1325,
+      },
+      {
+        "count": 3,
+        "missing": 3,
+        "name": "—",
+        "onTimePct": 100,
+        "share": 6,
+        "sum": 650,
+      },
+    ],
+    "customers": [
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1006",
+        "onTimePct": 0,
+        "share": 10,
+        "sum": 990,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1002",
+        "onTimePct": null,
+        "share": 7,
+        "sum": 750,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1001",
+        "onTimePct": null,
+        "share": 6,
+        "sum": 670,
+      },
+      {
+        "count": 1,
+        "missing": 1,
+        "name": "לקוח דמה 1003",
+        "onTimePct": null,
+        "share": 6,
+        "sum": 600,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1013",
+        "onTimePct": null,
+        "share": 6,
+        "sum": 600,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1007",
+        "onTimePct": 0,
+        "share": 5,
+        "sum": 550,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1023",
+        "onTimePct": 0,
+        "share": 5,
+        "sum": 550,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1004",
+        "onTimePct": null,
+        "share": 5,
+        "sum": 500,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1015",
+        "onTimePct": null,
+        "share": 5,
+        "sum": 500,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1005",
+        "onTimePct": null,
+        "share": 5,
+        "sum": 480,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1019",
+        "onTimePct": 100,
+        "share": 5,
+        "sum": 470,
+      },
+      {
+        "count": 1,
+        "missing": 1,
+        "name": "לקוח דמה 1022",
+        "onTimePct": null,
+        "share": 4,
+        "sum": 440,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1009",
+        "onTimePct": 100,
+        "share": 4,
+        "sum": 420,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1011",
+        "onTimePct": null,
+        "share": 4,
+        "sum": 400,
+      },
+      {
+        "count": 1,
+        "missing": 1,
+        "name": "לקוח ישן מאוד",
+        "onTimePct": null,
+        "share": 4,
+        "sum": 400,
+      },
+      {
+        "count": 1,
+        "missing": 1,
+        "name": "לקוח דמה 1017",
+        "onTimePct": 100,
+        "share": 3,
+        "sum": 360,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1016",
+        "onTimePct": null,
+        "share": 3,
+        "sum": 330,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1024",
+        "onTimePct": null,
+        "share": 3,
+        "sum": 330,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1010",
+        "onTimePct": null,
+        "share": 3,
+        "sum": 310,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1018",
+        "onTimePct": null,
+        "share": 3,
+        "sum": 275,
+      },
+      {
+        "count": 1,
+        "missing": 1,
+        "name": "לקוח בלי סניף",
+        "onTimePct": null,
+        "share": 2,
+        "sum": 250,
+      },
+      {
+        "count": 1,
+        "missing": 0,
+        "name": "לקוח דמה 1012",
+        "onTimePct": null,
+        "share": 2,
+        "sum": 220,
+      },
+      {
+        "count": 1,
+        "missing": 1,
+        "name": "לקוח מינימלי",
+        "onTimePct": 100,
+        "share": 0,
+        "sum": 0,
+      },
+    ],
+    "team": [
+      {
+        "count": 20,
+        "missing": 3,
+        "name": "נציג א",
+        "onTimePct": 50,
+        "share": 94,
+        "sum": 9745,
+      },
+      {
+        "count": 3,
+        "missing": 3,
+        "name": "—",
+        "onTimePct": 100,
+        "share": 6,
+        "sum": 650,
+      },
+    ],
+  },
+  "sales": {
+    "avg": 452,
+    "count": 23,
+    "customers": 23,
+    "pizzas": 164,
+    "sum": 10395,
+  },
+  "service": {
+    "cancelled": 3,
+    "closed": 10,
+    "delivered": 7,
+    "late": 3,
+    "lateBranches": [
+      {
+        "delivered": 5,
+        "late": 2,
+        "major": 1,
+        "name": "רמת גן – ביאליק",
+      },
+      {
+        "delivered": 1,
+        "late": 1,
+        "major": 0,
+        "name": "חיפה – חורב",
+      },
+    ],
+    "lateMajor": 1,
+    "lateMinor": 1,
+    "lateUnknown": 1,
+    "onTime": 4,
+    "onTimePct": 57,
+    "overdue": 1,
+    "partial": 1,
+  },
+}
+`;
+
+exports[`דוחות > דוח branches 1`] = `
+{
+  "chart": {
+    "kind": "category",
+    "labelKey": "name",
+    "money": true,
+    "title": "סך לפי סניף",
+    "valueKey": "sum",
+  },
+  "cols": [
+    {
+      "key": "cluster",
+      "label": "אשכול",
+    },
+    {
+      "key": "name",
+      "label": "סניף",
+    },
+    {
+      "key": "count",
+      "kind": "num",
+      "label": "הזמנות",
+    },
+    {
+      "key": "sum",
+      "kind": "money",
+      "label": "סך",
+    },
+    {
+      "key": "avg",
+      "kind": "money",
+      "label": "ממוצע",
+    },
+    {
+      "key": "ontime",
+      "kind": "pct",
+      "label": "סופקו בזמן",
+    },
+    {
+      "key": "late",
+      "kind": "num",
+      "label": "באיחור",
+    },
+    {
+      "key": "lateMajor",
+      "kind": "num",
+      "label": "מתוכם מעל 15 דק'",
+    },
+    {
+      "key": "partial",
+      "kind": "num",
+      "label": "מתוכן חלקית",
+    },
+    {
+      "key": "cancelled",
+      "kind": "num",
+      "label": "בוטלו",
+    },
+  ],
+  "note": ""סופקו בזמן" – הזמנות שסופקו (מלא או חלקי) בלי איחור, מתוך כל ההזמנות שסופקו. כל איחור נספר כאיחור; הפיצול – עד 15 דקות / מעל 15 דקות (לפי מה שנרשם בסגירה)",
+  "rows": [
+    {
+      "cells": {
+        "avg": 217,
+        "cancelled": 0,
+        "cluster": "—",
+        "count": 3,
+        "late": 0,
+        "lateMajor": 0,
+        "name": "—",
+        "ontime": 100,
+        "partial": 0,
+        "sum": 650,
+      },
+      "id": "—",
+      "orders": [
+        "#1101",
+        "#1102",
+        "#1103",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 495,
+        "cancelled": 3,
+        "cluster": "מרכז",
+        "count": 17,
+        "late": 2,
+        "lateMajor": 1,
+        "name": "רמת גן – ביאליק",
+        "ontime": 60,
+        "partial": 0,
+        "sum": 8420,
+      },
+      "id": "רמת גן – ביאליק",
+      "orders": [
+        "#1001",
+        "#1002",
+        "#1003",
+        "#1005",
+        "#1006",
+        "#1008",
+        "#1009",
+        "#1010",
+        "#1011",
+        "#1012",
+        "#1013",
+        "#1015",
+        "#1016",
+        "#1017",
+        "#1019",
+        "#1020",
+        "#1021",
+        "#1022",
+        "#1023",
+        "#1024",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 531,
+        "cancelled": 0,
+        "cluster": "צפון",
+        "count": 4,
+        "late": 1,
+        "lateMajor": 0,
+        "name": "חיפה – חורב",
+        "ontime": 50,
+        "partial": 1,
+        "sum": 2125,
+      },
+      "id": "חיפה – חורב",
+      "orders": [
+        "#1004",
+        "#1007",
+        "#1014",
+        "#1018",
+      ],
+    },
+  ],
+  "totals": {
+    "avg": 466,
+    "cancelled": 3,
+    "cluster": "סה"כ",
+    "count": 24,
+    "late": 3,
+    "lateMajor": 1,
+    "name": "",
+    "ontime": 63,
+    "partial": 1,
+    "sum": 11195,
+  },
+}
+`;
+
+exports[`דוחות > דוח credit 1`] = `
+{
+  "cols": [],
+  "rows": [],
+}
+`;
+
+exports[`דוחות > דוח customers 1`] = `
+{
+  "chart": {
+    "kind": "category",
+    "labelKey": "name",
+    "money": true,
+    "title": "סך לפי לקוח",
+    "valueKey": "sum",
+  },
+  "cols": [
+    {
+      "key": "name",
+      "label": "לקוח",
+    },
+    {
+      "key": "count",
+      "kind": "num",
+      "label": "הזמנות",
+    },
+    {
+      "key": "sum",
+      "kind": "money",
+      "label": "סך",
+    },
+    {
+      "key": "avg",
+      "kind": "money",
+      "label": "ממוצע",
+    },
+    {
+      "key": "share",
+      "kind": "pct",
+      "label": "חלק מהסך",
+    },
+    {
+      "key": "last",
+      "kind": "date",
+      "label": "הזמנה אחרונה",
+    },
+  ],
+  "rows": [
+    {
+      "cells": {
+        "avg": 990,
+        "count": 1,
+        "last": "2026-11-18",
+        "name": "לקוח דמה 1006",
+        "share": 8.8,
+        "sum": 990,
+      },
+      "id": "לקוח דמה 1006",
+      "orders": [
+        "#1006",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 800,
+        "count": 1,
+        "last": "2026-10-14",
+        "name": "לקוח דמה 1014",
+        "share": 7.1,
+        "sum": 800,
+      },
+      "id": "לקוח דמה 1014",
+      "orders": [
+        "#1014",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 750,
+        "count": 1,
+        "last": "2026-11-26",
+        "name": "לקוח דמה 1002",
+        "share": 6.7,
+        "sum": 750,
+      },
+      "id": "לקוח דמה 1002",
+      "orders": [
+        "#1002",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 670,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח דמה 1001",
+        "share": 6,
+        "sum": 670,
+      },
+      "id": "לקוח דמה 1001",
+      "orders": [
+        "#1001",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 600,
+        "count": 1,
+        "last": "2026-11-26",
+        "name": "לקוח דמה 1003",
+        "share": 5.4,
+        "sum": 600,
+      },
+      "id": "לקוח דמה 1003",
+      "orders": [
+        "#1003",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 600,
+        "count": 1,
+        "last": "2026-11-26",
+        "name": "לקוח דמה 1013",
+        "share": 5.4,
+        "sum": 600,
+      },
+      "id": "לקוח דמה 1013",
+      "orders": [
+        "#1013",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 550,
+        "count": 1,
+        "last": "2026-11-19",
+        "name": "לקוח דמה 1007",
+        "share": 4.9,
+        "sum": 550,
+      },
+      "id": "לקוח דמה 1007",
+      "orders": [
+        "#1007",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 550,
+        "count": 1,
+        "last": "2026-11-12",
+        "name": "לקוח דמה 1023",
+        "share": 4.9,
+        "sum": 550,
+      },
+      "id": "לקוח דמה 1023",
+      "orders": [
+        "#1023",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 500,
+        "count": 1,
+        "last": "2026-11-26",
+        "name": "לקוח דמה 1004",
+        "share": 4.5,
+        "sum": 500,
+      },
+      "id": "לקוח דמה 1004",
+      "orders": [
+        "#1004",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 500,
+        "count": 1,
+        "last": "2026-11-26",
+        "name": "לקוח דמה 1015",
+        "share": 4.5,
+        "sum": 500,
+      },
+      "id": "לקוח דמה 1015",
+      "orders": [
+        "#1015",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 480,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח דמה 1005",
+        "share": 4.3,
+        "sum": 480,
+      },
+      "id": "לקוח דמה 1005",
+      "orders": [
+        "#1005",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 470,
+        "count": 1,
+        "last": "2026-11-17",
+        "name": "לקוח דמה 1019",
+        "share": 4.2,
+        "sum": 470,
+      },
+      "id": "לקוח דמה 1019",
+      "orders": [
+        "#1019",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 440,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח דמה 1022",
+        "share": 3.9,
+        "sum": 440,
+      },
+      "id": "לקוח דמה 1022",
+      "orders": [
+        "#1022",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 420,
+        "count": 1,
+        "last": "2026-11-10",
+        "name": "לקוח דמה 1009",
+        "share": 3.8,
+        "sum": 420,
+      },
+      "id": "לקוח דמה 1009",
+      "orders": [
+        "#1009",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 400,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח דמה 1011",
+        "share": 3.6,
+        "sum": 400,
+      },
+      "id": "לקוח דמה 1011",
+      "orders": [
+        "#1011",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 400,
+        "count": 1,
+        "last": "2026-11-26",
+        "name": "לקוח ישן מאוד",
+        "share": 3.6,
+        "sum": 400,
+      },
+      "id": "לקוח ישן מאוד",
+      "orders": [
+        "#1101",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 360,
+        "count": 1,
+        "last": "2026-11-05",
+        "name": "לקוח דמה 1017",
+        "share": 3.2,
+        "sum": 360,
+      },
+      "id": "לקוח דמה 1017",
+      "orders": [
+        "#1017",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 330,
+        "count": 1,
+        "last": "2026-11-24",
+        "name": "לקוח דמה 1016",
+        "share": 2.9,
+        "sum": 330,
+      },
+      "id": "לקוח דמה 1016",
+      "orders": [
+        "#1016",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 330,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח דמה 1024",
+        "share": 2.9,
+        "sum": 330,
+      },
+      "id": "לקוח דמה 1024",
+      "orders": [
+        "#1024",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 310,
+        "count": 1,
+        "last": "2026-11-26",
+        "name": "לקוח דמה 1010",
+        "share": 2.8,
+        "sum": 310,
+      },
+      "id": "לקוח דמה 1010",
+      "orders": [
+        "#1010",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 275,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח דמה 1018",
+        "share": 2.5,
+        "sum": 275,
+      },
+      "id": "לקוח דמה 1018",
+      "orders": [
+        "#1018",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 250,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח בלי סניף",
+        "share": 2.2,
+        "sum": 250,
+      },
+      "id": "לקוח בלי סניף",
+      "orders": [
+        "#1102",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 220,
+        "count": 1,
+        "last": "2026-11-25",
+        "name": "לקוח דמה 1012",
+        "share": 2,
+        "sum": 220,
+      },
+      "id": "לקוח דמה 1012",
+      "orders": [
+        "#1012",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 0,
+        "count": 1,
+        "last": "2026-11-03",
+        "name": "לקוח מינימלי",
+        "share": 0,
+        "sum": 0,
+      },
+      "id": "לקוח מינימלי",
+      "orders": [
+        "#1103",
+      ],
+    },
+  ],
+  "totals": {
+    "avg": 466,
+    "count": 24,
+    "last": "",
+    "name": "סה"כ",
+    "share": 100,
+    "sum": 11195,
+  },
+}
+`;
+
+exports[`דוחות > דוח period 1`] = `
+{
+  "cols": [],
+  "rows": [],
+}
+`;
+
+exports[`דוחות > דוח summary 1`] = `
+{
+  "cols": [
+    {
+      "key": "date",
+      "kind": "date",
+      "label": "תאריך",
+    },
+    {
+      "key": "time",
+      "kind": "date",
+      "label": "שעה",
+    },
+    {
+      "key": "id",
+      "kind": "num",
+      "label": "מס' הזמנה",
+    },
+    {
+      "key": "customer",
+      "label": "לקוח",
+    },
+    {
+      "key": "branch",
+      "label": "סניף",
+    },
+    {
+      "key": "cluster",
+      "label": "אשכול",
+    },
+    {
+      "key": "channel",
+      "label": "ערוץ",
+    },
+    {
+      "key": "handler",
+      "label": "מטפל",
+    },
+    {
+      "key": "items",
+      "label": "פריטים",
+    },
+    {
+      "key": "amount",
+      "kind": "money",
+      "label": "לחיוב",
+    },
+    {
+      "key": "q",
+      "kind": "date",
+      "label": "מס' Q",
+    },
+    {
+      "key": "qAmount",
+      "kind": "money",
+      "label": "סכום Q",
+    },
+    {
+      "key": "method",
+      "label": "אמצעי תשלום",
+    },
+    {
+      "key": "payment",
+      "label": "תשלום",
+    },
+    {
+      "key": "outcome",
+      "label": "סטטוס אספקה",
+    },
+    {
+      "key": "lateMin",
+      "kind": "num",
+      "label": "דקות איחור",
+    },
+    {
+      "key": "reason",
+      "label": "סיבה / מה סופק",
+    },
+    {
+      "key": "po",
+      "kind": "date",
+      "label": "תעודת רכש",
+    },
+    {
+      "key": "notes",
+      "label": "הערות",
+    },
+  ],
+  "kpis": [
+    {
+      "label": "הזמנות",
+      "sub": "+ 3 בוטלו",
+      "value": 24,
+    },
+    {
+      "label": "סך (לפי Q)",
+      "money": true,
+      "value": 11195,
+    },
+    {
+      "label": "סופקו בזמן",
+      "sub": "63%",
+      "value": 5,
+    },
+    {
+      "alert": true,
+      "label": "סופקו באיחור",
+      "sub": "עד 15: 1 · מעל 15: 1 · בלי דקות: 1 · ממוצע 20 דק'",
+      "value": 3,
+    },
+    {
+      "alert": true,
+      "label": "מתוכן חלקית",
+      "value": 1,
+    },
+    {
+      "alert": true,
+      "label": "בוטלו",
+      "value": 3,
+    },
+    {
+      "label": "עדיין פתוחות",
+      "value": 16,
+    },
+  ],
+  "note": ""סופקו בזמן" – הזמנות שסופקו (מלא או חלקי) בלי איחור, מתוך כל ההזמנות שסופקו. כל איחור נספר כאיחור; הפיצול – עד 15 דקות / מעל 15 דקות (לפי מה שנרשם בסגירה) · 13 הזמנות בלי סכום Q – בסה"כ נלקח במקומן הסכום לחיוב",
+  "rows": [
+    {
+      "cells": {
+        "amount": 800,
+        "branch": "חיפה – חורב",
+        "channel": "טלפון",
+        "cluster": "צפון",
+        "customer": "לקוח דמה 1014",
+        "date": "14.10.2026",
+        "handler": "נציג א",
+        "id": 1014,
+        "items": "פיצות (10): 10 וולקנו — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "סופקה",
+        "payment": "שולם",
+        "po": "",
+        "q": "cs200",
+        "qAmount": 800,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1014",
+      "orders": [
+        "#1014",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 0,
+        "branch": undefined,
+        "channel": "",
+        "cluster": undefined,
+        "customer": "לקוח מינימלי",
+        "date": "03.11.2026",
+        "handler": "",
+        "id": 1103,
+        "items": "",
+        "lateMin": "",
+        "method": undefined,
+        "notes": "",
+        "outcome": "סופקה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": undefined,
+      },
+      "id": "1103",
+      "orders": [
+        "#1103",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 360,
+        "branch": "רמת גן – ביאליק",
+        "channel": "",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1017",
+        "date": "05.11.2026",
+        "handler": "נציג א",
+        "id": 1017,
+        "items": "פיצות (6): 6 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "סופקה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs250",
+        "qAmount": 360,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1017",
+      "orders": [
+        "#1017",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 420,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1009",
+        "date": "10.11.2026",
+        "handler": "נציג א",
+        "id": 1009,
+        "items": "ליד הפיצה (3): 3 לחם שום — לחם שום | אחר (5): 4 פיצה משפחתית L · רמה 2 — זיתים ; 1 מגש פירות — בלי אננס",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "סופקה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs300",
+        "qAmount": 420,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1009",
+      "orders": [
+        "#1009",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 550,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1023",
+        "date": "12.11.2026",
+        "handler": "נציג א",
+        "id": 1023,
+        "items": "פיצות (10): 10 משפחתית — ללא תוספת",
+        "lateMin": 15,
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "סופקה באיחור",
+        "payment": "שולם",
+        "po": "",
+        "q": "cs310",
+        "qAmount": 550,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1023",
+      "orders": [
+        "#1023",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 200,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1020",
+        "date": "16.11.2026",
+        "handler": "נציג א",
+        "id": 1020,
+        "items": "",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "בוטלה",
+        "payment": "בוטל",
+        "po": "",
+        "q": "cs338",
+        "qAmount": 200,
+        "reason": "הלקוח ביטל",
+        "time": "12:30",
+      },
+      "id": "1020",
+      "orders": [
+        "#1020",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 500,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1019",
+        "date": "17.11.2026",
+        "handler": "נציג א",
+        "id": 1019,
+        "items": "פיצות (9): 9 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "סופקה",
+        "payment": "שולם",
+        "po": "",
+        "q": "cs340",
+        "qAmount": 470,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1019",
+      "orders": [
+        "#1019",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 990,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1006",
+        "date": "18.11.2026",
+        "handler": "נציג א",
+        "id": 1006,
+        "items": "פיצות (18): 18 משפחתית — ללא תוספת",
+        "lateMin": 25,
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "סופקה באיחור",
+        "payment": "שולם",
+        "po": "",
+        "q": "cs350",
+        "qAmount": 990,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1006",
+      "orders": [
+        "#1006",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 660,
+        "branch": "חיפה – חורב",
+        "channel": "טלפון",
+        "cluster": "צפון",
+        "customer": "לקוח דמה 1007",
+        "date": "19.11.2026",
+        "handler": "נציג א",
+        "id": 1007,
+        "items": "פיצות (12): 12 אקסטרה — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "חלקית, באיחור",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs351",
+        "qAmount": 550,
+        "reason": "חסרו 2 פיצות",
+        "time": "12:30",
+      },
+      "id": "1007",
+      "orders": [
+        "#1007",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 300,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1008",
+        "date": "21.11.2026",
+        "handler": "נציג א",
+        "id": 1008,
+        "items": "פיצות (5): 5 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "בוטלה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs360",
+        "qAmount": 300,
+        "reason": "הלקוח ביטל",
+        "time": "12:30",
+      },
+      "id": "1008",
+      "orders": [
+        "#1008",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 330,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1016",
+        "date": "24.11.2026",
+        "handler": "נציג א",
+        "id": 1016,
+        "items": "פיצות (6): 6 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "13:00",
+      },
+      "id": "1016",
+      "orders": [
+        "#1016",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 275,
+        "branch": "חיפה – חורב",
+        "channel": "טלפון",
+        "cluster": "צפון",
+        "customer": "לקוח דמה 1018",
+        "date": "25.11.2026",
+        "handler": "נציג א",
+        "id": 1018,
+        "items": "פיצות (5): 5 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "אשראי",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "11:30",
+      },
+      "id": "1018",
+      "orders": [
+        "#1018",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 670,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1001",
+        "date": "25.11.2026",
+        "handler": "נציג א",
+        "id": 1001,
+        "items": "פיצות (10): 10 משפחתית — זיתים, פטריות | משקאות (10): 10 שתייה 1.5 ל׳",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "לחתוך ל-12 משולשים",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1001",
+      "orders": [
+        "#1001",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 495,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1005",
+        "date": "25.11.2026",
+        "handler": "נציג א",
+        "id": 1005,
+        "items": "פיצות (9): 9 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs402",
+        "qAmount": 480,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1005",
+      "orders": [
+        "#1005",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 400,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1011",
+        "date": "25.11.2026",
+        "handler": "נציג א",
+        "id": 1011,
+        "items": "פיצות (7): 7 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1011",
+      "orders": [
+        "#1011",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 250,
+        "branch": undefined,
+        "channel": "",
+        "cluster": undefined,
+        "customer": "לקוח בלי סניף",
+        "date": "25.11.2026",
+        "handler": "",
+        "id": 1102,
+        "items": "4× פיצה משפחתית",
+        "lateMin": "",
+        "method": "מזומן",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "13:00",
+      },
+      "id": "1102",
+      "orders": [
+        "#1102",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 440,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1022",
+        "date": "25.11.2026",
+        "handler": "נציג א",
+        "id": 1022,
+        "items": "פיצות (8): 8 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "לקוח חדש מהמחלקה",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "14:00",
+      },
+      "id": "1022",
+      "orders": [
+        "#1022",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 330,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1024",
+        "date": "25.11.2026",
+        "handler": "נציג א",
+        "id": 1024,
+        "items": "פיצות (6): 6 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs420",
+        "qAmount": 330,
+        "reason": "",
+        "time": "15:00",
+      },
+      "id": "1024",
+      "orders": [
+        "#1024",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 220,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1012",
+        "date": "25.11.2026",
+        "handler": "נציג א",
+        "id": 1012,
+        "items": "פיצות (7): 7 אישית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "18:00",
+      },
+      "id": "1012",
+      "orders": [
+        "#1012",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 500,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1015",
+        "date": "26.11.2026",
+        "handler": "נציג א",
+        "id": 1015,
+        "items": "פיצות (9): 9 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "אחר – העברה בנקאית",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "09:30",
+      },
+      "id": "1015",
+      "orders": [
+        "#1015",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 400,
+        "branch": undefined,
+        "channel": "",
+        "cluster": undefined,
+        "customer": "לקוח ישן מאוד",
+        "date": "26.11.2026",
+        "handler": "",
+        "id": 1101,
+        "items": "8 משפחתיות",
+        "lateMin": "",
+        "method": undefined,
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "12:00",
+      },
+      "id": "1101",
+      "orders": [
+        "#1101",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 750,
+        "branch": "רמת גן – ביאליק",
+        "channel": "וואטסאפ 4512",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1002",
+        "date": "26.11.2026",
+        "handler": "נציג א",
+        "id": 1002,
+        "items": "12 משפחתיות, 6 שתייה",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1002",
+      "orders": [
+        "#1002",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 600,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1003",
+        "date": "26.11.2026",
+        "handler": "נציג א",
+        "id": 1003,
+        "items": "פיצות (20): 20 אישית — ללא תוספת",
+        "lateMin": "",
+        "method": "אשראי",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1003",
+      "orders": [
+        "#1003",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 500,
+        "branch": "חיפה – חורב",
+        "channel": "טלפון",
+        "cluster": "צפון",
+        "customer": "לקוח דמה 1004",
+        "date": "26.11.2026",
+        "handler": "נציג א",
+        "id": 1004,
+        "items": "פיצות (8): 8 משפחתית דקה — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs401",
+        "qAmount": 500,
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1004",
+      "orders": [
+        "#1004",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 310,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1010",
+        "date": "26.11.2026",
+        "handler": "נציג א",
+        "id": 1010,
+        "items": "פיצות (4): 4 משפחתית — 2 חצי-חצי: פפרוני | ללא · 2 רבעים: זיתים | פטריות, בצל | טונה | ללא | קינוחים (2): 2 סופלה",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "",
+        "time": "12:30",
+      },
+      "id": "1010",
+      "orders": [
+        "#1010",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 300,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1021",
+        "date": "26.11.2026",
+        "handler": "נציג א",
+        "id": 1021,
+        "items": "",
+        "lateMin": "",
+        "method": "אשראי",
+        "notes": "",
+        "outcome": "בוטלה",
+        "payment": "חיוב נכשל",
+        "po": "",
+        "q": "",
+        "qAmount": "",
+        "reason": "כפילות · נפתחה פעמיים",
+        "time": "12:30",
+      },
+      "id": "1021",
+      "orders": [
+        "#1021",
+      ],
+    },
+    {
+      "cells": {
+        "amount": 650,
+        "branch": "רמת גן – ביאליק",
+        "channel": "טלפון",
+        "cluster": "מרכז",
+        "customer": "לקוח דמה 1013",
+        "date": "26.11.2026",
+        "handler": "נציג א",
+        "id": 1013,
+        "items": "פיצות (10): 10 משפחתית — ללא תוספת",
+        "lateMin": "",
+        "method": "הקפה",
+        "notes": "",
+        "outcome": "פתוחה",
+        "payment": "ממתין לתשלום",
+        "po": "",
+        "q": "cs410",
+        "qAmount": 600,
+        "reason": "",
+        "time": "13:00",
+      },
+      "id": "1013",
+      "orders": [
+        "#1013",
+      ],
+    },
+  ],
+  "totals": {
+    "amount": 11400,
+    "customer": "24 הזמנות · 3 בוטלו",
+    "date": "סה"כ",
+    "id": "",
+    "lateMin": "",
+    "outcome": "5 בזמן · 3 באיחור · מתוכן 1 חלקית",
+    "qAmount": 11195,
+  },
+}
+`;
+
+exports[`דוחות > דוח team 1`] = `
+{
+  "chart": {
+    "kind": "category",
+    "labelKey": "name",
+    "title": "הזמנות לפי עובד",
+    "valueKey": "count",
+  },
+  "cols": [
+    {
+      "key": "name",
+      "label": "עובד",
+    },
+    {
+      "key": "count",
+      "kind": "num",
+      "label": "הזמנות",
+    },
+    {
+      "key": "sum",
+      "kind": "money",
+      "label": "סך",
+    },
+    {
+      "key": "avg",
+      "kind": "money",
+      "label": "ממוצע",
+    },
+    {
+      "key": "late",
+      "kind": "num",
+      "label": "באיחור",
+    },
+    {
+      "key": "lateMajor",
+      "kind": "num",
+      "label": "מתוכם מעל 15 דק'",
+    },
+    {
+      "key": "partial",
+      "kind": "num",
+      "label": "מתוכן חלקית",
+    },
+    {
+      "key": "cancelled",
+      "kind": "num",
+      "label": "בוטלו",
+    },
+  ],
+  "rows": [
+    {
+      "cells": {
+        "avg": 502,
+        "cancelled": 3,
+        "count": 21,
+        "late": 3,
+        "lateMajor": 1,
+        "name": "נציג א",
+        "partial": 1,
+        "sum": 10545,
+      },
+      "id": "נציג א",
+      "orders": [
+        "#1001",
+        "#1002",
+        "#1003",
+        "#1004",
+        "#1005",
+        "#1006",
+        "#1007",
+        "#1008",
+        "#1009",
+        "#1010",
+        "#1011",
+        "#1012",
+        "#1013",
+        "#1014",
+        "#1015",
+        "#1016",
+        "#1017",
+        "#1018",
+        "#1019",
+        "#1020",
+        "#1021",
+        "#1022",
+        "#1023",
+        "#1024",
+      ],
+    },
+    {
+      "cells": {
+        "avg": 217,
+        "cancelled": 0,
+        "count": 3,
+        "late": 0,
+        "lateMajor": 0,
+        "name": "—",
+        "partial": 0,
+        "sum": 650,
+      },
+      "id": "—",
+      "orders": [
+        "#1101",
+        "#1102",
+        "#1103",
+      ],
+    },
+  ],
+  "totals": {
+    "avg": 466,
+    "cancelled": 3,
+    "count": 24,
+    "late": 3,
+    "lateMajor": 1,
+    "name": "סה"כ",
+    "partial": 1,
+    "sum": 11195,
+  },
+}
+`;
+
+exports[`דוחות > סגירת חודש 1`] = `
+{
+  "byCustomer": [
+    {
+      "count": 1,
+      "name": "לקוח דמה 1006",
+      "sum": 990,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1002",
+      "sum": 750,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1001",
+      "sum": 670,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1003",
+      "sum": 600,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1013",
+      "sum": 600,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1007",
+      "sum": 550,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1023",
+      "sum": 550,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1004",
+      "sum": 500,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1015",
+      "sum": 500,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1005",
+      "sum": 480,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1019",
+      "sum": 470,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1022",
+      "sum": 440,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1009",
+      "sum": 420,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1011",
+      "sum": 400,
+    },
+    {
+      "count": 1,
+      "name": "לקוח ישן מאוד",
+      "sum": 400,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1017",
+      "sum": 360,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1016",
+      "sum": 330,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1024",
+      "sum": 330,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1010",
+      "sum": 310,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1018",
+      "sum": 275,
+    },
+    {
+      "count": 1,
+      "name": "לקוח בלי סניף",
+      "sum": 250,
+    },
+    {
+      "count": 1,
+      "name": "לקוח דמה 1012",
+      "sum": 220,
+    },
+    {
+      "count": 1,
+      "name": "לקוח מינימלי",
+      "sum": 0,
+    },
+  ],
+  "byMethod": {
+    "account": {
+      "count": 17,
+      "sum": 8370,
+    },
+    "cash": {
+      "count": 1,
+      "sum": 250,
+    },
+    "credit": {
+      "count": 2,
+      "sum": 875,
+    },
+    "other": {
+      "count": 1,
+      "sum": 500,
+    },
+    "undefined": {
+      "count": 2,
+      "sum": 400,
+    },
+  },
+  "byOutcome": {
+    "cancelled": 3,
+    "late": 2,
+    "ontime": 4,
+    "open": 16,
+    "partial": 1,
+  },
+  "cancelled": 3,
+  "count": 23,
+  "onTime": {
+    "delivered": 7,
+    "late": 3,
+    "lateMajor": 1,
+    "lateMinor": 1,
+    "lateUnknown": 1,
+    "onTime": 4,
+    "partial": 1,
+    "split": 15,
+  },
+  "sum": 10395,
+}
+`;
+
+exports[`דוחות > סגירת חודש 2`] = `
+{
+  "byCustomer": [
+    {
+      "count": 1,
+      "name": "לקוח דמה 1014",
+      "sum": 800,
+    },
+  ],
+  "byMethod": {
+    "account": {
+      "count": 1,
+      "sum": 800,
+    },
+  },
+  "byOutcome": {
+    "ontime": 1,
+  },
+  "cancelled": 0,
+  "count": 1,
+  "onTime": {
+    "delivered": 1,
+    "late": 0,
+    "lateMajor": 0,
+    "lateMinor": 0,
+    "lateUnknown": 0,
+    "onTime": 1,
+    "partial": 0,
+    "split": 15,
+  },
+  "sum": 800,
+}
+`;
+
+exports[`דוחות > סיכום תקופה 1`] = `
+{
+  "cols": [
+    {
+      "kind": "date",
+      "label": "תאריך",
+      "width": 12,
+    },
+    {
+      "kind": "code",
+      "label": "שעה",
+      "width": 8,
+    },
+    {
+      "kind": "id",
+      "label": "מס' הזמנה",
+      "width": 11,
+    },
+    {
+      "kind": "text",
+      "label": "לקוח",
+      "width": 28,
+    },
+    {
+      "kind": "text",
+      "label": "סניף",
+      "width": 20,
+    },
+    {
+      "kind": "text",
+      "label": "אשכול",
+      "width": 18,
+    },
+    {
+      "kind": "text",
+      "label": "ערוץ",
+      "width": 12,
+    },
+    {
+      "kind": "num",
+      "label": "פריטים",
+      "width": 9,
+    },
+    {
+      "kind": "code",
+      "label": "מס' Q",
+      "width": 12,
+    },
+    {
+      "kind": "money",
+      "label": "סכום Q",
+      "width": 12,
+    },
+    {
+      "kind": "text",
+      "label": "אמצעי תשלום",
+      "width": 13,
+    },
+    {
+      "kind": "text",
+      "label": "סטטוס",
+      "width": 20,
+    },
+    {
+      "kind": "num",
+      "label": "דקות איחור",
+      "width": 11,
+    },
+  ],
+  "id": "orders",
+  "ids": [
+    1014,
+    1103,
+    1017,
+    1009,
+    1023,
+    1020,
+    1019,
+    1006,
+    1007,
+    1008,
+    1016,
+    1018,
+    1001,
+    1005,
+    1011,
+    1102,
+    1022,
+    1024,
+    1012,
+    1015,
+    1101,
+    1002,
+    1003,
+    1004,
+    1010,
+    1021,
+    1013,
+  ],
+  "note": "הזמנות שבוטלו מופיעות ברשימה ולא נספרות בסה"כ (3)",
+  "rows": [
+    [
+      "2026-10-14",
+      "12:30",
+      1014,
+      "לקוח דמה 1014",
+      "חיפה – חורב",
+      "צפון",
+      "טלפון",
+      10,
+      "cs200",
+      800,
+      "הקפה",
+      "סופקה",
+      null,
+    ],
+    [
+      "2026-11-03",
+      null,
+      1103,
+      "לקוח מינימלי",
+      undefined,
+      null,
+      null,
+      null,
+      null,
+      null,
+      undefined,
+      "סופקה",
+      null,
+    ],
+    [
+      "2026-11-05",
+      "12:30",
+      1017,
+      "לקוח דמה 1017",
+      "רמת גן – ביאליק",
+      "מרכז",
+      null,
+      6,
+      "cs250",
+      360,
+      "הקפה",
+      "סופקה",
+      null,
+    ],
+    [
+      "2026-11-10",
+      "12:30",
+      1009,
+      "לקוח דמה 1009",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      8,
+      "cs300",
+      420,
+      "הקפה",
+      "סופקה",
+      null,
+    ],
+    [
+      "2026-11-12",
+      "12:30",
+      1023,
+      "לקוח דמה 1023",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      10,
+      "cs310",
+      550,
+      "הקפה",
+      "סופקה באיחור",
+      15,
+    ],
+    [
+      "2026-11-16",
+      "12:30",
+      1020,
+      "לקוח דמה 1020",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      null,
+      "cs338",
+      200,
+      "הקפה",
+      "בוטלה",
+      null,
+    ],
+    [
+      "2026-11-17",
+      "12:30",
+      1019,
+      "לקוח דמה 1019",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      9,
+      "cs340",
+      470,
+      "הקפה",
+      "סופקה",
+      null,
+    ],
+    [
+      "2026-11-18",
+      "12:30",
+      1006,
+      "לקוח דמה 1006",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      18,
+      "cs350",
+      990,
+      "הקפה",
+      "סופקה באיחור",
+      25,
+    ],
+    [
+      "2026-11-19",
+      "12:30",
+      1007,
+      "לקוח דמה 1007",
+      "חיפה – חורב",
+      "צפון",
+      "טלפון",
+      12,
+      "cs351",
+      550,
+      "הקפה",
+      "חלקית, באיחור",
+      "לא צוין",
+    ],
+    [
+      "2026-11-21",
+      "12:30",
+      1008,
+      "לקוח דמה 1008",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      5,
+      "cs360",
+      300,
+      "הקפה",
+      "בוטלה",
+      null,
+    ],
+    [
+      "2026-11-24",
+      "13:00",
+      1016,
+      "לקוח דמה 1016",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      6,
+      null,
+      null,
+      "הקפה",
+      "ממתין לעדכון בתפעול",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "11:30",
+      1018,
+      "לקוח דמה 1018",
+      "חיפה – חורב",
+      "צפון",
+      "טלפון",
+      5,
+      null,
+      null,
+      "אשראי",
+      "ממתין לאישור לקוח",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "12:30",
+      1001,
+      "לקוח דמה 1001",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      20,
+      null,
+      null,
+      "הקפה",
+      "מאושר",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "12:30",
+      1005,
+      "לקוח דמה 1005",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      9,
+      "cs402",
+      480,
+      "הקפה",
+      "הוקלד ל-Q",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "12:30",
+      1011,
+      "לקוח דמה 1011",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      7,
+      null,
+      null,
+      "הקפה",
+      "ממתין לעדכון בתפעול",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "13:00",
+      1102,
+      "לקוח בלי סניף",
+      undefined,
+      null,
+      null,
+      4,
+      null,
+      null,
+      "מזומן",
+      "ממתין לעדכון בתפעול",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "14:00",
+      1022,
+      "לקוח דמה 1022",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      8,
+      null,
+      null,
+      "הקפה",
+      "ממתין לעדכון בתפעול",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "15:00",
+      1024,
+      "לקוח דמה 1024",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      6,
+      "cs420",
+      330,
+      "הקפה",
+      "הוקלד ל-Q",
+      null,
+    ],
+    [
+      "2026-11-25",
+      "18:00",
+      1012,
+      "לקוח דמה 1012",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      7,
+      null,
+      null,
+      "הקפה",
+      "ממתין לעדכון בתפעול",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "09:30",
+      1015,
+      "לקוח דמה 1015",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      9,
+      null,
+      null,
+      "אחר – העברה בנקאית",
+      "ממתין לעדכון בתפעול",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "12:00",
+      1101,
+      "לקוח ישן מאוד",
+      undefined,
+      null,
+      null,
+      8,
+      null,
+      null,
+      undefined,
+      "ממתין לאישור לקוח",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "12:30",
+      1002,
+      "לקוח דמה 1002",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "וואטסאפ 4512",
+      18,
+      null,
+      null,
+      "הקפה",
+      "ממתין לאישור לקוח",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "12:30",
+      1003,
+      "לקוח דמה 1003",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      20,
+      null,
+      null,
+      "אשראי",
+      "ממתין לאישור לקוח",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "12:30",
+      1004,
+      "לקוח דמה 1004",
+      "חיפה – חורב",
+      "צפון",
+      "טלפון",
+      8,
+      "cs401",
+      500,
+      "הקפה",
+      "הוקלד ל-Q",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "12:30",
+      1010,
+      "לקוח דמה 1010",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      6,
+      null,
+      null,
+      "הקפה",
+      "ממתין לעדכון בתפעול",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "12:30",
+      1021,
+      "לקוח דמה 1021",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      null,
+      null,
+      null,
+      "אשראי",
+      "בוטלה",
+      null,
+    ],
+    [
+      "2026-11-26",
+      "13:00",
+      1013,
+      "לקוח דמה 1013",
+      "רמת גן – ביאליק",
+      "מרכז",
+      "טלפון",
+      10,
+      "cs410",
+      600,
+      "הקפה",
+      "הוקלד ל-Q",
+      null,
+    ],
+  ],
+  "title": "הזמנות",
+  "total": [
+    "סה"כ",
+    null,
+    null,
+    "24 הזמנות",
+    null,
+    null,
+    null,
+    null,
+    null,
+    11195,
+    null,
+    null,
+    null,
+  ],
+}
+`;
+
+exports[`דוחות > סיכום תקופה 2`] = `
+{
+  "kpis": [
+    {
+      "kind": "money",
+      "label": "הכנסות",
+      "value": 11195,
+    },
+    {
+      "kind": "num",
+      "label": "הזמנות",
+      "sub": "ועוד 3 שבוטלו",
+      "value": 24,
+    },
+    {
+      "kind": "money",
+      "label": "ממוצע להזמנה",
+      "value": 466,
+    },
+    {
+      "kind": "pct",
+      "label": "סופקו בזמן",
+      "sub": "מתוך 8 שסופקו",
+      "value": 0.625,
+    },
+    {
+      "kind": "num",
+      "label": "פיצות",
+      "value": 174,
+    },
+    {
+      "kind": "num",
+      "label": "לקוחות שהזמינו",
+      "value": 24,
+    },
+  ],
+  "tables": [
+    {
+      "cols": [
+        {
+          "kind": "date",
+          "label": "תאריך",
+          "width": 30,
+        },
+        {
+          "kind": "text",
+          "label": "יום",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "הזמנות",
+          "width": 14,
+        },
+        {
+          "kind": "money",
+          "label": "הכנסות",
+          "width": 16,
+        },
+        {
+          "kind": "num",
+          "label": "איחורים",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "בוטלו",
+          "width": 14,
+        },
+      ],
+      "id": "daily",
+      "rows": [
+        [
+          "2026-11-01",
+          "ראשון",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-02",
+          "שני",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-03",
+          "שלישי",
+          1,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-04",
+          "רביעי",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-05",
+          "חמישי",
+          1,
+          360,
+          0,
+          0,
+        ],
+        [
+          "2026-11-06",
+          "שישי",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-07",
+          "שבת",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-08",
+          "ראשון",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-09",
+          "שני",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-10",
+          "שלישי",
+          1,
+          420,
+          0,
+          0,
+        ],
+        [
+          "2026-11-11",
+          "רביעי",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-12",
+          "חמישי",
+          1,
+          550,
+          1,
+          0,
+        ],
+        [
+          "2026-11-13",
+          "שישי",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-14",
+          "שבת",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-15",
+          "ראשון",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-16",
+          "שני",
+          0,
+          0,
+          0,
+          1,
+        ],
+        [
+          "2026-11-17",
+          "שלישי",
+          1,
+          470,
+          0,
+          0,
+        ],
+        [
+          "2026-11-18",
+          "רביעי",
+          1,
+          990,
+          1,
+          0,
+        ],
+        [
+          "2026-11-19",
+          "חמישי",
+          1,
+          550,
+          1,
+          0,
+        ],
+        [
+          "2026-11-20",
+          "שישי",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-21",
+          "שבת",
+          0,
+          0,
+          0,
+          1,
+        ],
+        [
+          "2026-11-22",
+          "ראשון",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-23",
+          "שני",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-24",
+          "שלישי",
+          1,
+          330,
+          0,
+          0,
+        ],
+        [
+          "2026-11-25",
+          "רביעי",
+          8,
+          3065,
+          0,
+          0,
+        ],
+        [
+          "2026-11-26",
+          "חמישי",
+          7,
+          3660,
+          0,
+          1,
+        ],
+        [
+          "2026-11-27",
+          "שישי",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-28",
+          "שבת",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-29",
+          "ראשון",
+          0,
+          0,
+          0,
+          0,
+        ],
+        [
+          "2026-11-30",
+          "שני",
+          0,
+          0,
+          0,
+          0,
+        ],
+      ],
+      "title": "לפי יום",
+      "total": [
+        "סה"כ",
+        null,
+        24,
+        11195,
+        3,
+        3,
+      ],
+    },
+    {
+      "cols": [
+        {
+          "kind": "text",
+          "label": "סטטוס",
+          "width": 30,
+        },
+        {
+          "kind": "num",
+          "label": "הזמנות",
+          "width": 14,
+        },
+        {
+          "kind": "pct",
+          "label": "מתוך שסופקו",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "איחור ממוצע (דק')",
+          "width": 16,
+        },
+      ],
+      "id": "service",
+      "note": ""סופקו בזמן" – הזמנות שסופקו (מלא או חלקי) בלי איחור, מתוך כל ההזמנות שסופקו. כל איחור נספר כאיחור; הפיצול – עד 15 דקות / מעל 15 דקות (לפי מה שנרשם בסגירה)",
+      "rows": [
+        [
+          "סופקו בזמן",
+          5,
+          0.625,
+          null,
+        ],
+        [
+          "סופקו באיחור",
+          3,
+          0.375,
+          20,
+        ],
+        [
+          "  מתוכן איחור עד 15 דק'",
+          1,
+          0.125,
+          null,
+        ],
+        [
+          "  מתוכן איחור מעל 15 דק'",
+          1,
+          0.125,
+          null,
+        ],
+        [
+          "  מתוכן איחור בלי דקות",
+          1,
+          0.125,
+          null,
+        ],
+        [
+          "מתוכן סופקו חלקית",
+          1,
+          null,
+          null,
+        ],
+        [
+          "בוטלו",
+          3,
+          null,
+          null,
+        ],
+        [
+          "עדיין פתוחות",
+          16,
+          null,
+          null,
+        ],
+      ],
+      "title": "עמידה בזמנים",
+      "total": [
+        "סה"כ הזמנות",
+        27,
+        null,
+        null,
+      ],
+    },
+    {
+      "cols": [
+        {
+          "kind": "text",
+          "label": "סניף",
+          "width": 30,
+        },
+        {
+          "kind": "text",
+          "label": "אשכול",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "איחורים",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "מעל 15 דק'",
+          "width": 12,
+        },
+        {
+          "kind": "num",
+          "label": "מתוך שסופקו",
+          "width": 16,
+        },
+        {
+          "kind": "pct",
+          "label": "אחוז איחור",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "איחור ממוצע (דק')",
+          "width": 14,
+        },
+      ],
+      "id": "late",
+      "note": undefined,
+      "rows": [
+        [
+          "רמת גן – ביאליק",
+          "מרכז",
+          2,
+          1,
+          5,
+          0.4,
+          20,
+        ],
+        [
+          "חיפה – חורב",
+          "צפון",
+          1,
+          0,
+          2,
+          0.5,
+          null,
+        ],
+      ],
+      "title": "איפה היו איחורים",
+      "total": [
+        "סה"כ",
+        null,
+        3,
+        1,
+        8,
+        0.375,
+        20,
+      ],
+    },
+    {
+      "cols": [
+        {
+          "kind": "text",
+          "label": "לקוח",
+          "width": 30,
+        },
+        {
+          "kind": "money",
+          "label": "הכנסות",
+          "width": 14,
+        },
+        {
+          "kind": "pct",
+          "label": "מההכנסות",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "הזמנות",
+          "width": 16,
+        },
+        {
+          "kind": "pct",
+          "label": "סופקו בזמן",
+          "width": 14,
+        },
+      ],
+      "id": "customers",
+      "note": "לקוח דמה 1006 הוא הלקוח הגדול בתקופה, עם 9% מההכנסות",
+      "rows": [
+        [
+          "לקוח דמה 1006",
+          990,
+          0.0884323358642251,
+          1,
+          0,
+        ],
+        [
+          "לקוח דמה 1014",
+          800,
+          0.07146047342563644,
+          1,
+          1,
+        ],
+        [
+          "לקוח דמה 1002",
+          750,
+          0.06699419383653417,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1001",
+          670,
+          0.05984814649397052,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1003",
+          600,
+          0.053595355069227336,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1013",
+          600,
+          0.053595355069227336,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1007",
+          550,
+          0.04912907548012506,
+          1,
+          0,
+        ],
+        [
+          "לקוח דמה 1023",
+          550,
+          0.04912907548012506,
+          1,
+          0,
+        ],
+        [
+          "לקוח דמה 1004",
+          500,
+          0.044662795891022775,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1015",
+          500,
+          0.044662795891022775,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1005",
+          480,
+          0.042876284055381866,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1019",
+          470,
+          0.04198302813756141,
+          1,
+          1,
+        ],
+        [
+          "לקוח דמה 1022",
+          440,
+          0.03930326038410004,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1009",
+          420,
+          0.037516748548459135,
+          1,
+          1,
+        ],
+        [
+          "לקוח דמה 1011",
+          400,
+          0.03573023671281822,
+          1,
+          null,
+        ],
+        [
+          "לקוח ישן מאוד",
+          400,
+          0.03573023671281822,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1017",
+          360,
+          0.0321572130415364,
+          1,
+          1,
+        ],
+        [
+          "לקוח דמה 1016",
+          330,
+          0.029477445288075034,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1024",
+          330,
+          0.029477445288075034,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1010",
+          310,
+          0.027690933452434122,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1018",
+          275,
+          0.02456453774006253,
+          1,
+          null,
+        ],
+        [
+          "לקוח בלי סניף",
+          250,
+          0.022331397945511387,
+          1,
+          null,
+        ],
+        [
+          "לקוח דמה 1012",
+          220,
+          0.01965163019205002,
+          1,
+          null,
+        ],
+        [
+          "לקוח מינימלי",
+          0,
+          0,
+          1,
+          1,
+        ],
+      ],
+      "title": "לקוחות",
+      "total": [
+        "סה"כ",
+        11195,
+        1,
+        24,
+        0.625,
+      ],
+    },
+    {
+      "cols": [
+        {
+          "kind": "text",
+          "label": "אשכול",
+          "width": 30,
+        },
+        {
+          "kind": "money",
+          "label": "הכנסות",
+          "width": 14,
+        },
+        {
+          "kind": "pct",
+          "label": "מההכנסות",
+          "width": 14,
+        },
+        {
+          "kind": "num",
+          "label": "הזמנות",
+          "width": 16,
+        },
+        {
+          "kind": "pct",
+          "label": "סופקו בזמן",
+          "width": 14,
+        },
+      ],
+      "id": "clusters",
+      "rows": [
+        [
+          "מרכז",
+          8420,
+          0.7521214828048236,
+          17,
+          0.6,
+        ],
+        [
+          "צפון",
+          2125,
+          0.1898168825368468,
+          4,
+          0.5,
+        ],
+        [
+          "—",
+          650,
+          0.058061634658329614,
+          3,
+          1,
+        ],
+      ],
+      "title": "אשכולות",
+      "total": [
+        "סה"כ",
+        11195,
+        1,
+        24,
+        0.625,
+      ],
+    },
+    {
+      "cols": [
+        {
+          "kind": "text",
+          "label": "סניף",
+          "width": 30,
+        },
+        {
+          "kind": "text",
+          "label": "אשכול",
+          "width": 14,
+        },
+        {
+          "kind": "money",
+          "label": "הכנסות",
+          "width": 14,
+        },
+        {
+          "kind": "pct",
+          "label": "מההכנסות",
+          "width": 16,
+        },
+        {
+          "kind": "num",
+          "label": "הזמנות",
+          "width": 14,
+        },
+        {
+          "kind": "pct",
+          "label": "סופקו בזמן",
+          "width": 14,
+        },
+      ],
+      "id": "branches",
+      "rows": [
+        [
+          "רמת גן – ביאליק",
+          "מרכז",
+          8420,
+          0.7521214828048236,
+          17,
+          0.6,
+        ],
+        [
+          "חיפה – חורב",
+          "צפון",
+          2125,
+          0.1898168825368468,
+          4,
+          0.5,
+        ],
+        [
+          "—",
+          "—",
+          650,
+          0.058061634658329614,
+          3,
+          1,
+        ],
+      ],
+      "title": "סניפים",
+      "total": [
+        "סה"כ",
+        null,
+        11195,
+        1,
+        24,
+        0.625,
+      ],
+    },
+  ],
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1031 1`] = `
+{
+  "expired": false,
+  "followup": false,
+  "sorted": [
+    "משפחתית",
+    "שתייה",
+  ],
+  "stale": null,
+  "status": "טיוטה",
+  "total": 1220,
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1032 1`] = `
+{
+  "expired": false,
+  "followup": true,
+  "sorted": [
+    "משפחתית",
+    "שתייה",
+  ],
+  "stale": 48,
+  "status": "נשלחה – ממתינה לתשובה",
+  "total": 1220,
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1033 1`] = `
+{
+  "expired": false,
+  "followup": false,
+  "sorted": [
+    "משפחתית",
+    "שתייה",
+  ],
+  "stale": 2,
+  "status": "אין מענה",
+  "total": 1220,
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1034 1`] = `
+{
+  "expired": true,
+  "followup": false,
+  "sorted": [
+    "משפחתית",
+    "שתייה",
+  ],
+  "stale": null,
+  "status": "נשלחה – ממתינה לתשובה",
+  "total": 1220,
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1035 1`] = `
+{
+  "expired": false,
+  "followup": false,
+  "sorted": [
+    "משפחתית",
+    "שתייה",
+  ],
+  "stale": null,
+  "status": "אושרה",
+  "total": 1220,
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1036 1`] = `
+{
+  "expired": false,
+  "followup": false,
+  "sorted": [
+    "משפחתית",
+    "שתייה",
+  ],
+  "stale": null,
+  "status": "נדחתה",
+  "total": 1220,
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1037 1`] = `
+{
+  "expired": false,
+  "followup": false,
+  "sorted": [
+    "משפחתית",
+    "שתייה",
+  ],
+  "stale": null,
+  "status": "הפכה להזמנה",
+  "total": 1220,
+}
+`;
+
+exports[`הצעות מחיר > הצעה 1038 1`] = `
+{
+  "expired": false,
+  "followup": true,
+  "sorted": [
+    "אישית",
+    "שתייה",
+  ],
+  "stale": 24,
+  "status": "נשלחה – ממתינה לתשובה",
+  "total": 151.5,
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1001 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+    "משקאות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 10,
+      "types": [
+        "10 משפחתית — זיתים, פטריות",
+      ],
+    },
+    {
+      "category": "משקאות",
+      "qty": 10,
+      "types": [
+        "10 שתייה 1.5 ל׳",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [],
+  "itemsText": "פיצות (10): 10 משפחתית — זיתים, פטריות | משקאות (10): 10 שתייה 1.5 ל׳",
+  "lane": "todo",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1001 · לקוח דמה 1001
+רביעי 25.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 10: 10 משפחתית — זיתים, פטריות
+משקאות 10: 10 שתייה 1.5 ל׳
+הערות: לחתוך ל-12 משולשים
+סכום: ₪670",
+  "sig": "2:1urjkej",
+  "stage": "approved",
+  "status": "הלקוח אישר",
+  "statusText": "מאושר",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1002 1`] = `
+{
+  "awaitingCustomer": true,
+  "categories": [],
+  "close": "ממתין לאישור לקוח",
+  "groups": [],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+    {
+      "action": "status",
+      "actionLabel": "הלקוח אישר",
+      "label": "אין אישור לקוח",
+      "rule": 6,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "",
+  "lane": "customer",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1002 · לקוח דמה 1002
+חמישי 26.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+12 משפחתיות, 6 שתייה
+סכום: ₪750",
+  "sig": "2:ckxqxj",
+  "stage": "pending_customer",
+  "status": "ממתין לאישור לקוח",
+  "statusText": "ממתין לאישור לקוח",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1003 1`] = `
+{
+  "awaitingCustomer": true,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "ממתין לאישור לקוח",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 20,
+      "types": [
+        "20 אישית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+    {
+      "action": "status",
+      "actionLabel": "הלקוח אישר",
+      "label": "אין אישור לקוח",
+      "rule": 6,
+      "severity": "orange",
+    },
+    {
+      "action": "open",
+      "actionLabel": "השלם פרטים",
+      "label": "חסר: כתובת",
+      "rule": 8,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (20): 20 אישית — ללא תוספת",
+  "lane": "customer",
+  "method": "אשראי",
+  "missing": [
+    "כתובת",
+  ],
+  "outcome": "open",
+  "register": "הזמנה 1003 · לקוח דמה 1003
+חמישי 26.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: אשראי
+איש קשר: איש קשר · 050-0000001
+משלוח: 
+פיצות 20: 20 אישית — ללא תוספת
+סכום: ₪600",
+  "sig": "2:177e2bh",
+  "stage": "pending_customer",
+  "status": "ממתין לאישור לקוח",
+  "statusText": "ממתין לאישור לקוח",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1004 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 8,
+      "types": [
+        "8 משפחתית דקה — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "ops",
+      "actionLabel": "נשלח בקבוצה",
+      "label": "לשלוח בקבוצת תפעול",
+      "rule": 12,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (8): 8 משפחתית דקה — ללא תוספת",
+  "lane": "inq",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1004 · לקוח דמה 1004
+חמישי 26.11.2026 · 12:30 · חיפה – חורב
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 8: 8 משפחתית דקה — ללא תוספת
+סכום: ₪500",
+  "sig": "2:1t4kivs",
+  "stage": "in_q",
+  "status": "הלקוח אישר",
+  "statusText": "הוקלד ל-Q",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1005 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 9,
+      "types": [
+        "9 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "ackGap",
+      "actionLabel": "בדוק פער",
+      "label": "פער מול Q",
+      "rule": 2,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (9): 9 משפחתית — ללא תוספת",
+  "lane": "inq",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1005 · לקוח דמה 1005
+רביעי 25.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 9: 9 משפחתית — ללא תוספת
+סכום: ₪495",
+  "sig": "2:1mfflbr",
+  "stage": "in_q",
+  "status": "הלקוח אישר",
+  "statusText": "הוקלד ל-Q",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1006 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "סופקה · באיחור 25 דק'",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 18,
+      "types": [
+        "18 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "פיצות (18): 18 משפחתית — ללא תוספת",
+  "lane": "closed",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "late",
+  "register": "הזמנה 1006 · לקוח דמה 1006
+רביעי 18.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 18: 18 משפחתית — ללא תוספת
+סכום: ₪990",
+  "sig": "2:1u1k5fu",
+  "stage": "delivered",
+  "status": "סופקה",
+  "statusText": "סופקה באיחור",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1007 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "סופקה חלקית · באיחור",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 12,
+      "types": [
+        "12 אקסטרה — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [
+    {
+      "action": "ackGap",
+      "actionLabel": "בדוק פער",
+      "label": "פער מול Q",
+      "rule": 2,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (12): 12 אקסטרה — ללא תוספת",
+  "lane": "closed",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "partial",
+  "register": "הזמנה 1007 · לקוח דמה 1007
+חמישי 19.11.2026 · 12:30 · חיפה – חורב
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 12: 12 אקסטרה — ללא תוספת
+סכום: ₪660",
+  "sig": "2:o3s1by",
+  "stage": "partial",
+  "status": "סופקה חלקית",
+  "statusText": "חלקית, באיחור",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1008 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "בוטלה",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 5,
+      "types": [
+        "5 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "critical",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [
+    {
+      "action": "ackCancel",
+      "actionLabel": "אשר שבוטלה ב-Q",
+      "label": "בוטלה אחרי Q",
+      "rule": 10,
+      "severity": "red",
+    },
+  ],
+  "itemsText": "פיצות (5): 5 משפחתית — ללא תוספת",
+  "lane": null,
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "cancelled",
+  "register": "הזמנה 1008 · לקוח דמה 1008
+שבת 21.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 5: 5 משפחתית — ללא תוספת
+סכום: ₪300",
+  "sig": "2:15af6tf",
+  "stage": "cancelled",
+  "status": "בוטלה",
+  "statusText": "בוטלה",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1009 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "אחר",
+    "אחר",
+    "ליד הפיצה",
+  ],
+  "close": "סופקה",
+  "groups": [
+    {
+      "category": "ליד הפיצה",
+      "qty": 3,
+      "types": [
+        "3 לחם שום — לחם שום",
+      ],
+    },
+    {
+      "category": "אחר",
+      "qty": 5,
+      "types": [
+        "4 פיצה משפחתית L · רמה 2 — זיתים",
+        "1 מגש פירות — בלי אננס",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "ליד הפיצה (3): 3 לחם שום — לחם שום | אחר (5): 4 פיצה משפחתית L · רמה 2 — זיתים ; 1 מגש פירות — בלי אננס",
+  "lane": "closed",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "ontime",
+  "register": "הזמנה 1009 · לקוח דמה 1009
+שלישי 10.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+ליד הפיצה 3: 3 לחם שום — לחם שום
+אחר 5: 4 פיצה משפחתית L · רמה 2 — זיתים ; 1 מגש פירות — בלי אננס
+סכום: ₪420",
+  "sig": "2:1e2w8z1",
+  "stage": "delivered",
+  "status": "סופקה",
+  "statusText": "סופקה",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1010 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+    "פיצות",
+    "קינוחים",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 4,
+      "types": [
+        "4 משפחתית — 2 חצי-חצי: פפרוני | ללא · 2 רבעים: זיתים | פטריות, בצל | טונה | ללא",
+      ],
+    },
+    {
+      "category": "קינוחים",
+      "qty": 2,
+      "types": [
+        "2 סופלה",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (4): 4 משפחתית — 2 חצי-חצי: פפרוני | ללא · 2 רבעים: זיתים | פטריות, בצל | טונה | ללא | קינוחים (2): 2 סופלה",
+  "lane": "todo",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1010 · לקוח דמה 1010
+חמישי 26.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 4: 4 משפחתית — 2 חצי-חצי: פפרוני | ללא · 2 רבעים: זיתים | פטריות, בצל | טונה | ללא
+קינוחים 2: 2 סופלה
+סכום: ₪310",
+  "sig": "2:1hotct5",
+  "stage": "pending_branch",
+  "status": "הלקוח אישר",
+  "statusText": "ממתין לעדכון בתפעול",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1011 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 7,
+      "types": [
+        "7 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": true,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (7): 7 משפחתית — ללא תוספת",
+  "lane": "todo",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1011 · לקוח דמה 1011
+רביעי 25.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 7: 7 משפחתית — ללא תוספת
+סכום: ₪400",
+  "sig": "2:pa2pfo",
+  "stage": "pending_branch",
+  "status": "הלקוח אישר",
+  "statusText": "ממתין לעדכון בתפעול",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1012 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 7,
+      "types": [
+        "7 אישית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (7): 7 אישית — ללא תוספת",
+  "lane": "hold",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1012 · לקוח דמה 1012
+רביעי 25.11.2026 · 18:00 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 7: 7 אישית — ללא תוספת
+סכום: ₪220",
+  "sig": "2:wqk0y6",
+  "stage": "pending_branch",
+  "status": "הלקוח אישר",
+  "statusText": "ממתין לעדכון בתפעול",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1013 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 10,
+      "types": [
+        "10 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "ackGap",
+      "actionLabel": "בדוק פער",
+      "label": "פער מול Q",
+      "rule": 2,
+      "severity": "orange",
+    },
+    {
+      "action": "ackQUpdate",
+      "actionLabel": "עודכן ב-Q",
+      "label": "שונתה – לעדכן ב-Q",
+      "rule": 11,
+      "severity": "orange",
+    },
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (10): 10 משפחתית — ללא תוספת",
+  "lane": "inq",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1013 · לקוח דמה 1013
+חמישי 26.11.2026 · 13:00 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 10: 10 משפחתית — ללא תוספת
+סכום: ₪650",
+  "sig": "2:1377ouu",
+  "stage": "in_q",
+  "status": "הלקוח אישר",
+  "statusText": "הוקלד ל-Q",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1014 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "סופקה",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 10,
+      "types": [
+        "10 וולקנו — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "פיצות (10): 10 וולקנו — ללא תוספת",
+  "lane": "closed",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "ontime",
+  "register": "הזמנה 1014 · לקוח דמה 1014
+רביעי 14.10.2026 · 12:30 · חיפה – חורב
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 10: 10 וולקנו — ללא תוספת
+סכום: ₪800",
+  "sig": "2:sg53ja",
+  "stage": "delivered",
+  "status": "סופקה",
+  "statusText": "סופקה",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1015 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 9,
+      "types": [
+        "9 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (9): 9 משפחתית — ללא תוספת",
+  "lane": "todo",
+  "method": "אחר – העברה בנקאית",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1015 · לקוח דמה 1015
+חמישי 26.11.2026 · 09:30 · רמת גן – ביאליק
+תשלום: אחר – העברה בנקאית
+איש קשר: איש קשר · 050-0000001
+איסוף עצמי
+פיצות 9: 9 משפחתית — ללא תוספת
+סכום: ₪500",
+  "sig": "2:kp6g0u",
+  "stage": "pending_branch",
+  "status": "הלקוח אישר",
+  "statusText": "ממתין לעדכון בתפעול",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1016 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 6,
+      "types": [
+        "6 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "critical",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "close",
+      "actionLabel": "סמן סופקה",
+      "label": "מועד עבר, לא נסגרה",
+      "rule": 3,
+      "severity": "red",
+    },
+  ],
+  "itemsText": "פיצות (6): 6 משפחתית — ללא תוספת",
+  "lane": "todo",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1016 · לקוח דמה 1016
+שלישי 24.11.2026 · 13:00 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 6: 6 משפחתית — ללא תוספת
+סכום: ₪330",
+  "sig": "2:dlzhyf",
+  "stage": "pending_branch",
+  "status": "הלקוח אישר",
+  "statusText": "ממתין לעדכון בתפעול",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1017 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "סופקה",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 6,
+      "types": [
+        "6 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "פיצות (6): 6 משפחתית — ללא תוספת",
+  "lane": "closed",
+  "method": "הקפה",
+  "missing": [
+    "ערוץ",
+  ],
+  "outcome": "ontime",
+  "register": "הזמנה 1017 · לקוח דמה 1017
+חמישי 05.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 6: 6 משפחתית — ללא תוספת
+סכום: ₪360",
+  "sig": "2:17nzlak",
+  "stage": "delivered",
+  "status": "סופקה",
+  "statusText": "סופקה",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1018 1`] = `
+{
+  "awaitingCustomer": true,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "ממתין לאישור לקוח",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 5,
+      "types": [
+        "5 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "critical",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [
+    {
+      "action": "q",
+      "actionLabel": "סמן הועברה ל-Q",
+      "label": "לא הועברה ל-Q",
+      "rule": 1,
+      "severity": "red",
+    },
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+    {
+      "action": "pay",
+      "actionLabel": "סמן שולם",
+      "label": "אשראי לא חויב",
+      "rule": 5,
+      "severity": "orange",
+    },
+    {
+      "action": "status",
+      "actionLabel": "הלקוח אישר",
+      "label": "אין אישור לקוח",
+      "rule": 6,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (5): 5 משפחתית — ללא תוספת",
+  "lane": "customer",
+  "method": "אשראי",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1018 · לקוח דמה 1018
+רביעי 25.11.2026 · 11:30 · חיפה – חורב
+תשלום: אשראי
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 5: 5 משפחתית — ללא תוספת
+סכום: ₪275",
+  "sig": "2:y84tcj",
+  "stage": "pending_customer",
+  "status": "ממתין לאישור לקוח",
+  "statusText": "ממתין לאישור לקוח",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1019 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "סופקה",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 9,
+      "types": [
+        "9 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "פיצות (9): 9 משפחתית — ללא תוספת",
+  "lane": "closed",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "ontime",
+  "register": "הזמנה 1019 · לקוח דמה 1019
+שלישי 17.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 9: 9 משפחתית — ללא תוספת
+סכום: ₪500",
+  "sig": "2:qw591s",
+  "stage": "delivered",
+  "status": "סופקה",
+  "statusText": "סופקה",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1020 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [],
+  "close": "בוטלה",
+  "groups": [],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "",
+  "lane": null,
+  "method": "הקפה",
+  "missing": [
+    "תכולה",
+  ],
+  "outcome": "cancelled",
+  "register": "הזמנה 1020 · לקוח דמה 1020
+שני 16.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+סכום: ₪200",
+  "sig": "2:129k1ii",
+  "stage": "cancelled",
+  "status": "בוטלה",
+  "statusText": "בוטלה",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1021 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [],
+  "close": "בוטלה",
+  "groups": [],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "",
+  "lane": null,
+  "method": "אשראי",
+  "missing": [
+    "תכולה",
+  ],
+  "outcome": "cancelled",
+  "register": "הזמנה 1021 · לקוח דמה 1021
+חמישי 26.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: אשראי
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+סכום: ₪300",
+  "sig": "2:1pjxcul",
+  "stage": "cancelled",
+  "status": "בוטלה",
+  "statusText": "בוטלה",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1022 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 8,
+      "types": [
+        "8 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": true,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+    {
+      "action": "open",
+      "actionLabel": "השלם פרטים",
+      "label": "חסר: תעודת רכש",
+      "rule": 8,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "פיצות (8): 8 משפחתית — ללא תוספת",
+  "lane": "todo",
+  "method": "הקפה",
+  "missing": [
+    "תעודת רכש",
+  ],
+  "outcome": "open",
+  "register": "הזמנה 1022 · לקוח דמה 1022
+רביעי 25.11.2026 · 14:00 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 8: 8 משפחתית — ללא תוספת
+סכום: ₪440",
+  "sig": "2:qvwgtm",
+  "stage": "pending_branch",
+  "status": "הלקוח אישר",
+  "statusText": "ממתין לעדכון בתפעול",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1023 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "סופקה · באיחור 15 דק'",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 10,
+      "types": [
+        "10 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "פיצות (10): 10 משפחתית — ללא תוספת",
+  "lane": "closed",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "late",
+  "register": "הזמנה 1023 · לקוח דמה 1023
+חמישי 12.11.2026 · 12:30 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 10: 10 משפחתית — ללא תוספת
+סכום: ₪550",
+  "sig": "2:1m9mb",
+  "stage": "delivered",
+  "status": "סופקה",
+  "statusText": "סופקה באיחור",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1024 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "פיצות",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "פיצות",
+      "qty": 6,
+      "types": [
+        "6 משפחתית — ללא תוספת",
+      ],
+    },
+  ],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [],
+  "itemsText": "פיצות (6): 6 משפחתית — ללא תוספת",
+  "lane": "inq",
+  "method": "הקפה",
+  "missing": [],
+  "outcome": "open",
+  "register": "הזמנה 1024 · לקוח דמה 1024
+רביעי 25.11.2026 · 15:00 · רמת גן – ביאליק
+תשלום: הקפה · טלפון הקפה 050-0000000
+איש קשר: איש קשר · 050-0000001
+משלוח: הרצל 1, רמת גן
+פיצות 6: 6 משפחתית — ללא תוספת
+סכום: ₪330",
+  "sig": "2:1lmlw2x",
+  "stage": "in_q",
+  "status": "הלקוח אישר",
+  "statusText": "הוקלד ל-Q",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1101 1`] = `
+{
+  "awaitingCustomer": true,
+  "categories": [],
+  "close": "ממתין לאישור לקוח",
+  "groups": [],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+    {
+      "action": "status",
+      "actionLabel": "הלקוח אישר",
+      "label": "אין אישור לקוח",
+      "rule": 6,
+      "severity": "orange",
+    },
+    {
+      "action": "open",
+      "actionLabel": "השלם פרטים",
+      "label": "חסר: סניף, ערוץ, טלפון, כתובת",
+      "rule": 8,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "",
+  "lane": "customer",
+  "method": undefined,
+  "missing": [
+    "סניף",
+    "ערוץ",
+    "טלפון",
+    "כתובת",
+  ],
+  "outcome": "open",
+  "register": "הזמנה 1101 · לקוח ישן מאוד
+חמישי 26.11.2026 · 12:00 · undefined
+תשלום: undefined
+משלוח: 
+8 משפחתיות
+סכום: ₪400",
+  "sig": "2:bf80vh",
+  "stage": "pending_customer",
+  "status": "ממתין לאישור לקוח",
+  "statusText": "ממתין לאישור לקוח",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1102 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [
+    "אחר",
+  ],
+  "close": "הלקוח אישר",
+  "groups": [
+    {
+      "category": "אחר",
+      "qty": 4,
+      "types": [
+        "4 פיצה משפחתית",
+      ],
+    },
+  ],
+  "health": "urgent",
+  "holdDue": false,
+  "inSummary": true,
+  "issues": [
+    {
+      "action": "branch",
+      "actionLabel": "סמן עודכן",
+      "label": "לא עודכן בתפעול",
+      "rule": 4,
+      "severity": "orange",
+    },
+    {
+      "action": "open",
+      "actionLabel": "השלם פרטים",
+      "label": "חסר: סניף, ערוץ, טלפון, כתובת",
+      "rule": 8,
+      "severity": "orange",
+    },
+  ],
+  "itemsText": "4× פיצה משפחתית",
+  "lane": "todo",
+  "method": "מזומן",
+  "missing": [
+    "סניף",
+    "ערוץ",
+    "טלפון",
+    "כתובת",
+  ],
+  "outcome": "open",
+  "register": "הזמנה 1102 · לקוח בלי סניף
+רביעי 25.11.2026 · 13:00 · undefined
+תשלום: מזומן
+משלוח: 
+4× פיצה משפחתית
+סכום: ₪250",
+  "sig": "2:1hke22y",
+  "stage": "pending_branch",
+  "status": "הלקוח אישר",
+  "statusText": "ממתין לעדכון בתפעול",
+}
+`;
+
+exports[`כל הזמנה לחוד > הזמנה 1103 1`] = `
+{
+  "awaitingCustomer": false,
+  "categories": [],
+  "close": "סופקה",
+  "groups": [],
+  "health": "ok",
+  "holdDue": false,
+  "inSummary": false,
+  "issues": [],
+  "itemsText": "",
+  "lane": "closed",
+  "method": undefined,
+  "missing": [
+    "שעה",
+    "סניף",
+    "ערוץ",
+    "סכום",
+    "טלפון",
+    "כתובת",
+    "תכולה",
+  ],
+  "outcome": "ontime",
+  "register": "הזמנה 1103 · לקוח מינימלי
+שלישי 03.11.2026 · undefined · undefined
+תשלום: undefined
+משלוח: 
+סכום: ₪0",
+  "sig": "2:mpe7xq",
+  "stage": "delivered",
+  "status": "סופקה",
+  "statusText": "סופקה",
+}
+`;
+
+exports[`מסך היום > מונים של משימות 1`] = `
+{
+  "branch": 11,
+  "customer": 4,
+  "followups": 2,
+  "missing": 4,
+  "ops": 1,
+  "other": 4,
+  "q": 6,
+  "quotes": 1,
+  "urgent": 1,
+  "users": 1,
+  "yesterday": 1,
+}
+`;
+
+exports[`מסך היום > תור Q 1`] = `
+{
+  "closed": [],
+  "customer": [
+    1018,
+  ],
+  "hold": [
+    1012,
+  ],
+  "inq": [
+    1005,
+    1024,
+  ],
+  "todo": [
+    1011,
+    1022,
+    1001,
+    1102,
+  ],
+}
+`;
+
+exports[`מסך היום > תור Q 2`] = `
+{
+  "done": 2,
+  "left": 6,
+  "total": 8,
+}
+`;
+
+exports[`מסך היום > תור Q 3`] = `1011`;
+
+exports[`סיכום לתפעול > לפי אשכול וסניף, מחר וסופ"ש 1`] = `
+{
+  "allOpenView": {
+    "amount": 5095,
+    "groups": [
+      {
+        "branches": [
+          {
+            "name": "רמת גן – ביאליק",
+            "orders": [
+              "#1016",
+              "#1001",
+              "#1005",
+              "#1011",
+              "#1022",
+              "#1024",
+              "#1012",
+              "#1015",
+              "#1010",
+              "#1013",
+            ],
+          },
+        ],
+        "name": "מרכז",
+        "orders": [
+          "#1016",
+          "#1001",
+          "#1005",
+          "#1011",
+          "#1022",
+          "#1024",
+          "#1012",
+          "#1015",
+          "#1010",
+          "#1013",
+        ],
+      },
+      {
+        "branches": [
+          {
+            "name": "חיפה – חורב",
+            "orders": [
+              "#1004",
+            ],
+          },
+        ],
+        "name": "צפון",
+        "orders": [
+          "#1004",
+        ],
+      },
+      {
+        "branches": [
+          {
+            "name": "ללא סניף",
+            "orders": [
+              "#1102",
+            ],
+          },
+        ],
+        "name": "ללא אשכול",
+        "orders": [
+          "#1102",
+        ],
+      },
+    ],
+    "pizzas": 88,
+    "unapproved": [
+      1002,
+      1003,
+      1018,
+      1101,
+    ],
+  },
+  "tomorrow": {
+    "from": "2026-11-26",
+    "to": "2026-11-26",
+  },
+  "tomorrowView": {
+    "amount": 1960,
+    "groups": [
+      {
+        "branches": [
+          {
+            "name": "רמת גן – ביאליק",
+            "orders": [
+              "#1015",
+              "#1010",
+              "#1013",
+            ],
+          },
+        ],
+        "name": "מרכז",
+        "orders": [
+          "#1015",
+          "#1010",
+          "#1013",
+        ],
+      },
+      {
+        "branches": [
+          {
+            "name": "חיפה – חורב",
+            "orders": [
+              "#1004",
+            ],
+          },
+        ],
+        "name": "צפון",
+        "orders": [
+          "#1004",
+        ],
+      },
+    ],
+    "pizzas": 31,
+    "unapproved": [
+      1002,
+      1003,
+      1101,
+    ],
+  },
+  "weekend": {
+    "from": "2026-11-27",
+    "to": "2026-11-28",
+  },
+  "weekendView": {
+    "amount": 0,
+    "groups": [],
+    "pizzas": 0,
+    "unapproved": [],
+  },
+}
+`;
+
+exports[`סיכום לתפעול – מה השתנה מאז השליחה > חתימה בגרסה 2, גרסה 1 ישנה, הזמנה שהשתנתה, חדשה ושירדה 1`] = `
+{
+  "mark": [
+    [
+      1004,
+      "changed",
+    ],
+    [
+      1005,
+      "changed",
+    ],
+    [
+      1011,
+      "new",
+    ],
+  ],
+  "removed": [
+    "9999",
+  ],
+}
+`;
+
+exports[`סיכום לתפעול – מה השתנה מאז השליחה > חתימה בגרסה 2, גרסה 1 ישנה, הזמנה שהשתנתה, חדשה ושירדה 2`] = `
+{
+  "mark": Map {},
+  "removed": [],
+}
+`;
+
+exports[`סכומים > fmtMoney ו-cleanAmount 1`] = `
+[
+  "₪55",
+  "₪54.90",
+  "₪1,250",
+  "₪0",
+  "₪1,234.50",
+]
+`;
+
+exports[`סכומים > fmtMoney ו-cleanAmount 2`] = `
+[
+  "54.90",
+  "1250",
+  "99",
+  "12.5",
+  "",
+]
+`;
