@@ -15,13 +15,12 @@ import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import { addDays, fmtPhone, toISODate } from '../../lib/format';
-import { cleanPhone, phoneError } from '../../lib/names';
+import { cleanPhone, phoneError, CARD_RE } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import '../orders/StatusDialogs.css';
 import '../customers/CustomerForm.css';
 import './Leads.css';
 
-const CARD_RE = /\d{13,}/;
 const plusDays = (n: number) => toISODate(addDays(new Date(), n));
 
 export function Shell({ title, sub, children, onClose, wide }: { title: string; sub?: ReactNode; children: ReactNode; onClose: () => void; wide?: boolean }) {

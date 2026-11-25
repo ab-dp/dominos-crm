@@ -15,8 +15,8 @@ import { useStore } from '../../data/store';
 import { CATEGORIES } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { cleanAmount, Ltr, fmtMoney, fmtPhone, roundMoney, toISODate } from '../../lib/format';
-import { isSimilar } from '../../lib/names';
+import { Ltr, fmtMoney, fmtPhone, toISODate, parseMoney as money } from '../../lib/format';
+import { isSimilar, CARD_RE } from '../../lib/names';
 import { saveError } from '../../lib/saveError';
 import { Shell } from '../leads/LeadDialogs';
 import { buildCatalog, catalogFor, normName, type CatalogItem } from '../orders/ItemsBuilder';
@@ -28,10 +28,8 @@ import './quotes.css';
 
 type QLine = QuoteLine & { key: string; pText?: string };
 type Fee = { itemId?: string; name: string; price: string };
-const CARD_RE = /\d{13,}/;
 const VALID: number[] = [7, 14, 30];
 const DRAFT_KEY = 'quoteDraft';
-const money = (s: string) => roundMoney(Number(cleanAmount(s)) || 0);
 const blankLine = (l: QuoteLine) => !l.name.trim() && !l.qty && !l.unitPrice;
 const lineErr = (l: QuoteLine) => (blankLine(l) ? '' : !l.name.trim() ? 'חסר שם מוצר' : l.qty <= 0 ? 'חסרה כמות' : '');
 // פריטים לחישוב מדרגת המשלוח: הכל חוץ משתייה
@@ -509,7 +507,6 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
               </div>
               <label className="qe-field qe-field--wide"><span className="field__label">הערות בהצעה <span className="muted">(יופיעו בדף)</span></span>
                 <textarea className="input cform__ta" rows={2} value={f.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="למשל: כולל כלים חד-פעמיים ומפיות" /></label>
-              <p className="qe-hint qe-hint--edit">התנאים הקבועים בסוף ההצעה {terms.length ? `(${terms.length})` : ''} נערכים בהגדרות → "הצעות מחיר".</p>
             </section>
           </fieldset>
 

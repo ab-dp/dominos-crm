@@ -30,7 +30,7 @@ import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { cleanAmount, Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
 import { isLive, lateSplit, onTime, revenue, revenueOf } from '../../data/metrics';
-import { cleanPhone, phoneError } from '../../lib/names';
+import { cleanPhone, phoneError, CARD_RE, EMAIL_RE } from '../../lib/names';
 import { CustomerForm } from './CustomerForm';
 import { MergeDialog } from './MergeDialog';
 import '../pages.css';
@@ -273,7 +273,6 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
           <div key={k} className="kpi card"><span className="kpi__label">{k}</span><span className={`kpi__value ${loading ? '' : 'is-live'}`}>{loading ? <Skeleton w={60} h={22} /> : v}</span></div>
         ))}
       </div>
-      <p className="ov__note muted">לפי תאריך אספקה וסכום Q, עד היום, בלי הזמנות שבוטלו. "פתוח לתשלום" – מכל החודשים.</p>
       {!loading && orders.length > 0 && (
         <section className="card ov__chart" aria-label="סך לפי חודש – 12 חודשים">
           <div className="card__head"><h2 className="card__title">12 חודשים אחרונים</h2><button className="link" onClick={() => onTab('monthly')}>לסיכום החודשי</button></div>
@@ -530,7 +529,6 @@ function PricesTab({ c }: { c: Customer }) {
       </div>
       <PriceNote c={c} />
       {pl.note && <p className="cfile__plhint cfile__plcond">תנאי המחירון: {pl.note}</p>}
-      <p className="muted cfile__plhint">מחיר ייחודי ללקוח לא משנה את המחירון עצמו. לחיצה על מחיר – שינוי; Enter שומר, שדה ריק מחזיר למחיר המחירון.</p>
       <table className="items cfile__prices">
         <thead><tr><th>מוצר</th><th>ללקוח – משלוח</th><th>ללקוח – איסוף עצמי</th></tr></thead>
         <tbody>
@@ -563,7 +561,6 @@ function PaymentTab({ c, sharing, method, onEdit }: { c: Customer; sharing: Cust
         <div className="kv"><span className="kv__k">טלפון הקפה</span><span className="kv__v">{c.accountPhone ? <><Ltr>{fmtPhone(c.accountPhone)}</Ltr> · {sharing.length ? <>כללי – משמש גם את {sharing.map((s, i) => <span key={s.id}>{i > 0 && ', '}<Link to={`/customers/${s.id}`}>{s.name}</Link></span>)}</> : 'ייעודי ללקוח הזה'}</> : '—'}</span></div>
         <div className="kv"><span className="kv__k">תעודת רכש</span><span className="kv__v">{c.poRequired ? 'נדרשת לכל הזמנה' : 'לא נדרשת'}</span></div>
         <div className="kv"><span className="kv__k">הנחיות חיוב קבועות</span><span className="kv__v">{c.billingInstructions || <span className="warn-text">לא הוגדרו</span>}</span></div>
-        <p className="muted cfile__plhint">ההנחיות נטענות אוטומטית ל"הערות להנהלת חשבונות" בכל הזמנה חדשה, ומופיעות בדוח ההקפות ובקובץ סגירת החודש.</p>
       </div>
     </div>
   );
@@ -653,7 +650,7 @@ function ContactEditor({ value, onSave, onCancel }: { value: Contact; onSave: (v
   const submit = async () => {
     if (!v.name.trim()) return setErr('חובה: שם');
     const pe = phoneError(v.phone); if (pe) return setErr(pe);
-    if (v.email && !/^\S+@\S+\.\S+$/.test(v.email)) return setErr('כתובת מייל לא תקינה');
+    if (v.email && !EMAIL_RE.test(v.email)) return setErr('כתובת מייל לא תקינה');
     await onSave({ ...v, name: v.name.trim(), phone: cleanPhone(v.phone), email: v.email.trim(), role: v.role.trim() });
   };
   return (
@@ -708,7 +705,7 @@ function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextA
   const KIND = { note: 'הערה', call: 'שיחה', followup: 'משימת חזרה' } as const;
   const submit = async () => {
     if (!text.trim()) return setErr('כתוב משהו לפני השמירה');
-    if (/\d{13,}/.test(text)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
+    if (CARD_RE.test(text)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     if (kind === 'followup' && !due) return setErr('למשימת חזרה צריך תאריך');
     try { await addActivity(c.id, { kind, text, due: kind === 'followup' ? due : undefined }, c.name); setText(''); setDue(''); setErr(''); toast({ message: `${KIND[kind]} נשמרה` }); }
     catch { setErr('השמירה נכשלה'); }
@@ -771,7 +768,7 @@ function PriceNote({ c }: { c: Customer }) {
   const [err, setErr] = useState('');
   const save = async () => {
     if (v.trim() === (c.priceNote ?? '')) return;
-    if (/\d{13,}/.test(v)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
+    if (CARD_RE.test(v)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     setErr('');
     await updateCustomer(c, { priceNote: v.trim() });
     toast({ message: v.trim() ? 'הערת המחיר נשמרה' : 'הערת המחיר הוסרה' });

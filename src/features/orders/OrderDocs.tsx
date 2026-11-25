@@ -147,7 +147,7 @@ export function CustomerDocsSection({ customerId, mergedFrom = [] }: { customerI
       </div>
       <div className="odocs__body">
         {docs === null ? <p className="muted">טוען…</p> : list.length ? <DocList docs={list} showOrder /> : <p className="muted odocs__empty">אין עדיין מסמכים{view === 'orders' ? ' בהזמנות' : view === 'customer' ? ' קבועים' : ''}.</p>}
-        <p className="odocs__hint">מסמך קבוע של הלקוח – למשל הסכם מחיר או טופס פתיחת הקפה:</p>
+        <p className="odocs__hint">מסמך קבוע של הלקוח:</p>
         <Uploader target={{ customerId }} defaultKind="agreement" />
       </div>
     </div>

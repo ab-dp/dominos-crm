@@ -9,6 +9,7 @@ import { useToast } from '../../design/Toast';
 import { Ltr, cleanAmount, fmtDate, fmtMoney, toISODate } from '../../lib/format';
 import { saveError } from '../../lib/saveError';
 import './Care.css';
+import { CARD_RE } from '../../lib/names';
 
 const fmtAt = (d: Date) => `${fmtDate(toISODate(d))} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
@@ -53,7 +54,7 @@ function CareForm({ o, done }: { o: OrderView; done: () => void }) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!text.trim()) { setErr('חובה: איך טיפלנו בלקוח'); return; }
-    if (/\d{13,}/.test(text)) { setErr('אסור לרשום כאן מספר כרטיס אשראי'); return; }
+    if (CARD_RE.test(text)) { setErr('אסור לרשום כאן מספר כרטיס אשראי'); return; }
     const compAmount = compHasAmount(comp) && amount.trim() ? Number(cleanAmount(amount)) || undefined : undefined;
     setBusy(true);
     try {

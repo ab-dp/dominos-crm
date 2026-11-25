@@ -6,6 +6,7 @@ import { Button } from '../design/components';
 import { DominoTile } from '../components/DominoTile';
 import { authErrorMessage, useAuth } from './AuthContext';
 import './AuthScreens.css';
+import { EMAIL_RE } from '../lib/names';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -122,7 +123,7 @@ function Register({ onBack }: { onBack: () => void }) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return setError('חובה: שם מלא');
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('כתובת המייל לא תקינה. בדוק שיש @ ונקודה.');
+    if (!EMAIL_RE.test(email.trim())) return setError('כתובת המייל לא תקינה. בדוק שיש @ ונקודה.');
     if (!allOk) return setError('הסיסמה לא עומדת בכללים שמסומנים למטה');
     if (password !== confirm) return setError('הסיסמאות לא זהות. הקלד שוב את אימות הסיסמה.');
     setBusy('email'); setError('');

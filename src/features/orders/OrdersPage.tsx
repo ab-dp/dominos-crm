@@ -11,6 +11,8 @@ import { needsCare } from '../../data/care';
 import { HEALTH_RANK, healthOf, issuesFor } from '../../rules-engine/health';
 import { Ltr, addDays, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import { OrdersTable } from './OrdersTable';
+import { FilterBar } from '../../design/FilterBar';
+import { filterOptions, filtersText, matchesFilters, type FilterKey, type FilterValues } from '../../data/orderFilters';
 import '../pages.css';
 
 /* לשוניות: היום · מחר · עתידיות (כל מה שאחרי היום, כולל מחר) · פתוחות שעבר מועדן · לפי תאריכים (כל טווח, גם עתידי וגם ארכיון) · ארכיון.
@@ -46,6 +48,11 @@ export function OrdersPage() {
   // בארכיון ובטווח תאריכים – גם "בלי תיעוד": איחור או חלקית שעוד לא תועד איך טיפלנו בלקוח
   const filters = raw === 'archive' || raw === 'range' ? { ...FILTERS, care: CARE_FILTER } : FILTERS;
   const filter = filterKey ? filters[filterKey] : undefined;
+  /* סינון לפי ממדים (אשכול, סניף, תשלום, מטפל, סטטוס אספקה) – אותו רכיב ואותם מפתחות כמו בדוחות */
+  const dimKeys: FilterKey[] = raw === 'archive' || raw === 'range' ? ['cluster', 'branch', 'method', 'handler', 'outcome'] : ['cluster', 'branch', 'method', 'handler'];
+  const dimSig = dimKeys.map((k) => params.get(k) ?? '').join('|');
+  const dimValues = useMemo(() => Object.fromEntries(dimKeys.map((k) => [k, params.get(k) ?? ''])) as FilterValues,
+    [dimSig, raw]);
 
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
@@ -91,8 +98,12 @@ export function OrdersPage() {
   const q = query.trim().toLowerCase();
   const rows = useMemo(() => lists[tab]
     .filter((o) => !filter || filter.test(o))
+    .filter((o) => matchesFilters(o, dimValues))
     .filter((o) => !q || o.customerName.toLowerCase().includes(q) || String(o.id).includes(q) || (o.qNumber ?? '').toLowerCase().includes(q) || o.branchName.includes(q)),
-  [lists, tab, filter, q]);
+  [lists, tab, filter, q, dimValues]);
+  const dims = useMemo(() => filterOptions(lists[tab], dimKeys, dimValues).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)),
+    [lists, tab, dimValues]);
+  const dimText = filtersText(dimValues);
   const total = revenue(rows);
   const needs = rows.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
   const critical = rows.some((o) => o.health === 'critical');
@@ -126,7 +137,7 @@ export function OrdersPage() {
         {TABS.map(([k, label]) => {
           const n = countOf(k);
           return (
-            <button key={k} role="tab" aria-selected={tab === k} className={`tab ${tab === k ? 'is-on' : ''} ${k === 'overdue' && lists.overdue.length ? 'tab--alert' : ''}`} onClick={() => set('tab', k)}>
+            <button key={k} role="tab" aria-selected={tab === k} className={`tab ${tab === k ? 'is-on' : ''} ${k === 'overdue' && lists.overdue.length ? 'tab--alert' : ''}`} onClick={() => setMany({ tab: k, ...(k === 'archive' || k === 'range' ? {} : { outcome: null }) })}>
               {label}
               {n !== null && <span className="tab__count"><Ltr>{n}</Ltr></span>}
             </button>
@@ -154,7 +165,6 @@ export function OrdersPage() {
           <span className="orange__note">מציג מ-<Ltr>{fmtDate(archFrom)}</Ltr></span>
           <Button size="sm" variant="secondary" disabled={arch >= 24} loading={archFetch && remote.loading} onClick={() => set('arch', String(arch + 1))}>טען חודש קודם</Button>
           {arch > 0 && <button type="button" className="link" onClick={() => set('arch', null)}>חזרה לחודשיים האחרונים</button>}
-          <span className="muted orange__note">לתקופה מסוימת – "לפי תאריכים"</span>
         </div>
       )}
       {(rangeFetch || archFetch) && remote.error && <p className="cform__formerr" role="alert">{remote.error} – הטעינה מהארכיון נכשלה. נסה "רענן".</p>}
@@ -167,6 +177,7 @@ export function OrdersPage() {
             ))}
           </div>
         )}
+        <FilterBar dims={dims} values={dimValues} onChange={setMany} extraActive={(query.trim() ? 1 : 0) + (filter ? 1 : 0)} alsoClear={['filter']} onClearAll={() => setQuery('')} />
         <div className="chips" role="group" aria-label="סינון מהיר">
           {Object.entries(filters).map(([k, f]) => (
             <button key={k} className={`chip ${filterKey === k ? 'is-on' : ''}`} aria-pressed={filterKey === k} onClick={() => set('filter', filterKey === k ? null : k)}>
@@ -193,8 +204,8 @@ export function OrdersPage() {
         rows={rows}
         showDate={tab !== 'today' && tab !== 'tomorrow'}
         qTint={tab === 'today'}
-        caption={`הזמנות – ${TABS.find((t) => t[0] === tab)![1]}${filter ? ` – ${filter.label}` : ''}`}
-        emptyText={filter ? `אין הזמנות: ${filter.label}` : tab === 'tomorrow' ? 'אין הזמנות למחר' : tab === 'overdue' ? 'אין הזמנות פתוחות שעבר מועדן ✓' : tab === 'range' ? (rangeBad || 'אין הזמנות בטווח הזה') : 'אין הזמנות בתצוגה הזו'}
+        caption={`הזמנות – ${TABS.find((t) => t[0] === tab)![1]}${filter ? ` – ${filter.label}` : ''}${dimText ? ` – ${dimText}` : ''}`}
+        emptyText={filter || dimText ? `אין הזמנות: ${[filter?.label, dimText].filter(Boolean).join(' · ')}` : tab === 'tomorrow' ? 'אין הזמנות למחר' : tab === 'overdue' ? 'אין הזמנות פתוחות שעבר מועדן ✓' : tab === 'range' ? (rangeBad || 'אין הזמנות בטווח הזה') : 'אין הזמנות בתצוגה הזו'}
       />}
     </div>
   );

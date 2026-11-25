@@ -7,7 +7,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { toISODate } from '../lib/format';
-import { CLOSED, type Order, type OrderStatus } from './types';
+import type { Order, OrderStatus } from './types';
 import { cleanTaxId } from '../lib/taxid';
 import type { CustomerInput } from './customers';
 
@@ -156,8 +156,6 @@ export function findDuplicate(all: Order[], c: { customerId: string; date: strin
     && o.status !== 'cancelled' && Math.abs(toMin(o.time) - toMin(c.time)) <= near);
 }
 
-export const isClosed = (o: Pick<Order, 'status'>) => CLOSED.includes(o.status);
-
 /* הזמנה בודדת שלא נטענה ברשימה החיה (למשל ארכיון ישן מתיק הלקוח) */
 export function useOrderDoc(id: number | null) {
   const [o, setO] = useState<Order | null>(null);
@@ -178,14 +176,6 @@ export function useOrderNotes(orderId: number) {
     (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as OrderNote).sort((a, b) => (a.at?.seconds ?? 9e9) - (b.at?.seconds ?? 9e9))),
     () => setItems([])), [orderId]);
   return items;
-}
-
-export async function addOrderNote(orderId: number, text: string) {
-  const u = me();
-  const batch = writeBatch(db);
-  batch.set(doc(collection(db, 'orders', String(orderId), 'notes')), { text: text.trim(), by: u.uid, byName: u.name, at: serverTimestamp() });
-  batch.set(doc(collection(db, 'auditLog')), auditDoc('order', String(orderId), 'note', null, { note: text.trim().slice(0, 200) }, 'form'));
-  await batch.commit();
 }
 
 /* ---------- שמירה בטוחה לעבודה מקבילה (אפיון 8) ----------

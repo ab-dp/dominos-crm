@@ -251,9 +251,8 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
         <label className="pl-terms__min">
           <span className="field__label">מינימום פיצות</span>
           <input className="input input--sm input--ltr" inputMode="numeric" value={minP} onChange={(e) => setMinP(e.target.value.replace(/\D/g, ''))} onBlur={saveNote} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-            placeholder="—" aria-describedby="pl-min-hint" />
+            placeholder="—" />
         </label>
-        <p id="pl-min-hint" className="pl-terms__hint">כשבהצעה יש פחות פיצות מהמינימום – מופיעה אזהרה. התנאי לא מופיע בדף שהלקוח מקבל.</p>
       </div>
 
       <div className="pl-body">

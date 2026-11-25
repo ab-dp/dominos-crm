@@ -102,7 +102,7 @@ function Gate() {
               <Route path="/reports/close" element={<MonthClosePage />} />
               <Route path="/reports/period" element={<PeriodReport />} />
               <Route path="/reports/:id" element={<ReportView />} />
-              <Route path="/styleguide" element={<StyleGuidePage />} />
+              {import.meta.env.DEV && <Route path="/styleguide" element={<StyleGuidePage />} />}
               <Route path="/settings/*" element={<SettingsPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/customers/:id" element={<CustomerFile />} />

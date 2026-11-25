@@ -11,11 +11,10 @@ import { usePriceLists } from '../../data/priceLists';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { fmtPhone } from '../../lib/format';
-import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
+import { cleanPhone, isSimilar, phoneError, CARD_RE, EMAIL_RE } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import './CustomerForm.css';
 
-const CARD_RE = /\d{13,}/;
 
 export function CustomerForm({ open, onClose, customers, editing, initialName = '' }: {
   open: boolean; onClose: () => void; customers: Customer[]; editing?: Customer; initialName?: string;
@@ -63,9 +62,9 @@ export function CustomerForm({ open, onClose, customers, editing, initialName = 
     const pe = phoneError(contact.phone); if (pe) e.contactPhone = pe;
     // טלפון הקפה לא חוסם שמירה – לקוח בלי טלפון הקפה נשמר ומסומן "חסר" ברשימה ובתיק
     if (f.paymentMethod === 'account' && cleanPhone(f.accountPhone)) { const ae = phoneError(f.accountPhone); if (ae) e.accountPhone = ae; }
-    if (contact.email && !/^\S+@\S+\.\S+$/.test(contact.email)) e.contactEmail = 'כתובת מייל לא תקינה';
-    emails.forEach((m, i) => { if (m.trim() && !/^\S+@\S+\.\S+$/.test(m.trim())) e[`email${i}`] = 'כתובת מייל לא תקינה'; });
-    more.forEach((m, i) => { const me = phoneError(m.phone); if (me) e[`morePhone${i}`] = me; if (m.email && !/^\S+@\S+\.\S+$/.test(m.email)) e[`moreEmail${i}`] = 'כתובת מייל לא תקינה'; });
+    if (contact.email && !EMAIL_RE.test(contact.email)) e.contactEmail = 'כתובת מייל לא תקינה';
+    emails.forEach((m, i) => { if (m.trim() && !EMAIL_RE.test(m.trim())) e[`email${i}`] = 'כתובת מייל לא תקינה'; });
+    more.forEach((m, i) => { const me = phoneError(m.phone); if (me) e[`morePhone${i}`] = me; if (m.email && !EMAIL_RE.test(m.email)) e[`moreEmail${i}`] = 'כתובת מייל לא תקינה'; });
     if (CARD_RE.test(f.priceNote ?? '')) e.priceNote = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(f.instructions)) e.instructions = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (CARD_RE.test(f.billingInstructions)) e.billingInstructions = 'אסור לרשום כאן מספר כרטיס אשראי';

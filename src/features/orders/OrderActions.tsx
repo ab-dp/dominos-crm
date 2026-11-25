@@ -9,6 +9,7 @@ import { cleanAmount, Ltr, fmtMoney, roundMoney, sameMoney } from '../../lib/for
 import type { Issue } from '../../rules-engine/health';
 import { useAuth } from '../../auth/AuthContext';
 import { CloseForm } from './OrderTimeline';
+import { CARD_RE } from '../../lib/names';
 
 /* ---------- טפסים קטנים שנפתחים במקום ---------- */
 export function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
@@ -189,7 +190,7 @@ function GapForm({ o, done }: { o: OrderView; done: () => void }) {
   const ack = (e: FormEvent) => {
     e.preventDefault();
     if (!note.trim()) { setErr('חובה: למה הפער בסדר (למשל: הנחה שסוכמה בטלפון)'); return; }
-    if (/\d{13,}/.test(note)) { setErr('אסור לרשום כאן מספר כרטיס אשראי'); return; }
+    if (CARD_RE.test(note)) { setErr('אסור לרשום כאן מספר כרטיס אשראי'); return; }
     update(o.id, { qGapAck: { amount: o.amount, qAmount: q, by: profile?.name ?? '', at: new Date().toISOString(), note: note.trim() } }, <>הפער מול Q אושר · הזמנה <Ltr>{o.id}</Ltr></>);
     done();
   };

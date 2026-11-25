@@ -47,3 +47,8 @@ export function phoneError(raw: string): string {
   if (!d) return '';
   return /^0\d{8,9}$/.test(d) ? '' : 'מספר טלפון לא תקין – 9 או 10 ספרות שמתחילות ב-0';
 }
+
+/* מספר כרטיס אשראי (13 ספרות ומעלה ברצף) אסור בשדות טקסט חופשי – כך גם בכללי Firestore (noCard) */
+export const CARD_RE = /\d{13,}/;
+/* מייל תקין בצורה בסיסית: משהו@משהו.משהו */
+export const EMAIL_RE = /^\S+@\S+\.\S+$/;

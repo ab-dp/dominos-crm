@@ -13,6 +13,7 @@ import { useToast } from '../../design/Toast';
 import { db } from '../../lib/firebase';
 import { Ltr } from '../../lib/format';
 import { Shell } from '../leads/LeadDialogs';
+import { CARD_RE } from '../../lib/names';
 
 /* העובד המטפל: לכולם – טקסט; למנהל – בחירה מרשימת המשתמשים הפעילים */
 export function HandlerEdit({ o }: { o: OrderView }) {
@@ -55,7 +56,7 @@ export function DeleteOrder({ o }: { o: OrderView }) {
   const locked = lockedMonths.includes(monthOf(o.date));
   const go = async () => {
     if (reason.trim().length < 3) return setErr('חובה: סיבת המחיקה');
-    if (/\d{13,}/.test(reason)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
+    if (CARD_RE.test(reason)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
     setBusy(true);
     try {
       await deleteOrder(o, reason);

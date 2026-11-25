@@ -2,6 +2,7 @@
    כלל אחיד: לפי תאריך אספקה וסכום Q (ואם לא הועברה – סכום לחיוב). סכומים בלי הזמנות שבוטלו; הביטולים נספרים בנפרד. */
 import { OUTCOME_LABEL, methodText, PAYMENT_LABEL, itemsText, outcomeOf, type Order, type Outcome } from '../../data/types';
 import { LATE_SPLIT_HINT, ON_TIME_HINT, isDelivered, isLive, lateSplit, onTime, pctOf, revenue, revenueOf } from '../../data/metrics';
+import { fmtDate } from '../../lib/format';
 
 export const qVal = revenueOf;
 export const live = (list: Order[]) => list.filter(isLive);
@@ -40,7 +41,6 @@ const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) 
 const onTimeCell = (list: Order[]) => pctOf(onTime(list).rate) ?? '';
 const lastDate = (list: Order[]) => list.reduce((m, o) => (o.date > m ? o.date : m), '');
 
-const fmtD = (iso: string) => iso.split('-').reverse().join('.');
 const outcomeCount = (list: Order[], k: Outcome) => list.filter((o) => outcomeOf(o) === k);
 const orderItemsText = (o: Order) => (o.items.length ? itemsText(o.items) : o.contents ?? '');
 const avgLate = (list: Order[]) => { const l = list.filter((o) => o.late?.minutes); return l.length ? Math.round(l.reduce((t, o) => t + (o.late?.minutes ?? 0), 0) / l.length) : 0; };
@@ -56,7 +56,7 @@ export const REPORTS: ReportDef[] = [
       const rows = [...all].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).map((o) => ({
         id: String(o.id), orders: [o],
         cells: {
-          date: fmtD(o.date), time: o.time, id: o.id, customer: o.customerName, branch: o.branchName, cluster: o.cluster, channel: o.channel,
+          date: fmtDate(o.date), time: o.time, id: o.id, customer: o.customerName, branch: o.branchName, cluster: o.cluster, channel: o.channel,
           handler: o.handler || o.createdBy, items: orderItemsText(o), amount: o.amount, q: o.qNumber ?? '', qAmount: o.qAmount ?? '',
           method: methodText(o), payment: PAYMENT_LABEL[o.payment], outcome: deliveryText(o),
           lateMin: o.late?.minutes || '', reason: o.status === 'cancelled' ? [o.cancelReason, o.cancelNote].filter(Boolean).join(' · ') : o.status === 'partial' ? o.partialNote ?? '' : '',

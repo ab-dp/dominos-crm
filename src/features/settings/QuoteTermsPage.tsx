@@ -6,6 +6,7 @@ import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import '../pages.css';
 import './ThresholdsPage.css';
+import { CARD_RE } from '../../lib/names';
 
 export function QuoteTermsPage() {
   const terms = useQuoteTerms();
@@ -17,7 +18,7 @@ export function QuoteTermsPage() {
   const next = text.split('\n').map((t) => t.trim()).filter(Boolean);
   const dirty = JSON.stringify(next) !== JSON.stringify(terms);
   const save = async () => {
-    if (next.some((t) => /\d{13,}/.test(t))) return setErr('אסור לרשום מספר כרטיס אשראי');
+    if (next.some((t) => CARD_RE.test(t))) return setErr('אסור לרשום מספר כרטיס אשראי');
     if (next.length > 12) return setErr('עד 12 תנאים');
     setBusy(true);
     try { await saveQuoteTerms(next, terms); toast({ message: 'התנאים נשמרו – יופיעו בכל הצעה מעכשיו' }); } catch { setErr('השמירה נכשלה – בדקו חיבור'); }

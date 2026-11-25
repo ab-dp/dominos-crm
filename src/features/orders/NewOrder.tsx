@@ -21,8 +21,8 @@ import { setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, categoryOf, type OrderStatus } from '../../data/types';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
-import { cleanAmount, Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday } from '../../lib/format';
-import { cleanPhone, isSimilar, phoneError } from '../../lib/names';
+import { Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday, parseMoney as money } from '../../lib/format';
+import { cleanPhone, isSimilar, phoneError, CARD_RE } from '../../lib/names';
 import { cleanTaxId, taxIdError } from '../../lib/taxid';
 import { BranchPicker, type BranchChoice } from '../branches/BranchPicker';
 import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, priceMissing, pricesUsed, toSaved, useCatalog, useRepriceOnDelivery, type Line } from './ItemsBuilder';
@@ -32,7 +32,6 @@ import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import '../customers/CustomerForm.css';
 import './NewOrder.css';
 
-const CARD_RE = /\d{13,}/;
 const MODES: [NewOrderMode, string, ReactNode][] = [
   ['full', 'הזמנה', <ClipboardList size={16} key="f" />],
   ['newCustomer', 'לקוח חדש', <UserPlus size={16} key="n" />],
@@ -43,7 +42,6 @@ const MISS_LABEL: Record<string, string> = {
   channel: 'ערוץ / מספר פניה', methodNote: 'פירוט אמצעי התשלום', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש', prices: 'מחיר',
 };
 
-const money = (s: string) => roundMoney(Number(cleanAmount(s)) || 0);
 
 export function NewOrderDialog() {
   const { newOrder, closeNewOrder } = useStore();

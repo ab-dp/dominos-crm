@@ -18,9 +18,13 @@
 .report__filters > .seg { grid-column: 1 / -1; justify-self: start; }
 .report__filters > .report__dates { grid-column: 1 / -1; justify-self: start; }
 .report__filters > .chip { justify-self: start; }
+/* סרגל הסינון המשותף תופס שורה שלמה; הצ'יפים בשורה אחת */
+.report__filters > .fbar { grid-column: 1 / -1; }
+.report__filters .fbar__chip { white-space: nowrap; }
+.report__filters .fbar .report__cust { width: 220px; }
 .report__dates { display: inline-flex; align-items: center; gap: var(--space-2); }
 .report__dates .input { width: 150px; }
-.report__sel, .report__cust { width: 100%; min-width: 0; }
+.report__cust { width: 100%; min-width: 0; }
 .report__count { margin-inline-start: auto; font-size: var(--text-label); color: var(--gray-600); }
 .report__kpis { margin: 0 0 var(--space-4); display: flex; flex-wrap: wrap; background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); }
 .report__kpis > div { flex: 1 1 160px; display: grid; gap: 2px; padding: var(--space-3) var(--space-5); }
@@ -96,10 +100,11 @@
   .report__odate { display: none; }
   /* מסננים בשני טורים, טווח בשורה אחת שנגללת, ומספרים ברשת של שניים */
   .report__filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-  .report__filters > .seg, .report__filters > .report__dates, .report__filters > .chip { grid-column: 1 / -1; }
+  .report__filters > .seg, .report__filters > .report__dates, .report__filters > .chip, .report__filters > .fbar { grid-column: 1 / -1; }
+  .report__filters .fbar .report__cust { width: 100%; }
   .report__filters > .seg { overflow-x: auto; scrollbar-width: none; justify-self: start; max-width: 100%; }
   .report__filters > .seg button { flex: none; white-space: nowrap; }
-  .report__sel, .report__cust { width: 100%; min-width: 0; }
+  .report__cust { width: 100%; min-width: 0; }
   .report__kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .report__kpis > div { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line-soft); }
   .report__kpis > div + div { border-inline-start: 0; }

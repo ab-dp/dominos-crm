@@ -90,25 +90,6 @@
 .health--missing { color: var(--missing-fg); }
 .health--ok { color: var(--ok-fg); }
 
-/* ---------- Status ---------- */
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  height: 28px;
-  padding: 0 var(--space-2) 0 var(--space-2);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  background: var(--white);
-  color: var(--gray-900);
-  font: inherit;
-  font-size: var(--text-label);
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.status:hover { border-color: var(--gray-300); background: var(--gray-50); }
-
 /* ---------- Menus & popovers ---------- */
 .menu, .pop {
   background: var(--white);
@@ -139,7 +120,6 @@
 .menu__sep { height: 1px; margin: var(--space-1) 0; background: var(--gray-100); }
 .menu__item--danger { color: var(--danger-fg); }
 .menu__item--danger[data-highlighted] { background: var(--danger-bg); color: var(--danger-fg); }
-.menu__check { width: 16px; display: grid; place-items: center; color: var(--brand-600); }
 .pop { padding: var(--space-4); width: 280px; }
 .pop__title { margin: 0 0 var(--space-3); font-weight: 600; font-size: var(--text-table); }
 .pop__row { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
@@ -242,7 +222,7 @@
 
 /* מטרות לחיצה ≥44px במסכי מגע (אפיון 2.2) */
 @media (pointer: coarse) {
-  .mark-btn, .btn--sm, .icon-btn, .status, .chip, .seg button { min-height: 44px; }
+  .mark-btn, .btn--sm, .icon-btn, .chip, .seg button { min-height: 44px; }
   .icon-btn { min-width: 44px; }
   /* קישורי פעולה ותחנות בציר: אזור לחיצה גדול סביב הטקסט, בלי לשנות את השורה (גם בתוך משפט) */
   .link, .otl-step__edit { position: relative; }

@@ -10,6 +10,7 @@ import { Ltr } from '../../lib/format';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import { FIELD } from './OrderPanel';
 import './StatusDialogs.css';
+import { CARD_RE } from '../../lib/names';
 
 export function LockFixDialog() {
   const { lockFix, confirmLockFix, endLockFix } = useStore();
@@ -20,7 +21,7 @@ export function LockFixDialog() {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (reason.trim().length < 3) { setErr('חובה: סיבת התיקון (לפחות 3 תווים)'); return; }
-    if (/\d{13,}/.test(reason)) { setErr('אסור לרשום כאן מספר כרטיס אשראי'); return; }
+    if (CARD_RE.test(reason)) { setErr('אסור לרשום כאן מספר כרטיס אשראי'); return; }
     confirmLockFix(reason.trim());
     setReason(''); setErr('');
   };

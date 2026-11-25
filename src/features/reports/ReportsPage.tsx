@@ -6,7 +6,7 @@ import { ArrowRight, CalendarCheck, ChartColumn, Download, RefreshCw, X } from '
 import { usePanel } from '../../app/PanelContext';
 import { logReportExport, useOrdersRange } from '../../data/orders';
 import { useStore } from '../../data/store';
-import { METHOD_LABEL, OUTCOME_LABEL, outcomeOf, type Order, type Outcome } from '../../data/types';
+import { METHOD_LABEL, OUTCOME_LABEL, type Order, type Outcome } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney } from '../../lib/format';
@@ -16,6 +16,8 @@ import { BarChart } from './BarChart';
 import { reportName, reportSheet } from './reportExcel';
 import { downloadXlsx } from '../../lib/xlsx';
 import { useProgressive } from '../../lib/useProgressive';
+import { FilterBar } from '../../design/FilterBar';
+import { filterOptions, matchesFilters, type FilterValues } from '../../data/orderFilters';
 import '../pages.css';
 import './ReportsPage.css';
 
@@ -80,6 +82,7 @@ function Report({ def }: { def: ReportDef }) {
   const method = params.get('method') ?? '';
   const outcome = (params.get('outcome') ?? '') as Outcome | '';
   const handler = params.get('handler') ?? '';
+  const fv: FilterValues = useMemo(() => ({ cluster, branch, method, outcome, handler }), [cluster, branch, method, outcome, handler]);
   const [cust, setCust] = useState('');
   const set = (patch: Record<string, string | null>) => {
     const p = new URLSearchParams(params);
@@ -88,12 +91,8 @@ function Report({ def }: { def: ReportDef }) {
   };
 
   const { orders: raw, loading, error, reload } = useOrdersRange(from, to);
-  const clusters = useMemo(() => [...new Set(raw.map((o) => o.cluster).filter(Boolean))].sort(), [raw]);
-  const branches = useMemo(() => [...new Set(raw.filter((o) => !cluster || o.cluster === cluster).map((o) => o.branchName))].sort(), [raw, cluster]);
-  const methods = useMemo(() => [...new Set(raw.map((o) => o.method))], [raw]);
-  const handlers = useMemo(() => [...new Set(raw.map((o) => o.handler || o.createdBy).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he')), [raw]);
-  const orders = useMemo(() => raw.filter((o) => (!cluster || o.cluster === cluster) && (!branch || o.branchName === branch) && (!cust.trim() || o.customerName.includes(cust.trim()))
-    && (!method || o.method === method) && (!outcome || outcomeOf(o) === outcome) && (!handler || (o.handler || o.createdBy) === handler)), [raw, cluster, branch, cust, method, outcome, handler]);
+  const dims = useMemo(() => filterOptions(raw, ['cluster', 'branch', 'method', 'outcome', 'handler'], fv).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)), [raw, fv]);
+  const orders = useMemo(() => raw.filter((o) => matchesFilters(o, fv) && (!cust.trim() || o.customerName.includes(cust.trim()))), [raw, fv, cust]);
   const res: ReportResult = useMemo(() => def.compute(orders), [def, orders]);
   const prog = useProgressive(res.rows.length, res);
   const [picked, setPicked] = useState<Row | null>(null);
@@ -142,28 +141,9 @@ function Report({ def }: { def: ReportDef }) {
             <input type="date" className="input input--sm" value={to} min={from} onChange={(e) => e.target.value && set({ to: e.target.value })} aria-label="עד תאריך" />
           </span>
         )}
-        <select className="input input--sm report__sel" value={cluster} onChange={(e) => set({ cluster: e.target.value, branch: null })} aria-label="אשכול">
-          <option value="">כל האשכולות</option>
-          {clusters.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select className="input input--sm report__sel" value={branch} onChange={(e) => set({ branch: e.target.value })} aria-label="סניף">
-          <option value="">כל הסניפים</option>
-          {branches.map((b) => <option key={b} value={b}>{b}</option>)}
-        </select>
-        <select className="input input--sm report__sel" value={method} onChange={(e) => set({ method: e.target.value })} aria-label="אמצעי תשלום">
-          <option value="">כל אמצעי התשלום</option>
-          {methods.map((m) => <option key={m} value={m}>{METHOD_LABEL[m] ?? m}</option>)}
-        </select>
-        <select className="input input--sm report__sel" value={outcome} onChange={(e) => set({ outcome: e.target.value })} aria-label="סטטוס אספקה">
-          <option value="">כל הסטטוסים</option>
-          {(Object.keys(OUTCOME_LABEL) as Outcome[]).map((k) => <option key={k} value={k}>{OUTCOME_LABEL[k]}</option>)}
-        </select>
-        <select className="input input--sm report__sel" value={handler} onChange={(e) => set({ handler: e.target.value })} aria-label="מטפל">
-          <option value="">כל המטפלים</option>
-          {handlers.map((h) => <option key={h} value={h}>{h}</option>)}
-        </select>
-        <input className="input input--sm report__cust" value={cust} onChange={(e) => setCust(e.target.value)} placeholder="לקוח" aria-label="סינון לפי לקוח" />
-        {filtered && <button className="chip is-on" onClick={() => { setCust(''); set({ cluster: null, branch: null, method: null, outcome: null, handler: null }); }}>נקה סינון <X size={14} aria-hidden="true" /></button>}
+        <FilterBar dims={dims} values={fv} onChange={set} extraActive={cust.trim() ? 1 : 0} onClearAll={() => setCust('')}>
+          <input className="input input--sm report__cust" value={cust} onChange={(e) => setCust(e.target.value)} placeholder="לקוח" aria-label="סינון לפי לקוח" />
+        </FilterBar>
       </div>
 
       {error && <p className="cform__formerr" role="alert">{error} – הדוח לא נטען.</p>}
