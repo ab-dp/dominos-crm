@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>כרטיס הזמנה – הדמיה v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v3.css">
+<style>
+  body { overflow: hidden; }
+  .behind { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
+  .scrim { position: fixed; inset: 0; background: rgb(11 35 64 / .34); z-index: 10; }
+  .panel { position: fixed; top: 0; bottom: 0; left: 0; width: min(820px, 100vw); background: var(--page); box-shadow: var(--shadow-panel); z-index: 20; display: flex; flex-direction: column; }
+
+  .p-head { padding: 20px 24px 0; flex: none; }
+  .p-head__top { display: flex; align-items: flex-start; gap: 12px; }
+  .p-head__act { margin-inline-start: auto; display: flex; gap: 4px; align-items: center; }
+  .p-head__act .btn { margin-inline-end: 4px; }
+  .p-head .facts { margin-top: 14px; }
+  .p-strip { display: flex; align-items: center; gap: 16px; margin-top: 16px; padding: 14px 0 16px; border-top: 1px solid var(--rec-line); flex-wrap: wrap; }
+  .p-strip .tag { height: 24px; font-size: 13px; padding: 0 8px; }
+  .p-amt { margin-inline-start: auto; display: flex; align-items: baseline; gap: 12px; }
+  .p-amt small { font-size: 12px; font-weight: 500; color: var(--rec-muted); }
+  .p-amt b { font-size: 28px; font-weight: 600; color: #fff; line-height: 1; }
+
+  .p-body { overflow: auto; padding: 16px 24px 40px; display: grid; gap: 16px; align-content: start; flex: 1; }
+
+  /* כתובת – יחידה אמיתית, מותר לה מסגרת */
+  .addr { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; margin-top: 14px; }
+  .addr svg { color: var(--gray-600); margin-top: 3px; }
+  .addr b { font-size: 17px; font-weight: 600; display: block; line-height: 1.35; }
+  .addr small { font-size: 13px; color: var(--gray-600); }
+  .addr .link { margin-inline-start: auto; align-self: center; }
+
+  /* פריטים */
+  .items { width: 100%; max-width: 480px; border-collapse: collapse; font-size: 15px; }
+  .items td { padding: 8px 0; border-bottom: 1px solid var(--line-soft); vertical-align: baseline; }
+  .items tr:last-child td { border-bottom: 0; }
+  .items .grp td { padding: 14px 0 4px; font-size: 12px; font-weight: 600; color: var(--gray-600); border-bottom: 1px solid var(--line); }
+  .items .grp:first-child td { padding-top: 0; }
+  .items .grp span { font-weight: 500; margin-inline-start: 6px; color: var(--gray-500); }
+  .items .q { width: 48px; font-weight: 600; }
+  .items .nm { font-weight: 500; }
+  .items .kind { color: var(--gray-600); font-weight: 400; margin-inline-start: 8px; }
+  .items .tops { display: block; font-size: 13px; color: var(--gray-600); }
+  .items .p { text-align: left; width: 80px; color: var(--gray-600); }
+
+  /* שורת Q – אזור הפעולה של הבלוק */
+  .qbar { margin-top: 16px; }
+  .qbar__sum { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px 32px; align-items: end; padding: 16px; }
+  .qbar__amt small { display: block; font-size: 12px; font-weight: 500; color: var(--gray-600); }
+  .qbar__amt b { font-size: 28px; font-weight: 600; line-height: 1.1; }
+  .qbar__q { display: flex; align-items: center; gap: 12px; padding: 14px 16px 10px; border-top: 1px solid var(--zone-line); flex-wrap: wrap; }
+  .qbar__btns { display: flex; gap: 8px; }
+  .qbar__btns .btn { padding: 0 16px; }
+  .qbar__q label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+  .qbar__q .input { width: 160px; }
+  .qbar__hint { padding: 0 16px 12px; font-size: 12px; color: var(--gray-600); display: flex; align-items: center; gap: 6px; }
+
+  details.sec > summary { list-style: none; cursor: pointer; }
+  details.sec > summary::-webkit-details-marker { display: none; }
+  details.sec > summary .chev { transition: transform var(--dur) var(--ease); color: var(--gray-500); }
+  details.sec[open] > summary .chev { transform: rotate(180deg); }
+  details.sec > summary:hover h2 { color: var(--brand-700); }
+  details.sec:not([open]) > summary.sec__head { border-bottom-color: transparent; padding-bottom: 0; }
+  .hist { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .hist li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+  .hist time { color: var(--gray-600); font-size: 13px; }
+
+  /* אזור הקופה מובלט; שאר האזורים שקטים */
+  .sec--reg { padding-top: 0; }
+  .sec--reg > .sec__head { margin: 0 -24px; padding: 14px 24px 12px; background: var(--brand-50); border-bottom: 1px solid var(--brand-100); border-radius: var(--r-panel) var(--r-panel) 0 0; min-height: 0; }
+  .sec--reg > .sec__head + .lrow { padding-top: 20px; }
+  .sec--reg .lrow__t { color: var(--navy); }
+  .sec--lite, .sec--lite + .sec--lite { padding: 4px 24px 16px; }
+  .sec--reg + .sec--lite { padding-top: 12px; }
+  .sec--lite .sec__head { border-bottom-color: var(--line); padding-bottom: 8px; min-height: 0; }
+  .sec--lite .kvs { padding-top: 12px; }
+  .sec--lite:last-child { padding-bottom: 20px; }
+  .empty { padding-top: 10px; font-size: 14px; color: var(--gray-600); }
+  .facts__more { display: none; }
+
+  @media (max-width: 700px) {
+    .p-head { padding: 14px 16px 0; }
+    .rec h1 { font-size: 20px; }
+    .rec h1 .id { font-size: 15px; }
+    .p-head__act .btn span { display: none; }
+    .p-head .facts { margin-top: 10px; align-items: flex-end; }
+    .p-head .fact { padding-inline: 12px; }
+    .p-head .fact--more { display: none; }
+    .p-head.is-open .fact--more { display: grid; }
+    .p-head.is-open .fact--more:nth-child(3) { padding-inline-start: 0; border: 0; }
+    .facts__more { display: inline-flex; margin-inline-start: auto; align-self: center; height: 28px; padding: 0 8px; gap: 4px; border: 0; border-radius: var(--r); background: rgb(255 255 255 / .08); color: var(--rec-text); font-size: 13px; font-weight: 500; align-items: center; }
+    .p-head.is-open .facts__more svg { transform: rotate(180deg); }
+    .track__ln { width: 20px; margin-inline: 6px; }
+    .p-strip { gap: 10px 12px; margin-top: 12px; padding: 12px 0; }
+    .track { width: 100%; }
+    .p-amt b { font-size: 24px; }
+    .p-body { padding: 12px 12px 32px; }
+    .qbar__sum { grid-template-columns: minmax(0, 1fr); }
+    .qbar__q .input { flex: 1; width: auto; }
+    .qbar__hint { display: none; }
+    .qbar__btns { width: 100%; }
+    .qbar__btns .btn { flex: 1; justify-content: center; }
+    .hist li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .note { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body data-active="orders">
+<iframe class="behind" src="orders.html" title="רשימת ההזמנות" tabindex="-1" aria-hidden="true"></iframe>
+<div class="scrim"></div>
+
+<section class="panel" role="dialog" aria-labelledby="ttl">
+  <header class="p-head rec">
+    <div class="p-head__top">
+      <h1 id="ttl" tabindex="-1">חברת אלפא טכנולוגיות<span class="id"><bdi class="n">#1024</bdi></span></h1>
+      <div class="p-head__act">
+        <button class="btn"><i data-lucide="pencil" class="i"></i><span>עריכה</span></button>
+        <button class="icon-btn" aria-label="פעולות נוספות"><i data-lucide="ellipsis" class="i"></i></button>
+        <button class="icon-btn" aria-label="סגירה"><i data-lucide="x" class="i"></i></button>
+      </div>
+    </div>
+    <div class="facts">
+      <div class="fact"><small>מועד</small><span>יום ה׳ <bdi class="n">27.11</bdi>, <bdi class="n">12:30</bdi></span></div>
+      <div class="fact"><small>סניף</small><span>רמת גן – ביאליק</span></div>
+      <div class="fact fact--more"><small>אספקה</small><span>משלוח</span></div>
+      <div class="fact fact--more"><small>ערוץ</small><span>טלפון</span></div>
+      <div class="fact fact--more"><small>מטפל</small><span>דנה לוי</span></div>
+      <button class="facts__more" type="button" aria-expanded="false" onclick="const h=this.closest('.p-head');h.classList.toggle('is-open');this.setAttribute('aria-expanded',h.classList.contains('is-open'))">עוד<i data-lucide="chevron-down" class="i i-sm"></i></button>
+    </div>
+    <div class="p-strip">
+      <div class="track" aria-label="שלב ההזמנה: פתוחה">
+        <span class="track__s track__s--now"><span class="track__dot"></span>פתוחה</span>
+        <span class="track__ln"></span>
+        <span class="track__s"><span class="track__dot"></span>הוקלד ל-Q</span>
+        <span class="track__ln"></span>
+        <span class="track__s"><span class="track__dot"></span>סופקה</span>
+      </div>
+      <span class="tag tag--urgent"><i data-lucide="bell" class="i i-sm"></i>לעדכן בתפעול</span>
+      <div class="p-amt"><small>סכום לחיוב</small><b><bdi class="n">₪—</bdi></b></div>
+    </div>
+  </header>
+
+  <div class="p-body">
+    <div class="note">
+      <p class="note__t">הערות להזמנה</p>
+      <p class="note__x">לחתוך כל פיצה ל-12 משולשים. להתקשר ליואב 10 דקות לפני ההגעה, הכניסה מהחניון בצד המזרחי.</p>
+    </div>
+
+    <article class="sheet">
+      <!-- להעברה לקופה -->
+      <section class="sec sec--reg">
+        <div class="sec__head">
+          <h2>להעברה לקופה</h2>
+          <div class="sec__act"><button class="link"><i data-lucide="copy" class="i i-sm"></i>העתק הכל</button></div>
+        </div>
+        <div class="lrow">
+          <h3 class="lrow__t">לקוח ואיש קשר</h3>
+          <div class="kvs">
+            <div class="kv"><span class="kv__l">לקוח</span><span class="kv__v kv__v--strong">חברת אלפא טכנולוגיות</span></div>
+            <div class="kv"><span class="kv__l">איש קשר</span><span class="kv__v">יואב כהן</span></div>
+            <div class="kv"><span class="kv__l">טלפון</span><span class="kv__v"><bdi class="n">050-0000000</bdi></span></div>
+          </div>
+        </div>
+        <div class="lrow">
+          <h3 class="lrow__t">אספקה וכתובת</h3>
+          <div>
+            <div class="kvs">
+              <div class="kv"><span class="kv__l">סוג</span><span class="kv__v">משלוח</span></div>
+              <div class="kv"><span class="kv__l">מועד</span><span class="kv__v"><bdi class="n">27.11.2026</bdi>, <bdi class="n">12:30</bdi></span></div>
+              <div class="kv"><span class="kv__l">סניף</span><span class="kv__v">רמת גן – ביאליק</span></div>
+            </div>
+            <div class="addr zone">
+              <i data-lucide="map-pin" class="i"></i>
+              <div><b>ז׳בוטינסקי 7, רמת גן</b><small>קומה 12, מגדל משרדים. חניה בכניסה המזרחית</small></div>
+              <button class="link"><i data-lucide="copy" class="i i-sm"></i>העתק</button>
+            </div>
+          </div>
+        </div>
+        <div class="lrow">
+          <h3 class="lrow__t">פריטים</h3>
+          <table class="items">
+            <tr class="grp"><td colspan="3">פיצות<span><bdi class="n">18</bdi></span></td></tr>
+            <tr><td class="q"><bdi class="n">×10</bdi></td><td><span class="nm">משפחתית</span><span class="kind">עם תוספת</span><span class="tops">זיתים, פטריות</span></td><td class="p"><bdi class="n">₪—</bdi></td></tr>
+            <tr><td class="q"><bdi class="n">×6</bdi></td><td><span class="nm">משפחתית דקה</span><span class="kind">מיקס</span><span class="tops">חצי פפרוני, חצי ללא</span></td><td class="p"><bdi class="n">₪—</bdi></td></tr>
+            <tr><td class="q"><bdi class="n">×2</bdi></td><td><span class="nm">צ׳יזי קראסט קלאסי</span><span class="kind">ללא תוספת</span></td><td class="p"><bdi class="n">₪—</bdi></td></tr>
+            <tr class="grp"><td colspan="3">ליד הפיצה<span><bdi class="n">4</bdi></span></td></tr>
+            <tr><td class="q"><bdi class="n">×4</bdi></td><td><span class="nm">לחם שום</span></td><td class="p"><bdi class="n">₪—</bdi></td></tr>
+            <tr class="grp"><td colspan="3">משקאות<span><bdi class="n">10</bdi></span></td></tr>
+            <tr><td class="q"><bdi class="n">×10</bdi></td><td><span class="nm">שתייה קלה</span><span class="kind"><bdi class="n">1.5</bdi> ליטר</span></td><td class="p"><bdi class="n">₪—</bdi></td></tr>
+            <tr class="grp"><td colspan="3">משלוח</td></tr>
+            <tr><td class="q"></td><td><span class="nm">דמי משלוח</span></td><td class="p"><bdi class="n">₪—</bdi></td></tr>
+          </table>
+        </div>
+
+        <div class="qbar zone">
+          <div class="qbar__sum">
+            <div class="qbar__amt"><small>סכום לחיוב, כולל משלוח</small><b><bdi class="n">₪—</bdi></b></div>
+            <div class="kvs">
+              <div class="kv"><span class="kv__l">אמצעי תשלום</span><span class="kv__v">הקפה</span></div>
+              <div class="kv"><span class="kv__l">טלפון להקפה</span><span class="kv__v"><bdi class="n">050-0000000</bdi></span></div>
+              <div class="kv"><span class="kv__l">ח.פ</span><span class="kv__v"><bdi class="n">510000000</bdi></span></div>
+            </div>
+          </div>
+          <div class="qbar__q">
+            <label for="qno">מס׳ Q</label>
+            <input id="qno" class="input input--ltr" inputmode="numeric" placeholder="עוד לא הוקלד">
+            <div class="qbar__btns"><button class="btn btn--primary"><i data-lucide="keyboard" class="i"></i>רישום Q</button><button class="btn"><i data-lucide="pause" class="i"></i>השהה</button></div>
+          </div>
+          <p class="qbar__hint">אחרי רישום Q: <kbd>N</kbd> מעבר להזמנה הבאה להקלדה</p>
+        </div>
+      </section>
+
+      <!-- תשלום ומסמכים -->
+      <section class="sec sec--lite">
+        <div class="sec__head">
+          <h2>תשלום ומסמכים</h2>
+          <span class="tag tag--urgent">חסרה תעודת רכש</span>
+          <div class="sec__act"><button class="btn btn--sm"><i data-lucide="paperclip" class="i i-sm"></i>צירוף מסמך</button></div>
+        </div>
+        <div class="kvs">
+          <div class="kv"><span class="kv__l">מצב תשלום</span><span class="kv__v">ממתין לחיוב</span></div>
+          <div class="kv"><span class="kv__l">תעודת רכש</span><span class="kv__v" style="color:var(--urgent-fg)">חסרה</span></div>
+          <div class="kv"><span class="kv__l">מסמכים</span><span class="kv__v kv__v--quiet">אין</span></div>
+        </div>
+      </section>
+
+      <!-- פרטים נוספים -->
+      <section class="sec sec--lite">
+        <div class="sec__head"><h2>פרטים נוספים</h2></div>
+        <div class="kvs">
+          <div class="kv"><span class="kv__l">ערוץ</span><span class="kv__v">טלפון</span></div>
+          <div class="kv"><span class="kv__l">מספר קריאה</span><span class="kv__v"><bdi class="n">CR-20931</bdi></span></div>
+          <div class="kv"><span class="kv__l">מטפל</span><span class="kv__v">דנה לוי</span></div>
+        </div>
+        <div class="kv" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft)"><span class="kv__l">הערות להנהלת חשבונות</span><span class="kv__v" style="font-weight:400">לציין בחשבונית את מספר ההזמנה הפנימי של הלקוח.</span></div>
+      </section>
+
+      <!-- היסטוריה – מקופלת -->
+      <details class="sec sec--lite">
+        <summary class="sec__head"><h2>היסטוריה</h2><span class="sec__meta"><bdi class="n">6</bdi> שינויים, האחרון היום ב-<bdi class="n">09:12</bdi></span><i data-lucide="chevron-down" class="i chev" style="margin-inline-start:auto"></i></summary>
+        <ul class="hist">
+          <li><time>היום <bdi class="n">09:12</bdi></time><span>דנה לוי שינתה שעה מ-<bdi class="n">12:00</bdi> ל-<bdi class="n">12:30</bdi></span></li>
+          <li><time>אתמול <bdi class="n">19:40</bdi></time><span>דנה לוי יצרה את ההזמנה</span></li>
+        </ul>
+      </details>
+
+      <!-- תיעוד טיפול – בתחתית -->
+      <section class="sec sec--lite">
+        <div class="sec__head"><h2>תיעוד טיפול</h2></div>
+        <p class="empty">תיעוד שיחה נפתח אחרי סימון סופקה.</p>
+      </section>
+    </article>
+  </div>
+</section>
+<div class="mock-label">הדמיה v3</div>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>

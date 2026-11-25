@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הזמנה חדשה – הדמיה v3</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v3.css">
+<style>
+  .no { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+  .form .sec { padding-bottom: 8px; }
+  .form .sec + .sec { padding-top: 32px; }
+  .form .sec:last-child { padding-bottom: 24px; }
+  .fgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 20px; padding-top: 16px; }
+  .span2 { grid-column: span 2; }
+  .span3 { grid-column: span 3; }
+  .cust { display: flex; align-items: center; gap: 8px; }
+  .cust b { font-weight: 600; }
+  .cust .tag { margin-inline-start: auto; }
+
+  /* קטגוריות */
+  .cats { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; padding-top: 16px; }
+  .cat { height: 40px; border: 1px solid var(--gray-200); border-radius: var(--r); background: var(--sheet); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--gray-700); white-space: nowrap; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease); padding: 0 8px; }
+  .cat svg { color: var(--gray-500); }
+  .cat:hover { background: var(--gray-50); border-color: var(--gray-300); }
+  .cat--on, .cat--on:hover { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); box-shadow: inset 0 0 0 1px var(--brand-600); }
+  .cat--on svg { color: var(--brand-700); }
+  .cat__n { font-size: 12px; color: var(--brand-700); font-weight: 600; }
+
+  /* בוחר מדורג – אזור פנימי */
+  .picker { margin-top: 12px; overflow: hidden; }
+  .crumbs { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--zone-line); font-size: 13px; color: var(--gray-600); flex-wrap: wrap; background: var(--sheet); }
+  .crumbs b { color: var(--gray-900); font-weight: 600; }
+  .crumbs svg { color: var(--gray-400); }
+  .crumbs .now { color: var(--brand-700); font-weight: 600; }
+  .crumbs .link { margin-inline-start: auto; }
+  .step { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--zone-line); align-items: start; }
+  .step:last-child { border-bottom: 0; }
+  .step__l { font-size: 13px; font-weight: 600; color: var(--gray-700); display: flex; align-items: center; gap: 6px; min-height: 36px; }
+  .step__l svg { color: var(--ok-mark); }
+  .step--now .step__l { color: var(--brand-700); }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .opt { height: 36px; padding: 0 12px; border-radius: var(--r); border: 1px solid var(--gray-200); background: var(--sheet); font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+  .opt:hover { border-color: var(--gray-300); background: var(--gray-50); }
+  /* מקש קיצור, לא כמות: מסגרת של מקש */
+  .opt i { font-style: normal; font-size: 12px; font-weight: 500; color: var(--gray-600); min-width: 18px; height: 18px; padding: 0 4px; border: 1px solid var(--gray-300); border-bottom-width: 2px; border-radius: 4px; display: inline-grid; place-items: center; line-height: 1; }
+  .opt--on, .opt--on:hover { background: var(--brand-50); border-color: var(--brand-600); color: var(--brand-800); box-shadow: inset 0 0 0 1px var(--brand-600); }
+  .opt--on i { color: var(--brand-700); }
+  .ctabs { margin-top: 8px; }
+  .ctabs button { height: 40px; }
+  .picker .step:first-child { border-top: 0; }
+  .mbar { display: none; }
+  .opt--other { border-style: dashed; color: var(--gray-600); }
+  .lineform { display: grid; grid-template-columns: auto 96px minmax(150px, 1fr) auto; gap: 12px; align-items: end; }
+  .lineform .field:first-child { grid-column: 1 / -1; }
+  .price { justify-content: space-between; white-space: nowrap; }
+  .price .tag { height: 20px; }
+  .enter { font-size: 12px; color: var(--gray-600); display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+
+  /* שורות שנוספו */
+  .added { margin-top: 20px; }
+  .added__g { display: flex; align-items: baseline; gap: 6px; font-size: 12px; font-weight: 600; color: var(--gray-600); padding: 12px 0 4px; border-bottom: 1px solid var(--line); }
+  .added__g span { font-weight: 500; color: var(--gray-500); }
+  .aline { display: grid; grid-template-columns: 48px minmax(0, 1fr) 72px auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 15px; }
+  .aline b { font-weight: 600; }
+  .aline .kind { color: var(--gray-600); margin-inline-start: 8px; }
+  .aline small { display: block; font-size: 13px; color: var(--gray-600); }
+  .aline .p { text-align: left; color: var(--gray-600); }
+  .aline .acts { display: flex; gap: 2px; }
+
+  /* סיכום צד */
+  .side { position: sticky; top: 80px; }
+  .side h2 { font-size: 15px; font-weight: 600; padding: 16px 20px 12px; border-bottom: 1px solid var(--rule); }
+  .srow { display: flex; justify-content: space-between; gap: 12px; padding: 8px 20px; font-size: 14px; }
+  .srow:first-of-type { padding-top: 12px; }
+  .srow span { color: var(--gray-600); }
+  .srow b { font-weight: 500; text-align: left; }
+  .stotal { margin: 12px 20px 0; padding: 14px 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: baseline; }
+  .stotal span { font-size: 13px; color: var(--gray-600); font-weight: 500; }
+  .stotal b { font-size: 28px; font-weight: 600; line-height: 1; }
+  .missing { list-style: none; margin: 0 20px; padding: 12px 14px; display: grid; gap: 6px; font-size: 13px; font-weight: 500; color: var(--missing-fg); background: var(--missing-bg); border-radius: var(--r); }
+  .missing li { display: flex; gap: 8px; align-items: center; }
+  .missing li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+  .sfoot { padding: 16px 20px 20px; display: grid; gap: 8px; }
+  .sfoot .btn--lg { justify-content: center; }
+  .sfoot small { font-size: 12px; color: var(--gray-600); display: flex; align-items: center; gap: 6px; justify-content: center; }
+
+  @media (max-width: 1180px) {
+    .no { grid-template-columns: minmax(0, 1fr); }
+    .side { position: static; }
+    .cats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px) {
+    .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .span2, .span3 { grid-column: 1 / -1; }
+    .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .step { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 12px; }
+    .step__l { min-height: 0; }
+    .lineform { grid-template-columns: 1fr 1fr; }
+    .lineform .seg { width: 100%; }
+    .lineform .seg button { flex: 1; justify-content: center; }
+    .lineform .field:nth-child(2) { grid-column: 1 / -1; }
+    .lineform .btn { grid-column: 1 / -1; justify-content: center; height: 44px; }
+    .crumbs { padding: 10px 12px; }
+    .phead .seg { width: 100%; }
+    .phead .seg button { flex: 1; justify-content: center; }
+    .aline { grid-template-columns: 40px minmax(0, 1fr) auto; }
+    .aline .p { display: none; }
+    .sec__head .field { display: none; }
+    .page { padding-bottom: 156px; }
+    .mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 60px; z-index: 25; align-items: center; gap: 12px; padding: 10px 16px; background: var(--sheet); border-top: 1px solid var(--line); box-shadow: 0 -6px 16px -10px rgb(15 27 42 / .22); }
+    .mbar small { display: block; font-size: 12px; font-weight: 500; color: var(--gray-600); }
+    .mbar b { font-size: 22px; font-weight: 600; line-height: 1.1; }
+    .mbar .btn { margin-inline-start: auto; }
+    .sfoot { display: none; }
+  }
+</style>
+</head>
+<body data-active="orders">
+<div class="shell">
+  <aside class="rail"></aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="search"><i data-lucide="search" class="i"></i><span>חיפוש: הזמנה, לקוח, מס׳ קריאה, Q, טלפון</span><span class="kbd">/</span></div>
+    </div>
+    <div class="page">
+      <div class="phead">
+        <div><h1>הזמנה חדשה</h1></div>
+        <div class="seg" role="radiogroup" aria-label="סוג לקוח"><button class="on" role="radio" aria-checked="true">לקוח קיים</button><button role="radio" aria-checked="false">לקוח חדש</button></div>
+      </div>
+
+      <div class="no">
+        <form class="sheet form" onsubmit="return false">
+          <!-- לקוח -->
+          <section class="sec">
+            <div class="sec__head"><h2>לקוח</h2></div>
+            <div class="fgrid">
+              <div class="field span2"><label for="c">לקוח<span class="req">*</span></label>
+                <div class="input cust" id="c"><i data-lucide="building-2" class="i" style="color:var(--gray-500)"></i><b>חברת אלפא טכנולוגיות</b><span class="tag">הקפה</span></div></div>
+              <div class="field span2"><label for="ct">איש קשר</label>
+                <select id="ct" class="input"><option>יואב כהן, 050-0000000</option><option>רונית לוי</option></select></div>
+            </div>
+          </section>
+
+          <!-- מועד, סניף וערוץ -->
+          <section class="sec">
+            <div class="sec__head"><h2>מועד, סניף וערוץ</h2></div>
+            <div class="fgrid">
+              <div class="field"><label for="d">תאריך<span class="req">*</span></label><input id="d" class="input input--ltr" value="27.11.2026"></div>
+              <div class="field"><label for="t">שעה<span class="req">*</span></label><input id="t" class="input input--ltr" value="12:30"></div>
+              <div class="field"><label for="ch">ערוץ<span class="req">*</span></label><select id="ch" class="input"><option>טלפון</option><option>וואטסאפ</option><option>מייל</option><option>מכירות</option></select></div>
+              <div class="field"><label for="cr">מספר קריאה</label><input id="cr" class="input input--ltr" placeholder="לא חובה"></div>
+            </div>
+          </section>
+
+          <!-- אספקה וכתובת -->
+          <section class="sec">
+            <div class="sec__head"><h2>אספקה וכתובת</h2>
+              <div class="sec__act"><div class="seg" role="radiogroup" aria-label="סוג אספקה"><button type="button" class="on">משלוח</button><button type="button">איסוף עצמי</button></div></div></div>
+            <div class="fgrid">
+              <div class="field span2"><label for="a">כתובת<span class="req">*</span></label><select id="a" class="input"><option>ז׳בוטינסקי 7, רמת גן, קומה 12</option><option>הברזל 30, תל אביב</option></select></div>
+              <div class="field span2"><label for="b">סניף<span class="req">*</span></label><select id="b" class="input"><option>רמת גן – ביאליק</option></select></div>
+            </div>
+          </section>
+
+          <!-- פריטים -->
+          <section class="sec">
+            <div class="sec__head"><h2>פריטים</h2><span class="sec__meta"><bdi class="n">16</bdi> פיצות, <bdi class="n">10</bdi> משקאות</span>
+              <div class="sec__act"><div class="field" style="grid-auto-flow:column;align-items:center;gap:8px"><label for="pl" style="white-space:nowrap">מחירון</label><select id="pl" class="input" style="width:200px;font-size:14px"><option>מחירון עסקי 2026</option><option>בלי מחירון</option></select></div></div></div>
+
+            <nav class="tabs ctabs" role="tablist" aria-label="קטגוריה">
+              <button type="button" role="tab" aria-selected="true" class="on">פיצות <span class="cnt">2</span></button>
+              <button type="button" role="tab">ליד הפיצה</button>
+              <button type="button" role="tab">כריכים</button>
+              <button type="button" role="tab">קינוחים</button>
+              <button type="button" role="tab">משקאות <span class="cnt">1</span></button>
+              <button type="button" role="tab">משלוח</button>
+              <button type="button" role="tab">שונות</button>
+            </nav>
+
+            <div class="picker zone">
+              <div class="step">
+                <div class="step__l"><i data-lucide="check" class="i i-sm"></i>סוג פיצה</div>
+                <div class="opts">
+                  <button type="button" class="opt">אישית<i>1</i></button><button type="button" class="opt">משפחתית<i>2</i></button><button type="button" class="opt">משפחתית עבה<i>3</i></button><button type="button" class="opt">משפחתית דקה<i>4</i></button><button type="button" class="opt">וולקנו<i>5</i></button><button type="button" class="opt">אקסטרה<i>6</i></button><button type="button" class="opt opt--on">צ׳יזי קראסט<i>7</i></button><button type="button" class="opt opt--other">אחר…</button>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step__l"><i data-lucide="check" class="i i-sm"></i>וריאציה</div>
+                <div class="opts"><button type="button" class="opt opt--on">קלאסי<i>1</i></button><button type="button" class="opt">חלפיניו<i>2</i></button></div>
+              </div>
+              <div class="step">
+                <div class="step__l"><i data-lucide="check" class="i i-sm"></i>סוג תוספת</div>
+                <div class="opts"><button type="button" class="opt opt--on">עם תוספת<i>1</i></button><button type="button" class="opt">ללא תוספת<i>2</i></button><button type="button" class="opt">בשרית<i>3</i></button><button type="button" class="opt">מיקס<i>4</i></button></div>
+              </div>
+              <div class="step step--now">
+                <div class="step__l">תוספות וחלוקה</div>
+                <div>
+                  <div class="lineform">
+                    <div class="field"><label for="tp">תוספות</label><input id="tp" class="input input--focus" value="זיתים, בצל סגול" autocomplete="off"></div>
+                    <div class="field"><span class="field__l">חלוקה</span><div class="seg"><button type="button" class="on">שלם</button><button type="button">חצי</button><button type="button">רבע</button></div></div>
+                    <div class="field"><label for="qt">כמות</label><input id="qt" class="input input--ltr" value="4" inputmode="numeric"></div>
+                    <div class="field"><label for="pr">מחיר ליח׳</label><div class="input price" id="pr"><span class="tag">מחירון</span><bdi class="n">₪—</bdi></div></div>
+                    <button type="button" class="btn"><i data-lucide="plus" class="i"></i>הוסף</button>
+                  </div>
+                  <p class="enter"><kbd>Enter</kbd> הוספה <kbd>Esc</kbd> שלב אחורה<button type="button" class="link" style="margin-inline-start:auto">התחלה מחדש</button></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="added">
+              <div class="added__g">פיצות<span><bdi class="n">16</bdi></span></div>
+              <div class="aline"><b><bdi class="n">×10</bdi></b><div>משפחתית<span class="kind">עם תוספת</span><small>זיתים, פטריות</small></div><span class="p"><bdi class="n">₪—</bdi></span><div class="acts"><button type="button" class="icon-btn icon-btn--sm" aria-label="עריכת שורה"><i data-lucide="pencil" class="i i-sm"></i></button><button type="button" class="icon-btn icon-btn--sm" aria-label="מחיקת שורה"><i data-lucide="trash-2" class="i i-sm"></i></button></div></div>
+              <div class="aline"><b><bdi class="n">×6</bdi></b><div>משפחתית דקה<span class="kind">מיקס</span><small>חצי פפרוני, חצי ללא</small></div><span class="p"><bdi class="n">₪—</bdi></span><div class="acts"><button type="button" class="icon-btn icon-btn--sm" aria-label="עריכת שורה"><i data-lucide="pencil" class="i i-sm"></i></button><button type="button" class="icon-btn icon-btn--sm" aria-label="מחיקת שורה"><i data-lucide="trash-2" class="i i-sm"></i></button></div></div>
+              <div class="added__g">משקאות<span><bdi class="n">10</bdi></span></div>
+              <div class="aline"><b><bdi class="n">×10</bdi></b><div>שתייה קלה<span class="kind"><bdi class="n">1.5</bdi> ליטר</span></div><span class="p"><bdi class="n">₪—</bdi></span><div class="acts"><button type="button" class="icon-btn icon-btn--sm" aria-label="עריכת שורה"><i data-lucide="pencil" class="i i-sm"></i></button><button type="button" class="icon-btn icon-btn--sm" aria-label="מחיקת שורה"><i data-lucide="trash-2" class="i i-sm"></i></button></div></div>
+            </div>
+          </section>
+
+          <!-- תשלום -->
+          <section class="sec">
+            <div class="sec__head"><h2>תשלום</h2></div>
+            <div class="fgrid">
+              <div class="field span2"><span class="field__l">אמצעי תשלום</span><div class="seg"><button type="button">אשראי</button><button type="button" class="on">הקפה</button><button type="button">מזומן</button><button type="button">אחר</button></div></div>
+              <div class="field"><label for="hp">טלפון להקפה</label><input id="hp" class="input input--ltr" value="050-0000000"></div>
+              <div class="field"><label for="po">תעודת רכש</label><input id="po" class="input input--ltr" placeholder="לא נדרשת"></div>
+            </div>
+          </section>
+
+          <!-- הערות -->
+          <section class="sec">
+            <div class="sec__head"><h2>הערות</h2></div>
+            <div class="fgrid">
+              <div class="field" style="grid-column:1/-1"><label for="nt">הערות להזמנה</label><textarea id="nt" class="input" style="background:var(--note-bg);border-color:var(--note-line)">לחתוך כל פיצה ל-12 משולשים.</textarea></div>
+              <button type="button" class="link" style="justify-self:start;grid-column:1/-1"><i data-lucide="chevron-down" class="i i-sm"></i>הערות להנהלת חשבונות</button>
+            </div>
+          </section>
+        </form>
+
+        <aside class="side sheet" aria-label="סיכום">
+          <h2>סיכום</h2>
+          <div class="srow"><span>לקוח</span><b>חברת אלפא טכנולוגיות</b></div>
+          <div class="srow"><span>מועד</span><b>מחר, <bdi class="n">12:30</bdi></b></div>
+          <div class="srow"><span>סניף</span><b>רמת גן – ביאליק</b></div>
+          <div class="srow"><span>ערוץ</span><b>טלפון</b></div>
+          <div class="srow"><span>אספקה</span><b>משלוח</b></div>
+          <div class="srow"><span>פריטים</span><b><bdi class="n">16</bdi> פיצות, <bdi class="n">10</bdi> משקאות</b></div>
+          <div class="stotal"><span>סה״כ לחיוב</span><b><bdi class="n">₪—</bdi></b></div>
+          <ul class="missing" aria-label="חסר בהזמנה"><li>שורת פיצה פתוחה, עוד לא נוספה</li></ul>
+          <div class="sfoot">
+            <button type="button" class="btn btn--primary btn--lg"><i data-lucide="check" class="i"></i>שמירת הזמנה<kbd>Ctrl S</kbd></button>
+            <button type="button" class="btn btn--ghost">ביטול</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="mbar"><div><small>סה״כ לחיוב</small><b><bdi class="n">₪—</bdi></b></div><button type="button" class="btn btn--primary btn--lg"><i data-lucide="check" class="i"></i>שמירת הזמנה</button></div>
+<nav class="bottombar" aria-label="ראשי"></nav>
+<div class="mock-label">הדמיה v3</div>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>
