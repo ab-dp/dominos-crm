@@ -136,6 +136,10 @@
 /* ---------- Content ---------- */
 .content { grid-area: main; min-width: 0; padding: var(--space-6) var(--gutter) 64px; outline: none; }
 .content > div { max-width: 1480px; }
+/* "יש גרסה חדשה" – קבוע בראש התוכן עד שמרעננים, לא חוסם */
+.version-banner { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--brand-300); border-radius: var(--radius); background: var(--brand-100); color: var(--gray-900); }
+.version-banner svg { flex: none; color: var(--brand-700); }
+.version-banner p { flex: 1; min-width: 180px; margin: 0; font-size: var(--text-table); font-weight: 500; }
 
 /* ---------- Command search ---------- */
 .cmd-overlay { position: fixed; inset: 0; background: var(--scrim); z-index: 60; animation: fade-in var(--dur-quick) var(--ease); }

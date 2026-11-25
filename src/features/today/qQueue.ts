@@ -1,12 +1,11 @@
 /* תור ההקלדה ל-Q של היום: כל הזמנה של היום (בלי ביטולים) נמצאת בקבוצה אחת, לפי מה שנשאר לעשות בה.
-   להקליד ל-Q – הלקוח אישר ועוד אין מספר Q · בהמתנה – סומנה 'בהמתנה' ועוד לא הגיע הזמן לחזור אליה ·
-   ממתינות לאישור לקוח – עוד לא מוכנות להקלדה ·
+   להקליד ל-Q – עוד אין מספר Q · בהמתנה – סומנה 'בהמתנה' ועוד לא הגיע הזמן לחזור אליה ·
    ירדו ל-Q – יש מספר Q והן עוד פתוחות · נסגרו – סופקו (מלא או חלקי).
    מסך "היום" וכפתור "הבאה להקלדה" בכרטיס ההזמנה קוראים מכאן, כדי שהתור יהיה זהה בשניהם. */
 import type { OrderView } from '../../data/store';
 import { holdDue } from '../../data/types';
 
-export type Lane = 'todo' | 'hold' | 'customer' | 'inq' | 'closed';
+export type Lane = 'todo' | 'hold' | 'inq' | 'closed';
 
 export function laneOf(o: Pick<OrderView, 'status' | 'qNumber' | 'hold'>, now: Date): Lane | null {
   if (o.status === 'cancelled') return null;
@@ -14,7 +13,6 @@ export function laneOf(o: Pick<OrderView, 'status' | 'qNumber' | 'hold'>, now: D
   if (o.qNumber) return 'inq';
   // בהמתנה עד שמגיע הזמן לחזור; אז חוזרת לקבוצה הרגילה שלה (ובראש 'להקליד ל-Q')
   if (o.hold && !holdDue(o.hold, now)) return 'hold';
-  if (o.status === 'new' || o.status === 'pending_customer') return 'customer';
   return 'todo';
 }
 
@@ -23,7 +21,7 @@ const byTime = (a: OrderView, b: OrderView) => a.time.localeCompare(b.time) || a
 const backFirst = (now: Date) => (a: OrderView, b: OrderView) => Number(holdDue(b.hold, now)) - Number(holdDue(a.hold, now)) || byTime(a, b);
 
 export function todayLanes(orders: OrderView[], today: string, now: Date): Record<Lane, OrderView[]> {
-  const out: Record<Lane, OrderView[]> = { todo: [], hold: [], customer: [], inq: [], closed: [] };
+  const out: Record<Lane, OrderView[]> = { todo: [], hold: [], inq: [], closed: [] };
   orders.filter((o) => o.date === today).sort(byTime).forEach((o) => {
     const l = laneOf(o, now);
     if (l) out[l].push(o);
@@ -34,7 +32,7 @@ export function todayLanes(orders: OrderView[], today: string, now: Date): Recor
 
 /* התקדמות היום: כמה מההזמנות של היום (בלי ביטולים) כבר ירדו ל-Q */
 export function qProgress(l: Record<Lane, OrderView[]>) {
-  const total = l.todo.length + l.hold.length + l.customer.length + l.inq.length + l.closed.length;
+  const total = l.todo.length + l.hold.length + l.inq.length + l.closed.length;
   const done = l.inq.length + l.closed.filter((o) => !!o.qNumber).length;
   return { total, done, left: total - done };
 }

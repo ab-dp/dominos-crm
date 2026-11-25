@@ -1,18 +1,18 @@
 /* ציר ההזמנה – בתיק ההזמנה. בלי מסגרת משלו: יושב בתוך התיק, מופרד בקו ובמרווח (כרטיס אחד, בלי קינון) */
 .timeline-wrap { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); }
-.otl { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
-.otl-step { position: relative; display: flex; gap: var(--space-2); align-items: flex-start; min-width: 0; }
-.otl-step + .otl-step::before { content: ''; position: absolute; inset-inline-end: calc(100% - 4px); top: 11px; width: 8px; height: 2px; background: var(--gray-200); }
+.otl { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-2); }
+.otl-step { display: flex; flex: 1 1 0; gap: var(--space-2); align-items: flex-start; min-width: 0; }
+.otl-step:last-child { flex: 0 1 auto; }
+/* המחבר לתחנה הבאה ממלא את כל הרווח, בגובה מרכז הנקודה; ירוק כשהתחנה הושלמה */
+.otl-step__line { flex: 1; min-width: var(--space-3); height: 2px; margin-top: 11px; border-radius: 1px; background: var(--gray-200); }
+.otl-step.is-done .otl-step__line { background: var(--ok-fg); }
 .otl-step__dot { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 var(--text-micro) var(--font-mono); background: var(--white); color: var(--gray-600); box-shadow: inset 0 0 0 1.5px var(--gray-300); }
 .otl-step.is-done .otl-step__dot { background: var(--ok-fg); color: var(--white); box-shadow: none; }
-.otl-step.is-done.is-warn .otl-step__dot { background: var(--urgent-edge); }
 .otl-step.is-now .otl-step__dot { background: var(--brand-600); color: var(--white); box-shadow: none; }
 .otl-step__body { display: grid; gap: var(--space-1); min-width: 0; justify-items: start; }
 .otl-step__title { font-size: var(--text-table); font-weight: 600; }
 .otl-step.is-todo .otl-step__title { color: var(--gray-600); font-weight: 500; }
 .otl-step__detail { font-size: var(--text-label); color: var(--gray-600); overflow-wrap: anywhere; }
-/* חוסר בשלב (דולג, עוד לא נשלח לתפעול) – דחוף, בכתום ובמילים */
-.otl-step__warn { display: block; color: var(--urgent-fg); font-weight: 500; }
 .otl-step__edit { padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-table); font-weight: 600; color: inherit; cursor: pointer; text-align: start; text-decoration: underline dotted var(--gray-300); text-underline-offset: 3px; }
 .otl-step__edit:hover { color: var(--brand-700); }
 .timeline-wrap.is-cancelled .otl { opacity: 0.55; }
@@ -21,7 +21,6 @@
 .otl-next { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding-top: var(--space-3); border-top: 1px solid var(--line-soft); }
 .otl-next__label { font-size: var(--text-label); color: var(--gray-600); font-weight: 500; }
 .otl-next__spacer { flex: 1; }
-.otl-next__warn { font-size: var(--text-label); color: var(--urgent-fg); font-weight: 500; }
 
 /* ציר קטן בשורה */
 .stage { display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
@@ -29,7 +28,6 @@
 .stage__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-200); }
 .stage__dot.is-done { background: var(--ok-fg); }
 .stage__dot.is-now { background: var(--brand-600); box-shadow: 0 0 0 2px var(--brand-100); }
-.stage__dot.is-warn { background: var(--urgent-edge); }
 .stage__label { font-size: var(--text-label); font-weight: 500; }
 .stage--cancelled .stage__label { color: var(--gray-600); }
 .stage--cancelled .stage__dot { background: var(--gray-200); }
@@ -42,7 +40,5 @@
 .close-form__reopen { justify-self: start; font-size: var(--text-label); }
 
 @media (max-width: 700px) {
-  .otl { grid-template-columns: 1fr 1fr; row-gap: var(--space-3); }
-  .otl-step + .otl-step::before { display: none; }
   .otl-next .btn--md { height: var(--control-lg); }
 }

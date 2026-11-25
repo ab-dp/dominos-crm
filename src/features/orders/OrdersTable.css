@@ -85,6 +85,10 @@
   .oday__meta { font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
   .orow__m { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-1); font-size: var(--text-label); color: var(--gray-700); }
   .orow__m > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* סניף ותגית "לעדכן בתפעול": השם נחתך, התגית תמיד גלויה */
+  .orow__m-br { display: flex; align-items: center; }
+  .orow__m-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .orow__m-br .ops-tag { flex: none; }
   .orow__m-sum { flex: none; font-weight: 500; color: var(--gray-900); }
   .otable--orders, .otable--orders tbody { display: block; }
   .otable--orders thead { display: none; }

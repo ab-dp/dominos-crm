@@ -3,35 +3,33 @@ export type PaymentState = 'pending' | 'paid' | 'failed' | 'cancelled';
 // אמצעי התשלום הבסיסיים נעולים ברשימות המערכת; אפשר להוסיף אחרים, לכן המזהה הוא מחרוזת
 export type PaymentMethod = 'credit' | 'account' | 'cash' | (string & {});
 
-/* status שומר רק את אישור הלקוח ואת הסגירה. השלב בציר נגזר מהנתונים – ראו stageOf */
+/* status שומר רק פתוחה / נסגרה. השלב בציר נגזר מהנתונים – ראו stageOf.
+   כל הזמנה שנכנסת למערכת כבר אושרה על ידי הלקוח: הזמנה חדשה נשמרת 'approved'.
+   'new' ו-'pending_customer' הם ערכים ישנים – מתפרשים כ-'approved' בקריאה (fromDoc ב-orders.ts), ומוצגים "פתוחה" */
 export const STATUS_LABEL: Record<OrderStatus, string> = {
-  new: 'ממתין לאישור לקוח', // ערך ישן – מוצג כמו "ממתין לאישור לקוח"
-  pending_customer: 'ממתין לאישור לקוח',
-  approved: 'הלקוח אישר',
+  new: 'פתוחה',
+  pending_customer: 'פתוחה',
+  approved: 'פתוחה',
   delivered: 'סופקה',
   partial: 'סופקה חלקית',
   cancelled: 'בוטלה',
 };
 export const CLOSED: OrderStatus[] = ['delivered', 'partial', 'cancelled'];
 
-/* ציר ההזמנה: ממתין לאישור לקוח ← ממתין לעדכון בתפעול ← מאושר ← הוקלד ל-Q ← נסגרה (סופקה / חלקית, אפשר באיחור). בוטלה – מכל שלב */
-export type Stage = 'pending_customer' | 'pending_branch' | 'approved' | 'in_q' | 'delivered' | 'partial' | 'cancelled';
+/* ציר ההזמנה: פתוחה ← הוקלד ל-Q ← נסגרה (סופקה / חלקית, אפשר באיחור). בוטלה – מכל שלב */
+export type Stage = 'open' | 'in_q' | 'delivered' | 'partial' | 'cancelled';
 export const STAGE_LABEL: Record<Stage, string> = {
-  pending_customer: 'ממתין לאישור לקוח',
-  pending_branch: 'ממתין לעדכון בתפעול',
-  approved: 'מאושר',
+  open: 'פתוחה',
   in_q: 'הוקלד ל-Q',
   delivered: 'סופקה',
   partial: 'סופקה חלקית',
   cancelled: 'בוטלה',
 };
-export const OPEN_STAGES: Stage[] = ['pending_customer', 'pending_branch', 'approved', 'in_q'];
-export function stageOf(o: Pick<Order, 'status' | 'branchApproval' | 'qNumber'>): Stage {
+export const OPEN_STAGES: Stage[] = ['open', 'in_q'];
+export function stageOf(o: Pick<Order, 'status' | 'qNumber'>): Stage {
   if (o.status === 'delivered' || o.status === 'partial' || o.status === 'cancelled') return o.status;
   if (o.qNumber) return 'in_q';
-  if (o.branchApproval) return 'approved';
-  if (o.status === 'approved') return 'pending_branch';
-  return 'pending_customer';
+  return 'open';
 }
 /* סטטוס אספקה לדוחות: סופקה / סופקה באיחור / חלקית / בוטלה / פתוחה */
 export type Outcome = 'ontime' | 'late' | 'partial' | 'cancelled' | 'open';
@@ -137,6 +135,7 @@ export type Order = {
   qNumber?: string;
   qAmount?: number;
   status: OrderStatus;
+  /* ישן, לקריאה בלבד: "עודכן בתפעול" בוטל (נובמבר 2026). מוצג רק בהיסטוריית ההזמנה */
   branchApproval?: { manager: string; at: string };
   payment: PaymentState;
   method: PaymentMethod;
@@ -171,15 +170,20 @@ export type Order = {
   /* אישורים שמנקים חריג (אפיון 9): פער מול Q שהוסבר, וביטול שבוצע גם בקופה */
   qGapAck?: { amount: number; qAmount: number; by: string; at: string; note?: string };
   qCancelAck?: { by: string; at: string };
-  /* שינוי אחרי אישור (אפיון 8): מה שונה, הערכים כפי שאושרו, ומה צריך לעדכן */
+  /* ישן, לקריאה בלבד: "שונתה לאחר אישור" – נשאר מוצג בהזמנות ישנות. שינויים חדשים נכתבים ל-changedAfterQ */
   changedAfterApproval?: { at: string; by: string; fields: string[]; before: Record<string, unknown> };
+  /* שינוי אחרי הקלדה ל-Q (או אחרי סגירה): מה שונה, הערכים לפני השינוי, ומה צריך לעדכן */
+  changedAfterQ?: { at: string; by: string; fields: string[]; before: Record<string, unknown> };
+  /* מתי ההזמנה נוצרה או שונתה בפרט שהסניף צריך לדעת (מועד, שעה, סניף, משלוח/איסוף, כתובת, פריטים) – ISO.
+     נכתב רק בשכבת הנתונים (orders.ts: createOrder, updateOrdersBatch, updateOrderSafe). לתזכורת "לעדכן בתפעול" */
+  opsChangeAt?: string;
   qNeedsUpdate?: boolean; // השינוי עוד לא עודכן בקופה
   /* תיקון בחודש נעול (אפיון 7): הסיבה של התיקון האחרון; מסומן בדוח החודש "תיקון לאחר סגירה" */
   postCloseFix?: { reason: string; by: string; at?: unknown };
   cancelNote?: string;
   /* אספקה באיחור – נרשם בסגירה (סופקה / חלקית), minutes לא חובה */
   late?: { minutes: number };
-  /* תזכורת בשלב Q: לשלוח בקבוצת התפעול. false = עוד לא נשלח; חסר = הזמנה מלפני התזכורת */
+  /* ישן, לקריאה בלבד: "נשלח בקבוצת תפעול" בוטל (נובמבר 2026). מוצג רק בהיסטוריית ההזמנה */
   opsNotified?: boolean;
   /* הוזנה בדיעבד – תאריך שעבר, לתיעוד בלבד */
   backfill?: boolean;
@@ -201,9 +205,58 @@ export type OrderHold = {
   remindAt?: string; // ISO – מתי לחזור
   attempts: number; // כמה ניסיונות נרשמו (הסימון הראשון = 1)
 };
-export const HOLD_REASONS = ['הלקוח לא עונה', 'ממתין לפרטי אשראי', 'ממתין לאישור הלקוח', 'אחר'];
+export const HOLD_REASONS = ['הלקוח לא עונה', 'ממתין לפרטי אשראי', 'אחר'];
 /* הזמנה שהושהתה "בלי תזכורת" לא נתקעת בהמתנה: אחרי שעה היא חוזרת ל"להקליד ל-Q" (בלי הודעה קופצת) */
 export const HOLD_NO_REMIND_MIN = 60;
 /* הגיע הזמן לחזור להזמנה שבהמתנה – לפי זמן החזרה שנקבע, או שעה אחרי הסימון כשלא נקבע זמן */
 export const holdDue = (h: OrderHold | undefined, now: Date) => !!h
   && (h.remindAt ? new Date(h.remindAt).getTime() : new Date(h.at).getTime() + HOLD_NO_REMIND_MIN * 60000) <= now.getTime();
+
+/* ---------- תזכורת "לעדכן בתפעול" ----------
+   בערב שולחים לתפעול את הזמנות מחר. הזמנה של היום או מחר שנוצרה או שונתה בפרט שהסניף צריך לדעת
+   אחרי שעת הסף (ברירת מחדל 18:00) ביום שלפני המועד – לא הייתה בסיכום, וצריך לעדכן את התפעול. רק תזכורת: נעלמת לבד. */
+export const OPS_FIELDS: (keyof Order)[] = ['date', 'time', 'branchId', 'delivery', 'address', 'items'];
+const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+/* מתי לכתוב opsChangeAt בשמירה: כשהשינוי נוגע באחד מ-OPS_FIELDS (בהשוואה לערך הנוכחי). אחרת undefined – לא נוגעים בשדה.
+   opsChangeAt מפורש בשינוי (למשל "בטל" שמחזיר את הערך הקודם) גובר – אז לא מחשבים, והערך שבשינוי נכתב כמו שהוא */
+export function opsChangeFor(before: Partial<Order>, patch: Partial<Order>, nowIso: string): string | undefined {
+  if ('opsChangeAt' in patch) return undefined;
+  return OPS_FIELDS.some((k) => k in patch && JSON.stringify(before[k] ?? null) !== JSON.stringify(patch[k] ?? null)) ? nowIso : undefined;
+}
+/* ההזמנה כמו שתישמר: השינוי, ו-opsChangeAt כמו ששכבת הנתונים תכתוב אותו */
+export function orderAfterSave<T extends Order>(before: T, patch: Partial<Order>, nowIso: string): T {
+  const at = opsChangeFor(before, patch, nowIso);
+  return { ...before, ...patch, ...(at ? { opsChangeAt: at } : {}) };
+}
+const dayBeforeAt = (date: string, cutoff: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  const [h, min] = (cutoff || '18:00').split(':').map(Number);
+  return new Date(y, m - 1, d - 1, h || 0, min || 0, 0);
+};
+const soonDay = (date: string, now: Date) => date === isoDay(now) || date === isoDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+/* cutoff – "HH:MM" מהספים (opsCutoff) */
+export function needsOpsUpdate(o: Pick<Order, 'status' | 'date' | 'opsChangeAt'>, now: Date, cutoff: string): boolean {
+  if (CLOSED.includes(o.status) || !o.opsChangeAt || !o.date || !soonDay(o.date, now)) return false;
+  return new Date(o.opsChangeAt).getTime() >= dayBeforeAt(o.date, cutoff).getTime();
+}
+/* להציג בהודעת השמירה "לעדכן את התפעול"? כן כש:
+   1. השמירה הזו כתבה opsChangeAt וההזמנה צריכה עדכון (needsOpsUpdate), או
+   2. ההזמנה יוצאת מהסיכום שכבר נשלח: מועדה הקודם היום/מחר, כבר עברה שעת הסף ביום שלפניו, והיא הוזזה לתאריך אחר או בוטלה.
+   (במקרה 2 אין תגית קבועה – רק ההודעה) */
+export function opsReminderOnSave(before: Pick<Order, 'status' | 'date' | 'opsChangeAt'>, after: Pick<Order, 'status' | 'date' | 'opsChangeAt'>, now: Date, cutoff: string): boolean {
+  if (after.opsChangeAt !== before.opsChangeAt && needsOpsUpdate(after, now, cutoff)) return true;
+  const wasSent = !CLOSED.includes(before.status) && !!before.date && soonDay(before.date, now) && now.getTime() >= dayBeforeAt(before.date, cutoff).getTime();
+  if (wasSent && (after.status === 'cancelled' || after.date !== before.date)) return true;
+  /* הזמנה מבוטלת שחזרה לחיים אחרי הסיכום – הסניף לא קיבל אותה */
+  return before.status === 'cancelled' && after.status !== 'cancelled' && !!after.date && soonDay(after.date, now) && now.getTime() >= dayBeforeAt(after.date, cutoff).getTime();
+}
+/* התאריך שההודעה מדברת עליו: המועד החדש כשצריך לעדכן עליו, אחרת המועד שממנו ההזמנה יצאה */
+export const opsReminderDate = (before: Pick<Order, 'date'>, after: Pick<Order, 'status' | 'date' | 'opsChangeAt'>, now: Date, cutoff: string) =>
+  (needsOpsUpdate(after, now, cutoff) ? after.date : before.date);
+/* "ההזמנה למחר" / "ההזמנה להיום" – להודעת השמירה */
+export const opsDayWord = (date: string, now: Date) => (date === isoDay(now) ? 'להיום' : 'למחר');
+/* "שונתה אחרי הקלדה ל-Q" – שני שינויים במקביל לא דורסים זה את זה: איחוד השדות, והערכים "לפני" המוקדמים ביותר גוברים */
+export function mergeChangedAfterQ(cur: Order['changedAfterQ'], mine: NonNullable<Order['changedAfterQ']>): NonNullable<Order['changedAfterQ']> {
+  if (!cur) return mine;
+  return { ...mine, fields: [...new Set([...cur.fields, ...mine.fields])], before: { ...mine.before, ...cur.before } };
+}

@@ -225,7 +225,18 @@ service cloud.firestore {
         && (!('qAmount' in d) || (d.qAmount is number && d.qAmount >= 0 && d.qAmount < 1000000))
         && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee < 10000))
         && (!('hold' in d) || validHold(d.hold))
+        // "לעדכן בתפעול": מתי שונה פרט שהסניף צריך לדעת (ISO) – נכתב רק משכבת הנתונים
+        && (!('opsChangeAt' in d) || (d.opsChangeAt is string && d.opsChangeAt.size() <= 40))
+        // "שונתה אחרי הקלדה ל-Q" (מחליף את changedAfterApproval, שנשאר מותר בהזמנות ישנות)
+        && (!('changedAfterQ' in d) || validChangedAfterQ(d.changedAfterQ))
         && d.keys().size() <= 70;
+    }
+    function validChangedAfterQ(c) {
+      return c is map && c.keys().hasOnly(['at', 'by', 'fields', 'before'])
+        && c.at is string && c.at.size() <= 40
+        && c.by is string && c.by.size() <= 120
+        && c.fields is list && c.fields.size() <= 20
+        && c.before is map && c.before.size() <= 20;
     }
     // "בהמתנה": סיבה, הערה קצרה, מי ומתי, מתי לחזור ומספר ניסיונות
     function validHold(h) {

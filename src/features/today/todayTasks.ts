@@ -3,9 +3,9 @@
 import type { OrderView } from '../../data/store';
 import { CLOSED } from '../../data/types';
 import { missingOf, orderDateTime } from '../../rules-engine/health';
-import { addDays, toISODate } from '../../lib/format';
+import { toISODate } from '../../lib/format';
 
-export type TaskKey = 'urgent' | 'yesterday' | 'customer' | 'branch' | 'q' | 'ops' | 'other' | 'missing' | 'quotes' | 'followups' | 'users';
+export type TaskKey = 'urgent' | 'yesterday' | 'q' | 'other' | 'missing' | 'quotes' | 'followups' | 'users';
 
 /* חריגות דחופות שאין להן משימה משלה: פער מול Q, אשראי שלא חויב, שינוי שלא עודכן ב-Q, ביטול אחרי חיוב */
 const OTHER_RULES = [2, 5, 11];
@@ -29,17 +29,12 @@ export function redTasks(orders: OrderView[], c: Record<TaskKey, number>): Set<T
 
 export function todayTaskCounts(orders: OrderView[], now: Date, x: { dueTasks: number; quoteFollowups: number; pendingUsers: number }): Record<TaskKey, number> {
   const today = toISODate(now);
-  const tomorrow = toISODate(addDays(now, 1));
   const open = orders.filter((o) => !CLOSED.includes(o.status));
-  const soon = (o: OrderView) => o.date === today || o.date === tomorrow;
   return {
     urgent: orders.filter((o) => o.issues.some((i) => i.severity === 'red' && URGENT_RULES.includes(i.rule))).length,
     // מועד האספקה עבר (גם היום, אחרי השעה) – לסגור: סופקה / חלקית / באיחור
     yesterday: open.filter((o) => orderDateTime(o) < now).length,
-    customer: open.filter((o) => soon(o) && (o.status === 'new' || o.status === 'pending_customer')).length,
-    branch: open.filter((o) => soon(o) && !o.branchApproval).length,
     q: open.filter((o) => o.date === today && !o.qNumber).length,
-    ops: open.filter((o) => !!o.qNumber && o.opsNotified === false).length,
     other: orders.filter(isOther).length,
     missing: open.filter((o) => missingOf(o).length > 0).length,
     quotes: x.quoteFollowups,

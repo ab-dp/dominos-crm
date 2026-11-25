@@ -33,6 +33,10 @@
 .toast__ok--error { background: var(--danger-fg); }
 .toast--error { box-shadow: var(--shadow-panel); }
 .toast__msg { flex: 1; }
+/* תזכורת "לעדכן את התפעול" בתוך הודעת השמירה – שורה משלה, מודגשת */
+.toast__ops { display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); font-weight: 600; }
+/* נקודה כתומה (גוון דחוף) – כדי שהשורה תיקרא כתזכורת ולא כהצלחה */
+.toast__ops-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--urgent-edge); }
 .toast__undo, .toast__action {
   display: inline-flex;
   align-items: center;

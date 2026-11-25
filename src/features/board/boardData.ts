@@ -54,11 +54,9 @@ const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) 
 /* שינוי באחוזים; null כשאין בסיס להשוואה */
 export const delta = (cur: number, prev: number) => (prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null);
 
-/* ---------- הזמנות קרובות: 7 הימים הקרובים, ומה מעבר. מוכנות = הלקוח אישר והתפעול עודכן ---------- */
-export type Readiness = 'ready' | 'customer' | 'ops';
-export const readinessOf = (o: OrderView): Readiness =>
-  (o.status === 'new' || o.status === 'pending_customer' ? 'customer' : !o.branchApproval ? 'ops' : 'ready');
-export type Day = { date: string; count: number; sum: number; pizzas: number; ready: number; customer: number; ops: number; weekend: boolean };
+/* ---------- הזמנות קרובות: 7 הימים הקרובים, ומה מעבר ----------
+   (עד נובמבר 2026 היה גם פילוח "מוכנות" – אישור לקוח ועדכון בתפעול. שני השלבים בוטלו) */
+export type Day = { date: string; count: number; sum: number; pizzas: number; weekend: boolean };
 export function horizon(orders: OrderView[], now: Date, days = 7) {
   const today = iso(now);
   const open = orders.filter((o) => live(o) && !CLOSED.includes(o.status) && o.date >= today);
@@ -66,9 +64,7 @@ export function horizon(orders: OrderView[], now: Date, days = 7) {
     const d = addDays(now, i);
     const date = iso(d);
     const os = open.filter((o) => o.date === date);
-    const r = os.map(readinessOf);
-    return { date, weekend: d.getDay() === 5 || d.getDay() === 6, count: os.length, sum: sumOf(os), pizzas: os.reduce((t, o) => t + pizzasOf(o), 0),
-      ready: r.filter((x) => x === 'ready').length, customer: r.filter((x) => x === 'customer').length, ops: r.filter((x) => x === 'ops').length };
+    return { date, weekend: d.getDay() === 5 || d.getDay() === 6, count: os.length, sum: sumOf(os), pizzas: os.reduce((t, o) => t + pizzasOf(o), 0) };
   });
   const last = list[list.length - 1].date;
   const later = open.filter((o) => o.date > last);
@@ -76,7 +72,7 @@ export function horizon(orders: OrderView[], now: Date, days = 7) {
   return {
     days: list,
     later: { count: later.length, sum: sumOf(later) },
-    week: { count: week.length, sum: sumOf(week), pizzas: list.reduce((t, d) => t + d.pizzas, 0), customer: list.reduce((t, d) => t + d.customer, 0), ops: list.reduce((t, d) => t + d.ops, 0) },
+    week: { count: week.length, sum: sumOf(week), pizzas: list.reduce((t, d) => t + d.pizzas, 0) },
   };
 }
 

@@ -1,19 +1,19 @@
-/* ציר ההזמנה: תהליך אחד במקום סטטוס + שלושה סימונים.
-   לקוח אישר ← עודכן בתפעול ← הוקלד ל-Q (ונשלח בקבוצת תפעול) ← נסגרה (סופקה / חלקית, אפשר באיחור). ביטול – מכל שלב.
+/* ציר ההזמנה: פתוחה ← הוקלד ל-Q ← נסגרה (סופקה / חלקית, אפשר באיחור). ביטול – מכל שלב.
+   (עד נובמבר 2026 היו גם "לקוח אישר", "עודכן בתפעול" ו"נשלח בקבוצת תפעול" – בוטלו; הנתונים הישנים מוצגים רק בהיסטוריה)
    השלב נגזר מהנתונים (stageOf), כך שגם הזמנות ישנות יושבות במקום הנכון. */
 import { useState, type FormEvent, type ReactNode } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { Check, CircleAlert } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useStore, type OrderView } from '../../data/store';
 import { STAGE_LABEL, closeLabel, stageOf, type Stage } from '../../data/types';
 import { Button, Field, keepOpenOnOutside } from '../../design/components';
-import { Ltr, fmtMoney, toISODate } from '../../lib/format';
+import { Ltr, fmtDate, fmtMoney, toISODate } from '../../lib/format';
 import { orderDateTime } from '../../rules-engine/health';
-import { BranchForm, QForm } from './OrderActions';
+import { QForm } from './OrderActions';
 import './OrderTimeline.css';
 
-const STEP_ORDER: Stage[] = ['pending_customer', 'pending_branch', 'approved', 'in_q'];
-const rank = (s: Stage) => (s === 'delivered' || s === 'partial' ? 4 : s === 'cancelled' ? -1 : STEP_ORDER.indexOf(s));
+/* הדרגה = התחנה שממתינה עכשיו: פתוחה – ממתינה להקלדה ל-Q (תחנה 1), הוקלד – ממתינה לסגירה (תחנה 2), נסגרה – הכל הושלם */
+const rank = (s: Stage) => (s === 'delivered' || s === 'partial' ? 3 : s === 'in_q' ? 2 : s === 'open' ? 1 : -1);
 
 /* סגירת הזמנה: סופקה או סופקה חלקית, ואם היה איחור – כמה דקות.
    לפני מועד האספקה: אין "באיחור", ויש אזהרה ולחיצה שנייה – כדי לא לסגור בטעות הזמנה אחרת */
@@ -72,17 +72,11 @@ function Pop({ trigger, title, children, open, setOpen, align = 'start' }: { tri
   );
 }
 
-/* אחרי Q: עוד לא נשלח בקבוצת התפעול. זה הצעד הבא, ורק אחריו סגירה */
-export const opsPending = (o: Pick<OrderView, 'qNumber' | 'opsNotified' | 'status'>) =>
-  !!o.qNumber && o.opsNotified === false && o.status !== 'cancelled' && o.status !== 'delivered' && o.status !== 'partial';
-
 /* שם הצעד הבא בציר – לתפריט "⋯" בשורה, כשהכפתור בשורה תפוס בפעולת תיקון */
 export function nextStepLabel(o: OrderView): string | null {
   const stage = stageOf(o);
-  if (stage === 'pending_customer') return 'הלקוח אישר';
-  if (stage === 'pending_branch') return 'סמן עודכן בתפעול';
-  if (stage === 'approved') return 'הקלד ל-Q';
-  if (stage === 'in_q') return opsPending(o) ? 'נשלח בקבוצת תפעול' : 'סמן סופקה';
+  if (stage === 'open') return 'הקלד ל-Q';
+  if (stage === 'in_q') return 'סמן סופקה';
   return null;
 }
 
@@ -90,77 +84,68 @@ export function nextStepLabel(o: OrderView): string | null {
    variant: בשורה – כפתור שקט; בתיק ההזמנה – הכפתור הראשי.
    onQ: בתיק יש שורת Q מוטמעת, אז "הקלד ל-Q" מעביר אליה במקום לפתוח טופס שני */
 export function NextStep({ o, size = 'sm', variant = 'fix', onQ }: { o: OrderView; size?: 'sm' | 'md'; variant?: 'fix' | 'primary'; onQ?: () => void }) {
-  const { update } = useStore();
   const [open, setOpen] = useState(false);
   const stage = stageOf(o);
   const done = () => setOpen(false);
   const btn = (label: string, onClick?: () => void) => <Button size={size} variant={variant} onClick={(e) => { e.stopPropagation(); onClick?.(); }}>{label}</Button>;
-  if (stage === 'pending_customer') return btn('הלקוח אישר', () => update(o.id, { status: 'approved' }, <>הלקוח אישר · הזמנה <Ltr>{o.id}</Ltr></>));
-  if (stage === 'pending_branch') return <Pop open={open} setOpen={setOpen} title="עודכן בתפעול" align="end" trigger={btn('סמן עודכן בתפעול')}><BranchForm o={o} done={done} /></Pop>;
-  if (stage === 'approved' && onQ) return btn('הקלד ל-Q', onQ);
-  if (stage === 'approved') return <Pop open={open} setOpen={setOpen} title="הקלדה ל-Q" align="end" trigger={btn('הקלד ל-Q')}><QForm o={o} done={done} /></Pop>;
-  if (stage === 'in_q' && opsPending(o)) return btn('נשלח בקבוצת תפעול', () => update(o.id, { opsNotified: true }, <>נשלח בקבוצת תפעול · הזמנה <Ltr>{o.id}</Ltr></>));
+  if (stage === 'open' && onQ) return btn('הקלד ל-Q', onQ);
+  if (stage === 'open') return <Pop open={open} setOpen={setOpen} title="הקלדה ל-Q" align="end" trigger={btn('הקלד ל-Q')}><QForm o={o} done={done} /></Pop>;
   if (stage === 'in_q') return <Pop open={open} setOpen={setOpen} title="סגירת הזמנה" align="end" trigger={btn('סמן סופקה')}><CloseForm o={o} done={done} /></Pop>;
   return null;
 }
 
-/* ציר קטן לשורה בטבלה: ארבע נקודות ושם השלב */
+/* ציר קטן לשורה בטבלה: שלוש נקודות ושם השלב */
 export function StageTrack({ o }: { o: OrderView }) {
   const stage = stageOf(o);
   const r = rank(stage);
-  const warn = (i: number) => (i === 1 && r > 1 && !o.branchApproval) || (i === 2 && opsPending(o));
   return (
     <span className={`stage stage--${stage}`} aria-label={`שלב: ${stage === 'delivered' || stage === 'partial' ? closeLabel(o) : STAGE_LABEL[stage]}`}>
       <span className="stage__dots" aria-hidden="true">
-        {[0, 1, 2, 3].map((i) => <span key={i} className={`stage__dot ${r > i ? 'is-done' : r === i ? 'is-now' : ''} ${warn(i) ? 'is-warn' : ''}`} />)}
+        {[0, 1, 2].map((i) => <span key={i} className={`stage__dot ${r > i ? 'is-done' : r === i ? 'is-now' : ''}`} />)}
       </span>
       <span className="stage__label">{stage === 'delivered' || stage === 'partial' ? closeLabel(o) : STAGE_LABEL[stage]}</span>
     </span>
   );
 }
 
-/* הציר המלא בתיק ההזמנה: ארבע תחנות (לחיצה על תחנה – תיקון שלה), ומתחת – הצעד הבא, תזכורת התפעול וביטול */
+/* הציר המלא בתיק ההזמנה: שלוש תחנות (לחיצה על תחנה – תיקון שלה), ומתחת – הצעד הבא וביטול */
 export function OrderTimeline({ o, onQ }: { o: OrderView; onQ?: () => void }) {
-  const { update, requestStatus } = useStore();
-  const [open, setOpen] = useState<null | 'cust' | 'branch' | 'q' | 'close'>(null);
+  const { requestStatus } = useStore();
+  const [open, setOpen] = useState<null | 'open' | 'q' | 'close'>(null);
   const stage = stageOf(o);
   const r = rank(stage);
   const cancelled = stage === 'cancelled';
-  const setFor = (k: 'cust' | 'branch' | 'q' | 'close') => (v: boolean) => setOpen(v ? k : null);
+  const setFor = (k: 'open' | 'q' | 'close') => (v: boolean) => setOpen(v ? k : null);
   const done = () => setOpen(null);
 
-  const custDone = o.status !== 'new' && o.status !== 'pending_customer';
-  const branchSkipped = r > 1 && !o.branchApproval;
   const closedDone = stage === 'delivered' || stage === 'partial';
   const st = (i: number): 'done' | 'now' | 'todo' => (cancelled ? (i < rankBeforeCancel(o) ? 'done' : 'todo') : r > i ? 'done' : r === i ? 'now' : 'todo');
 
   /* תחנה: נקודה, כותרת, פרט קצר. תחנה שהושלמה – כותרת לחיצה לתיקון */
-  const step = (i: number, k: 'cust' | 'branch' | 'q' | 'close', title: string, detail: ReactNode, state: 'done' | 'now' | 'todo', warn: boolean, form: ReactNode) => (
-    <li className={`otl-step is-${state} ${warn ? 'is-warn' : ''}`}>
-      <span className="otl-step__dot" aria-hidden="true">{state === 'done' ? (warn ? <CircleAlert size={14} /> : <Check size={14} />) : i + 1}</span>
+  /* מחבר בין התחנות ממלא את הרווח; התחנה הנוכחית מסומנת aria-current, והמצב נקרא גם בקורא מסך */
+  const step = (i: number, k: 'open' | 'q' | 'close', title: string, detail: ReactNode, state: 'done' | 'now' | 'todo', form: ReactNode) => (
+    <li className={`otl-step is-${state}`} aria-current={state === 'now' && !cancelled ? 'step' : undefined}>
+      <span className="otl-step__dot" aria-hidden="true">{state === 'done' ? <Check size={14} /> : i + 1}</span>
       <span className="otl-step__body">
         {state === 'done' && !cancelled && form
-          ? <Pop open={open === k} setOpen={setFor(k)} title={title} trigger={<button className="otl-step__title otl-step__edit" aria-label={`${title} – לחץ לתיקון`}>{title}</button>}>{form}</Pop>
-          : <span className="otl-step__title">{title}</span>}
+          ? <Pop open={open === k} setOpen={setFor(k)} title={title} trigger={<button className="otl-step__title otl-step__edit" aria-label={`${title} – הושלם, לחץ לתיקון`}>{title}</button>}>{form}</Pop>
+          : <span className="otl-step__title">{title}{state !== 'todo' && <span className="sr-only">{state === 'done' ? ' – הושלם' : ' – שלב נוכחי'}</span>}</span>}
         {detail && <span className="otl-step__detail">{detail}</span>}
       </span>
+      {i < 2 && <span className="otl-step__line" aria-hidden="true" />}
     </li>
   );
 
   return (
     <div className={`timeline-wrap ${cancelled ? 'is-cancelled' : ''}`}>
       <ol className="otl" aria-label="ציר ההזמנה">
-        {step(0, 'cust', 'לקוח אישר', custDone ? null : 'ממתין ללקוח', st(0), false,
-          <><p className="pop__text">הלקוח אישר את ההזמנה.</p><div className="pop__row"><Button size="sm" variant="ghost" onClick={() => { update(o.id, { status: 'pending_customer' }, <>הזמנה <Ltr>{o.id}</Ltr> חזרה ל"ממתין לאישור לקוח"</>); done(); }}>בטל אישור לקוח</Button></div></>)}
-        {step(1, 'branch', 'עודכן בתפעול',
-          o.branchApproval ? o.branchApproval.manager || null : branchSkipped ? <span className="otl-step__warn">דולג</span> : null,
-          o.branchApproval ? 'done' : st(1), branchSkipped, <BranchForm o={o} done={done} />)}
-        {step(2, 'q', 'הוקלד ל-Q',
-          o.qNumber ? <><Ltr>{o.qNumber}</Ltr> · <Ltr>{fmtMoney(o.qAmount ?? o.amount)}</Ltr>{opsPending(o) && <span className="otl-step__warn">עוד לא נשלח בקבוצת תפעול</span>}</> : null,
-          st(2), opsPending(o), <QForm o={o} done={done} />)}
-        {step(3, 'close', closedDone ? closeLabel(o) : 'סופקה',
+        {step(0, 'open', 'פתוחה', <>נפתחה <Ltr>{fmtDate(o.createdAt)}</Ltr></>, st(0), null)}
+        {step(1, 'q', 'הוקלד ל-Q',
+          o.qNumber ? <><Ltr>{o.qNumber}</Ltr> · <Ltr>{fmtMoney(o.qAmount ?? o.amount)}</Ltr></> : null,
+          st(1), <QForm o={o} done={done} />)}
+        {step(2, 'close', closedDone ? closeLabel(o) : 'סופקה',
           closedDone && o.status === 'partial' ? o.partialNote : null,
-          closedDone ? 'done' : st(3), false, <CloseForm o={o} done={done} />)}
+          closedDone ? 'done' : st(2), <CloseForm o={o} done={done} />)}
       </ol>
 
       {/* בהזמנה שנסגרה (סופקה) אין צעד הבא – לא מציגים שורה ריקה */}
@@ -173,7 +158,6 @@ export function OrderTimeline({ o, onQ }: { o: OrderView; onQ?: () => void }) {
             <>
               <span className="otl-next__label">הצעד הבא</span>
               <NextStep o={o} size="md" variant="primary" onQ={onQ} />
-              {branchSkipped && <span className="otl-next__warn">לא סומן "עודכן בתפעול"</span>}
               <span className="otl-next__spacer" />
               <Button size="sm" variant="danger" onClick={() => requestStatus(o, 'cancelled')}>ביטול הזמנה</Button>
             </>
@@ -186,7 +170,5 @@ export function OrderTimeline({ o, onQ }: { o: OrderView; onQ?: () => void }) {
 
 /* בהזמנה שבוטלה: עד איפה הגיעה לפני הביטול */
 function rankBeforeCancel(o: OrderView) {
-  if (o.qNumber) return 3;
-  if (o.branchApproval) return 2;
-  return 1;
+  return o.qNumber ? 2 : 1;
 }

@@ -1,7 +1,6 @@
 /* פעולות מהירות על הזמנה – בשורה, במסך "היום" ובתיק ההזמנה (אפיון 6.2). */
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { TriangleAlert } from 'lucide-react';
 import { Button, Field, MarkAction, keepOpenOnOutside } from '../../design/components';
 import { useStore, type OrderView } from '../../data/store';
 import { PAYMENT_LABEL, type PaymentState } from '../../data/types';
@@ -12,49 +11,16 @@ import { CloseForm } from './OrderTimeline';
 import { CARD_RE } from '../../lib/names';
 
 /* ---------- טפסים קטנים שנפתחים במקום ---------- */
-export function BranchForm({ o, done }: { o: OrderView; done: () => void }) {
-  const { update } = useStore();
-  const [name, setName] = useState(o.branchApproval?.manager ?? '');
-  if (!o.branchId) return <p className="pop__text">קודם צריך לשבץ סניף להזמנה – בתיק ההזמנה, באזור "אספקה".</p>;
-  const custPending = o.status === 'new' || o.status === 'pending_customer';
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    update(o.id, { branchApproval: { manager: name.trim(), at: o.branchApproval?.at ?? new Date().toISOString() }, ...(custPending ? { status: 'approved' as const } : {}) },
-      <>עודכן בתפעול · {o.branchName}{name.trim() && <> · {name.trim()}</>}</>);
-    done();
-  };
-  return (
-    /* data-keep-open: לחיצה מחוץ לחלון לא סוגרת אותו – אחרת הסימון הולך לאיבוד בלי שמרגישים */
-    <form onSubmit={submit} data-keep-open="">
-      <p className="pop__text">{o.branchName}{o.branchPhone && <> · <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></>}</p>
-      <Field label="שם המאשר (לא חובה)">
-        <input className="input" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
-      </Field>
-      <div className="pop__row">
-        <Button variant="primary" size="sm" type="submit" kbd="Enter">{o.branchApproval ? 'שמור' : 'סמן עודכן בתפעול'}</Button>
-        {o.branchApproval
-          ? <Button size="sm" variant="ghost" type="button" onClick={() => { update(o.id, { branchApproval: undefined }, <>סימון "עודכן בתפעול" בוטל · הזמנה <Ltr>{o.id}</Ltr></>); done(); }}>בטל סימון</Button>
-          : <Button size="sm" variant="ghost" type="button" onClick={done}>ביטול</Button>}
-      </div>
-    </form>
-  );
-}
-
 /* טופס Q אחד לכל המערכת: בחלון קופץ (שורה, "היום", תיקון מהציר) ומוטמע בבלוק "להעברה לקופה" (inline).
-   סכום Q הוא בקרה: ריק עד שמקלידים את הסכום שירד בקופה, ונבדק מול סכום ההזמנה (פער = חריגה).
-   "נשלח בקבוצת תפעול" – אפשר לסמן כבר כאן; אם לא, זה הצעד הבא בציר. */
+   סכום Q הוא בקרה: ריק עד שמקלידים את הסכום שירד בקופה, ונבדק מול סכום ההזמנה (פער = חריגה). */
 export function QForm({ o, done, inline, primary = true, onCancel }: { o: OrderView; done: () => void; inline?: boolean; primary?: boolean; onCancel?: () => void }) {
   const { update } = useStore();
   const [num, setNum] = useState(o.qNumber ?? '');
   const [amt, setAmt] = useState(o.qAmount !== undefined ? String(o.qAmount) : '');
-  const [ops, setOps] = useState(o.opsNotified !== false && !!o.qNumber);
   const [err, setErr] = useState('');
   const numRef = useRef<HTMLInputElement>(null);
   const amtRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { setNum(o.qNumber ?? ''); setAmt(o.qAmount !== undefined ? String(o.qAmount) : ''); setOps(o.opsNotified !== false && !!o.qNumber); setErr(''); }, [o.id, o.qNumber, o.qAmount, o.opsNotified]);
-  // כלל 15: העברה ל-Q לפני אישור – אזהרה, לא חסימה
-  const custPending = o.status === 'new' || o.status === 'pending_customer';
-  const early = !o.qNumber && (custPending || !o.branchApproval);
+  useEffect(() => { setNum(o.qNumber ?? ''); setAmt(o.qAmount !== undefined ? String(o.qAmount) : ''); setErr(''); }, [o.id, o.qNumber, o.qAmount]);
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!num.trim()) { setErr("חובה: מס' ההזמנה ב-Q, למשל cs669"); numRef.current?.focus(); return; }
@@ -63,23 +29,19 @@ export function QForm({ o, done, inline, primary = true, onCancel }: { o: OrderV
     // מספר הזמנה ב-Q = ההזמנה חויבה, ולכן היא מסומנת "שולם" לבד. ביטול שכבר נרשם לא נדרס
     const paid = o.payment === 'cancelled' ? {} : { payment: 'paid' as const };
     // רישום Q משחרר את ההזמנה מהמתנה (אם הייתה) – הטיפול הסתיים
-    update(o.id, { qNumber: num.trim(), qAmount, opsNotified: ops, ...paid, ...(custPending ? { status: 'approved' as const } : {}), ...(o.hold ? { hold: undefined } : {}) }, !sameMoney(qAmount, o.amount)
+    update(o.id, { qNumber: num.trim(), qAmount, ...paid, ...(o.hold ? { hold: undefined } : {}) }, !sameMoney(qAmount, o.amount)
       ? <>הועברה ל-Q · <b>פער מול Q</b>: <Ltr>{fmtMoney(qAmount)}</Ltr> מול <Ltr>{fmtMoney(o.amount)}</Ltr></>
-      : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם{!ops && ' · הצעד הבא: לשלוח בקבוצת תפעול'}</>);
+      : <>הועברה ל-Q · <Ltr>{num.trim()}</Ltr> · סומנה שולם</>);
     done();
   };
-  const warn = early && <p className={inline ? 'reg-q__warn' : 'pop__warn'}><TriangleAlert size={14} aria-hidden="true" /> {custPending ? 'הלקוח עוד לא אישר' : 'התפעול עוד לא עודכן'}. אפשר להמשיך.</p>;
   const numInput = <input ref={numRef} id={inline ? 'reg-q-num' : undefined} className="input input--ltr" autoFocus={!inline} value={num} onChange={(e) => { setNum(e.target.value); setErr(''); }} aria-invalid={(!!err && !num.trim()) || undefined} />;
   const amtInput = <input ref={amtRef} className="input input--ltr" inputMode="decimal" value={amt} onChange={(e) => { setAmt(e.target.value); setErr(''); }} aria-invalid={(!!err && !!num.trim()) || undefined} />;
-  const opsBox = <label className={`check-inline ${inline ? 'reg-q__ops' : 'q-ops'}`}><input type="checkbox" checked={ops} onChange={(e) => setOps(e.target.checked)} /> נשלח בקבוצת תפעול</label>;
   const error = err && <p className={`pop__err ${inline ? 'reg-q__err' : ''}`} role="alert">{err}</p>;
   if (inline) {
     return (
       <form className="reg-q" onSubmit={submit} aria-label="העברה ל-Q">
-        {warn}
         <label className="reg-q__f"><span className="kv__k">מס' הזמנה ב-Q</span>{numInput}</label>
         <label className="reg-q__f reg-q__f--amt"><span className="kv__k">הסכום שירד ב-Q (₪)</span>{amtInput}</label>
-        {opsBox}
         <div className="reg-q__btns">
           <Button variant={primary ? 'primary' : 'secondary'} size="sm" type="submit">הועבר ל-Q</Button>
           {onCancel && <button type="button" className="link" onClick={onCancel}>ביטול</button>}
@@ -90,12 +52,10 @@ export function QForm({ o, done, inline, primary = true, onCancel }: { o: OrderV
   }
   return (
     <form onSubmit={submit}>
-      {warn}
       <Field label="מס' הזמנה ב-Q (חובה)">{numInput}</Field>
       <Field label="הסכום שירד ב-Q (₪, חובה)">{amtInput}</Field>
-      {opsBox}
       {error}
-      <div className="pop__row"><Button variant="primary" size="sm" type="submit" kbd="Enter">{early ? 'שמור בכל זאת' : 'שמור'}</Button></div>
+      <div className="pop__row"><Button variant="primary" size="sm" type="submit" kbd="Enter">שמור</Button></div>
     </form>
   );
 }
@@ -148,20 +108,14 @@ export function PoEdit({ o }: { o: OrderView }) {
   );
 }
 
-/* ---------- שלושת הסימונים ---------- */
-export function OrderMarks({ o, only }: { o: OrderView; only?: 'branch' | 'q' | 'pay' }) {
-  const [open, setOpen] = useState<null | 'branch' | 'q' | 'pay'>(null);
-  const set = (k: 'branch' | 'q' | 'pay') => (v: boolean) => setOpen(v ? k : null);
+/* ---------- הסימונים: Q ותשלום ---------- */
+export function OrderMarks({ o, only }: { o: OrderView; only?: 'q' | 'pay' }) {
+  const [open, setOpen] = useState<null | 'q' | 'pay'>(null);
+  const set = (k: 'q' | 'pay') => (v: boolean) => setOpen(v ? k : null);
   const payDone = o.payment === 'paid' || o.payment === 'cancelled';
   const show = (k: string) => !only || only === k;
   return (
     <>
-      {show('branch') && (
-        <MarkAction open={open === 'branch'} onOpenChange={set('branch')} done={!!o.branchApproval} label="תפעול"
-          srLabel={o.branchApproval ? `עודכן בתפעול${o.branchApproval.manager ? ` · ${o.branchApproval.manager}` : ''}` : 'עודכן בתפעול: עוד לא. לחץ לסימון'} title="עודכן בתפעול">
-          <BranchForm o={o} done={() => setOpen(null)} />
-        </MarkAction>
-      )}
       {show('q') && (
         <MarkAction open={open === 'q'} onOpenChange={set('q')} done={!!o.qNumber} label={o.qNumber ? o.qNumber : 'Q'}
           srLabel={o.qNumber ? `הועברה ל-Q, מספר ${o.qNumber}` : 'הועברה ל-Q: חסר. לחץ לסימון'} title="הועברה ל-Q">
@@ -228,7 +182,7 @@ function CancelAckForm({ o, done }: { o: OrderView; done: () => void }) {
   );
 }
 
-/* שינוי אחרי אישור שעוד לא עודכן בקופה: מסמנים שעודכן, ואם הסכום ב-Q השתנה – רושמים אותו */
+/* שינוי אחרי הקלדה ל-Q שעוד לא עודכן בקופה: מסמנים שעודכן, ואם הסכום ב-Q השתנה – רושמים אותו */
 function QUpdateForm({ o, done }: { o: OrderView; done: () => void }) {
   const { update } = useStore();
   const [amt, setAmt] = useState('');
@@ -253,7 +207,6 @@ function QUpdateForm({ o, done }: { o: OrderView; done: () => void }) {
 }
 
 export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; onOpen: () => void }) {
-  const { update } = useStore();
   const [open, setOpen] = useState(false);
   const pop = (content: ReactNode, title: string) => (
     <Popover.Root open={open} onOpenChange={setOpen}>
@@ -270,7 +223,6 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
   );
   const done = () => setOpen(false);
   switch (issue.action) {
-    case 'branch': return pop(<BranchForm o={o} done={done} />, 'עודכן בתפעול');
     case 'q': return pop(<QForm o={o} done={done} />, 'הועברה ל-Q');
     case 'pay': return pop(<PayForm o={o} done={done} />, 'מצב תשלום');
     case 'po': return pop(<PoForm o={o} done={done} />, 'תעודת רכש');
@@ -278,10 +230,6 @@ export function FixButton({ o, issue, onOpen }: { o: OrderView; issue: Issue; on
     case 'ackCancel': return pop(<CancelAckForm o={o} done={done} />, 'בוטלה אחרי Q');
     case 'ackQUpdate': return pop(<QUpdateForm o={o} done={done} />, 'עדכון ב-Q');
     case 'close': return pop(<CloseForm o={o} done={done} />, 'סגירת הזמנה');
-    case 'ops':
-      return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); update(o.id, { opsNotified: true }, <>נשלח בקבוצת תפעול · הזמנה <Ltr>{o.id}</Ltr></>); }}>{issue.actionLabel}</Button>;
-    case 'status':
-      return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); update(o.id, { status: 'approved' }, <>הלקוח אישר · הזמנה <Ltr>{o.id}</Ltr></>); }}>הלקוח אישר</Button>;
     default:
       return <Button size="sm" variant="fix" onClick={(e) => { e.stopPropagation(); onOpen(); }}>{issue.actionLabel}</Button>;
   }

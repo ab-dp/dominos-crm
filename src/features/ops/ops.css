@@ -6,20 +6,16 @@
 .ops-range__custom .input { width: 160px; }
 .ops-err { color: var(--danger-fg); font-weight: 500; }
 
-.ops-waiting { margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--danger-fg); border-radius: var(--radius); background: var(--danger-bg); color: var(--danger-fg); }
-.ops-waiting__title { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; font-weight: 600; font-size: var(--text-table); }
-.ops-waiting__title svg { flex: none; margin-top: 2px; }
-.ops-waiting ul { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.ops-waiting li button { min-height: 32px; padding: var(--space-1) var(--space-3); border: 1px solid currentColor; border-radius: var(--radius); background: var(--white); color: var(--danger-fg); font: inherit; font-size: var(--text-label); cursor: pointer; }
-.ops-waiting li button:hover { background: var(--danger-bg); text-decoration: underline; }
+/* סיכום חלקי (מסונן): בולט, בגוון דחוף – כדי שלא ישלחו בטעות סיכום שחסרות בו הזמנות */
+.ops-partial { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--urgent-edge); border-radius: var(--radius); background: var(--urgent-bg); color: var(--urgent-fg); }
+.ops-partial svg { flex: none; }
+.ops-partial p { flex: 1; min-width: 200px; margin: 0; font-size: var(--text-table); }
+.ops-range__cust { width: 160px; }
 
 .ops-card { margin-bottom: var(--space-5); }
 .ops-card__bar { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-2); }
 .ops-card__bar h2 { margin: 0; font-size: var(--text-card-title); }
 .ops-card__actions { display: flex; gap: var(--space-2); margin-inline-start: auto; }
-.ops-sent { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px var(--space-3); border-radius: var(--radius-panel); background: var(--gray-100); color: var(--gray-600); font-size: var(--text-label); }
-.ops-sent.is-sent { background: var(--ok-bg); color: var(--ok-fg); }
-.ops-sent.is-dirty { background: var(--urgent-bg); color: var(--urgent-fg); font-weight: 500; }
 .ops-phone { display: none; margin: 0 0 var(--space-2); font-size: var(--text-label); color: var(--gray-600); }
 .ops-fit { overflow: hidden; border: 1px solid var(--gray-100); border-radius: var(--radius); background: var(--white); }
 
@@ -43,7 +39,7 @@
 .os-stats b { font-size: var(--text-section); font-weight: 600; color: var(--ink); line-height: 1.2; }
 .os-stats span { font-size: var(--text-micro); color: var(--os-sub); }
 .os-head img { height: 30px; width: auto; display: block; }
-.os-removed { margin: var(--space-2) 0 0; padding: var(--space-1) var(--space-3); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-label); }
+.os-partial { margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--urgent-edge); border-radius: 6px; background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-table); }
 
 /* טבלה: כותרות עמודה שקטות, קו דק בין הזמנות */
 .os-table { width: 100%; margin-top: var(--space-1); border-collapse: collapse; table-layout: fixed; }
@@ -101,9 +97,6 @@
 .os-extra b { font-weight: 500; color: var(--os-sub); }
 .os-dlv { font-size: var(--text-label); }
 .os-dlv b { font-weight: 500; color: var(--ink); }
-.os-tag { display: inline-block; margin-inline-end: var(--space-1); padding: 0 var(--space-2); border-radius: 4px; font-size: var(--text-micro); font-weight: 600; }
-.os-tag--new { background: var(--ok-bg); color: var(--ok-fg); }
-.os-tag--changed { background: var(--urgent-bg); color: var(--urgent-fg); }
 .os-foot { margin: var(--space-3) 0 0; font-size: var(--text-micro); color: var(--os-sub); text-align: center; }
 
 @media (max-width: 640px) {

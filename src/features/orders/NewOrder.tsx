@@ -16,9 +16,9 @@ import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
 import { ChannelPicks } from './ChannelPicks';
 import { usePriceLists } from '../../data/priceLists';
-import { useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
+import { opsReminder, useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
 import { setQuoteStatus } from '../../data/quotes';
-import { METHOD_LABEL, categoryOf, type OrderStatus } from '../../data/types';
+import { METHOD_LABEL, categoryOf, needsOpsUpdate } from '../../data/types';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday, parseMoney as money } from '../../lib/format';
@@ -90,7 +90,6 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const [override, setOverride] = useState<string | null>(null); // סכום לחיוב שהוקלד ידנית
   const [poFile, setPoFile] = useState<File | null>(null);
   const [lines, setLines] = useState<Line[]>(() => (fq?.lines ?? []).map((l) => ({ key: newId(), group: l.category, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.unitPrice ? { manualPrice: true } : {}) })));
-  const [status, setStatus] = useState<OrderStatus>(fq?.status === 'approved' ? 'approved' : 'pending_customer');
   // הזמנה בתאריך שעבר – לתיעוד בלבד: נשמרת ישר כסגורה, לפי התוצאה
   const [outcome, setOutcome] = useState<'' | 'delivered' | 'late' | 'partial' | 'cancelled'>('');
   const [lateMin, setLateMin] = useState('');
@@ -290,7 +289,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       cluster: b ? clusters.find((x) => x.id === b.clusterId)?.name ?? '' : '',
       amount: finalAmount,
       calcAmount: isManual && !totalOnly ? total : undefined,
-      status: past ? (outcome === 'cancelled' ? 'cancelled' : outcome === 'partial' ? 'partial' : 'delivered') : status,
+      // כל הזמנה שנכנסת למערכת כבר אושרה על ידי הלקוח
+      status: past ? (outcome === 'cancelled' ? 'cancelled' : outcome === 'partial' ? 'partial' : 'delivered') : 'approved',
       payment: past ? (outcome === 'cancelled' ? 'cancelled' : pastQ.trim() ? 'paid' : 'pending') : 'pending',
       ...(past ? {
         backfill: true,
@@ -343,8 +343,11 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
         // ההזמנה כבר נשמרה; אם סימון ההצעה נכשל – רק מודיעים
         await setQuoteStatus(fq, 'ordered', '', { orderId: n }).catch(() => toast({ tone: 'error', message: <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
       }
+      // הזמנה להיום/מחר שנוצרה אחרי שעת הסף – לא הייתה בסיכום לתפעול (opsChangeAt נכתב ב-createOrder)
+      const savedAt = new Date();
+      const ops = needsOpsUpdate({ status: input.status, date, opsChangeAt: savedAt.toISOString() }, savedAt, thresholds.opsCutoff);
       toast({
-        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת להשלמה</b></>}</>,
+        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת להשלמה</b></>}{ops && <><br />{opsReminder({ date }, savedAt)}</>}</>,
         action: { label: 'פתח תיק', run: () => panel.open(n) },
       });
       onClose();
@@ -389,14 +392,6 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     </div>
   );
 
-  // שלב התחלה: שאלה של כן/לא – תיבת סימון, לא בקר מפולח
-  const statusField = (
-    <L label="שלב התחלה" group>
-      <label className="check-inline no-approved">
-        <input type="checkbox" checked={status === 'approved'} onChange={(e) => setStatus(e.target.checked ? 'approved' : 'pending_customer')} /> הלקוח כבר אישר
-      </label>
-    </L>
-  );
 
   const deliveryFields = (
     <>
@@ -667,7 +662,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                   {err('outcome')}
                 </div>
               )}
-              <Row>{branchField}{!past && statusField}</Row>
+              <Row>{branchField}</Row>
               <Row>
                 <L label="ערוץ / מספר פניה">
                   {/* האפשרויות – רק מה שהוגדר ב"ערוצי קבלה" בהגדרות; אפשר גם להקליד חופשי (למשל מספר פניה) */}

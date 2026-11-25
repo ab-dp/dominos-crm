@@ -203,14 +203,6 @@
 /* ---------- Popover forms ---------- */
 .pop__text { margin: -4px 0 var(--space-3); font-size: var(--text-label); color: var(--gray-600); }
 .pop__err { margin: var(--space-2) 0 0; font-size: var(--text-label); color: var(--danger-fg); }
-.pop__warn {
-  display: flex; align-items: flex-start; gap: var(--space-2);
-  margin: 0 0 var(--space-3); padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
-  background: var(--urgent-bg); color: var(--urgent-fg);
-  font-size: var(--text-label);
-}
-.pop__warn svg { flex: none; margin-top: 2px; }
 .pay-options { display: grid; gap: var(--space-2); }
 .pay-opt {
   height: var(--control-md); padding: 0 var(--space-3);
@@ -259,5 +251,7 @@
 .udialog__danger p { margin: 0; }
 .udialog__danger p + p { margin-top: var(--space-2); }
 .udialog__actions { display: flex; gap: var(--space-2); margin-top: var(--space-5); }
-.q-ops { margin-top: 2px; }
 @media (hover: none) and (pointer: coarse) { .btn__kbd { display: none; } } /* בטלפון אין קיצורי מקלדת */
+
+/* "לעדכן בתפעול" – תזכורת בלבד, בגוון דחוף (כתום). נעלמת לבד כשהמועד עובר */
+.ops-tag { display: inline-flex; align-items: center; height: 20px; margin-inline-start: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--urgent-bg); color: var(--urgent-fg); }

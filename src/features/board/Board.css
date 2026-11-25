@@ -62,8 +62,6 @@
 
 /* צבעי סטטוס ומדרג ותק – אותם בכל מקום (פס, מקרא, שורה) */
 .board i.is-ready, .board span.is-ready { background: var(--brand-600); }
-.board i.is-customer, .board span.is-customer { background: var(--brand-300); }
-.board i.is-ops, .board span.is-ops { background: var(--gray-600); }
 /* עמידה בזמנים: "בזמן" הוא מצב תקין – ירוק */
 .board .bstack .is-ready, .board .bstats i.is-ready { background: var(--ok-fg); }
 .board i.is-cancel, .board span.is-cancel { background: var(--gray-300); }
@@ -91,8 +89,6 @@
 .bday.is-empty .bday__count { color: var(--gray-600); }
 .bday__sum { font-size: var(--text-label); color: var(--gray-700); }
 .bday__piz { font-size: var(--text-micro); color: var(--gray-600); }
-.bready { display: flex; gap: 2px; width: 100%; height: 6px; margin-top: var(--space-3); }
-.bready span { min-width: 3px; border-radius: var(--radius-tag); }
 
 /* ---------- מכירות ---------- */
 .bsales { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: var(--space-6); margin-top: var(--space-3); }

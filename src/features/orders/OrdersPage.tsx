@@ -26,7 +26,6 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 const CARE_FILTER = { label: 'איחור / חלקית בלי תיעוד', test: (o: OrderView) => needsCare(o) };
 export const FILTERS: Record<string, { label: string; test: (o: OrderView) => boolean }> = {
-  branch: { label: 'לא עודכן בתפעול', test: (o) => !o.branchApproval },
   q: { label: 'לא הועברו ל-Q', test: (o) => !o.qNumber },
   credit: { label: 'אשראי לחייב', test: (o) => o.method === 'credit' && (o.payment === 'pending' || o.payment === 'failed') },
   issues: { label: 'עם חריג', test: (o) => o.health === 'critical' || o.health === 'urgent' },
@@ -48,8 +47,9 @@ export function OrdersPage() {
   // בארכיון ובטווח תאריכים – גם "בלי תיעוד": איחור או חלקית שעוד לא תועד איך טיפלנו בלקוח
   const filters = raw === 'archive' || raw === 'range' ? { ...FILTERS, care: CARE_FILTER } : FILTERS;
   const filter = filterKey ? filters[filterKey] : undefined;
-  /* סינון לפי ממדים (אשכול, סניף, תשלום, מטפל, סטטוס אספקה) – אותו רכיב ואותם מפתחות כמו בדוחות */
-  const dimKeys: FilterKey[] = raw === 'archive' || raw === 'range' ? ['cluster', 'branch', 'method', 'handler', 'outcome'] : ['cluster', 'branch', 'method', 'handler'];
+  /* סינון לפי ממדים (אשכול, סניף, תשלום, מטפל, שלב, סטטוס אספקה) – אותו רכיב ואותם מפתחות כמו בדוחות.
+     שלב בכל הלשוניות (בהיום/מחר/עתידיות/שעבר מועדן מופיעים בפועל רק פתוחה והוקלד ל-Q) */
+  const dimKeys: FilterKey[] = raw === 'archive' || raw === 'range' ? ['cluster', 'branch', 'method', 'handler', 'stage', 'outcome'] : ['cluster', 'branch', 'method', 'handler', 'stage'];
   const dimSig = dimKeys.map((k) => params.get(k) ?? '').join('|');
   const dimValues = useMemo(() => Object.fromEntries(dimKeys.map((k) => [k, params.get(k) ?? ''])) as FilterValues,
     [dimSig, raw]);

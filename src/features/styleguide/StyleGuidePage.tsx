@@ -62,9 +62,9 @@ export function StyleGuidePage() {
         </div>
         <div className="sg__row">
           <HealthBadge health="critical" issues={[{ rule: 1, severity: 'red', label: 'לא הועברה ל-Q', action: 'q', actionLabel: '' }]} />
-          <HealthBadge health="urgent" issues={[{ rule: 4, severity: 'orange', label: 'אין אישור סניף', action: 'branch', actionLabel: '' }]} />
+          <HealthBadge health="urgent" issues={[{ rule: 2, severity: 'orange', label: 'פער מול Q', action: 'ackGap', actionLabel: '' }]} />
           <HealthBadge health="missing" issues={[{ rule: 9, severity: 'yellow', label: 'תעודת רכש חסרה', action: 'po', actionLabel: '' }]} />
-          <span className="status-demo">אושרה</span>
+          <span className="status-demo">פתוחה</span>
           <span className="muted">← סטטוס תמיד ניטרלי</span>
         </div>
       </section>
