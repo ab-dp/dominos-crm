@@ -14,7 +14,6 @@
 /* תנאי המחירון */
 .pl-terms { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--gray-100); background: var(--gray-50); }
 .pl-terms label { display: grid; gap: var(--space-1); }
-.pl-terms__hint { grid-column: 1 / -1; margin: 0; font-size: var(--text-micro); color: var(--gray-600); }
 
 /* טבלת המוצרים – כמו בבונה הפריטים של ההזמנה */
 .pl-body { padding: var(--space-3) var(--space-4) var(--space-1); }

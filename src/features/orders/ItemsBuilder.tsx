@@ -8,7 +8,7 @@ import type { Customer } from '../../data/customers';
 import { DELIVERY_CAT, priceOf, type PriceItem, type PriceList } from '../../data/priceLists';
 import { useStore } from '../../data/store';
 import { CATEGORIES, OTHER, PIZZA, categoryOf, groupItems, splitPart, type OrderItem } from '../../data/types';
-import { cleanAmount, Ltr, fmtMoney, roundMoney } from '../../lib/format';
+import { Ltr, fmtMoney, parseMoney as money } from '../../lib/format';
 import { newId } from '../../data/customers';
 import { PizzaGroups } from './PizzaGroups';
 import { RadioSeg } from '../../design/components';
@@ -19,7 +19,6 @@ export type Line = OrderItem & { key: string; tText?: string; pText?: string; au
 export type CatalogItem = PriceItem & { unit?: number; custom: boolean };
 type Delivery = 'delivery' | 'pickup';
 const NO_LIST = '__none';
-const money = (s: string) => roundMoney(Number(cleanAmount(s)) || 0);
 
 /* שורה שלא הוקלד בה כלום (גם אם סוג הפיצה הועתק מהשורה הקודמת) – לא נשמרת ולא נבדקת.
    מוצר שנכתב בלי כמות אינו ריק – הוא מסומן כחסר, ולא נעלם בשקט */
@@ -342,34 +341,6 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
 }
 
 const rowLabel = (it: OrderItem) => { const t = groupItems([it])[0].types[0]; return t.rows[0].text ? `${t.name} — ${t.rows[0].text}` : t.name; };
-
-/* ---------- תצוגת הפריטים בתיק ההזמנה: קטגוריה ← סוג ← פירוט, ומחירים רק אם הוזנו ---------- */
-export function ItemsView({ items }: { items: OrderItem[] }) {
-  const groups = groupItems(items);
-  const priced = items.some((i) => i.unitPrice > 0);
-  return (
-    <div className="iview">
-      {groups.map((c) => (
-        <section key={c.category} className="iview__cat" aria-label={`${c.category} – ${c.qty}`}>
-          <h4 className="iview__head">{c.category} <span className="iview__n"><Ltr>{c.qty}</Ltr></span></h4>
-          <ul className="iview__list">
-            {c.types.map((t) => (
-              <li key={t.name}>
-                <b><Ltr>{t.qty}</Ltr> × {t.name}</b>
-                {(t.rows.length > 1 || t.rows[0].text) && (
-                  <ul className="iview__rows">
-                    {t.rows.map((r, i) => <li key={i}>{t.rows.length > 1 && <><Ltr>{r.qty}</Ltr> · </>}{r.text || 'רגיל'}</li>)}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-      {priced && <PriceRows items={items} />}
-    </div>
-  );
-}
 
 /* מחירים לפי שורה – מתקפל, מתחת לפירוט */
 export function PriceRows({ items }: { items: OrderItem[] }) {

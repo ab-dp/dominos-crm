@@ -1,0 +1,13 @@
+/* סרגל סינון משותף (FilterBar.tsx) */
+.fbar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; min-width: 0; }
+.fbar__count { margin-inline-start: var(--space-1); min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--brand-600); color: var(--white); font-size: var(--text-micro); display: inline-grid; place-items: center; }
+.fbar__pop { width: 300px; display: grid; gap: var(--space-3); }
+.fbar__pop .field + .field { margin-top: 0; }
+/* צ'יפ של סינון פעיל: לבן עם מסגרת כחולה – שונה מצ'יפ "סינון מהיר" הצבוע, כדי שלא ייראו כאותו דבר */
+.fbar__chip.chip.is-on { gap: var(--space-1); background: var(--white); border-color: var(--brand-600); color: var(--gray-900); }
+.fbar__chip.chip.is-on:hover { background: var(--brand-50); }
+/* קו מפריד בין סרגל הסינון לצ'יפים של הסינון המהיר שאחריו */
+.fbar + .chips { padding-inline-start: var(--space-3); border-inline-start: 1px solid var(--gray-200); }
+@media (pointer: coarse) { .fbar__pop .input { min-height: 44px; } }
+.fbar__k { color: var(--brand-700); font-weight: var(--weight-body); }
+.fbar__clear { font-size: var(--text-label); justify-self: start; }

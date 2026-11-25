@@ -7,7 +7,6 @@ import type { OrderView } from '../../data/store';
 import { holdDue } from '../../data/types';
 
 export type Lane = 'todo' | 'hold' | 'customer' | 'inq' | 'closed';
-export const LANES: Lane[] = ['todo', 'hold', 'customer', 'inq', 'closed'];
 
 export function laneOf(o: Pick<OrderView, 'status' | 'qNumber' | 'hold'>, now: Date): Lane | null {
   if (o.status === 'cancelled') return null;

@@ -9,8 +9,8 @@ import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, toISODate } from '../../lib/format';
 import { Shell } from '../leads/LeadDialogs';
+import { CARD_RE } from '../../lib/names';
 
-const CARD_RE = /\d{13,}/;
 export const ago = (h: number) => (h < 1 ? 'פחות משעה' : h < 24 ? `${h} שעות` : h < 48 ? 'יום' : `${Math.floor(h / 24)} ימים`);
 const when = (s?: number) => {
   if (!s) return '';

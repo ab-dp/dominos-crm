@@ -1,12 +1,10 @@
 /* רכיבי בסיס של מערכת העיצוב (תוכנית בנייה, סעיף 3.8) */
 import { forwardRef, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { motion, useReducedMotion } from 'motion/react';
-import { Check, ChevronDown, CircleAlert, Loader2, OctagonAlert, TriangleAlert } from 'lucide-react';
+import { CircleAlert, Loader2, OctagonAlert, TriangleAlert } from 'lucide-react';
 import type { Health, Issue } from '../rules-engine/health';
-import { STATUS_LABEL, type OrderStatus } from '../data/types';
 import './components.css';
 
 /* ---------- Button ---------- */
@@ -71,30 +69,6 @@ export function HealthBadge({ health, issues, compact, focusable = true }: { hea
     <Tip label={<ul className="tip__list">{issues.map((i) => <li key={i.rule}>{i.label}</li>)}</ul>}>
       {badge}
     </Tip>
-  );
-}
-
-/* ---------- Status badge: ניטרלי, עם תפריט לשינוי ---------- */
-export function StatusMenu({ status, onChange }: { status: OrderStatus; onChange: (s: OrderStatus) => void }) {
-  return (
-    <Dropdown.Root dir="rtl">
-      <Dropdown.Trigger asChild>
-        <button className="status" aria-label={`סטטוס: ${STATUS_LABEL[status]}. לחץ לשינוי`} onClick={(e) => e.stopPropagation()}>
-          {STATUS_LABEL[status]}
-          <ChevronDown size={14} aria-hidden="true" />
-        </button>
-      </Dropdown.Trigger>
-      <Dropdown.Portal>
-        <Dropdown.Content className="menu" sideOffset={4} align="start" onClick={(e) => e.stopPropagation()}>
-          {(Object.keys(STATUS_LABEL) as OrderStatus[]).map((s) => (
-            <Dropdown.Item key={s} className="menu__item" onSelect={() => s !== status && onChange(s)}>
-              <span className="menu__check">{s === status && <Check size={14} />}</span>
-              {STATUS_LABEL[s]}
-            </Dropdown.Item>
-          ))}
-        </Dropdown.Content>
-      </Dropdown.Portal>
-    </Dropdown.Root>
   );
 }
 

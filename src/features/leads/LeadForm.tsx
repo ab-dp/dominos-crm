@@ -11,13 +11,12 @@ import { EMPTY_LEAD, createLead, emptyContact, findTwins, updateLead, type Lead,
 import { Button } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { fmtPhone } from '../../lib/format';
-import { cleanPhone, phoneError } from '../../lib/names';
+import { cleanPhone, phoneError, CARD_RE, EMAIL_RE } from '../../lib/names';
 import { taxIdError } from '../../lib/taxid';
 import { StepFields, stepError } from './LeadDialogs';
 import '../customers/CustomerForm.css';
 import './Leads.css';
 
-const CARD_RE = /\d{13,}/;
 const num = (s: string) => Math.max(0, Math.round(Number(s.replace(/[^\d.]/g, '')) || 0));
 
 export function LeadForm({ onClose, leads, editing, initialName = '' }: { onClose: () => void; leads: Lead[]; editing?: Lead; initialName?: string }) {
@@ -45,7 +44,7 @@ export function LeadForm({ onClose, leads, editing, initialName = '' }: { onClos
     if (!f.name.trim()) e.name = 'חובה: שם העסק';
     const te = taxIdError(f.taxId); if (te) e.taxId = te;
     if (block) e.taxId = `${block.why}: "${block.name}"`;
-    contacts.forEach((c, i) => { const pe = phoneError(c.phone); if (pe) e[`phone${i}`] = pe; if (c.email && !/^\S+@\S+\.\S+$/.test(c.email)) e[`email${i}`] = 'כתובת מייל לא תקינה'; });
+    contacts.forEach((c, i) => { const pe = phoneError(c.phone); if (pe) e[`phone${i}`] = pe; if (c.email && !EMAIL_RE.test(c.email)) e[`email${i}`] = 'כתובת מייל לא תקינה'; });
     if (!contacts.some((c) => c.name.trim())) e.contacts = 'חובה: לפחות איש קשר אחד';
     if (CARD_RE.test(f.notes)) e.notes = 'אסור לרשום כאן מספר כרטיס אשראי';
     if (withStep && !editing) { const se = stepError(step); if (se) e.step = se; }

@@ -20,6 +20,7 @@ export function toISODate(d: Date): string {
 }
 
 export function fmtDate(iso: string): string {
+  if (!iso) return '';
   const [y, m, d] = iso.split('-');
   return `${d}.${m}.${y}`;
 }
@@ -41,6 +42,8 @@ export function cleanAmount(s: string): string {
   if (i >= 0) t = `${t.slice(0, i).replace(/,/g, '')}.${t.slice(i + 1)}`;
   return t;
 }
+/* סכום מתוך שדה טקסט: מפענח עם cleanAmount ומעגל לאגורות; ריק או לא תקין = 0 */
+export const parseMoney = (s: string) => roundMoney(Number(cleanAmount(s)) || 0);
 
 export function fmtPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '');
@@ -49,10 +52,6 @@ export function fmtPhone(raw: string): string {
 
 export function Money({ value }: { value: number }) {
   return <Ltr>{fmtMoney(value)}</Ltr>;
-}
-
-export function DateText({ iso }: { iso: string }) {
-  return <Ltr>{fmtDate(iso)}</Ltr>;
 }
 
 export function Phone({ value }: { value: string }) {
