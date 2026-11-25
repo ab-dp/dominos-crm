@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>הזמנות – הדמיה v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v3.css">
+<style>
+  .list { overflow: hidden; }
+  .list .tabs { padding: 0 16px; background: var(--sheet); }
+  /* סרגל מסננים – אזור פנימי, אותו גובה לכל הפקדים */
+  .fbar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--zone); border-bottom: 1px solid var(--zone-line); flex-wrap: wrap; }
+  .fbar .btn { background: var(--sheet); }
+  .fbar__n { font-size: 12px; font-weight: 600; color: var(--brand-700); }
+  .fchip { height: 28px; display: inline-flex; align-items: center; gap: 4px; padding-inline: 8px 4px; border-radius: var(--r); background: var(--sheet); box-shadow: inset 0 0 0 1px var(--gray-200); font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .fchip span { color: var(--gray-600); font-weight: 400; }
+  .fchip button { width: 20px; height: 20px; border: 0; background: none; border-radius: var(--r-tag); display: grid; place-items: center; color: var(--gray-500); }
+  .fchip button:hover { background: var(--gray-100); color: var(--gray-900); }
+  .fbar__search { margin-inline-start: auto; width: 260px; background: var(--sheet); }
+  .fbar__search svg { color: var(--gray-500); }
+  .fbar__search input { border: 0; outline: 0; background: none; width: 100%; font-size: 14px; }
+
+  table.ot { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .ot th { height: 36px; text-align: right; font-size: 12px; font-weight: 500; color: var(--gray-600); padding: 0 12px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--sheet); position: sticky; top: 56px; z-index: 1; }
+  .ot td { height: 56px; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+  .ot tbody tr { transition: background var(--dur) var(--ease); cursor: pointer; }
+  .ot tbody tr:hover { background: var(--gray-50); }
+  .ot tbody tr:focus-visible { background: var(--brand-50); box-shadow: inset 0 0 0 2px var(--brand-600); }
+  .ot th:first-child, .ot td:first-child { padding-inline-start: 16px; }
+  .ot th:last-child, .ot td:last-child { padding-inline-end: 16px; }
+  .c-time { width: 72px; font-weight: 600; }
+  .c-cust b { font-weight: 600; display: block; }
+  .c-cust small { font-size: 12px; font-weight: 500; color: var(--gray-600); display: block; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-cust small.warn { color: var(--urgent-fg); }
+  .c-branch { white-space: nowrap; }
+  .c-branch .tag { margin-inline-start: 6px; }
+  .c-items { white-space: nowrap; }
+  .c-ch { width: 80px; color: var(--gray-700); white-space: nowrap; }
+  .c-num { text-align: left; white-space: nowrap; }
+  .ot th.c-num { text-align: left; }
+  .stage { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .stage__q { font-size: 12px; color: var(--gray-600); }
+  .c-act { width: 1%; white-space: nowrap; }
+  .c-act .row { display: flex; gap: 4px; justify-content: flex-end; }
+  .c-act .btn svg { color: var(--gray-600); }
+  .day { background: var(--zone) !important; cursor: default !important; }
+  .day td { height: 32px; padding-block: 0; font-size: 12px; font-weight: 600; color: var(--gray-700); }
+  .day td span { font-weight: 500; color: var(--gray-600); margin-inline-start: 8px; }
+  /* The Q-Lane Rule (DESIGN.md) – רק בטאב "היום": הפס בתחילת השורה אומר מה נשאר מול הקופה */
+  .ot tr.lane--type td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
+  .ot tr.lane--late td:first-child { box-shadow: inset -3px 0 0 var(--danger-fg); }
+  .ot tr.lane--q { background: var(--ok-bg); }
+  .ot tr.lane--q:hover { background: #DCEEE4; }
+  .ot tr.lane--hold { background: var(--hold-bg); }
+  .ot tr.lane--hold:hover { background: #EAE4F7; }
+  .ot tr.lane--closed { background: var(--gray-50); color: var(--gray-600); }
+  .ot tr.lane--closed b, .ot tr.lane--closed .c-time { color: var(--gray-600); font-weight: 500; }
+  .stage__ok { color: var(--ok-fg); }
+  .c-act .btn--ghost { color: var(--brand-700); }
+  .c-act .btn--ghost svg { color: var(--brand-700); }
+  .c-act .btn--ghost:hover { background: rgb(0 100 145 / .08); color: var(--brand-800); }
+  .tfoot { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-size: 13px; color: var(--gray-600); }
+
+  @media (max-width: 1100px) { .c-items { display: none; } }
+  @media (max-width: 700px) {
+    .fbar__search { width: 100%; order: -1; margin: 0; }
+    .ot thead { display: none; }
+    .ot, .ot tbody { display: block; }
+    .ot tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 12px; row-gap: 4px; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
+    .ot td { display: block; height: auto; padding: 0 !important; border: 0; }
+    .ot .c-time { grid-row: 1; grid-column: 1; }
+    .ot .c-cust { grid-row: 1; grid-column: 2; }
+    .ot .c-amt { grid-row: 1; grid-column: 3; }
+    .ot .c-branch { grid-row: 2; grid-column: 2 / 4; font-size: 13px; color: var(--gray-700); white-space: normal; }
+    .ot .c-ch { grid-row: 2; grid-column: 1; width: auto; font-size: 12px; color: var(--gray-600); }
+    .ot .c-items { display: none; }
+    .ot .c-stage { grid-row: 3; grid-column: 2; }
+    .ot .c-health { grid-row: 3; grid-column: 3; }
+    .ot .c-act { display: none; }
+    .ot tr.day { display: block; padding: 6px 16px; }
+    .ot tr td:first-child { box-shadow: none !important; }
+    .ot tr.lane--type { box-shadow: inset -3px 0 0 var(--brand-600); }
+    .ot tr.lane--late { box-shadow: inset -3px 0 0 var(--danger-fg); }
+    .ot tr.day td { height: auto; }
+    .phead__act .btn span { display: none; }
+    .metrics { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  }
+</style>
+</head>
+<body data-active="orders">
+<div class="shell">
+  <aside class="rail"></aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="search"><i data-lucide="search" class="i"></i><span>חיפוש: הזמנה, לקוח, מס׳ קריאה, Q, טלפון</span><span class="kbd">/</span></div>
+      <button class="btn btn--primary" style="margin-inline-start:auto"><i data-lucide="plus" class="i"></i><span>הזמנה חדשה</span></button>
+    </div>
+    <div class="page">
+      <div class="phead">
+        <div>
+          <h1>הזמנות</h1>
+          <p class="phead__sub">כל ההזמנות לפי מועד אספקה.</p>
+        </div>
+        <div class="phead__act"><button class="btn"><i data-lucide="download" class="i"></i><span>ייצוא לאקסל</span></button></div>
+      </div>
+      <div class="metrics">
+        <span>להקליד ל-Q<b><bdi class="n">4</bdi></b></span>
+        <span>אחרי השעה<b class="crit"><bdi class="n">1</bdi></b></span>
+        <span>בהמתנה<b><bdi class="n">1</bdi></b></span>
+      </div>
+
+      <section class="sheet list">
+        <nav class="tabs" aria-label="תצוגה">
+          <button class="on">היום <span class="cnt">12</span></button>
+          <button>מחר <span class="cnt">9</span></button>
+          <button>עתידיות <span class="cnt">31</span></button>
+          <button>פתוחות שעבר מועדן <span class="cnt">2</span></button>
+          <button>לפי תאריכים</button>
+          <button>ארכיון</button>
+        </nav>
+        <div class="fbar">
+          <button class="btn"><i data-lucide="sliders-horizontal" class="i"></i>סינון <span class="fbar__n">2</span></button>
+          <span class="fchip">אשכול: <span>מרכז</span><button aria-label="הסרת סינון אשכול"><i data-lucide="x" class="i i-sm"></i></button></span>
+          <span class="fchip">ערוץ: <span>וואטסאפ, טלפון</span><button aria-label="הסרת סינון ערוץ"><i data-lucide="x" class="i i-sm"></i></button></span>
+          <button class="link">נקה הכל</button>
+          <label class="input fbar__search"><i data-lucide="search" class="i"></i><input placeholder="חיפוש בתוצאות"></label>
+        </div>
+        <table class="ot">
+          <thead><tr>
+            <th>שעה</th><th>לקוח</th><th>סניף</th><th>ערוץ</th><th class="c-items">פריטים</th><th class="c-num">סכום</th><th>שלב</th><th>תקינות</th><th><span class="sr">פעולה</span></th>
+          </tr></thead>
+          <tbody>
+            <tr class="day"><td colspan="9">בוקר<span>עד <bdi class="n">12:00</bdi></span></td></tr>
+            <tr tabindex="0" class="lane--closed">
+              <td class="c-time"><bdi class="n">09:00</bdi></td>
+              <td class="c-cust"><b>מכללת הנגב</b><small>ארוחת בוקר לסגל</small></td>
+              <td class="c-branch">באר שבע – רגר</td>
+              <td class="c-ch">מייל</td>
+              <td class="c-items">10 פיצות</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="stage">סופקה</span></td>
+              <td class="c-health"></td>
+              <td class="c-act"><div class="row"><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+            <tr tabindex="0" class="lane--late">
+              <td class="c-time"><bdi class="n">10:30</bdi></td>
+              <td class="c-cust"><b>משרד עורכי דין לוינסון</b><small class="warn">עבר מועד ההקלדה ל-Q</small></td>
+              <td class="c-branch">תל אביב – אבן גבירול</td>
+              <td class="c-ch">טלפון</td>
+              <td class="c-items">12 פיצות</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="stage">פתוחה</span></td>
+              <td class="c-health"><span class="health health--crit">חריגה</span></td>
+              <td class="c-act"><div class="row"><button class="btn btn--ghost btn--sm"><i data-lucide="keyboard" class="i i-sm"></i>רישום Q</button><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+            <tr tabindex="0" class="lane--type">
+              <td class="c-time"><bdi class="n">11:00</bdi></td>
+              <td class="c-cust"><b>בית ספר אורנים</b><small>40 תלמידים, כניסה משער צפוני</small></td>
+              <td class="c-branch">הרצליה – סוקולוב<span class="tag tag--urgent"><i data-lucide="bell" class="i i-sm"></i>לעדכן בתפעול</span></td>
+              <td class="c-ch">וואטסאפ</td>
+              <td class="c-items">20 פיצות, 4 נוספים</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="stage">פתוחה</span></td>
+              <td class="c-health"><span class="health health--urgent">דחוף</span></td>
+              <td class="c-act"><div class="row"><button class="btn btn--ghost btn--sm"><i data-lucide="keyboard" class="i i-sm"></i>רישום Q</button><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+            <tr tabindex="0" class="lane--hold">
+              <td class="c-time"><bdi class="n">11:45</bdi></td>
+              <td class="c-cust"><b>סטודיו גלבוע</b><small>לקוח לא עונה, חוזרים ב-<bdi class="n">10:50</bdi></small></td>
+              <td class="c-branch">רמת גן – ביאליק</td>
+              <td class="c-ch">מייל</td>
+              <td class="c-items">6 פיצות</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="tag tag--hold">בהמתנה</span></td>
+              <td class="c-health"></td>
+              <td class="c-act"><div class="row"><button class="btn btn--ghost btn--sm"><i data-lucide="rotate-ccw" class="i i-sm"></i>ניסיתי שוב</button><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+            <tr class="day"><td colspan="9">צהריים<span><bdi class="n">12:00–16:00</bdi></span></td></tr>
+            <tr tabindex="0" class="lane--type">
+              <td class="c-time"><bdi class="n">12:30</bdi></td>
+              <td class="c-cust"><b>חברת אלפא טכנולוגיות</b><small>יואב כהן</small></td>
+              <td class="c-branch">רמת גן – ביאליק<span class="tag tag--urgent"><i data-lucide="bell" class="i i-sm"></i>לעדכן בתפעול</span></td>
+              <td class="c-ch">טלפון</td>
+              <td class="c-items">18 פיצות, 10 משקאות</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="stage">פתוחה</span></td>
+              <td class="c-health"><span class="health health--missing">חסר</span></td>
+              <td class="c-act"><div class="row"><button class="btn btn--ghost btn--sm"><i data-lucide="keyboard" class="i i-sm"></i>רישום Q</button><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+            <tr tabindex="0" class="lane--q">
+              <td class="c-time"><bdi class="n">13:00</bdi></td>
+              <td class="c-cust"><b>מרכז רפואי השרון</b><small>מחלקת משאבי אנוש</small></td>
+              <td class="c-branch">כפר סבא – ויצמן</td>
+              <td class="c-ch">מכירות</td>
+              <td class="c-items">30 פיצות</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="stage"><i data-lucide="check" class="i i-sm stage__ok"></i>הוקלד ל-Q <span class="stage__q">Q <bdi class="n">48213</bdi></span></span></td>
+              <td class="c-health"></td>
+              <td class="c-act"><div class="row"><button class="btn btn--ghost btn--sm"><i data-lucide="package-check" class="i i-sm"></i>סגירה</button><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+            <tr tabindex="0" class="lane--q">
+              <td class="c-time"><bdi class="n">14:15</bdi></td>
+              <td class="c-cust"><b>עמותת צעד קדימה</b><small>איסוף עצמי</small></td>
+              <td class="c-branch">פתח תקווה – העצמאות</td>
+              <td class="c-ch">טלפון</td>
+              <td class="c-items">8 פיצות</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="stage"><i data-lucide="check" class="i i-sm stage__ok"></i>הוקלד ל-Q <span class="stage__q">Q <bdi class="n">48190</bdi></span></span></td>
+              <td class="c-health"></td>
+              <td class="c-act"><div class="row"><button class="btn btn--ghost btn--sm"><i data-lucide="package-check" class="i i-sm"></i>סגירה</button><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+            <tr tabindex="0" class="lane--type">
+              <td class="c-time"><bdi class="n">15:30</bdi></td>
+              <td class="c-cust"><b>קבוצת נדל״ן אופק</b><small>כנס מנהלים</small></td>
+              <td class="c-branch">תל אביב – אבן גבירול</td>
+              <td class="c-ch">וואטסאפ</td>
+              <td class="c-items">25 פיצות, 12 נוספים</td>
+              <td class="c-num c-amt"><bdi class="n">₪—</bdi></td>
+              <td class="c-stage"><span class="stage">פתוחה</span></td>
+              <td class="c-health"></td>
+              <td class="c-act"><div class="row"><button class="btn btn--ghost btn--sm"><i data-lucide="keyboard" class="i i-sm"></i>רישום Q</button><button class="icon-btn icon-btn--sm" aria-label="עוד פעולות"><i data-lucide="ellipsis" class="i"></i></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="tfoot"><span>מוצגות <bdi class="n">7</bdi> מתוך <bdi class="n">12</bdi> (מסונן)</span><span>מסודר לפי שעה</span></div>
+      </section>
+    </div>
+  </main>
+</div>
+<nav class="bottombar" aria-label="ראשי"></nav>
+<div class="mock-label">הדמיה v3</div>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>

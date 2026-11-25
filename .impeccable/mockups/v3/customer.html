@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>תיק לקוח – הדמיה v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v3.css">
+<style>
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--gray-600); margin-bottom: 12px; }
+  .back:hover { color: var(--brand-700); }
+  .file { overflow: hidden; margin-bottom: 24px; }
+  .file .rec { padding: 20px 24px 18px; display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .file .facts { margin-top: 12px; }
+  .file__act { margin-inline-start: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .file .tabs { padding: 0 16px; border-bottom: 0; }
+  .facts--stats { margin-top: 12px !important; padding-top: 12px; border-top: 1px solid var(--rec-line); }
+  .tfilter { display: flex; align-items: center; gap: 4px; padding: 14px 24px 0; flex-wrap: wrap; font-size: 13px; }
+  .tfilter > span { color: var(--gray-600); margin-inline-end: 4px; }
+  .tfilter button { border: 0; background: none; padding: 4px 8px; border-radius: var(--r-tag); color: var(--gray-600); font-size: 13px; font-weight: 500; }
+  .tfilter button:hover { color: var(--gray-900); background: var(--gray-100); }
+  .tfilter .on, .tfilter .on:hover { color: var(--gray-900); font-weight: 600; background: none; text-decoration: underline; text-decoration-color: var(--brand-600); text-decoration-thickness: 2px; text-underline-offset: 6px; }
+
+  .cf { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+
+  /* מחבר פעולה */
+  .composer { margin: 20px 24px 0; padding: 12px; display: grid; gap: 10px; }
+  .composer textarea { background: var(--sheet); min-height: 64px; }
+  .composer__row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .composer__row label { font-size: 13px; font-weight: 500; color: var(--gray-600); }
+  .composer__row select { width: auto; min-width: 210px; height: 32px; font-size: 14px; }
+  .composer__row .btn--primary { margin-inline-start: auto; }
+  .filters { display: flex; align-items: center; gap: 12px; padding: 16px 24px 0; flex-wrap: wrap; }
+  .filters .seg { height: 32px; }
+  .filters .seg button { height: 28px; font-size: 13px; padding: 0 10px; }
+
+  /* ציר זמן: טור יום, טור אירועים */
+  .tl { padding: 8px 24px 24px; }
+  .tday { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; padding-top: 16px; }
+  .tday + .tday { border-top: 1px solid var(--line-soft); margin-top: 8px; }
+  .tday__l { font-size: 13px; font-weight: 600; color: var(--gray-700); padding-top: 4px; }
+  .tday__l small { display: block; font-weight: 500; color: var(--gray-500); font-size: 12px; }
+  .evs { list-style: none; margin: 0; padding: 0; }
+  .ev { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 16px; }
+  .ev::before { content: ''; position: absolute; inset-inline-start: 13.5px; top: 30px; bottom: 2px; width: 1px; background: var(--line); }
+  .ev:last-child { padding-bottom: 4px; }
+  .ev:last-child::before { display: none; }
+  .ev__node { width: 28px; height: 28px; background: var(--sheet); display: grid; place-items: center; color: var(--gray-600); }
+  .ev__node svg { width: 16px; height: 16px; }
+  .ev--task .ev__node { background: var(--zone); }
+  .ev__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 28px; font-size: 14px; }
+  .ev__head b { font-weight: 600; }
+  .ev__head .muted { font-size: 13px; }
+  .ev__time { margin-inline-start: auto; font-size: 13px; color: var(--gray-600); white-space: nowrap; }
+  .ev__body { font-size: 14px; color: var(--gray-900); margin-top: 2px; max-width: 68ch; }
+  .ev__facts { display: flex; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+  .ev__facts span { padding-inline: 10px; border-inline-start: 1px solid var(--rule); color: var(--gray-600); }
+  .ev__facts span:first-child { padding-inline-start: 0; border: 0; }
+  .ev__facts b { color: var(--gray-900); font-weight: 500; }
+  .ev__acts { display: flex; gap: 6px; margin-top: 8px; }
+  .ev--task { background: var(--zone); border: 1px solid var(--zone-line); border-radius: var(--r-panel); padding: 10px 12px; margin-bottom: 16px; }
+  .ev--task::before { display: none; }
+  .more { display: flex; justify-content: center; padding: 0 24px 20px; }
+
+  /* עמודת צד – גיליון אחד עם אזורים */
+  .side .sec { padding: 20px; }
+  .side .sec + .sec { padding-top: 4px; }
+  .open { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 4px 10px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+  .open:last-child { border-bottom: 0; padding-bottom: 0; }
+  .open > svg { color: var(--gray-600); margin-top: 2px; }
+  .open b { font-weight: 600; font-size: 14px; }
+  .open small { display: block; font-size: 13px; color: var(--gray-600); }
+  .open__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .open .btn { grid-column: 2; justify-self: start; margin-top: 6px; }
+  .contact { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
+  .contact:last-child { border-bottom: 0; padding-bottom: 0; }
+  .contact .person { background: var(--gray-100); color: var(--gray-700); }
+  .contact b { font-weight: 500; display: block; }
+  .contact small { font-size: 13px; color: var(--gray-600); }
+  .contact .tag { margin-inline-start: auto; }
+  .addr-l { padding: 12px 0; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
+  .addr-l:last-child { border-bottom: 0; padding-bottom: 0; }
+  .addr-l b { font-weight: 500; display: block; }
+  .addr-l small { font-size: 13px; color: var(--gray-600); }
+  .billing { padding-top: 12px; font-size: 14px; }
+
+  @media (max-width: 1180px) { .cf { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 700px) {
+    .file .rec { padding: 16px; gap: 14px; }
+    .rec h1 { font-size: 20px; }
+    .file .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 0; }
+    .file .fact { padding-inline: 0 12px; border: 0; }
+    .file .fact span { white-space: normal; }
+    .file .facts--stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .file__act { margin: 0; width: 100%; }
+    .file__act .btn--primary { flex: 1 1 100%; justify-content: center; height: 44px; }
+    .file__act .btn:not(.btn--primary) { flex: 1; justify-content: center; padding: 0 8px; }
+    .composer { margin: 16px 16px 0; }
+    .composer__row select { min-width: 0; flex: 1; }
+    .tfilter { padding: 12px 16px 0; }
+    .tl { padding: 8px 16px 20px; }
+    .tday { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .ev__time { width: 100%; margin: 0; }
+    .side .sec { padding: 16px; }
+  }
+</style>
+</head>
+<body data-active="customers">
+<div class="shell">
+  <aside class="rail"></aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="search"><i data-lucide="search" class="i"></i><span>חיפוש: הזמנה, לקוח, מס׳ קריאה, Q, טלפון</span><span class="kbd">/</span></div>
+    </div>
+    <div class="page">
+      <a href="#" class="back"><i data-lucide="arrow-right" class="i i-sm"></i>לקוחות</a>
+
+      <section class="sheet file">
+        <header class="rec">
+          <div>
+            <h1>חברת אלפא טכנולוגיות</h1>
+            <div class="facts">
+              <div class="fact"><small>סוג</small><span>לקוח קבוע</span></div>
+              <div class="fact"><small>איש קשר ראשי</small><span>יואב כהן, <bdi class="n">050-0000000</bdi></span></div>
+              <div class="fact"><small>תשלום</small><span>הקפה</span></div>
+              <div class="fact"><small>מחירון</small><span>עסקי <bdi class="n">2026</bdi></span></div>
+              <div class="fact"><small>מטפל</small><span>דנה לוי</span></div>
+            </div>
+            <div class="facts facts--stats">
+              <div class="fact"><small>הזמנות ב-12 חודשים</small><span><bdi class="n">14</bdi></span></div>
+              <div class="fact"><small>סך הזמנות</small><span><bdi class="n">₪—</bdi></span></div>
+              <div class="fact"><small>הזמנה אחרונה</small><span>לפני <bdi class="n">7</bdi> ימים</span></div>
+              <div class="fact"><small>סופקו בזמן</small><span><bdi class="n">93%</bdi></span></div>
+              <div class="fact"><small>פתוח לתשלום</small><span><bdi class="n">₪—</bdi></span></div>
+            </div>
+          </div>
+          <div class="file__act">
+            <button class="btn btn--primary"><i data-lucide="plus" class="i"></i>הזמנה חדשה</button>
+            <button class="btn"><i data-lucide="phone" class="i"></i>תיעוד שיחה</button>
+            <button class="btn"><i data-lucide="file-text" class="i"></i>הצעת מחיר</button>
+            <button class="btn"><i data-lucide="pencil" class="i"></i>עריכה</button>
+          </div>
+        </header>
+        <nav class="tabs" aria-label="תיק לקוח">
+          <button class="on">ציר זמן</button>
+          <button>הזמנות <span class="cnt">14</span></button>
+          <button>הצעות מחיר <span class="cnt">3</span></button>
+          <button>פרטים ומחירון</button>
+          <button>נתונים</button>
+        </nav>
+      </section>
+
+      <div class="cf">
+        <section class="sheet" aria-label="ציר זמן">
+          <div class="composer zone">
+            <div class="seg" role="radiogroup" aria-label="סוג תיעוד" style="justify-self:start"><button class="on"><i data-lucide="phone" class="i i-sm"></i>שיחה</button><button><i data-lucide="sticky-note" class="i i-sm"></i>הערה</button><button><i data-lucide="alarm-clock" class="i i-sm"></i>משימת חזרה</button></div>
+            <textarea class="input" aria-label="תוכן השיחה" placeholder="מה נאמר בשיחה" oninput="document.getElementById('saveNote').classList.toggle('btn--primary', this.value.trim().length > 0)"></textarea>
+            <div class="composer__row">
+              <label for="rel">קשור ל</label>
+              <select id="rel" class="input"><option>בלי קישור</option><option>הזמנה #1024, מחר</option><option>הצעה #1031</option></select>
+              <button class="btn btn--sm" id="saveNote">שמירה</button>
+            </div>
+          </div>
+          <div class="tfilter" role="radiogroup" aria-label="סינון לפי סוג"><span>הצג</span><button class="on">הכל</button><button>הזמנות</button><button>הצעות</button><button>שיחות והערות</button><button>תיעודי טיפול</button><button>משימות</button></div>
+
+          <div class="tl">
+            <div class="tday">
+              <div class="tday__l">היום<small>ד׳ <bdi class="n">25.11</bdi></small></div>
+              <ul class="evs">
+                <li class="ev ev--task">
+                  <span class="ev__node"><i data-lucide="alarm-clock" class="i i-sm"></i></span>
+                  <div>
+                    <div class="ev__head"><b>משימת חזרה</b><span>לחזור לגבי הצעה <a href="#" class="link"><bdi class="n">#1031</bdi></a></span><span class="tag tag--line">היום <bdi class="n">16:00</bdi></span><span class="ev__time">נקבע ע״י דנה לוי</span></div>
+                    <div class="ev__acts"><button class="btn btn--sm"><i data-lucide="check" class="i i-sm"></i>בוצע</button><button class="btn btn--sm btn--ghost"><i data-lucide="clock" class="i i-sm"></i>דחייה</button></div>
+                  </div>
+                </li>
+                <li class="ev">
+                  <span class="ev__node"><i data-lucide="phone-missed" class="i i-sm"></i></span>
+                  <div><div class="ev__head"><b>שיחה, אין מענה</b><span class="muted">על הצעה <a href="#" class="link"><bdi class="n">#1031</bdi></a></span><span class="tag">ניסיון 2</span><span class="ev__time"><bdi class="n">11:05</bdi> דנה לוי</span></div></div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="tday">
+              <div class="tday__l">אתמול<small>ג׳ <bdi class="n">24.11</bdi></small></div>
+              <ul class="evs">
+                <li class="ev">
+                  <span class="ev__node"><i data-lucide="headset" class="i i-sm"></i></span>
+                  <div>
+                    <div class="ev__head"><b>תיעוד טיפול</b><span class="muted">על הזמנה <a href="#" class="link"><bdi class="n">#1019</bdi></a></span><span class="tag tag--urgent">איחור</span><span class="ev__time"><bdi class="n">14:20</bdi> דנה לוי</span></div>
+                    <p class="ev__body">הלקוח התקשר על איחור של 25 דקות. התנצלנו, בדקנו מול הסניף וסיכמנו הנחה בהזמנה הבאה.</p>
+                    <div class="ev__facts"><span>סניף <b>רמת גן – ביאליק</b></span><span>אספקה <b>סופקה באיחור</b></span><span>פיצוי <b>הנחה בהזמנה הבאה</b></span><span>סכום <b><bdi class="n">₪—</bdi></b></span></div>
+                  </div>
+                </li>
+                <li class="ev">
+                  <span class="ev__node"><i data-lucide="phone" class="i i-sm"></i></span>
+                  <div>
+                    <div class="ev__head"><b>שיחה</b><span class="ev__time"><bdi class="n">09:30</bdi> יוסי מזרחי</span></div>
+                    <p class="ev__body">ביקשו הצעה לאירוע סוף שנה, כ-40 פיצות. סיכמנו לשלוח היום.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="tday">
+              <div class="tday__l">ב׳<small><bdi class="n">23.11</bdi></small></div>
+              <ul class="evs">
+                <li class="ev">
+                  <span class="ev__node"><i data-lucide="send" class="i i-sm"></i></span>
+                  <div><div class="ev__head"><b>הצעת מחיר <a href="#" class="link"><bdi class="n">#1031</bdi></a> נשלחה</b><span class="muted">בתוקף עד <bdi class="n">02.12</bdi></span><span class="ev__time"><bdi class="n">10:10</bdi> יוסי מזרחי</span></div></div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="tday">
+              <div class="tday__l">ד׳<small><bdi class="n">18.11</bdi></small></div>
+              <ul class="evs">
+                <li class="ev">
+                  <span class="ev__node ev__node--done"><i data-lucide="package-check" class="i i-sm"></i></span>
+                  <div>
+                    <div class="ev__head"><b>הזמנה <a href="#" class="link"><bdi class="n">#1019</bdi></a> סופקה</b><span class="tag tag--urgent">באיחור</span><span class="ev__time"><bdi class="n">12:55</bdi></span></div>
+                    <div class="ev__facts"><span><b><bdi class="n">18</bdi> פיצות</b></span><span>סניף <b>רמת גן – ביאליק</b></span><span>סכום <b><bdi class="n">₪—</bdi></b></span></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="more"><button class="btn btn--ghost"><i data-lucide="chevron-down" class="i"></i>הצג עוד</button></div>
+        </section>
+
+        <aside class="sheet side" aria-label="פרטי הלקוח">
+          <section class="sec">
+            <div class="sec__head"><h2>פתוח עכשיו</h2><span class="sec__meta"><bdi class="n">3</bdi></span></div>
+            <div class="open">
+              <i data-lucide="clipboard-list" class="i"></i>
+              <div><div class="open__row"><b>הזמנה <bdi class="n">#1024</bdi></b><span class="tag tag--urgent"><i data-lucide="bell" class="i i-sm"></i>לעדכן בתפעול</span></div><small>מחר <bdi class="n">12:30</bdi>, פתוחה</small></div>
+            </div>
+            <div class="open">
+              <i data-lucide="file-text" class="i"></i>
+              <div><div class="open__row"><b>הצעה <bdi class="n">#1031</bdi></b><span class="tag">בטיפול</span></div><small>אירוע סוף שנה, חזרה היום</small></div>
+              <button class="btn btn--brand btn--sm"><i data-lucide="check" class="i i-sm"></i>אשר והפוך להזמנה</button>
+            </div>
+            <div class="open">
+              <i data-lucide="alarm-clock" class="i"></i>
+              <div><b>משימת חזרה</b><small>היום <bdi class="n">16:00</bdi>, לגבי הצעה <bdi class="n">#1031</bdi></small></div>
+            </div>
+          </section>
+          <section class="sec">
+            <div class="sec__head"><h2>אנשי קשר</h2><div class="sec__act"><button class="link"><i data-lucide="plus" class="i i-sm"></i>הוספה</button></div></div>
+            <div class="contact"><span class="person">י</span><div><b>יואב כהן</b><small><bdi class="n">050-0000000</bdi></small></div><span class="tag">ראשי</span></div>
+            <div class="contact"><span class="person">ר</span><div><b>רונית לוי</b><small>הנהלת חשבונות</small></div></div>
+          </section>
+          <section class="sec">
+            <div class="sec__head"><h2>כתובות</h2></div>
+            <div class="addr-l"><b>ז׳בוטינסקי 7, רמת גן</b><small>ברירת מחדל, סניף רמת גן – ביאליק</small></div>
+            <div class="addr-l"><b>הברזל 30, תל אביב</b><small>סניף רמת החייל</small></div>
+          </section>
+          <section class="sec">
+            <div class="sec__head"><h2>הנחיות חיוב</h2></div>
+            <p class="billing">לציין בחשבונית את מספר ההזמנה הפנימי של הלקוח. חשבונית מרוכזת בסוף החודש.</p>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+<nav class="bottombar" aria-label="ראשי"></nav>
+<div class="mock-label">הדמיה v3</div>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>
