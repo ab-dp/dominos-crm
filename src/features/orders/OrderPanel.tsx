@@ -23,7 +23,7 @@ import { canCare } from '../../data/care';
 import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
-const STEP_ACTIONS = ['q', 'branch', 'status', 'close', 'ops'];
+const STEP_ACTIONS = ['q', 'close'];
 import { OrderDocsSection } from './OrderDocs';
 import { EditKv, useOrderSave } from './OrderEdit';
 import { ChannelPicks } from './ChannelPicks';
@@ -147,6 +147,16 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
             <span className="changed-tag">תיקון לאחר סגירה</span>
             <span className="changed-note__item">{o.postCloseFix.reason}</span>
             <span className="muted">· {o.postCloseFix.by}</span>
+          </div>
+        )}
+        {/* "שונתה אחרי הקלדה ל-Q" – הסימון החדש; "שונתה לאחר אישור" – סימון ישן שנשאר מוצג בהזמנות ישנות */}
+        {o.changedAfterQ && (
+          <div className="changed-note">
+            <span className="changed-tag">שונתה אחרי הקלדה ל-Q</span>
+            {o.changedAfterQ.fields.map((k) => (
+              <span key={k} className="changed-note__item">{FIELD[k] ?? k}: היה <s>{showVal(k, o.changedAfterQ!.before[k])}</s> · כעת <b>{showVal(k, o[k as keyof OrderView])}</b></span>
+            ))}
+            <span className="muted">· {o.changedAfterQ.by}</span>
           </div>
         )}
         {o.changedAfterApproval && (
@@ -274,7 +284,7 @@ export const FIELD: Record<string, string> = {
   date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
   delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', methodNote: 'פירוט אמצעי התשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
-  opsNotified: 'נשלח בקבוצת תפעול', hold: 'בהמתנה', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות', careCount: 'תיעודי טיפול', topic: 'נושא', comp: 'פיצוי', compAmount: 'סכום הפיצוי', text: 'איך טיפלנו',
+  opsNotified: 'נשלח בקבוצת תפעול', changedAfterApproval: 'שונתה לאחר אישור', changedAfterQ: 'שונתה אחרי הקלדה ל-Q', hold: 'בהמתנה', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות', careCount: 'תיעודי טיפול', topic: 'נושא', comp: 'פיצוי', compAmount: 'סכום הפיצוי', text: 'איך טיפלנו',
 };
 export function showVal(k: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return '—';
@@ -295,6 +305,7 @@ export function showVal(k: string, v: unknown): string {
   if (k === 'qNeedsUpdate') return v ? 'צריך לעדכן' : 'עודכן';
   if (k === 'late') return (v as { minutes?: number }).minutes ? `${(v as { minutes: number }).minutes} דק'` : 'באיחור';
   if (k === 'postCloseFix') return (v as { reason?: string }).reason ?? '—';
+  if (k === 'changedAfterQ' || k === 'changedAfterApproval') return Array.isArray((v as { fields?: unknown }).fields) ? (v as { fields: string[] }).fields.map((x) => FIELD[x] ?? x).join(', ') : '—';
   if (typeof v === 'object') return '—';
   return String(v);
 }

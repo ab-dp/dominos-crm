@@ -7,20 +7,26 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { toISODate } from '../lib/format';
-import type { Order, OrderStatus } from './types';
+import { mergeChangedAfterQ, opsChangeFor, type Order, type OrderStatus } from './types';
 import { cleanTaxId } from '../lib/taxid';
 import type { CustomerInput } from './customers';
 
 export const FIRST_ORDER_NUMBER = 1001;
+/* כולל הערכים הישנים 'new' ו-'pending_customer' בכוונה: הזמנות פתוחות ישנות שעדיין שמורות כך – אחרת ייעלמו מהמסכים */
 const OPEN: OrderStatus[] = ['new', 'pending_customer', 'approved'];
+/* שדות שלא נחשבים בבדיקת ההתנגשות – נכתבים אוטומטית, ושני נציגים שמשנים שדות שונים לא יקבלו התנגשות שווא */
+const NO_CLASH: (keyof Order)[] = ['opsChangeAt', 'changedAfterQ'];
 
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-/* מסמך → הזמנה לתצוגה. createdAt נשמר כחותמת זמן של השרת ומוצג כתאריך. */
+/* מסמך → הזמנה לתצוגה. createdAt נשמר כחותמת זמן של השרת ומוצג כתאריך.
+   כל הזמנה במערכת אושרה על ידי הלקוח: הערכים הישנים 'new' / 'pending_customer' (או בלי status) מתפרשים כאן כ-'approved' –
+   המקום היחיד שממיר. לא כותבים על ההזמנה עצמה. */
 export function fromDoc(id: string, d: DocumentData): Order {
   const at = d.createdAt as Timestamp | null | undefined;
   return {
-    items: [], notes: [], poRequired: false, payment: 'pending', status: 'new', delivery: 'delivery', channel: '', handler: '', createdBy: '',
+    items: [], notes: [], poRequired: false, payment: 'pending', delivery: 'delivery', channel: '', handler: '', createdBy: '',
     ...d,
+    status: !d.status || d.status === 'new' || d.status === 'pending_customer' ? 'approved' : d.status,
     id: Number(id),
     createdAt: at?.toDate ? toISODate(at.toDate()) : toISODate(new Date()),
     createdTime: hhmm(at?.toDate ? at.toDate() : new Date()),
@@ -114,7 +120,7 @@ export async function createOrder(input: NewOrderInput, newCustomer?: NewCustome
     }
 
     const data = clean({
-      ...input, customerId, number: n, notes: [],
+      ...input, customerId, number: n, notes: [], opsChangeAt: new Date().toISOString(),
       createdAt: serverTimestamp(), createdBy: input.handler || u.name, createdByUid: u.uid, updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name,
     });
     tx.set(counterRef, { next: n + 1 });
@@ -139,9 +145,12 @@ async function updateOrdersBatch(orders: Order[], patch: Partial<Order>, source:
     const changed = keys.filter((k) => JSON.stringify(o[k]) !== JSON.stringify(patch[k]));
     if (!changed.length) continue;
     const sub = Object.fromEntries(changed.map((k) => [k, patch[k]])) as Partial<Order>;
-    batch.update(doc(db, 'orders', String(o.id)), { ...toPatch(sub), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
-    const before = Object.fromEntries(changed.map((k) => [k, o[k] ?? null]));
-    const after = Object.fromEntries(changed.map((k) => [k, sub[k] ?? null]));
+    // "לעדכן בתפעול": מתי שונה פרט שהסניף צריך לדעת – לא נרשם ביומן כשינוי נפרד. opsChangeAt מפורש בשינוי גובר
+    const opsAt = 'opsChangeAt' in patch ? undefined : opsChangeFor(o, sub, new Date().toISOString());
+    batch.update(doc(db, 'orders', String(o.id)), { ...toPatch(sub), ...(opsAt ? { opsChangeAt: opsAt } : {}), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
+    const logged = changed.filter((k) => k !== 'opsChangeAt');
+    const before = Object.fromEntries(logged.map((k) => [k, o[k] ?? null]));
+    const after = Object.fromEntries(logged.map((k) => [k, sub[k] ?? null]));
     batch.set(doc(collection(db, 'auditLog')), auditDoc('order', String(o.id), 'status' in sub ? 'status' : 'update', before, after, source, note));
   }
   await batch.commit();
@@ -188,21 +197,28 @@ export class ConflictError extends Error {
 
 export async function updateOrderSafe(o: Order, patch: Partial<Order>, source: 'form' | 'inline' = 'inline', note?: string) {
   const u = me();
-  const keys = (Object.keys(patch) as (keyof Order)[]).filter((k) => JSON.stringify(o[k]) !== JSON.stringify(patch[k]));
+  // שדות אוטומטיים (NO_CLASH) נבדקים מול העותק בשרת ולא מול מה שהמשתמש ראה – למשל "בטל" שמחזיר opsChangeAt קודם
+  const keys = (Object.keys(patch) as (keyof Order)[]).filter((k) => NO_CLASH.includes(k) || JSON.stringify(o[k]) !== JSON.stringify(patch[k]));
   if (!keys.length) return;
   await runTransaction(db, async (tx) => {
     const ref = doc(db, 'orders', String(o.id));
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error('missing');
     const cur = fromDoc(snap.id, snap.data());
-    const clash = keys.filter((k) => JSON.stringify(cur[k]) !== JSON.stringify(o[k]) && JSON.stringify(cur[k]) !== JSON.stringify(patch[k]));
+    const clash = keys.filter((k) => !NO_CLASH.includes(k) && JSON.stringify(cur[k]) !== JSON.stringify(o[k]) && JSON.stringify(cur[k]) !== JSON.stringify(patch[k]));
     if (clash.length) {
       throw new ConflictError(clash.map((k) => ({ key: k, base: o[k], mine: patch[k], theirs: cur[k] })), (snap.data().updatedByName as string) ?? '', cur);
     }
     const sub = Object.fromEntries(keys.map((k) => [k, patch[k]])) as Partial<Order>;
-    tx.update(ref, { ...toPatch(sub), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
+    // שינוי אחרי Q שמישהו אחר רשם בינתיים – מאחדים ולא דורסים
+    if (sub.changedAfterQ) sub.changedAfterQ = mergeChangedAfterQ(cur.changedAfterQ, sub.changedAfterQ);
+    (Object.keys(sub) as (keyof Order)[]).forEach((k) => { if (NO_CLASH.includes(k) && JSON.stringify(cur[k]) === JSON.stringify(sub[k])) delete sub[k]; });
+    if (!Object.keys(sub).length) return;
+    const opsAt = 'opsChangeAt' in patch ? undefined : opsChangeFor(cur, sub, new Date().toISOString());
+    tx.update(ref, { ...toPatch(sub), ...(opsAt ? { opsChangeAt: opsAt } : {}), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
+    const logged = (Object.keys(sub) as (keyof Order)[]).filter((k) => k !== 'opsChangeAt');
     tx.set(doc(collection(db, 'auditLog')), auditDoc('order', String(o.id), 'status' in sub ? 'status' : 'update',
-      Object.fromEntries(keys.map((k) => [k, cur[k] ?? null])), Object.fromEntries(keys.map((k) => [k, sub[k] ?? null])), source, note));
+      Object.fromEntries(logged.map((k) => [k, cur[k] ?? null])), Object.fromEntries(logged.map((k) => [k, sub[k] ?? null])), source, note));
   });
 }
 

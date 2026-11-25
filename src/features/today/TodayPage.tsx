@@ -2,7 +2,7 @@
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, UserCheck, BellRing, ChevronLeft, CircleCheckBig, OctagonAlert, PackageCheck, Send, Store, ListChecks, ClipboardX, Download, FileText, Scale } from 'lucide-react';
+import { UserPlus, ChevronLeft, CircleCheckBig, OctagonAlert, PackageCheck, Send, ListChecks, ClipboardX, Download, FileText, Scale } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore } from '../../data/store';
@@ -14,7 +14,7 @@ import { Ltr, addDays, fmtDate, toISODate, weekday } from '../../lib/format';
 import { TodayQueue } from './TodayQueue';
 import { mineOnly, todayLanes } from './qQueue';
 import { downloadCsv } from '../../lib/csv';
-import { PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
+import { PAYMENT_LABEL, STAGE_LABEL, STATUS_LABEL } from '../../data/types';
 import { fmtPhone } from '../../lib/format';
 import '../pages.css';
 import './TodayPage.css';
@@ -32,7 +32,7 @@ export function TodayPage() {
   const tomorrow = toISODate(addDays(now, 1));
   const scope = mine ? mineOnly(orders, profile) : orders;
 
-  /* משימות לפי ציר ההזמנה: לקוח ← תפעול ← Q ← קבוצת תפעול ← סגירה. מופיעה רק משימה שיש בה מה לעשות.
+  /* משימות לפי ציר ההזמנה: Q ← סגירה. מופיעה רק משימה שיש בה מה לעשות.
      הספירה משותפת לתפריט (todayTasks.ts) – המספר ליד "היום" הוא בדיוק מספר המשימות כאן */
   // הזמנות של היום שבהמתנה – נספרות ב'להקליד ל-Q' (הן עוד לא ירדו), ומצוינות בנפרד
   const held = scope.filter((o) => o.date === today && !o.qNumber && !!o.hold && o.status !== 'cancelled').length;
@@ -41,10 +41,7 @@ export function TodayPage() {
   const tasks: { key: TaskKey; title: string; sub?: string; icon: ReactNode; count: number; to: string; unit: [string, string] }[] = [
     { key: 'urgent', title: 'חריגות', sub: 'חיוב שנכשל, ביטול שלא בוצע ב-Q', icon: <OctagonAlert size={20} />, count: c.urgent, to: '/exceptions', unit: ['הזמנה', 'הזמנות'] },
     { key: 'yesterday', title: 'לסגור הזמנות שמועדן עבר', sub: 'סופקה / חלקית / באיחור', icon: <PackageCheck size={20} />, count: c.yesterday, to: '/orders?tab=overdue', unit: ['הזמנה', 'הזמנות'] },
-    { key: 'customer', title: 'לאשר מול הלקוח', sub: 'הזמנות של היום ומחר', icon: <UserCheck size={20} />, count: c.customer, to: '/exceptions?rule=6', unit: ['הזמנה', 'הזמנות'] },
-    { key: 'branch', title: 'לעדכן בתפעול', sub: 'הזמנות של היום ומחר', icon: <Store size={20} />, count: c.branch, to: '/orders?tab=today&filter=branch', unit: ['הזמנה', 'הזמנות'] },
     { key: 'q', title: 'להקליד ל-Q', sub: held ? `הזמנות של היום · מתוכן ${held} בהמתנה` : 'הזמנות של היום', icon: <Send size={20} />, count: c.q, to: '/orders?tab=today&filter=q', unit: ['הזמנה', 'הזמנות'] },
-    { key: 'ops', title: 'לשלוח בקבוצת תפעול', sub: 'הוקלדו ל-Q ועוד לא נשלחו', icon: <BellRing size={20} />, count: c.ops, to: '/exceptions?rule=12', unit: ['הזמנה', 'הזמנות'] },
     { key: 'other', title: 'לבדוק מול הקופה', sub: 'פער מול Q, אשראי שלא חויב, שינוי שלא עודכן', icon: <Scale size={20} />, count: c.other, to: '/exceptions', unit: ['הזמנה', 'הזמנות'] },
     { key: 'missing', title: 'להשלים פרטים חסרים', icon: <ClipboardX size={20} />, count: c.missing, to: '/exceptions?rule=8', unit: ['הזמנה', 'הזמנות'] },
     { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, count: c.quotes, to: '/quotes?tab=waiting', unit: ['הצעה', 'הצעות'] },
@@ -58,16 +55,16 @@ export function TodayPage() {
   const openCount = open.length;
 
   const lanes = todayLanes(scope, today, now);
-  const todayCount = lanes.todo.length + lanes.hold.length + lanes.customer.length + lanes.inq.length + lanes.closed.length;
+  const todayCount = lanes.todo.length + lanes.hold.length + lanes.inq.length + lanes.closed.length;
 
   /* "הורד היום ומחר" (אפיון 16): כל הזמנות היום ומחר לאקסל – לעבודה גם אם המערכת לא זמינה. תמיד של כולם, לא רק "שלי". */
   const downloadTodayTomorrow = () => {
     const list = orders.filter((o) => (o.date === today || o.date === tomorrow) && o.status !== 'cancelled')
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     downloadCsv(`הזמנות היום ומחר ${fmtDate(today)}.csv`, [
-      ['תאריך', 'שעה', 'הזמנה', 'לקוח', 'סניף', 'טלפון סניף', 'סטטוס', 'עודכן בתפעול', "מס' Q", 'סכום', 'אמצעי תשלום', 'טלפון הקפה', 'מצב תשלום', 'משלוח/איסוף', 'כתובת', 'איש קשר', 'טלפון', 'תכולה', 'הנחיות'],
-      ...list.map((o) => [fmtDate(o.date), o.time, o.id, o.customerName, o.branchName, o.branchPhone ? fmtPhone(o.branchPhone) : '', STATUS_LABEL[o.status],
-        o.branchApproval ? o.branchApproval.manager || 'כן' : '', o.qNumber ?? '', o.qAmount ?? o.amount, methodText(o), o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment],
+      ['תאריך', 'שעה', 'הזמנה', 'לקוח', 'סניף', 'טלפון סניף', 'סטטוס', "מס' Q", 'סכום', 'אמצעי תשלום', 'טלפון הקפה', 'מצב תשלום', 'משלוח/איסוף', 'כתובת', 'איש קשר', 'טלפון', 'תכולה', 'הנחיות'],
+      ...list.map((o) => [fmtDate(o.date), o.time, o.id, o.customerName, o.branchName, o.branchPhone ? fmtPhone(o.branchPhone) : '', o.qNumber ? STAGE_LABEL.in_q : STATUS_LABEL[o.status],
+        o.qNumber ?? '', o.qAmount ?? o.amount, methodText(o), o.accountPhone ? fmtPhone(o.accountPhone) : '', PAYMENT_LABEL[o.payment],
         o.delivery === 'delivery' ? 'משלוח' : 'איסוף', o.address ?? '', o.contactName ?? '', o.contactPhone ? fmtPhone(o.contactPhone) : '',
         o.items.length ? itemsText(o.items) + (o.contents ? ` · ${o.contents}` : '') : o.contents ?? '', o.instructions ?? '']),
     ]);

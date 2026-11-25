@@ -10,14 +10,15 @@ import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import type { XSheet } from '../../lib/xlsx';
 import { STAGE_LABEL, closeLabel, methodText, stageOf, type Order } from '../../data/types';
+import { OpsTag } from './OpsTag';
 import { FixButton } from './OrderActions';
-import { NextStep, StageTrack, nextStepLabel, opsPending } from './OrderTimeline';
+import { NextStep, StageTrack, nextStepLabel } from './OrderTimeline';
 import './OrdersTable.css';
 import { canCare } from '../../data/care';
 
 const PAGE = 150;
 // פעולות שהן חלק מהציר – מופיעות ככפתור "הצעד הבא", לא ככפתור תיקון נוסף
-const STEP_ACTIONS = ['q', 'branch', 'status', 'close', 'ops'];
+const STEP_ACTIONS = ['q', 'close'];
 
 /* qTint: בטאב 'היום' – צבע לפי מצב Q (פס כחול = עוד לא ירדה ל-Q, ירוק עדין = ירדה), כמו בתור של מסך היום */
 export function OrdersTable({ rows, showDate = true, emptyText, caption, density = 'dense', qTint = false }: { rows: OrderView[]; showDate?: boolean; emptyText: string; caption: string; density?: 'dense' | 'comfy'; qTint?: boolean }) {
@@ -99,18 +100,18 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
 }
 
 /* פעולה מרובה לא עוקפת את מסלול ההזמנה:
-   "סמן כסופקו" – רק הזמנות שהוקלדו ל-Q ונשלחו בקבוצת תפעול; "סמן שולם" – בלי מבוטלות ובלי מה שכבר שולם.
+   "סמן כסופקו" – רק הזמנות שהוקלדו ל-Q; "סמן שולם" – בלי מבוטלות ובלי מה שכבר שולם.
    השאר מדולגות, וההודעה אומרת כמה ולמה. */
 // מספר + פועל מותאם: 'הזמנה אחת סומנה' / '3 הזמנות סומנו'
 const count = (n: number, one: string, many: string) => (n === 1 ? <>הזמנה אחת {one}</> : <><Ltr>{n}</Ltr> הזמנות {many}</>);
 function BulkBar({ rows, clear, updateMany }: { rows: OrderView[]; clear: () => void; updateMany: (ids: number[], patch: Partial<Order>, message: ReactNode) => void }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
-  const closable = rows.filter((o) => stageOf(o) === 'in_q' && !opsPending(o));
+  const closable = rows.filter((o) => stageOf(o) === 'in_q');
   const payable = rows.filter((o) => o.status !== 'cancelled' && o.payment !== 'cancelled' && o.payment !== 'paid');
   const skipped = (n: number, why: string) => (n > 0 ? <> · {count(n, 'דולגה', 'דולגו')} ({why})</> : null);
   const deliver = () => {
-    updateMany(closable.map((o) => o.id), { status: 'delivered' }, <>{count(closable.length, 'סומנה כסופקה', 'סומנו כסופקו')}{skipped(rows.length - closable.length, 'לא הוקלדו ל-Q או לא נשלחו לתפעול')}</>);
+    updateMany(closable.map((o) => o.id), { status: 'delivered' }, <>{count(closable.length, 'סומנה כסופקה', 'סומנו כסופקו')}{skipped(rows.length - closable.length, 'לא הוקלדו ל-Q')}</>);
     clear();
   };
   const pay = () => {
@@ -132,7 +133,7 @@ function BulkBar({ rows, clear, updateMany }: { rows: OrderView[]; clear: () => 
       <button onClick={deliver} disabled={!closable.length}>סמן כסופקו{closable.length > 0 && closable.length < rows.length && <> (<Ltr>{closable.length}</Ltr>)</>}</button>
       <button onClick={pay} disabled={!payable.length}>סמן שולם{payable.length > 0 && payable.length < rows.length && <> (<Ltr>{payable.length}</Ltr>)</>}</button>
       <button onClick={exportXlsx} disabled={busy}>{busy ? 'מייצא…' : 'ייצוא לאקסל'}</button>
-      {!closable.length && <span className="bulkbar__note">לסגירה: רק הזמנות שהוקלדו ל-Q ונשלחו לתפעול</span>}
+      {!closable.length && <span className="bulkbar__note">לסגירה: רק הזמנות שהוקלדו ל-Q</span>}
       <button className="bulkbar__clear" onClick={clear}>ניקוי בחירה</button>
     </div>
   );
@@ -221,7 +222,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, 
       <td className="num strong c-time">{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</td>
       {showDate && <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>}
       <td className="c-cust">
-        <span className="orow__cust">{o.customerName}{o.changedAfterApproval && <span className="changed-tag changed-tag--sm" title="שונתה לאחר אישור">שונתה</span>}{!!o.careCount && <span className="care-tag" title="יש תיעוד טיפול בתיק הלקוח">תועד</span>}{o.hold && <span className="hold-tag" title={[o.hold.reason, o.hold.note].filter(Boolean).join(' · ')}>בהמתנה</span>}</span>
+        <span className="orow__cust">{o.customerName}{(o.changedAfterQ || o.changedAfterApproval) && <span className="changed-tag changed-tag--sm" title={o.changedAfterQ ? 'שונתה אחרי הקלדה ל-Q' : 'שונתה לאחר אישור'}>שונתה</span>}{!!o.careCount && <span className="care-tag" title="יש תיעוד טיפול בתיק הלקוח">תועד</span>}{o.hold && <span className="hold-tag" title={[o.hold.reason, o.hold.note].filter(Boolean).join(' · ')}>בהמתנה</span>}</span>
         {/* הסיבות גלויות בשורה, לא רק בריחוף: שתיים ראשונות, ומספר הנוספות */}
         {top && o.health !== 'ok' && (
           <span className={`orow__why orow__why--${o.health}`} title={o.issues.map((i) => i.label).join(' · ')}>
@@ -230,12 +231,12 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, 
         )}
         {/* בטלפון העמודות מוסתרות – סניף וסכום בשורה אחת מתחת לשם */}
         <span className="orow__m">
-          <span>{o.branchName || <Missing>ללא סניף</Missing>}</span>
+          <span className="orow__m-br"><span className="orow__m-name">{o.branchName || <Missing>ללא סניף</Missing>}</span><OpsTag o={o} /></span>
           <span className="orow__m-sum">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</span>
         </span>
       </td>
       <td>
-        <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}</span>
+        <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}<OpsTag o={o} /></span>
         {o.branchPhone && <span className="orow__sub"><PhoneIcon size={14} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>}
       </td>
       <td className="num">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</td>

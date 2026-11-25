@@ -249,71 +249,50 @@ exports[`בורד > מדדים 1`] = `
     "days": [
       {
         "count": 8,
-        "customer": 1,
         "date": "2026-11-25",
-        "ops": 4,
         "pizzas": 52,
-        "ready": 3,
         "sum": 3065,
         "weekend": false,
       },
       {
         "count": 7,
-        "customer": 3,
         "date": "2026-11-26",
-        "ops": 3,
         "pizzas": 51,
-        "ready": 1,
         "sum": 3660,
         "weekend": false,
       },
       {
         "count": 0,
-        "customer": 0,
         "date": "2026-11-27",
-        "ops": 0,
         "pizzas": 0,
-        "ready": 0,
         "sum": 0,
         "weekend": true,
       },
       {
         "count": 0,
-        "customer": 0,
         "date": "2026-11-28",
-        "ops": 0,
         "pizzas": 0,
-        "ready": 0,
         "sum": 0,
         "weekend": true,
       },
       {
         "count": 0,
-        "customer": 0,
         "date": "2026-11-29",
-        "ops": 0,
         "pizzas": 0,
-        "ready": 0,
         "sum": 0,
         "weekend": false,
       },
       {
         "count": 0,
-        "customer": 0,
         "date": "2026-11-30",
-        "ops": 0,
         "pizzas": 0,
-        "ready": 0,
         "sum": 0,
         "weekend": false,
       },
       {
         "count": 0,
-        "customer": 0,
         "date": "2026-12-01",
-        "ops": 0,
         "pizzas": 0,
-        "ready": 0,
         "sum": 0,
         "weekend": false,
       },
@@ -324,8 +303,6 @@ exports[`בורד > מדדים 1`] = `
     },
     "week": {
       "count": 15,
-      "customer": 4,
-      "ops": 7,
       "pizzas": 103,
       "sum": 6725,
     },
@@ -2634,7 +2611,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "הקפה",
-      "ממתין לעדכון בתפעול",
+      "פתוחה",
       null,
     ],
     [
@@ -2649,7 +2626,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "אשראי",
-      "ממתין לאישור לקוח",
+      "פתוחה",
       null,
     ],
     [
@@ -2664,7 +2641,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "הקפה",
-      "מאושר",
+      "פתוחה",
       null,
     ],
     [
@@ -2694,7 +2671,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "הקפה",
-      "ממתין לעדכון בתפעול",
+      "פתוחה",
       null,
     ],
     [
@@ -2709,7 +2686,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "מזומן",
-      "ממתין לעדכון בתפעול",
+      "פתוחה",
       null,
     ],
     [
@@ -2724,7 +2701,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "הקפה",
-      "ממתין לעדכון בתפעול",
+      "פתוחה",
       null,
     ],
     [
@@ -2754,7 +2731,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "הקפה",
-      "ממתין לעדכון בתפעול",
+      "פתוחה",
       null,
     ],
     [
@@ -2769,7 +2746,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "אחר – העברה בנקאית",
-      "ממתין לעדכון בתפעול",
+      "פתוחה",
       null,
     ],
     [
@@ -2784,7 +2761,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       undefined,
-      "ממתין לאישור לקוח",
+      "פתוחה",
       null,
     ],
     [
@@ -2799,7 +2776,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "הקפה",
-      "ממתין לאישור לקוח",
+      "פתוחה",
       null,
     ],
     [
@@ -2814,7 +2791,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "אשראי",
-      "ממתין לאישור לקוח",
+      "פתוחה",
       null,
     ],
     [
@@ -2844,7 +2821,7 @@ exports[`דוחות > סיכום תקופה 1`] = `
       null,
       null,
       "הקפה",
-      "ממתין לעדכון בתפעול",
+      "פתוחה",
       null,
     ],
     [
@@ -3832,12 +3809,11 @@ exports[`הצעות מחיר > הצעה 1038 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1001 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
     "משקאות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -3872,40 +3848,23 @@ exports[`כל הזמנה לחוד > הזמנה 1001 1`] = `
 משקאות 10: 10 שתייה 1.5 ל׳
 הערות: לחתוך ל-12 משולשים
 סכום: ₪670",
-  "sig": "2:1urjkej",
-  "stage": "approved",
-  "status": "הלקוח אישר",
-  "statusText": "מאושר",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1002 1`] = `
 {
-  "awaitingCustomer": true,
   "categories": [],
-  "close": "ממתין לאישור לקוח",
+  "close": "פתוחה",
   "groups": [],
-  "health": "urgent",
+  "health": "ok",
   "holdDue": false,
-  "inSummary": false,
-  "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-    {
-      "action": "status",
-      "actionLabel": "הלקוח אישר",
-      "label": "אין אישור לקוח",
-      "rule": 6,
-      "severity": "orange",
-    },
-  ],
+  "inSummary": true,
+  "issues": [],
   "itemsText": "",
-  "lane": "customer",
+  "lane": "todo",
   "method": "הקפה",
   "missing": [],
   "outcome": "open",
@@ -3916,20 +3875,18 @@ exports[`כל הזמנה לחוד > הזמנה 1002 1`] = `
 משלוח: הרצל 1, רמת גן
 12 משפחתיות, 6 שתייה
 סכום: ₪750",
-  "sig": "2:ckxqxj",
-  "stage": "pending_customer",
-  "status": "ממתין לאישור לקוח",
-  "statusText": "ממתין לאישור לקוח",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1003 1`] = `
 {
-  "awaitingCustomer": true,
   "categories": [
     "פיצות",
   ],
-  "close": "ממתין לאישור לקוח",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -3941,22 +3898,8 @@ exports[`כל הזמנה לחוד > הזמנה 1003 1`] = `
   ],
   "health": "urgent",
   "holdDue": false,
-  "inSummary": false,
+  "inSummary": true,
   "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-    {
-      "action": "status",
-      "actionLabel": "הלקוח אישר",
-      "label": "אין אישור לקוח",
-      "rule": 6,
-      "severity": "orange",
-    },
     {
       "action": "open",
       "actionLabel": "השלם פרטים",
@@ -3966,7 +3909,7 @@ exports[`כל הזמנה לחוד > הזמנה 1003 1`] = `
     },
   ],
   "itemsText": "פיצות (20): 20 אישית — ללא תוספת",
-  "lane": "customer",
+  "lane": "todo",
   "method": "אשראי",
   "missing": [
     "כתובת",
@@ -3979,20 +3922,18 @@ exports[`כל הזמנה לחוד > הזמנה 1003 1`] = `
 משלוח: 
 פיצות 20: 20 אישית — ללא תוספת
 סכום: ₪600",
-  "sig": "2:177e2bh",
-  "stage": "pending_customer",
-  "status": "ממתין לאישור לקוח",
-  "statusText": "ממתין לאישור לקוח",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1004 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4002,18 +3943,10 @@ exports[`כל הזמנה לחוד > הזמנה 1004 1`] = `
       ],
     },
   ],
-  "health": "urgent",
+  "health": "ok",
   "holdDue": false,
   "inSummary": true,
-  "issues": [
-    {
-      "action": "ops",
-      "actionLabel": "נשלח בקבוצה",
-      "label": "לשלוח בקבוצת תפעול",
-      "rule": 12,
-      "severity": "orange",
-    },
-  ],
+  "issues": [],
   "itemsText": "פיצות (8): 8 משפחתית דקה — ללא תוספת",
   "lane": "inq",
   "method": "הקפה",
@@ -4026,20 +3959,18 @@ exports[`כל הזמנה לחוד > הזמנה 1004 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 8: 8 משפחתית דקה — ללא תוספת
 סכום: ₪500",
-  "sig": "2:1t4kivs",
   "stage": "in_q",
-  "status": "הלקוח אישר",
+  "status": "פתוחה",
   "statusText": "הוקלד ל-Q",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1005 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4073,16 +4004,14 @@ exports[`כל הזמנה לחוד > הזמנה 1005 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 9: 9 משפחתית — ללא תוספת
 סכום: ₪495",
-  "sig": "2:1mfflbr",
   "stage": "in_q",
-  "status": "הלקוח אישר",
+  "status": "פתוחה",
   "statusText": "הוקלד ל-Q",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1006 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
@@ -4112,7 +4041,6 @@ exports[`כל הזמנה לחוד > הזמנה 1006 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 18: 18 משפחתית — ללא תוספת
 סכום: ₪990",
-  "sig": "2:1u1k5fu",
   "stage": "delivered",
   "status": "סופקה",
   "statusText": "סופקה באיחור",
@@ -4121,7 +4049,6 @@ exports[`כל הזמנה לחוד > הזמנה 1006 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1007 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
@@ -4159,7 +4086,6 @@ exports[`כל הזמנה לחוד > הזמנה 1007 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 12: 12 אקסטרה — ללא תוספת
 סכום: ₪660",
-  "sig": "2:o3s1by",
   "stage": "partial",
   "status": "סופקה חלקית",
   "statusText": "חלקית, באיחור",
@@ -4168,7 +4094,6 @@ exports[`כל הזמנה לחוד > הזמנה 1007 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1008 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
@@ -4206,7 +4131,6 @@ exports[`כל הזמנה לחוד > הזמנה 1008 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 5: 5 משפחתית — ללא תוספת
 סכום: ₪300",
-  "sig": "2:15af6tf",
   "stage": "cancelled",
   "status": "בוטלה",
   "statusText": "בוטלה",
@@ -4215,7 +4139,6 @@ exports[`כל הזמנה לחוד > הזמנה 1008 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1009 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "אחר",
     "אחר",
@@ -4256,7 +4179,6 @@ exports[`כל הזמנה לחוד > הזמנה 1009 1`] = `
 ליד הפיצה 3: 3 לחם שום — לחם שום
 אחר 5: 4 פיצה משפחתית L · רמה 2 — זיתים ; 1 מגש פירות — בלי אננס
 סכום: ₪420",
-  "sig": "2:1e2w8z1",
   "stage": "delivered",
   "status": "סופקה",
   "statusText": "סופקה",
@@ -4265,13 +4187,12 @@ exports[`כל הזמנה לחוד > הזמנה 1009 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1010 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
     "פיצות",
     "קינוחים",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4288,18 +4209,10 @@ exports[`כל הזמנה לחוד > הזמנה 1010 1`] = `
       ],
     },
   ],
-  "health": "urgent",
+  "health": "ok",
   "holdDue": false,
   "inSummary": true,
-  "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-  ],
+  "issues": [],
   "itemsText": "פיצות (4): 4 משפחתית — 2 חצי-חצי: פפרוני | ללא · 2 רבעים: זיתים | פטריות, בצל | טונה | ללא | קינוחים (2): 2 סופלה",
   "lane": "todo",
   "method": "הקפה",
@@ -4313,20 +4226,18 @@ exports[`כל הזמנה לחוד > הזמנה 1010 1`] = `
 פיצות 4: 4 משפחתית — 2 חצי-חצי: פפרוני | ללא · 2 רבעים: זיתים | פטריות, בצל | טונה | ללא
 קינוחים 2: 2 סופלה
 סכום: ₪310",
-  "sig": "2:1hotct5",
-  "stage": "pending_branch",
-  "status": "הלקוח אישר",
-  "statusText": "ממתין לעדכון בתפעול",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1011 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4336,18 +4247,10 @@ exports[`כל הזמנה לחוד > הזמנה 1011 1`] = `
       ],
     },
   ],
-  "health": "urgent",
+  "health": "ok",
   "holdDue": true,
   "inSummary": true,
-  "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-  ],
+  "issues": [],
   "itemsText": "פיצות (7): 7 משפחתית — ללא תוספת",
   "lane": "todo",
   "method": "הקפה",
@@ -4360,20 +4263,18 @@ exports[`כל הזמנה לחוד > הזמנה 1011 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 7: 7 משפחתית — ללא תוספת
 סכום: ₪400",
-  "sig": "2:pa2pfo",
-  "stage": "pending_branch",
-  "status": "הלקוח אישר",
-  "statusText": "ממתין לעדכון בתפעול",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1012 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4383,18 +4284,10 @@ exports[`כל הזמנה לחוד > הזמנה 1012 1`] = `
       ],
     },
   ],
-  "health": "urgent",
+  "health": "ok",
   "holdDue": false,
   "inSummary": true,
-  "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-  ],
+  "issues": [],
   "itemsText": "פיצות (7): 7 אישית — ללא תוספת",
   "lane": "hold",
   "method": "הקפה",
@@ -4407,20 +4300,18 @@ exports[`כל הזמנה לחוד > הזמנה 1012 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 7: 7 אישית — ללא תוספת
 סכום: ₪220",
-  "sig": "2:wqk0y6",
-  "stage": "pending_branch",
-  "status": "הלקוח אישר",
-  "statusText": "ממתין לעדכון בתפעול",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1013 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4448,13 +4339,6 @@ exports[`כל הזמנה לחוד > הזמנה 1013 1`] = `
       "rule": 11,
       "severity": "orange",
     },
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
   ],
   "itemsText": "פיצות (10): 10 משפחתית — ללא תוספת",
   "lane": "inq",
@@ -4468,16 +4352,14 @@ exports[`כל הזמנה לחוד > הזמנה 1013 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 10: 10 משפחתית — ללא תוספת
 סכום: ₪650",
-  "sig": "2:1377ouu",
   "stage": "in_q",
-  "status": "הלקוח אישר",
+  "status": "פתוחה",
   "statusText": "הוקלד ל-Q",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1014 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
@@ -4507,7 +4389,6 @@ exports[`כל הזמנה לחוד > הזמנה 1014 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 10: 10 וולקנו — ללא תוספת
 סכום: ₪800",
-  "sig": "2:sg53ja",
   "stage": "delivered",
   "status": "סופקה",
   "statusText": "סופקה",
@@ -4516,11 +4397,10 @@ exports[`כל הזמנה לחוד > הזמנה 1014 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1015 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4530,18 +4410,10 @@ exports[`כל הזמנה לחוד > הזמנה 1015 1`] = `
       ],
     },
   ],
-  "health": "urgent",
+  "health": "ok",
   "holdDue": false,
   "inSummary": true,
-  "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-  ],
+  "issues": [],
   "itemsText": "פיצות (9): 9 משפחתית — ללא תוספת",
   "lane": "todo",
   "method": "אחר – העברה בנקאית",
@@ -4554,20 +4426,18 @@ exports[`כל הזמנה לחוד > הזמנה 1015 1`] = `
 איסוף עצמי
 פיצות 9: 9 משפחתית — ללא תוספת
 סכום: ₪500",
-  "sig": "2:kp6g0u",
-  "stage": "pending_branch",
-  "status": "הלקוח אישר",
-  "statusText": "ממתין לעדכון בתפעול",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1016 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4601,16 +4471,14 @@ exports[`כל הזמנה לחוד > הזמנה 1016 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 6: 6 משפחתית — ללא תוספת
 סכום: ₪330",
-  "sig": "2:dlzhyf",
-  "stage": "pending_branch",
-  "status": "הלקוח אישר",
-  "statusText": "ממתין לעדכון בתפעול",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1017 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
@@ -4642,7 +4510,6 @@ exports[`כל הזמנה לחוד > הזמנה 1017 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 6: 6 משפחתית — ללא תוספת
 סכום: ₪360",
-  "sig": "2:17nzlak",
   "stage": "delivered",
   "status": "סופקה",
   "statusText": "סופקה",
@@ -4651,11 +4518,10 @@ exports[`כל הזמנה לחוד > הזמנה 1017 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1018 1`] = `
 {
-  "awaitingCustomer": true,
   "categories": [
     "פיצות",
   ],
-  "close": "ממתין לאישור לקוח",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4667,7 +4533,7 @@ exports[`כל הזמנה לחוד > הזמנה 1018 1`] = `
   ],
   "health": "critical",
   "holdDue": false,
-  "inSummary": false,
+  "inSummary": true,
   "issues": [
     {
       "action": "q",
@@ -4677,29 +4543,15 @@ exports[`כל הזמנה לחוד > הזמנה 1018 1`] = `
       "severity": "red",
     },
     {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-    {
       "action": "pay",
       "actionLabel": "סמן שולם",
       "label": "אשראי לא חויב",
       "rule": 5,
       "severity": "orange",
     },
-    {
-      "action": "status",
-      "actionLabel": "הלקוח אישר",
-      "label": "אין אישור לקוח",
-      "rule": 6,
-      "severity": "orange",
-    },
   ],
   "itemsText": "פיצות (5): 5 משפחתית — ללא תוספת",
-  "lane": "customer",
+  "lane": "todo",
   "method": "אשראי",
   "missing": [],
   "outcome": "open",
@@ -4710,16 +4562,14 @@ exports[`כל הזמנה לחוד > הזמנה 1018 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 5: 5 משפחתית — ללא תוספת
 סכום: ₪275",
-  "sig": "2:y84tcj",
-  "stage": "pending_customer",
-  "status": "ממתין לאישור לקוח",
-  "statusText": "ממתין לאישור לקוח",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1019 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
@@ -4749,7 +4599,6 @@ exports[`כל הזמנה לחוד > הזמנה 1019 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 9: 9 משפחתית — ללא תוספת
 סכום: ₪500",
-  "sig": "2:qw591s",
   "stage": "delivered",
   "status": "סופקה",
   "statusText": "סופקה",
@@ -4758,7 +4607,6 @@ exports[`כל הזמנה לחוד > הזמנה 1019 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1020 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [],
   "close": "בוטלה",
   "groups": [],
@@ -4779,7 +4627,6 @@ exports[`כל הזמנה לחוד > הזמנה 1020 1`] = `
 איש קשר: איש קשר · 050-0000001
 משלוח: הרצל 1, רמת גן
 סכום: ₪200",
-  "sig": "2:129k1ii",
   "stage": "cancelled",
   "status": "בוטלה",
   "statusText": "בוטלה",
@@ -4788,7 +4635,6 @@ exports[`כל הזמנה לחוד > הזמנה 1020 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1021 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [],
   "close": "בוטלה",
   "groups": [],
@@ -4809,7 +4655,6 @@ exports[`כל הזמנה לחוד > הזמנה 1021 1`] = `
 איש קשר: איש קשר · 050-0000001
 משלוח: הרצל 1, רמת גן
 סכום: ₪300",
-  "sig": "2:1pjxcul",
   "stage": "cancelled",
   "status": "בוטלה",
   "statusText": "בוטלה",
@@ -4818,11 +4663,10 @@ exports[`כל הזמנה לחוד > הזמנה 1021 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1022 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4836,13 +4680,6 @@ exports[`כל הזמנה לחוד > הזמנה 1022 1`] = `
   "holdDue": true,
   "inSummary": true,
   "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
     {
       "action": "open",
       "actionLabel": "השלם פרטים",
@@ -4865,16 +4702,14 @@ exports[`כל הזמנה לחוד > הזמנה 1022 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 8: 8 משפחתית — ללא תוספת
 סכום: ₪440",
-  "sig": "2:qvwgtm",
-  "stage": "pending_branch",
-  "status": "הלקוח אישר",
-  "statusText": "ממתין לעדכון בתפעול",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1023 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
@@ -4904,7 +4739,6 @@ exports[`כל הזמנה לחוד > הזמנה 1023 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 10: 10 משפחתית — ללא תוספת
 סכום: ₪550",
-  "sig": "2:1m9mb",
   "stage": "delivered",
   "status": "סופקה",
   "statusText": "סופקה באיחור",
@@ -4913,11 +4747,10 @@ exports[`כל הזמנה לחוד > הזמנה 1023 1`] = `
 
 exports[`כל הזמנה לחוד > הזמנה 1024 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "פיצות",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "פיצות",
@@ -4943,37 +4776,21 @@ exports[`כל הזמנה לחוד > הזמנה 1024 1`] = `
 משלוח: הרצל 1, רמת גן
 פיצות 6: 6 משפחתית — ללא תוספת
 סכום: ₪330",
-  "sig": "2:1lmlw2x",
   "stage": "in_q",
-  "status": "הלקוח אישר",
+  "status": "פתוחה",
   "statusText": "הוקלד ל-Q",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1101 1`] = `
 {
-  "awaitingCustomer": true,
   "categories": [],
-  "close": "ממתין לאישור לקוח",
+  "close": "פתוחה",
   "groups": [],
   "health": "urgent",
   "holdDue": false,
-  "inSummary": false,
+  "inSummary": true,
   "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
-    {
-      "action": "status",
-      "actionLabel": "הלקוח אישר",
-      "label": "אין אישור לקוח",
-      "rule": 6,
-      "severity": "orange",
-    },
     {
       "action": "open",
       "actionLabel": "השלם פרטים",
@@ -4983,7 +4800,7 @@ exports[`כל הזמנה לחוד > הזמנה 1101 1`] = `
     },
   ],
   "itemsText": "",
-  "lane": "customer",
+  "lane": "todo",
   "method": undefined,
   "missing": [
     "סניף",
@@ -4998,20 +4815,18 @@ exports[`כל הזמנה לחוד > הזמנה 1101 1`] = `
 משלוח: 
 8 משפחתיות
 סכום: ₪400",
-  "sig": "2:bf80vh",
-  "stage": "pending_customer",
-  "status": "ממתין לאישור לקוח",
-  "statusText": "ממתין לאישור לקוח",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1102 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [
     "אחר",
   ],
-  "close": "הלקוח אישר",
+  "close": "פתוחה",
   "groups": [
     {
       "category": "אחר",
@@ -5025,13 +4840,6 @@ exports[`כל הזמנה לחוד > הזמנה 1102 1`] = `
   "holdDue": false,
   "inSummary": true,
   "issues": [
-    {
-      "action": "branch",
-      "actionLabel": "סמן עודכן",
-      "label": "לא עודכן בתפעול",
-      "rule": 4,
-      "severity": "orange",
-    },
     {
       "action": "open",
       "actionLabel": "השלם פרטים",
@@ -5056,16 +4864,14 @@ exports[`כל הזמנה לחוד > הזמנה 1102 1`] = `
 משלוח: 
 4× פיצה משפחתית
 סכום: ₪250",
-  "sig": "2:1hke22y",
-  "stage": "pending_branch",
-  "status": "הלקוח אישר",
-  "statusText": "ממתין לעדכון בתפעול",
+  "stage": "open",
+  "status": "פתוחה",
+  "statusText": "פתוחה",
 }
 `;
 
 exports[`כל הזמנה לחוד > הזמנה 1103 1`] = `
 {
-  "awaitingCustomer": false,
   "categories": [],
   "close": "סופקה",
   "groups": [],
@@ -5091,7 +4897,6 @@ exports[`כל הזמנה לחוד > הזמנה 1103 1`] = `
 תשלום: undefined
 משלוח: 
 סכום: ₪0",
-  "sig": "2:mpe7xq",
   "stage": "delivered",
   "status": "סופקה",
   "statusText": "סופקה",
@@ -5100,11 +4905,8 @@ exports[`כל הזמנה לחוד > הזמנה 1103 1`] = `
 
 exports[`מסך היום > מונים של משימות 1`] = `
 {
-  "branch": 11,
-  "customer": 4,
   "followups": 2,
   "missing": 4,
-  "ops": 1,
   "other": 4,
   "q": 6,
   "quotes": 1,
@@ -5117,9 +4919,6 @@ exports[`מסך היום > מונים של משימות 1`] = `
 exports[`מסך היום > תור Q 1`] = `
 {
   "closed": [],
-  "customer": [
-    1018,
-  ],
   "hold": [
     1012,
   ],
@@ -5130,6 +4929,7 @@ exports[`מסך היום > תור Q 1`] = `
   "todo": [
     1011,
     1022,
+    1018,
     1001,
     1102,
   ],
@@ -5149,7 +4949,7 @@ exports[`מסך היום > תור Q 3`] = `1011`;
 exports[`סיכום לתפעול > לפי אשכול וסניף, מחר וסופ"ש 1`] = `
 {
   "allOpenView": {
-    "amount": 5095,
+    "amount": 7120,
     "groups": [
       {
         "branches": [
@@ -5164,6 +4964,8 @@ exports[`סיכום לתפעול > לפי אשכול וסניף, מחר וסופ
               "#1024",
               "#1012",
               "#1015",
+              "#1002",
+              "#1003",
               "#1010",
               "#1013",
             ],
@@ -5179,6 +4981,72 @@ exports[`סיכום לתפעול > לפי אשכול וסניף, מחר וסופ
           "#1024",
           "#1012",
           "#1015",
+          "#1002",
+          "#1003",
+          "#1010",
+          "#1013",
+        ],
+      },
+      {
+        "branches": [
+          {
+            "name": "חיפה – חורב",
+            "orders": [
+              "#1018",
+              "#1004",
+            ],
+          },
+        ],
+        "name": "צפון",
+        "orders": [
+          "#1018",
+          "#1004",
+        ],
+      },
+      {
+        "branches": [
+          {
+            "name": "ללא סניף",
+            "orders": [
+              "#1102",
+              "#1101",
+            ],
+          },
+        ],
+        "name": "ללא אשכול",
+        "orders": [
+          "#1102",
+          "#1101",
+        ],
+      },
+    ],
+    "pizzas": 113,
+  },
+  "tomorrow": {
+    "from": "2026-11-26",
+    "to": "2026-11-26",
+  },
+  "tomorrowView": {
+    "amount": 3710,
+    "groups": [
+      {
+        "branches": [
+          {
+            "name": "רמת גן – ביאליק",
+            "orders": [
+              "#1015",
+              "#1002",
+              "#1003",
+              "#1010",
+              "#1013",
+            ],
+          },
+        ],
+        "name": "מרכז",
+        "orders": [
+          "#1015",
+          "#1002",
+          "#1003",
           "#1010",
           "#1013",
         ],
@@ -5202,70 +5070,17 @@ exports[`סיכום לתפעול > לפי אשכול וסניף, מחר וסופ
           {
             "name": "ללא סניף",
             "orders": [
-              "#1102",
+              "#1101",
             ],
           },
         ],
         "name": "ללא אשכול",
         "orders": [
-          "#1102",
+          "#1101",
         ],
       },
     ],
-    "pizzas": 88,
-    "unapproved": [
-      1002,
-      1003,
-      1018,
-      1101,
-    ],
-  },
-  "tomorrow": {
-    "from": "2026-11-26",
-    "to": "2026-11-26",
-  },
-  "tomorrowView": {
-    "amount": 1960,
-    "groups": [
-      {
-        "branches": [
-          {
-            "name": "רמת גן – ביאליק",
-            "orders": [
-              "#1015",
-              "#1010",
-              "#1013",
-            ],
-          },
-        ],
-        "name": "מרכז",
-        "orders": [
-          "#1015",
-          "#1010",
-          "#1013",
-        ],
-      },
-      {
-        "branches": [
-          {
-            "name": "חיפה – חורב",
-            "orders": [
-              "#1004",
-            ],
-          },
-        ],
-        "name": "צפון",
-        "orders": [
-          "#1004",
-        ],
-      },
-    ],
-    "pizzas": 31,
-    "unapproved": [
-      1002,
-      1003,
-      1101,
-    ],
+    "pizzas": 51,
   },
   "weekend": {
     "from": "2026-11-27",
@@ -5275,37 +5090,7 @@ exports[`סיכום לתפעול > לפי אשכול וסניף, מחר וסופ
     "amount": 0,
     "groups": [],
     "pizzas": 0,
-    "unapproved": [],
   },
-}
-`;
-
-exports[`סיכום לתפעול – מה השתנה מאז השליחה > חתימה בגרסה 2, גרסה 1 ישנה, הזמנה שהשתנתה, חדשה ושירדה 1`] = `
-{
-  "mark": [
-    [
-      1004,
-      "changed",
-    ],
-    [
-      1005,
-      "changed",
-    ],
-    [
-      1011,
-      "new",
-    ],
-  ],
-  "removed": [
-    "9999",
-  ],
-}
-`;
-
-exports[`סיכום לתפעול – מה השתנה מאז השליחה > חתימה בגרסה 2, גרסה 1 ישנה, הזמנה שהשתנתה, חדשה ושירדה 2`] = `
-{
-  "mark": Map {},
-  "removed": [],
 }
 `;
 

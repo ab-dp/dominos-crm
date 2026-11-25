@@ -1,5 +1,5 @@
 /* "להעברה לקופה": הבלוק הראשון בתיק ההזמנה – כל מה שהאחמ"ש צריך כדי להקליד את ההזמנה ל-Q ביום ההזמנה,
-   ובתחתיתו השורה שבה רושמים שהועברה ל-Q (מספר, סכום, נשלח בקבוצת תפעול). כל ערך נערך בלחיצה, כמו בשאר התיק. */
+   ובתחתיתו השורה שבה רושמים שהועברה ל-Q (מספר וסכום). כל ערך נערך בלחיצה, כמו בשאר התיק. */
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, Copy } from 'lucide-react';
 import { useStore, type OrderView } from '../../data/store';
@@ -105,8 +105,7 @@ export function RegisterBlock({ o }: { o: OrderView }) {
   );
 }
 
-/* השורה של Q: לפני ההקלדה – הטופס המשותף (QForm), מוטמע; אחרי – מה נרשם, ו"תיקון".
-   השליחה בקבוצת התפעול מסומנת בציר (הצעד הבא), לא כאן – מקום אחד לכל פעולה */
+/* השורה של Q: לפני ההקלדה – הטופס המשותף (QForm), מוטמע; אחרי – מה נרשם, ו"תיקון" */
 function QRow({ o }: { o: OrderView }) {
   const [editing, setEditing] = useState(!o.qNumber);
   // נשמר עכשיו בכרטיס הזה – "הבאה להקלדה" הופך לכפתור הראשי ומקבל פוקוס, כך ש-Enter עובר להזמנה הבאה
@@ -119,14 +118,13 @@ function QRow({ o }: { o: OrderView }) {
       <div className="reg-q reg-q--done">
         <span className="reg-q__done"><Check size={16} aria-hidden="true" /> הוקלד ל-Q · <Ltr>{o.qNumber}</Ltr> · <Money value={o.qAmount ?? o.amount} /></span>
         {gap && <span className="reg-q__gap">פער <Ltr>{fmtMoney(Math.abs((o.qAmount ?? 0) - o.amount))}</Ltr></span>}
-        {o.opsNotified === true && <span className="reg-q__ops-state">נשלח בקבוצת תפעול</span>}
         <button type="button" className="link reg-q__edit" onClick={() => setEditing(true)}>תיקון</button>
         <NextToType o={o} primary={justSaved} />
       </div>
     );
   }
-  // הכפתור "הועבר ל-Q" ראשי רק כשהקלדה ל-Q היא באמת הצעד הבא; בשלבים קודמים הצעד הבא הוא בציר
-  return <QForm o={o} inline primary={stageOf(o) === 'approved'} done={() => { setEditing(false); setJustSaved(true); }} onCancel={o.qNumber ? () => setEditing(false) : undefined} />;
+  // הכפתור "הועבר ל-Q" ראשי כשהקלדה ל-Q היא הצעד הבא (הזמנה פתוחה)
+  return <QForm o={o} inline primary={stageOf(o) === 'open'} done={() => { setEditing(false); setJustSaved(true); }} onCancel={o.qNumber ? () => setEditing(false) : undefined} />;
 }
 
 /* אחרי שהזמנה של היום ירדה ל-Q: מעבר ישר להזמנה הבאה בתור "להקליד ל-Q" (לפי שעה, באותו סינון "כולם / שלי" של מסך היום),

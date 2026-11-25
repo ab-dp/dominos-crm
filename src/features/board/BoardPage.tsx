@@ -281,11 +281,10 @@ function Pulse({ s, sp, sv, svp, col, daily, prevName, goal, go }: {
   );
 }
 
-/* ---------- הזמנות קרובות: 7 ימים, ולכל יום – כמה מוכנות ---------- */
+/* ---------- הזמנות קרובות: 7 ימים ---------- */
 function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go: (to: string) => void }) {
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
-  const pending = h.week.customer + h.week.ops;
   const dayName = (iso: string) => (iso === today ? 'היום' : iso === tomorrow ? 'מחר' : WEEKDAY[new Date(iso + 'T12:00').getDay()]);
   const linkFor = (iso: string) => (iso === today ? '/orders?tab=today' : iso === tomorrow ? '/orders?tab=tomorrow' : '/orders?tab=future');
   return (
@@ -293,9 +292,6 @@ function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go
       lead={h.week.count === 0 ? <p>אין הזמנות פתוחות בשבוע הקרוב.</p> : (
         <>
           <p>בשבוע הקרוב {orders$(h.week.count)} בסך <Ltr>{fmtMoney(h.week.sum)}</Ltr>{h.week.pizzas > 0 && <>, {pizzas$(h.week.pizzas)}</>}.</p>
-          {pending > 0
-            ? <p className="is-warn">עוד לא מוכנות: {h.week.customer > 0 && <>{h.week.customer === 1 ? 'אחת ממתינה' : <><Ltr>{h.week.customer}</Ltr> ממתינות</>} לאישור הלקוח</>}{h.week.customer > 0 && h.week.ops > 0 && ', '}{h.week.ops > 0 && <>{h.week.ops === 1 ? 'אחת לא עודכנה' : <><Ltr>{h.week.ops}</Ltr> לא עודכנו</>} בתפעול</>}.</p>
-            : <p className="is-ok">כל ההזמנות אושרו מול הלקוח ועודכנו בתפעול.</p>}
         </>
       )}>
       <div className="bdays" role="list">
@@ -308,11 +304,6 @@ function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go
             {d.count > 0 && <>
               <span className="bday__sum"><Ltr>{fmtMoney(d.sum)}</Ltr></span>
               <span className="bday__piz">{d.pizzas ? pizzas$(d.pizzas) : ' '}</span>
-              <span className="bready" aria-hidden="true">
-                {d.ready > 0 && <span className="is-ready" style={{ flexGrow: d.ready }} />}
-                {d.customer > 0 && <span className="is-customer" style={{ flexGrow: d.customer }} />}
-                {d.ops > 0 && <span className="is-ops" style={{ flexGrow: d.ops }} />}
-              </span>
             </>}
           </button>
         ))}
@@ -323,9 +314,6 @@ function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go
           {h.later.count > 0 && <span className="bday__sum"><Ltr>{fmtMoney(h.later.sum)}</Ltr></span>}
         </button>
       </div>
-      <ul className="blegend" aria-label="מקרא מוכנות">
-        <li><i className="is-ready" />מוכנה</li><li><i className="is-customer" />ממתינה לאישור הלקוח</li><li><i className="is-ops" />לא עודכנה בתפעול</li>
-      </ul>
     </Section>
   );
 }

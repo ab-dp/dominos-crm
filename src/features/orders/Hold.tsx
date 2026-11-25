@@ -40,6 +40,8 @@ export function HoldForm({ o, done, retry }: { o: OrderView; done: () => void; r
   const { update } = useStore();
   const { profile } = useAuth();
   const [reason, setReason] = useState(o.hold?.reason ?? HOLD_REASONS[0]);
+  // סיבה ישנה שכבר לא ברשימה (למשל "ממתין לאישור הלקוח") – נשארת כצ'יפ נבחר, בלי לשנות את הנתונים
+  const reasons = o.hold?.reason && !HOLD_REASONS.includes(o.hold.reason) ? [o.hold.reason, ...HOLD_REASONS] : HOLD_REASONS;
   const [note, setNote] = useState(retry ? '' : o.hold?.note ?? '');
   const [remind, setRemind] = useState(10);
   const submit = (e: FormEvent) => {
@@ -67,7 +69,7 @@ export function HoldForm({ o, done, retry }: { o: OrderView; done: () => void; r
         <div className="hold-form__f">
           <span className="hold-form__k" id={`hr-${o.id}`}>סיבה</span>
           <div className="chips" role="radiogroup" aria-labelledby={`hr-${o.id}`}>
-            {HOLD_REASONS.map((r) => <button type="button" key={r} role="radio" aria-checked={reason === r} className={`chip ${reason === r ? 'is-on' : ''}`} onClick={() => setReason(r)}>{r}</button>)}
+            {reasons.map((r) => <button type="button" key={r} role="radio" aria-checked={reason === r} className={`chip ${reason === r ? 'is-on' : ''}`} onClick={() => setReason(r)}>{r}</button>)}
           </div>
         </div>
       )}

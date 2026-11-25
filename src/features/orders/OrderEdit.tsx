@@ -10,6 +10,7 @@ import { usePriceLists } from '../../data/priceLists';
 import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, useCatalog, type Line } from './ItemsBuilder';
 import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, type Order } from '../../data/types';
+import { OpsTag } from './OpsTag';
 import { Button, Missing } from '../../design/components';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, roundMoney, sameMoney, toISODate, parseMoney as money } from '../../lib/format';
 import { cleanPhone, phoneError, CARD_RE } from '../../lib/names';
@@ -105,7 +106,7 @@ export function BranchEdit({ o }: { o: OrderView }) {
   if (!open) {
     return (
       <div className="kv kv--edit">
-        <span className="kv__k">סניף</span>
+        <span className="kv__k">סניף<OpsTag o={o} /></span>
         <button type="button" className="kv__v kv__btn" onClick={() => setOpen(true)} aria-label={`סניף: ${o.branchName || "חסר"}. לחץ לשינוי`}>
           <span className="kv__val">{o.branchId ? <>{o.branchName} <span className="muted">· אשכול {o.cluster}</span></> : <Missing />}</span>
           <Pencil size={14} className="kv__pen" aria-hidden="true" />
@@ -120,7 +121,7 @@ export function BranchEdit({ o }: { o: OrderView }) {
         <BranchPicker label="בחר סניף" value={{ branchId: o.branchId, clusterId: '' }} onChange={(v) => {
           const b = branches.find((x) => x.id === v.branchId);
           if (b && b.id !== o.branchId) {
-            // סניף חדש: השם, הטלפון והאשכול נשמרים מחדש בהזמנה. אם הייתה מאושרת – חלון "שינוי אחרי אישור" שואל מה לבטל.
+            // סניף חדש: השם, הטלפון והאשכול נשמרים מחדש בהזמנה. אם כבר הוקלדה ל-Q – חלון "שינוי אחרי הקלדה ל-Q" שואל אם לעדכן גם בקופה.
             save({ branchId: b.id, branchName: b.name, branchPhone: b.phone, cluster: clusters.find((c) => c.id === b.clusterId)?.name ?? '' }, 'הסניף');
           }
           setOpen(false);

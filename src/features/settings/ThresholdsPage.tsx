@@ -7,7 +7,8 @@ import { useToast } from '../../design/Toast';
 import '../pages.css';
 import './ThresholdsPage.css';
 
-const KEYS: (keyof Thresholds)[] = ['qFromTime', 'qLeadMinutes', 'soonDays', 'creditDeadline', 'nearMinutes', 'quoteFollowupHours', 'lateSplitMinutes'];
+const KEYS: (keyof Thresholds)[] = ['qFromTime', 'qLeadMinutes', 'soonDays', 'creditDeadline', 'nearMinutes', 'opsCutoff', 'quoteFollowupHours', 'lateSplitMinutes'];
+const isTimeKey = (k: keyof Thresholds) => THRESHOLD_META[k].unit === 'שעה';
 
 export function ThresholdsPage() {
   const { th, saved } = useThresholds();
@@ -21,7 +22,7 @@ export function ThresholdsPage() {
   const validate = () => {
     for (const k of KEYS) {
       const m = THRESHOLD_META[k];
-      if (k === 'creditDeadline' || k === 'qFromTime') { if (!/^\d{2}:\d{2}$/.test(draft[k])) return `${m.title}: שעה בפורמט 12:00`; continue; }
+      if (isTimeKey(k)) { if (!/^\d{2}:\d{2}$/.test(String(draft[k]))) return `${m.title}: שעה בפורמט 12:00`; continue; }
       const v = draft[k] as number;
       if (!Number.isFinite(v) || v < m.min || v > m.max) return `${m.title}: בין ${m.min} ל-${m.max} ${m.unit}`;
     }
@@ -47,7 +48,7 @@ export function ThresholdsPage() {
       <div className="card thr">
         {KEYS.map((k) => {
           const m = THRESHOLD_META[k];
-          const isTime = k === 'creditDeadline' || k === 'qFromTime';
+          const isTime = isTimeKey(k);
           return (
             <label key={k} className="thr__row">
               <span className="thr__text">

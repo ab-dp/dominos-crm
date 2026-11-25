@@ -223,16 +223,13 @@
 .reg-q { display: flex; align-items: flex-end; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) 0 var(--space-1); border-top: 1px solid var(--line); }
 .reg-q__f { display: grid; gap: 2px; flex: 1 1 130px; }
 .reg-q__f--amt { flex: 0 1 110px; }
-.reg-q__ops { min-height: 36px; font-size: var(--text-label); font-weight: 500; }
 .reg-q__btns { display: flex; align-items: center; gap: var(--space-3); }
-.reg-q__warn { flex-basis: 100%; display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--urgent-fg); font-size: var(--text-label); font-weight: 500; }
 .reg-q__err { flex-basis: 100%; margin: 0; }
 .reg-q--done { align-items: center; }
 .reg-q__done { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 600; color: var(--ok-fg); }
 .reg-q__done bdi { white-space: nowrap; }
 .reg-q__gap { padding: 1px var(--space-2); border-radius: var(--radius-tag); background: var(--urgent-bg); color: var(--urgent-fg); font-size: var(--text-micro); font-weight: 500; }
 .reg-q__edit { margin-inline-start: auto; font-size: var(--text-label); }
-.reg-q__ops-state { font-size: var(--text-label); color: var(--gray-600); }
 .reg-q__next { flex-basis: 100%; justify-content: center; }
 .reg-q__next bdi { font-family: var(--font-mono); }
 .reg-q__all { flex-basis: 100%; font-size: var(--text-label); color: var(--ok-fg); font-weight: 500; }

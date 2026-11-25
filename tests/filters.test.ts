@@ -17,6 +17,15 @@ describe('סינון הזמנות', () => {
     expect(ids({ outcome: 'late' })).toMatchSnapshot();
     expect(ids({ handler: 'נציג א', cluster: 'מרכז', method: 'account' })).toMatchSnapshot();
   });
+  it('שלב – לפי stageOf, בסדר הציר', () => {
+    const inq = ids({ stage: 'in_q' });
+    expect(inq.length).toBeGreaterThan(0);
+    expect(ALL.filter((o) => inq.includes(o.id)).every((o) => !!o.qNumber && !['delivered', 'partial', 'cancelled'].includes(o.status))).toBe(true);
+    expect(ids({ stage: 'open' }).every((id) => !ALL.find((o) => o.id === id)!.qNumber)).toBe(true);
+    const opts = filterOptions(ALL, ['stage'], {})[0].options.map((o) => o.value);
+    expect(opts).toEqual(['open', 'in_q', 'delivered', 'partial', 'cancelled'].filter((v) => opts.includes(v)));
+    expect(filterOptions(ALL, ['stage'], {})[0].options.find((o) => o.value === 'in_q')?.label).toBe('הוקלד ל-Q');
+  });
   it('מטפל ריק – לפי מי שיצר', () => {
     const o = { ...LEGACY[0], handler: '', createdBy: 'נציג ב' };
     expect(matchesFilters(o, { handler: 'נציג ב' })).toBe(true);

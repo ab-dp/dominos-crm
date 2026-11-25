@@ -1,18 +1,17 @@
 /* סיכום לתפעול: בוחרים תאריכים (מחר / סופ"ש / טווח) ומקבלים דף מסודר לכל אשכול – סניף ← יום ושעה, פירוט מלא של כל הזמנה.
-   הדף בנוי לצילום מסך או ל-PDF – כתב גדול ושורות צפופות, עמוד אחד לאשכול. נכנסות רק הזמנות שהלקוח אישר; מה שעוד ממתין לאישור הלקוח מוצג באדום למעלה. */
+   הדף בנוי לצילום מסך או ל-PDF – כתב גדול ושורות צפופות, עמוד אחד לאשכול. נכנסות כל ההזמנות הפתוחות שלא בוטלו.
+   סינון (אשכול, סניף, לקוח) אפשרי, וגם אז אפשר להוריד PDF – אבל בראש המסך ובראש כל דף מופיע "סיכום חלקי – מסונן לפי…". */
 import { forwardRef, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AlertTriangle, Check, Download, Send } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Download, Filter, Send } from 'lucide-react';
 import { useStore } from '../../data/store';
-import { usePanel } from '../../app/PanelContext';
 import { Button, EmptyState } from '../../design/components';
+import { FilterBar } from '../../design/FilterBar';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { OTHER, PIZZA, categoryOf, groupItems, itemsText, typeText, type Order } from '../../data/types';
-import {
-  amountIn, awaitingCustomer, diffSince, groupByCluster, inRange, inSummary, markOpsSent, pizzasIn, tomorrowRange, useOpsSends, weekendRange,
-  type ClusterGroup, type OpsSend,
-} from '../../data/opsSummary';
-import { saveError } from '../../lib/saveError';
+import { amountIn, groupByCluster, inRange, inSummary, pizzasIn, tomorrowRange, weekendRange, type ClusterGroup } from '../../data/opsSummary';
+import { filterOptions, filtersText, matchesFilters, type FilterValues } from '../../data/orderFilters';
 import { logError } from '../../lib/errorLog';
 import '../pages.css';
 import './ops.css';
@@ -23,25 +22,39 @@ const dm = (iso: string) => fmtDate(iso).slice(0, 5);
 export const rangeText = (from: string, to: string) => (from === to
   ? `יום ${weekday(from)} ${fmtDate(from)}`
   : `${weekday(from)} ${dm(from)} – ${weekday(to)} ${fmtDate(to)}`);
-const sentAt = (s: OpsSend) => { const d = s.at?.toDate?.(); return d ? `${dm(toISODate(d))} ${d.toTimeString().slice(0, 5)}` : 'עכשיו'; };
 
 export function OpsSummaryPage() {
-  const { orders, now, updateMany } = useStore();
-  const panel = usePanel();
+  const { orders, now } = useStore();
   const toast = useToast();
   const [mode, setMode] = useState<Mode>(() => (now.getDay() === 4 ? 'weekend' : 'tomorrow'));
   const [custom, setCustom] = useState(() => tomorrowRange(now));
   const range = mode === 'tomorrow' ? tomorrowRange(now) : mode === 'weekend' ? weekendRange(now) : custom;
   const { from, to } = range;
   const bad = from > to;
-  const sends = useOpsSends(from).filter((s) => s.to === to);
   const [busy, setBusy] = useState('');
   const sheets = useRef(new Map<string, HTMLElement>());
 
-  const inDates = useMemo(() => (bad ? [] : orders.filter((o) => inRange(o, from, to))), [orders, from, to, bad]);
-  const clusters = useMemo(() => groupByCluster(inDates.filter(inSummary)), [inDates]);
-  const waiting = useMemo(() => inDates.filter(awaitingCustomer).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)), [inDates]);
-  const byId = useMemo(() => new Map(orders.map((o) => [String(o.id), o])), [orders]);
+  // סינון: אשכול, סניף ולקוח – בכתובת הדף (אותם מפתחות כמו בהזמנות ובדוחות), כך שקישור או רענון שומרים אותו
+  const [params, setParams] = useSearchParams();
+  const cluster = params.get('cluster') ?? '';
+  const branch = params.get('branch') ?? '';
+  const cust = params.get('customer') ?? '';
+  const fv: FilterValues = useMemo(() => ({ cluster, branch }), [cluster, branch]);
+  const custRef = useRef<HTMLInputElement>(null);
+  const setMany = (patch: Record<string, string | null>) => {
+    const p = new URLSearchParams(params);
+    Object.entries(patch).forEach(([k, v]) => (v ? p.set(k, v) : p.delete(k)));
+    setParams(p, { replace: true });
+  };
+  const setCust = (v: string) => setMany({ customer: v || null });
+  // "הצג הכל": הבאנר נעלם, ולכן הפוקוס עובר לשדה הלקוח – לא הולך לאיבוד
+  const showAll = () => { setMany({ cluster: null, branch: null, customer: null }); requestAnimationFrame(() => custRef.current?.focus()); };
+
+  const inDates = useMemo(() => (bad ? [] : orders.filter((o) => inRange(o, from, to) && inSummary(o))), [orders, from, to, bad]);
+  const dims = useMemo(() => filterOptions(inDates, ['cluster', 'branch'], fv).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)), [inDates, fv]);
+  const q = cust.trim();
+  const clusters = useMemo(() => groupByCluster(inDates.filter((o) => matchesFilters(o, fv) && (!q || o.customerName.includes(q)))), [inDates, fv, q]);
+  const filterText = [filtersText(fv), q && `לקוח "${q}"`].filter(Boolean).join(' · ');
 
   const pdf = async (list: ClusterGroup[], name: string) => {
     const els = list.map((c) => sheets.current.get(c.name)).filter(Boolean) as HTMLElement[];
@@ -49,23 +62,10 @@ export function OpsSummaryPage() {
     setBusy(`pdf:${name}`);
     try {
       const { downloadOpsPdf } = await import('./opsPdf');
-      await downloadOpsPdf(els, `סיכום לתפעול ${name} ${fmtDate(from)}${from !== to ? ` עד ${fmtDate(to)}` : ''}.pdf`);
+      await downloadOpsPdf(els, `סיכום לתפעול ${name} ${fmtDate(from)}${from !== to ? ` עד ${fmtDate(to)}` : ''}${filterText ? ' (חלקי)' : ''}.pdf`);
     } catch (e) {
       logError('ops-pdf', e); // נרשם בהגדרות ← תקלות, כדי שנדע מה נכשל
       toast({ tone: 'error', message: 'הורדת ה-PDF נכשלה. נסו שוב.' });
-    } finally { setBusy(''); }
-  };
-
-  const markSent = async (c: ClusterGroup) => {
-    setBusy(`sent:${c.name}`);
-    try {
-      await markOpsSent(c.name, from, to, c.orders);
-      // הסיכום הוא העדכון בתפעול: הזמנות שעוד לא סומנו "עודכן בתפעול" מסומנות עכשיו (בלי שם מאשר)
-      const ids = c.orders.filter((o) => !o.branchApproval).map((o) => o.id);
-      if (ids.length) updateMany(ids, { branchApproval: { manager: '', at: new Date().toISOString() } }, <>עודכן בתפעול · {ids.length} הזמנות</>);
-      toast({ message: <>סומן שהסיכום של {c.name} נשלח</> });
-    } catch (e) {
-      toast({ tone: 'error', message: saveError(e) });
     } finally { setBusy(''); }
   };
 
@@ -95,63 +95,45 @@ export function OpsSummaryPage() {
             <label>עד <input type="date" className="input input--ltr" value={custom.to} min={custom.from} onChange={(e) => e.target.value && setCustom((c) => ({ ...c, to: e.target.value }))} /></label>
           </div>
         ) : <b className="ops-range__text">{rangeText(from, to)}</b>}
+        <FilterBar dims={dims} values={fv} onChange={setMany} extraActive={q ? 1 : 0} alsoClear={['customer']}>
+          <input ref={custRef} className="input input--sm ops-range__cust" value={cust} onChange={(e) => setCust(e.target.value)} placeholder="לקוח" aria-label="סינון לפי לקוח" />
+        </FilterBar>
       </div>
 
-      {waiting.length > 0 && (
-        <div className="ops-waiting" role="alert">
-          <p className="ops-waiting__title"><AlertTriangle size={16} aria-hidden="true" />
-            שים לב: {waiting.length === 1 ? 'יש הזמנה אחת' : `יש ${waiting.length} הזמנות`} בתאריכים שנבחרו שעוד לא אושרו על ידי הלקוח. הן לא נכנסות לסיכום – יש לבדוק אותן קודם.
-          </p>
-          <ul>
-            {waiting.map((o) => (
-              <li key={o.id}>
-                <button onClick={(e) => panel.open(o.id, e.currentTarget)}>
-                  <b>{o.customerName}</b> · {weekday(o.date)} <Ltr>{dm(o.date)} {o.time}</Ltr> · {o.branchName || 'ללא סניף'}
-                </button>
-              </li>
-            ))}
-          </ul>
+      {filterText && (
+        <div className="ops-partial" role="status">
+          <Filter size={16} aria-hidden="true" />
+          <p><b>סיכום חלקי</b> – מסונן לפי: {filterText}. הזמנות אחרות בתאריכים האלה לא מופיעות בדף וב-PDF.</p>
+          <Button size="sm" variant="secondary" onClick={showAll}>הצג הכל</Button>
         </div>
       )}
 
       {bad ? <p className="ops-err">תאריך הסיום לפני תאריך ההתחלה.</p> : !clusters.length ? (
-        <EmptyState icon={<Send size={20} />} title="אין הזמנות מאושרות בתאריכים האלה">
-          {waiting.length ? 'יש הזמנות שממתינות לאישור הלקוח – הן מופיעות למעלה.' : 'בחרו תאריכים אחרים.'}
+        <EmptyState icon={<Send size={20} />} title={filterText && inDates.length ? 'אין הזמנות שמתאימות לסינון' : 'אין הזמנות בתאריכים האלה'}>
+          {filterText && inDates.length ? <button type="button" className="link" onClick={showAll}>הצג הכל</button> : 'בחרו תאריכים אחרים.'}
         </EmptyState>
-      ) : clusters.map((c) => {
-        const send = sends.find((s) => s.cluster === c.name);
-        const { mark, removed } = diffSince(send, c.orders);
-        const dirty = !!send && (mark.size > 0 || removed.length > 0);
-        return (
-          <section key={c.name} className="ops-card" aria-label={`אשכול ${c.name}`}>
-            <div className="ops-card__bar">
-              <h2>{c.name}</h2>
-              <span className={`ops-sent ${send ? (dirty ? 'is-dirty' : 'is-sent') : ''}`}>
-                {!send ? 'עוד לא נשלח' : dirty ? <>נשלח {sentAt(send)} · יש שינויים מאז – לשלוח שוב</> : <><Check size={14} aria-hidden="true" /> נשלח {sentAt(send)}{send.byName && ` · ${send.byName}`}</>}
-              </span>
-              <div className="ops-card__actions">
-                <Button size="sm" icon={<Download size={16} />} loading={busy === `pdf:${c.name}`} onClick={() => pdf([c], c.name)}>PDF</Button>
-                <Button size="sm" variant={send && !dirty ? 'secondary' : 'primary'} icon={<Check size={16} />} loading={busy === `sent:${c.name}`} onClick={() => markSent(c)}>
-                  {send ? 'סמן שנשלח שוב' : 'סמן שנשלח'}
-                </Button>
-              </div>
+      ) : clusters.map((c) => (
+        <section key={c.name} className="ops-card" aria-label={`אשכול ${c.name}`}>
+          <div className="ops-card__bar">
+            <h2>{c.name}</h2>
+            <div className="ops-card__actions">
+              <Button size="sm" icon={<Download size={16} />} loading={busy === `pdf:${c.name}`} onClick={() => pdf([c], c.name)}>PDF</Button>
             </div>
-            <p className="ops-phone">בטלפון הדף מוקטן – לשליחה עדיף להוריד PDF.</p>
-            <FitWidth>
-              <OpsSheet ref={(el) => { if (el) sheets.current.set(c.name, el); else sheets.current.delete(c.name); }}
-                c={c} from={from} to={to} now={now} mark={mark}
-                removed={removed.map((id) => byId.get(id)).map((o, i) => (o ? `${o.customerName} (${weekday(o.date)} ${dm(o.date)})` : `הזמנה ${removed[i]}`))} />
-            </FitWidth>
-          </section>
-        );
-      })}
+          </div>
+          <p className="ops-phone">בטלפון הדף מוקטן – לשליחה עדיף להוריד PDF.</p>
+          <FitWidth>
+            <OpsSheet ref={(el) => { if (el) sheets.current.set(c.name, el); else sheets.current.delete(c.name); }}
+              c={c} from={from} to={to} now={now} partial={filterText} />
+          </FitWidth>
+        </section>
+      ))}
     </div>
   );
 }
 
 /* הדף עצמו – רוחב קבוע, כדי שצילום מסך ו-PDF ייראו אותו דבר */
-const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: string; now: Date; mark: Map<number, 'new' | 'changed'>; removed: string[] }>(
-  function OpsSheet({ c, from, to, now, mark, removed }, ref) {
+const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: string; now: Date; partial: string }>(
+  function OpsSheet({ c, from, to, now, partial }, ref) {
     const multiDay = from !== to;
     // יום ← סניף: כל יום בפני עצמו, ובתוכו הסניפים באותו סדר כמו בכל הסיכום
     const days = multiDay
@@ -173,7 +155,7 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
           </div>
           <img src={LOGO} alt="Domino's Pizza" />
         </header>
-        {removed.length > 0 && <p className="os-removed">ירדו מהסיכום מאז השליחה הקודמת (בוטלו, נסגרו או הוזזו): {removed.join(' · ')}</p>}
+        {partial && <p className="os-partial"><b>סיכום חלקי</b> – מסונן לפי: {partial}. לא כל ההזמנות בתאריכים האלה מופיעות כאן.</p>}
         <table className="os-table">
           <colgroup><col className="c-when" /><col className="c-pz" /><col className="c-cust" /><col className="c-items" /><col className="c-dlv" /><col className="c-sum" /></colgroup>
           <thead><tr><th scope="col">שעה</th><th scope="col" className="c">פיצות</th><th scope="col">לקוח ואיש קשר</th><th scope="col">פירוט ההזמנה</th><th scope="col">אספקה</th><th scope="col" className="m">סכום</th></tr></thead>
@@ -187,12 +169,12 @@ const OpsSheet = forwardRef<HTMLElement, { c: ClusterGroup; from: string; to: st
               )}
               {d.branches.flatMap((b, bi) => [
                 <tr key={b.name} className={`os-br${bi % 2 ? ' is-wash' : ''}`}><td colSpan={6}><div><p><b>{b.name}</b><span>{totals(b.orders)}</span></p></div></td></tr>,
-                ...b.orders.map((o) => <OrderRow key={o.id} o={o} wash={bi % 2 === 1} mark={mark.get(o.id)} />),
+                ...b.orders.map((o) => <OrderRow key={o.id} o={o} wash={bi % 2 === 1} />),
               ])}
             </tbody>
           ))}
         </table>
-        <p className="os-foot">הופק <Ltr>{fmtDate(toISODate(now))} {now.toTimeString().slice(0, 5)}</Ltr> · רק הזמנות שאושרו על ידי הלקוח · הסכומים כוללים מע"מ ומשלוח</p>
+        <p className="os-foot">הופק <Ltr>{fmtDate(toISODate(now))} {now.toTimeString().slice(0, 5)}</Ltr> · {partial ? 'סיכום חלקי (מסונן)' : 'כל ההזמנות הפתוחות'} · הסכומים כוללים מע"מ ומשלוח</p>
       </article>
     );
   });
@@ -203,16 +185,15 @@ function Stat({ n, l }: { n: ReactNode; l: string }) {
 
 const totals = (os: Order[]) => `${os.length === 1 ? 'הזמנה אחת' : `${os.length} הזמנות`} · ${pizzasIn(os)} פיצות · ${fmtMoney(amountIn(os))}`;
 
-function OrderRow({ o, wash, mark }: { o: Order; wash: boolean; mark?: 'new' | 'changed' }) {
+function OrderRow({ o, wash }: { o: Order; wash: boolean }) {
   const pz = pizzasIn([o]);
   // "הערות להזמנה" פנימיות (לנציג שמקליד ל-Q) – לא מופיעות בסיכום לתפעול
   const name = o.contactName?.trim(), phone = o.contactPhone?.trim();
   return (
-    <tr className={[wash && 'is-wash', mark && `is-${mark}`].filter(Boolean).join(' ') || undefined}>
+    <tr className={wash ? 'is-wash' : undefined}>
       <td className="os-when"><b><Ltr>{o.time}</Ltr></b></td>
       <td className="os-pz">{pz > 0 && <span><Ltr>{pz}</Ltr></span>}</td>
       <td className="os-cust">
-        {mark && <span className={`os-tag os-tag--${mark}`}>{mark === 'new' ? 'חדש' : 'עודכן'}</span>}
         <b>{o.customerName}</b>
         {(name || phone) && <span className="os-sub">{name}{name && phone && ' · '}{phone && <Ltr>{fmtPhone(phone)}</Ltr>}</span>}
       </td>

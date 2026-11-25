@@ -8,7 +8,7 @@ import { getDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { ConflictError, fromDoc, updateOrderSafe, updateOrders, useLiveOrders } from './orders';
 import { LOCKED_FIELDS, monthOf, useLockedMonths } from './months';
-import { STATUS_LABEL } from './types';
+import { STATUS_LABEL, opsChangeFor, opsDayWord, opsReminderDate, opsReminderOnSave, orderAfterSave } from './types';
 import { useThresholds, type Thresholds } from './thresholds';
 import { setLateSplit } from './metrics';
 import { useOpenTasks, type Task } from './tasks';
@@ -20,9 +20,21 @@ export type OrderView = Order & { issues: Issue[]; health: Health };
 
 export type NewOrderMode = 'full' | 'newCustomer';
 export type ChangeRequest = { order: Order; patch: Partial<Order>; what: string };
-/* שדות שמשנים את מה שהסניף, הקופה או הלקוח אישרו */
+/* שדות שמשנים את מה שהוקלד בקופה (Q) */
 export const SENSITIVE: (keyof Order)[] = ['date', 'time', 'branchId', 'delivery', 'address', 'amount', 'items'];
-export const isLocked = (o: Order) => o.status === 'approved' || o.status === 'delivered' || o.status === 'partial' || !!o.qNumber || !!o.branchApproval;
+/* "שונתה אחרי הקלדה ל-Q": רק הזמנה שהוקלדה ל-Q או שנסגרה. שינוי בהזמנה פתוחה נשמר רגיל */
+export const isLocked = (o: Order) => !!o.qNumber || o.status === 'delivered' || o.status === 'partial' || o.status === 'cancelled';
+/* הודעת השמירה: "ההזמנה למחר – לעדכן את התפעול" כשהשינוי (או היצירה) צריך עדכון בתפעול */
+export const opsReminder = (o: Pick<Order, 'date'>, now: Date) => <span className="toast__ops"><span className="toast__ops-dot" aria-hidden="true" />ההזמנה {opsDayWord(o.date, now)} – לעדכן את התפעול</span>;
+/* האם להוסיף את התזכורת להודעת השמירה – אותו חישוב כמו בשכבת הנתונים (opsChangeAt), על ההזמנה אחרי השמירה */
+function withOpsReminder(message: ReactNode, before: Order[], patch: Partial<Order>, cutoff: string): ReactNode {
+  const now = new Date();
+  for (const b of before) {
+    const after = orderAfterSave(b, patch, now.toISOString());
+    if (opsReminderOnSave(b, after, now, cutoff)) return <>{message}<br />{opsReminder({ date: opsReminderDate(b, after, now, cutoff) }, now)}</>;
+  }
+  return message;
+}
 export type ConflictState = { error: ConflictError; patch: Partial<Order>; message: ReactNode };
 export type ClosingRequest = { order: Order; status: 'partial' | 'cancelled' };
 /* fromQuote – הזמנה מהצעת מחיר שאושרה: הלקוח, המועד והשורות עוברים לטופס, ואחרי השמירה ההצעה מסומנת "הפכה להזמנה" */
@@ -90,6 +102,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   lockedRef.current = lockedMonths;
   const rawRef = useRef(raw);
   rawRef.current = raw;
+  const thresholdsRef = useRef(thresholds);
+  thresholdsRef.current = thresholds;
 
   // תקינות מחושבת מחדש כל דקה (אפיון: "בכל שמירה וכל כמה דקות")
   useEffect(() => {
@@ -124,9 +138,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const source = ids.length > 1 ? 'bulk' : 'inline';
     // הזמנה אחת: שמירה בטוחה שלא דורסת שינוי של משתמש אחר. כמה הזמנות (סימון מרובה): כתיבה רגילה.
     const write = ids.length === 1 ? updateOrderSafe(before[0], patch, 'inline', fixReason ? `תיקון לאחר סגירה: ${fixReason}` : undefined) : updateOrders(before, patch, source, fixReason ? `תיקון לאחר סגירה: ${fixReason}` : undefined);
+    // תזכורת "לעדכן בתפעול" בהודעה (גם כשההזמנה יוצאת מסיכום שכבר נשלח – הוזזה או בוטלה)
+    const shown = withOpsReminder(message, before, patch, thresholdsRef.current.opsCutoff);
     write
       .then(() => toast({
-        message,
+        message: shown,
         onUndo: () => {
           // מחזירים לכל הזמנה את הערכים שהיו לה לפני השינוי
           const current = rawRef.current.filter((o) => ids.includes(o.id));
@@ -134,6 +150,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             const cur = current.find((c) => c.id === b.id);
             if (!cur) return undefined;
             const back = Object.fromEntries(Object.keys(patch).map((k) => [k, b[k as keyof Order]])) as Partial<Order>;
+            // הביטול מחזיר גם את opsChangeAt הקודם – אחרת התגית "לעדכן בתפעול" נשארת אחרי ביטול
+            if (opsChangeFor(b, patch, 'x')) back.opsChangeAt = b.opsChangeAt;
             // ביטול של תיקון בחודש נעול הוא גם תיקון – עם סיבה, אחרת השרת חוסם
             if (fixReason) {
               back.postCloseFix = { reason: `ביטול תיקון: ${fixReason}`, by: auth.currentUser?.displayName ?? '', at: serverTimestamp() };
@@ -158,8 +176,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setConflict(null);
     if (c && keepMine) {
       // נשמר על בסיס הערכים העדכניים, כך שרק השדות שבחרתי משתנים
+      const shown = withOpsReminder(c.message, [c.error.current], c.patch, thresholdsRef.current.opsCutoff);
       updateOrderSafe(c.error.current, c.patch, 'inline', 'נשמר אחרי התנגשות')
-        .then(() => toast({ message: c.message }))
+        .then(() => toast({ message: shown }))
         .catch(() => toast({ tone: 'error', message: 'השמירה נכשלה שוב – פתח את התיק מחדש ונסה' }));
     }
   }, [conflict, toast]);

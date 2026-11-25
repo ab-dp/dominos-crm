@@ -5,7 +5,7 @@ import { CLOSED, type Order } from '../data/types';
 import { DEFAULT_THRESHOLDS, type Thresholds } from '../data/thresholds';
 
 export type Severity = 'red' | 'orange' | 'yellow' | 'info';
-export type FixAction = 'q' | 'branch' | 'pay' | 'status' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel' | 'ackQUpdate' | 'ops';
+export type FixAction = 'q' | 'pay' | 'close' | 'po' | 'open' | 'ackGap' | 'ackCancel' | 'ackQUpdate';
 
 export type Issue = { rule: number; severity: Severity; label: string; action: FixAction; actionLabel: string };
 
@@ -19,10 +19,12 @@ export const SEVERITY_LABEL: Record<Severity, string> = { red: 'חריגות', o
 
 const RANK: Record<Severity, number> = { red: 3, orange: 2, yellow: 1, info: 0 };
 
-/* כללי החריגים בשמם – למסננים במסך החריגים */
+/* כללי החריגים בשמם – למסננים במסך החריגים.
+   0, 4, 6 ו-12 (עדכון בתפעול, אישור לקוח, שליחה בקבוצת תפעול) בוטלו בנובמבר 2026 – המספרים לא חוזרים לשימוש.
+   "לעדכן בתפעול" החדש הוא תזכורת בלבד (needsOpsUpdate ב-types.ts) ולא חריג – תגית בשורה ובכרטיס, בלי ספירה ובלי כפתור */
 export const RULE_LABEL: Record<number, string> = {
-  1: 'לא הועברה ל-Q', 2: 'פער מול Q', 3: 'מועד עבר', 4: 'לא עודכן בתפעול', 5: 'אשראי לא חויב', 6: 'אין אישור לקוח',
-  7: 'חיוב אשראי נכשל', 11: 'לעדכן שינוי ב-Q', 8: 'חסרים פרטים', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q', 0: 'לעדכן בתפעול', 12: 'לשלוח בקבוצת תפעול',
+  1: 'לא הועברה ל-Q', 2: 'פער מול Q', 3: 'מועד עבר', 5: 'אשראי לא חויב',
+  7: 'חיוב אשראי נכשל', 11: 'לעדכן שינוי ב-Q', 8: 'חסרים פרטים', 9: 'תעודת רכש חסרה', 10: 'בוטלה אחרי Q',
 };
 
 export function orderDateTime(o: Order): Date {
@@ -82,19 +84,12 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
     return out.sort(bySeverity);
   }
 
-  // תזכורת שלא חוסמת: אחרי ההקלדה ל-Q – לשלוח בקבוצת התפעול
-  if (o.qNumber && o.opsNotified === false) {
-    out.push({ rule: 12, severity: 'orange', label: 'לשלוח בקבוצת תפעול', action: 'ops', actionLabel: 'נשלח בקבוצה' });
-  }
   if (minutesLeft < 0) {
     out.push({ rule: 3, severity: diff < 0 ? 'red' : 'orange', label: diff < 0 ? 'מועד עבר, לא נסגרה' : 'שעת האספקה עברה', action: 'close', actionLabel: 'סמן סופקה' });
   }
   // העברה ל-Q: רק ביום האספקה, החל מהשעה שנקבעה (12:00) או X דקות לפני האספקה – המוקדם מביניהם
   if (diff === 0 && !o.qNumber && (nowMinutes(now) >= minutesOfDay(th.qFromTime) || minutesLeft < th.qLeadMinutes)) {
     out.push({ rule: 1, severity: 'red', label: 'לא הועברה ל-Q', action: 'q', actionLabel: 'סמן הועברה ל-Q' });
-  }
-  if (soon && !o.branchApproval) {
-    out.push({ rule: 4, severity: 'orange', label: 'לא עודכן בתפעול', action: 'branch', actionLabel: 'סמן עודכן' });
   }
   if (diff === 0 && o.method === 'credit' && o.payment === 'pending' && !o.qNumber) {
     /* הזמנה שנפתחה ביום האספקה אחרי מועד החיוב לא "איחרה" ברגע שנפתחה: יש לה חצי שעה מהפתיחה,
@@ -105,16 +100,10 @@ export function issuesFor(o: Order, now: Date, th: Thresholds = DEFAULT_THRESHOL
       : nowMinutes(now) >= minutesOfDay(th.creditDeadline);
     out.push({ rule: 5, severity: 'orange', label: late ? 'אשראי לא חויב – עבר המועד' : 'אשראי לא חויב', action: 'pay', actionLabel: 'סמן שולם' });
   }
-  if (soon && (o.status === 'new' || o.status === 'pending_customer')) {
-    out.push({ rule: 6, severity: 'orange', label: 'אין אישור לקוח', action: 'status', actionLabel: 'הלקוח אישר' });
-  }
   const miss = missingOf(o);
   if (miss.length) {
     // צהוב; כשההזמנה כבר בחלון "בקרוב" (היום/מחר לפי הספים) או שמועדה עבר – דחוף (כתום)
     out.push({ rule: 8, severity: soon || diff < 0 ? 'orange' : 'yellow', label: `חסר: ${miss.join(', ')}`, action: 'open', actionLabel: 'השלם פרטים' });
-  }
-  if (diff > th.soonDays && !o.branchApproval) {
-    out.push({ rule: 0, severity: 'info', label: 'לעדכן בתפעול', action: 'branch', actionLabel: 'סמן עודכן' });
   }
   return out.sort(bySeverity);
 }

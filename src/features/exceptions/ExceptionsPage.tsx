@@ -20,10 +20,9 @@ import '../pages.css';
 import './ExceptionsPage.css';
 
 /* צ'יפים בסדר קבוע לפי שלבי ההזמנה (לא לפי כמות – כדי שלא יזוזו אחרי כל תיקון).
-   "עדכון בתפעול" מאחד את הדחוף (כלל 4) ואת המעקב להזמנה רחוקה (כלל 0) */
+   (הכללים 0, 4, 6 ו-12 – אישור לקוח, עדכון בתפעול, שליחה בקבוצה – בוטלו בנובמבר 2026; קישור ישן אליהם מציג הכל) */
 const CHIPS: { key: string; rules: number[]; label?: string }[] = [
-  { key: '6', rules: [6] }, { key: '4', rules: [4, 0], label: 'עדכון בתפעול' }, { key: '1', rules: [1] }, { key: '12', rules: [12] },
-  { key: '2', rules: [2] }, { key: '11', rules: [11] }, { key: '5', rules: [5] }, { key: '7', rules: [7] },
+  { key: '1', rules: [1] }, { key: '2', rules: [2] }, { key: '11', rules: [11] }, { key: '5', rules: [5] }, { key: '7', rules: [7] },
   { key: '3', rules: [3] }, { key: '10', rules: [10] }, { key: '8', rules: [8], label: 'פרטים חסרים' },
 ];
 type Chip = (typeof CHIPS)[number];
@@ -41,7 +40,6 @@ export function ExceptionsPage() {
   // "כולם / שלי" נשמר לכל משתמש, ומשותף ל"היום" ול"חריגים ומשימות"
   const [mine, setMine] = usePref('scope:mine', false);
   const raw = params.get('rule');
-  // קישורים ישנים (rule=0) מגיעים לצ'יפ המאוחד
   const chip = raw === null ? null : CHIPS.find((c) => c.key === raw || c.rules.includes(Number(raw))) ?? null;
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));

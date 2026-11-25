@@ -26,6 +26,7 @@ import { ConflictDialog } from '../features/orders/ConflictDialog';
 import { ChangeDialog } from '../features/orders/ChangeDialog';
 import { LockFixDialog } from '../features/orders/LockFixDialog';
 import { HoldReminders } from '../features/orders/HoldReminders';
+import { VersionBanner } from './VersionBanner';
 import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -216,6 +217,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <main id="main" className="content" tabIndex={-1}>
+        <VersionBanner />
         {/* מעבר מסך בלי המתנה: המסך החדש מופיע מיד, בדהייה קצרה (בלי יציאה של הישן) */}
         <motion.div
           key={location.pathname}

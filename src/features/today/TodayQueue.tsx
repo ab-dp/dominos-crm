@@ -10,13 +10,13 @@ import { Ltr, Money } from '../../lib/format';
 import { usePref } from '../../lib/prefs';
 import { orderDateTime } from '../../rules-engine/health';
 import { NextStep } from '../orders/OrderTimeline';
+import { OpsTag } from '../orders/OpsTag';
 import { HoldActions, agoText, remindText } from '../orders/Hold';
 import { qProgress, type Lane } from './qQueue';
 
 const LANE_META: Record<Lane, { title: string; empty?: string; fold?: boolean }> = {
-  todo: { title: 'להקליד ל-Q', empty: 'כל ההזמנות שהלקוח אישר ירדו ל-Q' },
+  todo: { title: 'להקליד ל-Q', empty: 'כל ההזמנות ירדו ל-Q' },
   hold: { title: 'בהמתנה' },
-  customer: { title: 'ממתינות לאישור לקוח' },
   inq: { title: 'ירדו ל-Q', fold: true },
   closed: { title: 'נסגרו', fold: true },
 };
@@ -47,7 +47,7 @@ export function TodayQueue({ lanes, loading, now }: { lanes: Record<Lane, OrderV
 
       {loading ? <div className="loading-rows" aria-busy="true" aria-label="טוען">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={40} />)}</div>
         : p.total === 0 ? <p className="calm calm--quiet">אין הזמנות להיום</p>
-        : (['todo', 'hold', 'customer', 'inq', 'closed'] as Lane[]).map((lane) => {
+        : (['todo', 'hold', 'inq', 'closed'] as Lane[]).map((lane) => {
           const list = lanes[lane];
           const meta = LANE_META[lane];
           if (!list.length && lane !== 'todo') return null;
@@ -86,7 +86,7 @@ function QueueRow({ o, lane, isNext, now }: { o: OrderView; lane: Lane; isNext: 
   const panel = usePanel();
   // הזמנה של היום שלא ירדה ל-Q אחרי השעה שנקבעה – החריגה האדומה (כלל 1)
   const late = lane === 'todo' && o.issues.some((i) => i.rule === 1 && i.severity === 'red');
-  const credit = (lane === 'todo' || lane === 'hold' || lane === 'customer') && o.method === 'credit' && o.payment !== 'paid' && o.payment !== 'cancelled';
+  const credit = (lane === 'todo' || lane === 'hold') && o.method === 'credit' && o.payment !== 'paid' && o.payment !== 'cancelled';
   const minutes = Math.round((orderDateTime(o).getTime() - now.getTime()) / 60000);
   const back = lane !== 'hold' && holdDue(o.hold, now);
   const label = `${o.time} ${o.customerName}${o.hold ? `, בהמתנה: ${o.hold.reason}` : ''}${late ? ', לא הועברה ל-Q' : ''}${o.qNumber ? `, Q ${o.qNumber}` : ''}${o.health !== 'ok' && !late ? `, ${o.issues.map((i) => i.label).join(', ')}` : ''}`;
@@ -108,6 +108,7 @@ function QueueRow({ o, lane, isNext, now }: { o: OrderView; lane: Lane; isNext: 
         {back && <span className="qtag qtag--back">הגיע הזמן לחזור</span>}
         {late && <span className="qtag qtag--late">לא הועברה ל-Q</span>}
         {credit && <span className="qtag qtag--credit">אשראי לחיוב</span>}
+        {lane !== 'closed' && <OpsTag o={o} />}
         {!late && lane !== 'closed' && <HealthBadge health={o.health} issues={o.issues} compact focusable={false} />}
       </span>
       {lane !== 'closed' && <span className="qrow__act">{o.hold ? <HoldActions o={o} /> : <NextStep o={o} />}</span>}

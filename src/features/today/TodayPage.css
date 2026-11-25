@@ -75,7 +75,6 @@
 .qrow--todo { border-inline-start-color: var(--brand-600); box-shadow: inset 0 0 0 1px var(--gray-100); }
 .qrow--todo.is-late { border-inline-start-color: var(--danger-fg); }
 .qrow--todo.is-late .qrow__time { color: var(--danger-fg); }
-.qrow--customer { border-inline-start-color: var(--gray-300); }
 /* בהמתנה – סגול; חזרה מהמתנה (הגיע הזמן) – בראש "להקליד" עם תג כחול */
 .qrow--hold { border-inline-start-color: var(--hold-edge); background: var(--hold-bg); }
 .qrow--hold:hover { background: color-mix(in srgb, var(--hold-bg) 92%, var(--hold-fg)); }
