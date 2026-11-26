@@ -14,7 +14,8 @@ import {
 } from '../../data/customers';
 import { useBranches, useClusters } from '../../data/branches';
 import { useLists } from '../../data/lists';
-import { usePriceLists } from '../../data/priceLists';
+import { priceOf, usePriceLists } from '../../data/priceLists';
+import { useMenu } from '../../data/menu';
 import { useCustomerOrders } from '../../data/orders';
 import { SHORT_STATUS, isExpired, useQuotes, type Quote } from '../../data/quotes';
 import '../quotes/quotes.css';
@@ -460,6 +461,7 @@ function QuotesTab({ c, items, loading }: { c: Customer; items: Quote[]; loading
 /* ---------- מחירון + מחירים ייחודיים ללקוח ---------- */
 function PricesTab({ c }: { c: Customer }) {
   const { items: priceLists } = usePriceLists();
+  const { menu } = useMenu();
   const toast = useToast();
   const pl = priceLists.find((p) => p.id === c.priceListId);
   const [editing, setEditing] = useState<string | null>(null);
@@ -479,29 +481,52 @@ function PricesTab({ c }: { c: Customer }) {
     );
   }
 
+  const pizzaCat = menu.categories.find((m) => m.id === 'pizza' || m.name === 'פיצות');
+  const kinds = pizzaCat?.steps.toppingKind ? pizzaCat.toppingKinds.filter((k) => k.active && k.id !== 'with') : [];
+  const namesKind = (n: string) => (pizzaCat?.toppingKinds ?? []).some((k) => k.name.trim() && n.includes(k.name.trim()));
   const custom = (itemId: string) => c.customPrices.find((x) => x.itemId === itemId);
-  // editing = "<itemId>:d" (משלוח) או "<itemId>:p" (איסוף עצמי)
+  // editing = "<itemId>:d" (משלוח) או "<itemId>:p" (איסוף עצמי); בסוג תוספת – "<itemId>:d:<kind>"
   const save = async (key: string) => {
-    const [itemId, mode] = key.split(':');
+    const [itemId, mode, kind] = key.split(':');
     const v = Number(cleanAmount(draft));
     setEditing(null);
     const item = pl.items.find((i) => i.id === itemId);
     if (!item) return;
+    if (kind) {
+      // מחיר ייחודי לסוג תוספת: נשמר בתוך שורת הלקוח, kindPrices[kind]. ריק / כמו המחירון – נמחק
+      const base = priceOf(item, mode === 'p' ? 'pickup' : 'delivery', kind);
+      const cur = custom(itemId);
+      const kp = { ...(cur?.kindPrices ?? {}) };
+      const one = { ...(kp[kind] ?? {}) };
+      const val = !draft.trim() || !(v > 0) || v === base ? undefined : v;
+      if (mode === 'p') { if (val === undefined) delete one.pickupPrice; else one.pickupPrice = val; } else if (val === undefined) delete one.price; else one.price = val;
+      if (Object.keys(one).length) kp[kind] = one; else delete kp[kind];
+      const rest = c.customPrices.filter((x) => x.itemId !== itemId);
+      const ownBase = !!cur && !!cur.price && cur.price !== item.price;
+      const keepBase = ownBase || cur?.pickupPrice !== undefined;
+      const row = { itemId, price: ownBase ? cur!.price : 0, ...(cur?.pickupPrice !== undefined ? { pickupPrice: cur.pickupPrice } : {}), ...(Object.keys(kp).length ? { kindPrices: kp } : {}) };
+      const next = !keepBase && !Object.keys(kp).length ? rest : [...rest, row];
+      await updateCustomer(c, { customPrices: next });
+      toast({ message: val === undefined ? 'המחיר חזר למחיר המחירון' : `מחיר ייחודי ל${c.name}: ${fmtMoney(val)}` });
+      return;
+    }
     const base = mode === 'p' ? item.pickupPrice ?? item.price : item.price;
     const cur = custom(itemId);
-    const d = mode === 'd' ? (!draft.trim() || !(v > 0) || v === base ? undefined : v) : cur && cur.price !== item.price ? cur.price : undefined;
+    const d = mode === 'd' ? (!draft.trim() || !(v > 0) || v === base ? undefined : v) : cur && cur.price && cur.price !== item.price ? cur.price : undefined;
     const pk = mode === 'p' ? (!draft.trim() || !(v > 0) || v === base ? undefined : v) : cur?.pickupPrice;
     const rest = c.customPrices.filter((x) => x.itemId !== itemId);
     // שורה נשמרת רק אם יש בה מחיר מיוחד למשלוח או לאיסוף. מוצר בלי מחיר במחירון – המחיר המיוחד הוא המחיר היחיד
-    const next = d === undefined && pk === undefined ? rest : [...rest, { itemId, price: d ?? item.price ?? 0, ...(pk !== undefined ? { pickupPrice: pk } : {}) }];
+    const kindsKept = cur?.kindPrices && Object.keys(cur.kindPrices).length ? { kindPrices: cur.kindPrices } : {};
+    const next = d === undefined && pk === undefined && !kindsKept.kindPrices ? rest : [...rest, { itemId, price: d ?? 0, ...(pk !== undefined ? { pickupPrice: pk } : {}), ...kindsKept }];
     await updateCustomer(c, { customPrices: next });
     toast({ message: !draft.trim() || v === base ? 'המחיר חזר למחיר המחירון' : `מחיר ייחודי ל${c.name} (${mode === 'p' ? 'איסוף עצמי' : 'משלוח'}): ${fmtMoney(v)}` });
   };
-  const cell = (it: (typeof pl.items)[number], mode: 'd' | 'p') => {
+  const cell = (it: (typeof pl.items)[number], mode: 'd' | 'p', kind?: string) => {
     const cp = custom(it.id);
-    const base = mode === 'p' ? it.pickupPrice ?? it.price : it.price;
-    const special = mode === 'p' ? cp?.pickupPrice : cp && cp.price && cp.price !== it.price ? cp.price : undefined;
-    const key = `${it.id}:${mode}`;
+    const base = kind ? priceOf(it, mode === 'p' ? 'pickup' : 'delivery', kind) : mode === 'p' ? it.pickupPrice ?? it.price : it.price;
+    const special = kind ? (mode === 'p' ? cp?.kindPrices?.[kind]?.pickupPrice : cp?.kindPrices?.[kind]?.price)
+      : mode === 'p' ? cp?.pickupPrice : cp && cp.price && cp.price !== it.price ? cp.price : undefined;
+    const key = `${it.id}:${mode}${kind ? `:${kind}` : ''}`;
     const label = mode === 'p' ? 'איסוף עצמי' : 'משלוח';
     return editing === key ? (
       <input className="input input--sm input--ltr cfile__priceinput" autoFocus inputMode="decimal" value={draft} aria-label={`מחיר ללקוח ב${label}: ${it.name}`}
@@ -537,13 +562,21 @@ function PricesTab({ c }: { c: Customer }) {
             const its = pl.items.filter((i) => i.active && i.category === cat);
             return its.length > 0 && [
               <tr key={cat} className="cfile__plcat"><th colSpan={3}>{cat}</th></tr>,
-              ...its.map((it) => (
+              ...its.flatMap((it) => [
                 <tr key={it.id}>
-                  <td>{it.name}</td>
+                  <td>{it.name}{cat === 'פיצות' && kinds.length > 0 && !namesKind(it.name) && <span className="muted"> · עם תוספת</span>}</td>
                   <td>{cell(it, 'd')}</td>
                   <td>{cell(it, 'p')}</td>
-                </tr>
-              )),
+                </tr>,
+                // פיצה: מחיר ללקוח לפי סוג תוספת (ריק = מחיר המחירון לסוג, ואם אין – כמו "עם תוספת")
+                ...(cat === 'פיצות' && !namesKind(it.name) ? kinds.map((k) => (
+                  <tr key={`${it.id}-${k.id}`} className="cfile__plkind">
+                    <td>{k.name}</td>
+                    <td>{cell(it, 'd', k.id)}</td>
+                    <td>{cell(it, 'p', k.id)}</td>
+                  </tr>
+                )) : []),
+              ]),
             ];
           })}
         </tbody>

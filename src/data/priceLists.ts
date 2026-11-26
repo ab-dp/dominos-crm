@@ -9,7 +9,11 @@ import { byName, useLiveCollection } from './live';
 /* category – אחת הקטגוריות של ההזמנה, או "משלוח". price – משלוח, pickupPrice – איסוף עצמי (חסר = כמו משלוח).
    במשלוח: price = דמי המשלוח, upTo = עד כמה פריטים המדרגה מתאימה (להצעה אוטומטית).
    group – שדה ישן (מחירון לפי קבוצות ורמות). מחירון ישן מומר בקריאה – ראו normalizeItem */
-export type PriceItem = { id: string; category: string; name: string; price?: number; pickupPrice?: number; upTo?: number; active: boolean; group?: string };
+/* מחיר לפי סוג תוספת (שלב 7ב): בתוך שורת הפיצה – לא שורות נפרדות (מגבלת 500 השורות בכללים).
+   price / pickupPrice של השורה = "עם תוספת"; kindPrices – לשאר הסוגים (ללא, בשרית, מיקס…) לפי מזהה סוג התוספת בתפריט.
+   משבצת ריקה מקבלת את המחיר של "עם תוספת". menuId – הסוג בתפריט שהשורה מקושרת אליו (רשות; שורה לא מקושרת עובדת לפי שם) */
+export type KindPrice = { price?: number; pickupPrice?: number };
+export type PriceItem = { id: string; category: string; name: string; price?: number; pickupPrice?: number; upTo?: number; active: boolean; group?: string; menuId?: string; kindPrices?: Record<string, KindPrice> };
 export const DELIVERY_CAT = 'משלוח';
 export const PL_TABS = [...CATEGORIES, DELIVERY_CAT];
 export type PriceList = {
@@ -19,7 +23,13 @@ export type PriceList = {
   createdAt?: Timestamp;
 };
 
-export const priceOf = (i: Pick<PriceItem, 'price' | 'pickupPrice'>, delivery: 'delivery' | 'pickup') => (delivery === 'pickup' ? i.pickupPrice ?? i.price : i.price);
+/* מחיר לשורה: kind – מזהה סוג התוספת ("with" / חסר = מחיר השורה). סוג בלי מחיר – כמו "עם תוספת"; איסוף בלי מחיר – כמו משלוח */
+export function priceOf(i: Pick<PriceItem, 'price' | 'pickupPrice' | 'kindPrices'>, delivery: 'delivery' | 'pickup', kind?: string) {
+  const kp = kind && kind !== 'with' ? i.kindPrices?.[kind] : undefined;
+  const dlv = kp?.price ?? i.price;
+  if (delivery === 'delivery') return dlv;
+  return kp?.pickupPrice ?? (kp?.price !== undefined ? kp.price : i.pickupPrice ?? i.price);
+}
 
 /* מחירון ישן: קבוצה + רמה ("משפחתיות" · "עם תוספת") – הקטגוריה מנוחשת מהשם, והשם הוא "קבוצה – רמה" */
 // הסדר חשוב: "משפחתיות – עם תוספת" היא פיצה, לא "ליד הפיצה"
@@ -44,7 +54,27 @@ export function usePriceLists() {
 }
 
 /* Firestore לא מקבל undefined – מוצר נשמר בלי שדות ריקים, ובלי השדה הישן group */
-const cleanItem = ({ group: _g, ...i }: PriceItem): PriceItem => Object.fromEntries(Object.entries({ ...i, name: i.name.trim() }).filter(([, v]) => v !== undefined && v !== '')) as PriceItem;
+const cleanKinds = (k?: Record<string, KindPrice>) => {
+  if (!k) return undefined;
+  const out = Object.fromEntries(Object.entries(k).map(([id, p]) => [id, Object.fromEntries(Object.entries(p).filter(([, v]) => typeof v === 'number' && v > 0))])
+    .filter(([, p]) => Object.keys(p as object).length));
+  return Object.keys(out).length ? out : undefined;
+};
+const cleanItem = ({ group: _g, ...i }: PriceItem): PriceItem => Object.fromEntries(Object.entries({ ...i, name: i.name.trim(), kindPrices: cleanKinds(i.kindPrices) }).filter(([, v]) => v !== undefined && v !== '')) as PriceItem;
+
+/* "קישור לתפריט": התאמה לפי שם – הסוג הארוך ביותר שמופיע בשם השורה ("משפחתית עבה" לפני "משפחתית"). רק הצעה; המשתמש מאשר */
+const norm = (s: string) => s.replace(/["'׳״–-]/g, ' ').replace(/\s+/g, ' ').trim();
+/* שורש מילה: בלי סיומת רבים / נקבה ("משפחתיות" ו"משפחתית" → "משפחת"), כדי שהתאמה לפי שם תעבוד גם ביחיד ורבים */
+const stem = (w: string) => { const s = w.replace(/(יות|ות|ים|ית|ה|ת)$/, ''); return s.length >= 2 ? s : w; };
+const words = (s: string) => norm(s).split(' ').filter(Boolean);
+export function suggestMenuLink(itemName: string, options: { id: string; name: string }[]): string {
+  const iw = words(itemName).map(stem);
+  const cut = (x: string) => (x.length > 3 && /^[וה]/.test(x) ? [x, x.slice(1)] : [x]);
+  const iwAll = iw.flatMap(cut);
+  const fits = (o: { name: string }) => { const ow = words(o.name).map(stem); return ow.length > 0 && ow.every((w) => iwAll.some((x) => (w.length < 3 ? x === w : x.startsWith(w)))); };
+  const hit = options.filter(fits).sort((a, b) => words(b.name).length - words(a.name).length || norm(b.name).length - norm(a.name).length)[0];
+  return hit?.id ?? '';
+}
 
 const me = () => { const u = auth.currentUser!; return { uid: u.uid, name: u.displayName ?? u.email ?? '' }; };
 function audit(batch: WriteBatch, entityId: string, action: string, before: unknown, after: unknown, note?: string) {

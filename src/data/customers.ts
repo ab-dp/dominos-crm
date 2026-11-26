@@ -12,7 +12,8 @@ import { byName, useLiveCollection } from './live';
 export type Contact = { id: string; name: string; role: string; phone: string; email: string; emails?: string[]; primary: boolean }; // emails – מיילים נוספים
 export type Address = { id: string; label: string; address: string; directions: string; preferredBranchId: string };
 /* מחיר מיוחד ללקוח לבסיס מחיר: למשלוח (price), ולאיסוף (pickupPrice – אם חסר, כמו המשלוח) */
-export type CustomPrice = { itemId: string; price: number; pickupPrice?: number };
+/* kindPrices – מחיר ייחודי לפי סוג תוספת (אותו מבנה כמו בשורת המחירון) */
+export type CustomPrice = { itemId: string; price: number; pickupPrice?: number; kindPrices?: Record<string, { price?: number; pickupPrice?: number }> };
 
 export type Customer = {
   id: string;

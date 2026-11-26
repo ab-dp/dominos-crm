@@ -255,3 +255,4 @@
 
 /* "לעדכן בתפעול" – תזכורת בלבד, בגוון דחוף (כתום). נעלמת לבד כשהמועד עובר */
 .ops-tag { display: inline-flex; align-items: center; height: 20px; margin-inline-start: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--urgent-bg); color: var(--urgent-fg); }
+a.btn, a.btn:hover { text-decoration: none; }
