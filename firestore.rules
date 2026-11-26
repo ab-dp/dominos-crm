@@ -229,6 +229,11 @@ service cloud.firestore {
         && (!('opsChangeAt' in d) || (d.opsChangeAt is string && d.opsChangeAt.size() <= 40))
         // "שונתה אחרי הקלדה ל-Q" (מחליף את changedAfterApproval, שנשאר מותר בהזמנות ישנות)
         && (!('changedAfterQ' in d) || validChangedAfterQ(d.changedAfterQ))
+        // ערוץ מרשימה סגורה (שלב 1 מתוך 2: נבדק רק כשקיים; חובה ביצירה – בשלב 2) והטקסט הישן
+        && (!('channelId' in d) || (d.channelId is string && d.channelId.size() > 0 && d.channelId.size() <= 60))
+        && (!('channelLegacy' in d) || noCard(d.channelLegacy))
+        // מספר קריאה: בלי בדיקת מספר כרטיס (החלטה קבועה – אין חסימת כרטיס בשדות טקסט חדשים)
+        && (!('callRef' in d) || (d.callRef is string && d.callRef.size() <= 60))
         && d.keys().size() <= 70;
     }
     function validChangedAfterQ(c) {

@@ -8,6 +8,7 @@ import {
   STATUS_LABEL, closeLabel, groupItems, itemsText, methodText, outcomeOf, stageOf, typeText, categoryOf, holdDue, needsOpsUpdate, opsChangeFor, opsReminderOnSave, orderAfterSave, mergeChangedAfterQ,
 } from '../src/data/types';
 import { fromDoc } from '../src/data/orders';
+import { callRefMatch, channelLabel, channelLegacyText } from '../src/data/channels';
 import { missingOf, healthOf } from '../src/rules-engine/health';
 import { laneOf, nextToType, qProgress, todayLanes } from '../src/features/today/qQueue';
 import { todayTaskCounts } from '../src/features/today/todayTasks';
@@ -157,6 +158,36 @@ describe('תזכורת לעדכן בתפעול', () => {
     expect(merged.fields).toEqual(['date', 'time']);
     expect(merged.before).toEqual({ time: '11:00', date: '2026-11-25' });
     expect(merged.by).toBe('נציג ב');
+  });
+});
+
+describe('ערוץ ומספר קריאה', () => {
+  const ch = [{ id: 'a', label: 'מכירות', active: true }, { id: 'b', label: 'well-b', active: false }];
+  it('channelLabel – פעיל, מושבת, טקסט ישן, ריק', () => {
+    expect(channelLabel({ channelId: 'a', channel: 'שם ישן' }, ch)).toBe('מכירות'); // השם הנוכחי ברשימה, לא מה שנשמר
+    expect(channelLabel({ channelId: 'b', channel: 'well-b' }, ch)).toBe('well-b'); // מושבת – עדיין מוצג
+    expect(channelLabel({ channelId: 'gone', channel: 'מוקד' }, ch)).toBe('מוקד'); // פריט שלא ברשימה – השם שנשמר
+    expect(channelLabel({ channel: 'וואטסאפ 4512' }, ch)).toBe('לא מסווג');
+    expect(channelLabel({ channel: '  ' }, ch)).toBe('');
+    expect(channelLabel({ channel: '' }, ch)).toBe('');
+  });
+  it('missingOf – טקסט ערוץ ישן לא חסר; בלי ערוץ בכלל – חסר', () => {
+    const o = LEGACY[0];
+    expect(missingOf({ ...o, channelId: undefined, channel: 'וואטסאפ 4512' })).not.toContain('ערוץ');
+    expect(missingOf({ ...o, channelId: 'sales', channel: '' })).not.toContain('ערוץ');
+    expect(missingOf({ ...o, channelId: undefined, channel: '' })).toContain('ערוץ');
+  });
+  it('channelLegacyText – הטקסט הישן לייצוא לא הולך לאיבוד', () => {
+    expect(channelLegacyText({ channel: 'וואטסאפ 4512' })).toBe('וואטסאפ 4512');
+    expect(channelLegacyText({ channelId: 'a', channel: 'מכירות', channelLegacy: 'וואטסאפ 4512' })).toBe('וואטסאפ 4512');
+    expect(channelLegacyText({ channelId: 'a', channel: 'מכירות' })).toBe('');
+    expect(channelLegacyText({ channel: '' })).toBe('');
+  });
+  it('callRefMatch – חיפוש לפי מספר קריאה', () => {
+    expect(callRefMatch({ callRef: 'A-77120' }, '7712')).toBe(true);
+    expect(callRefMatch({ callRef: 'A-77120' }, 'a-77')).toBe(true);
+    expect(callRefMatch({}, '77')).toBe(false);
+    expect(callRefMatch({ callRef: '77' }, '')).toBe(false);
   });
 });
 

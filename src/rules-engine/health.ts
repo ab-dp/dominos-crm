@@ -2,6 +2,7 @@
    הסטטוס לא משתנה כאן לעולם; המערכת רק מתריעה. מסך "היום", מסך החריגים, הפעמון והתפריט נשענים על אותה פונקציה. */
 import { sameMoney, toISODate } from '../lib/format';
 import { CLOSED, type Order } from '../data/types';
+import { hasChannel } from '../data/channels';
 import { DEFAULT_THRESHOLDS, type Thresholds } from '../data/thresholds';
 
 export type Severity = 'red' | 'orange' | 'yellow' | 'info';
@@ -36,7 +37,7 @@ export function missingOf(o: Order): string[] {
   const m: string[] = [];
   if (!o.time) m.push('שעה');
   if (!o.branchId) m.push('סניף');
-  if (!o.channel?.trim()) m.push('ערוץ');
+  if (!hasChannel(o)) m.push('ערוץ'); // הזמנה ישנה עם טקסט ערוץ חופשי – לא חסרה
   if (!(o.amount > 0)) m.push('סכום');
   if (!o.contactPhone) m.push('טלפון');
   if (o.delivery === 'delivery' && !o.address) m.push('כתובת');

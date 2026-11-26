@@ -5,6 +5,7 @@ import { Check, Pencil } from 'lucide-react';
 import { useBranches, useClusters } from '../../data/branches';
 import { newId, useCustomers } from '../../data/customers';
 import { useLists } from '../../data/lists';
+import { UNCLASSIFIED, channelLabel } from '../../data/channels';
 import { useOrderNotes } from '../../data/orders';
 import { usePriceLists } from '../../data/priceLists';
 import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, useCatalog, type Line } from './ItemsBuilder';
@@ -20,13 +21,18 @@ import { BranchPicker } from '../branches/BranchPicker';
 /* ---------- שדה אחד שנערך במקום ---------- */
 type Kind = 'text' | 'textarea' | 'date' | 'time' | 'phone' | 'money';
 
-export function EditKv({ k, value, display, kind = 'text', placeholder, validate, onSave, readOnly, picks, autoEdit }: {
+export function EditKv({ k, value, display, kind = 'text', placeholder, validate, onSave, readOnly, picks, autoEdit, allowCard, maxLength }: {
   k: string; value: string; display?: ReactNode; kind?: Kind; placeholder?: string;
   validate?: (v: string) => string; onSave: (v: string) => void; readOnly?: boolean;
-  /* בחירה מהירה מתחת לשדה בזמן עריכה (למשל ערוצים מההגדרות); הבחירה נשמרת מיד */
+  /* בחירה מהירה מתחת לשדה בזמן עריכה; הבחירה נשמרת מיד */
   picks?: (draft: string, pick: (v: string) => void) => ReactNode;
   autoEdit?: boolean; // נפתח מיד לעריכה (למשל אחרי בחירה ב"אחר" באמצעי התשלום)
+  /* בלי חסימת מספר כרטיס (שדות חדשים – לפי ההחלטה הקבועה; גם הכללים לא חוסמים) */
+  allowCard?: boolean;
+  maxLength?: number;
 }) {
+  // מזהה בלי רווחים ("טלפון הקפה" → kv-טלפון-הקפה) – אחרת aria-labelledby נשבר
+  const kvId = `kv-${k.trim().replace(/\s+/g, '-')}`;
   const [editing, setEditing] = useState(!!autoEdit && !readOnly);
   const [draft, setDraft] = useState(value);
   const [err, setErr] = useState('');
@@ -42,7 +48,7 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
     const v = kind === 'phone' ? cleanPhone(next ?? draft) : (next ?? draft).trim();
     const before = kind === 'phone' ? cleanPhone(value) : value.trim();
     if (v === before) { setEditing(false); setErr(''); return; }
-    const e = (CARD_RE.test(v) && kind !== 'phone' ? 'אסור לרשום כאן מספר כרטיס אשראי' : '') || validate?.(v) || '';
+    const e = (CARD_RE.test(v) && kind !== 'phone' && !allowCard ? 'אסור לרשום כאן מספר כרטיס אשראי' : '') || validate?.(v) || '';
     if (e) { setErr(e); ref.current?.focus(); return; }
     // מישהו אחר שינה את השדה בזמן שערכתי – לא דורסים בלי לשאול
     if (value !== start.current && remote === null) { setRemote(value); return; }
@@ -56,15 +62,15 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
 
   return (
     <div className={`kv kv--edit ${editing ? 'is-editing' : ''}`}>
-      <span className="kv__k" id={`kv-${k}`}>{k}</span>
+      <span className="kv__k" id={kvId}>{k}</span>
       {editing ? (
         <span className="kv__field">
           {kind === 'textarea' ? (
-            <textarea ref={ref} className="input kv__input kv__ta" rows={2} value={draft} placeholder={placeholder} aria-labelledby={`kv-${k}`} aria-invalid={!!err || undefined}
+            <textarea ref={ref} className="input kv__input kv__ta" rows={2} value={draft} placeholder={placeholder} aria-labelledby={kvId} aria-invalid={!!err || undefined}
               onChange={(e) => { setDraft(e.target.value); setErr(''); }} onBlur={() => commit()}
               onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); cancel(); } if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); commit(); } }} />
           ) : (
-            <input ref={ref} className={`input kv__input ${kind === 'text' ? '' : 'input--ltr'}`} value={draft} placeholder={placeholder} aria-labelledby={`kv-${k}`} aria-invalid={!!err || undefined}
+            <input ref={ref} className={`input kv__input ${kind === 'text' ? '' : 'input--ltr'}`} value={draft} maxLength={maxLength} placeholder={placeholder} aria-labelledby={kvId} aria-invalid={!!err || undefined}
               type={kind === 'date' ? 'date' : kind === 'time' ? 'time' : 'text'} step={kind === 'time' ? 900 : undefined}
               inputMode={kind === 'phone' ? 'tel' : kind === 'money' ? 'decimal' : undefined}
               onChange={(e) => { setDraft(e.target.value); setErr(''); }} onBlur={() => commit()}
@@ -96,6 +102,52 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
 export function useOrderSave(o: OrderView) {
   const { requestChange } = useStore();
   return (patch: Partial<Order>, what: string) => requestChange(o, patch, what);
+}
+
+/* ערוץ: בחירה מתוך הרשימה הסגורה (פעילים, ועוד הערוץ הנוכחי גם אם הושבת). נשמרים channelId ושם הערוץ.
+   הזמנה ישנה עם טקסט חופשי: הטקסט מוצג "היה: …", ובבחירה הראשונה הוא עובר ל-channelLegacy (אם עוד ריק) – לא הולך לאיבוד */
+export function ChannelEdit({ o, readOnly }: { o: OrderView; readOnly?: boolean }) {
+  const save = useOrderSave(o);
+  const { lists } = useLists();
+  const [open, setOpen] = useState(false);
+  const all = lists?.channels ?? [];
+  const options = all.filter((x) => x.active || x.id === o.channelId);
+  const label = channelLabel(o, all);
+  const legacy = !o.channelId ? o.channel?.trim() ?? '' : '';
+  const display = o.channelId ? label : legacy ? <span className="muted">{UNCLASSIFIED}</span> : <Missing />;
+  const was = legacy ? <span className="kv__was">היה: {legacy}</span> : null;
+  const pick = (id: string) => {
+    setOpen(false);
+    const it = all.find((x) => x.id === id);
+    if (!it || id === o.channelId) return;
+    save({ channelId: it.id, channel: it.label, ...(legacy && !o.channelLegacy ? { channelLegacy: legacy } : {}) }, 'הערוץ');
+  };
+  if (readOnly) return <div className="kv"><span className="kv__k">ערוץ</span><span className="kv__v">{display}{was}</span></div>;
+  if (!open) {
+    return (
+      <div className="kv kv--edit">
+        <span className="kv__k">ערוץ</span>
+        <button type="button" className="kv__v kv__btn" onClick={() => setOpen(true)} aria-label={`ערוץ: ${o.channelId ? label : legacy ? `לא מסווג, היה ${legacy}` : 'חסר'}. לחץ לבחירה`}>
+          <span className="kv__val">{display}{was}</span>
+          <Pencil size={14} className="kv__pen" aria-hidden="true" />
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="kv kv--edit is-editing">
+      <span className="kv__k" id="kv-channel">ערוץ</span>
+      <span className="kv__field">
+        <select className="input kv__input" autoFocus aria-labelledby="kv-channel" value={o.channelId ?? ''}
+          onChange={(e) => pick(e.target.value)} onBlur={() => setOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } }}>
+          <option value="" disabled>בחרו ערוץ</option>
+          {options.map((x) => <option key={x.id} value={x.id}>{x.label}{x.active ? '' : ' (לא פעיל)'}</option>)}
+        </select>
+        {was}
+      </span>
+    </div>
+  );
 }
 
 export function BranchEdit({ o }: { o: OrderView }) {

@@ -274,3 +274,6 @@
   .panel__tabs--body { top: -4px; }
   .panel__tabs button { height: 44px; }
 }
+
+/* ערוץ בהזמנה ישנה: הטקסט החופשי הקודם, ליד הבחירה */
+.kv__was { margin-inline-start: var(--space-2); font-size: var(--text-label); font-weight: 400; color: var(--gray-600); }

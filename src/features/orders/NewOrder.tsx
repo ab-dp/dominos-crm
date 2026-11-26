@@ -14,7 +14,6 @@ import { useBranches, useClusters } from '../../data/branches';
 import { EMPTY_CUSTOMER, newId, primaryContact, updateCustomer, useCustomers, type Customer } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
-import { ChannelPicks } from './ChannelPicks';
 import { usePriceLists } from '../../data/priceLists';
 import { opsReminder, useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
 import { setQuoteStatus } from '../../data/quotes';
@@ -39,7 +38,7 @@ const MODES: [NewOrderMode, string, ReactNode][] = [
 const MISS = 'חסר – אפשר להשלים אחר כך';
 const MISS_LABEL: Record<string, string> = {
   ncContact: 'איש קשר', contactName: 'איש קשר', ncPhone: 'טלפון', contactPhone: 'טלפון', time: 'שעה', branch: 'סניף',
-  channel: 'ערוץ / מספר פניה', methodNote: 'פירוט אמצעי התשלום', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש', prices: 'מחיר',
+  channel: 'ערוץ', methodNote: 'פירוט אמצעי התשלום', address: 'כתובת', final: 'סכום', amount: 'סכום', account: 'טלפון הקפה', ncAccount: 'טלפון הקפה', contents: 'פריטים', detail: 'תיאור פריט', po: 'תעודת רכש', prices: 'מחיר',
 };
 
 
@@ -95,7 +94,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const [lateMin, setLateMin] = useState('');
   const [pastQ, setPastQ] = useState('');
   const [pastReason, setPastReason] = useState('');
-  const [channel, setChannel] = useState('');
+  const [channelId, setChannelId] = useState('');
+  const [callRef, setCallRef] = useState('');
   const [method, setMethod] = useState('');
   const [methodNote, setMethodNote] = useState(''); // באמצעי תשלום "אחר": מה האמצעי בפועל
   const [accountPhone, setAccountPhone] = useState('');
@@ -194,6 +194,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const newContact = !!c && !contactId && !!(contact.name.trim() || contactPhoneClean) && !c.contacts.some((p) => (contactPhoneClean && p.phone === contactPhoneClean) || (!contactPhoneClean && p.name === contact.name.trim()));
   const newAddress = !!c && delivery === 'delivery' && !!address.trim() && !c.addresses.some((a) => a.address.trim() === address.trim());
 
+  const channels = (lists?.channels ?? []).filter((x) => x.active);
   const methods = (lists?.paymentMethods ?? []).filter((m) => m.active || m.id === method || m.id === nc.paymentMethod);
   const effMethod = isNew ? nc.paymentMethod : method;
   const effAccountPhone = isNew ? nc.accountPhone : accountPhone;
@@ -219,8 +220,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     if (!time) m.time = MISS;
     else if (!/^\d{2}:\d{2}$/.test(time)) e.time = 'שעה לא תקינה';
     if (!branch) m.branch = MISS;
-    if (!channel.trim()) m.channel = MISS;
-    else if (CARD_RE.test(channel)) e.channel = 'אסור לרשום כאן מספר כרטיס אשראי';
+    // ערוץ חובה – חריג לכלל "שמירה עם פרטים חסרים מותרת": בלי ערוץ אי אפשר לשמור (הפילוח "לפי ערוץ" נשען עליו)
+    if (!channelId || !channels.some((x) => x.id === channelId)) e.channel = 'בחרו ערוץ';
+    if (callRef.trim().length > 60) e.callRef = 'מספר קריאה: עד 60 תווים';
     if (delivery === 'delivery' && !address.trim()) m.address = MISS;
     if (isManual && finalAmount <= 0) m.final = MISS;
     if (totalOnly && !isManual) m.amount = 'אין מחיר: מלאו מחיר בשורות או סכום כולל'; // בלי פריטים – חסר "פריטים" בלבד
@@ -248,6 +250,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const missKeys = past ? [] : Object.keys(live.m).filter((k, i, a) => MISS_LABEL[k] && a.findIndex((x) => MISS_LABEL[x] === MISS_LABEL[k]) === i);
   const missLabel = (k: string) => (k === 'prices' ? `מחיר ל${unpriced.join(', ')}` : MISS_LABEL[k]);
   const missLive = missKeys.map(missLabel);
+  // ערוץ חוסם שמירה – נספר עם הפרטים החסרים ומוצג בשורה משלו ("חובה לפני שמירה")
+  const needChannel = !!live.e.channel;
+  const missCount = missLive.length + (needChannel ? 1 : 0);
   /* קפיצה לשדה החסר */
   const goTo = (k: string) => {
     if (k === 'prices') { setReveal((n) => n + 1); return; }
@@ -305,7 +310,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       accountPhone: effMethod === 'account' ? cleanPhone(effAccountPhone) : undefined,
       handler: profile?.name ?? '',
       handlerUid: profile?.uid,
-      channel: channel.trim(),
+      channelId, channel: channels.find((x) => x.id === channelId)?.label ?? '',
+      callRef: callRef.trim() || undefined,
       delivery,
       address: delivery === 'delivery' ? address.trim() || undefined : undefined,
       contactName: (isNew ? nc.contactName : contact.name).trim() || undefined,
@@ -361,7 +367,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const inv = (k: string) => ({ 'data-field': k, 'aria-invalid': (!!errors[k] && errors[k] !== MISS) || undefined, 'data-miss': errors[k] === MISS || undefined, 'aria-describedby': errors[k] ? `no-${k}` : undefined });
   const customerChosen = isNew ? nc.name.trim().length > 0 : !!c;
   const saveLabel = badLine ? `השלם שורה ב${categoryOf(badLine)}` : `${dup ? 'שמור כהזמנה נוספת' : isNew ? (similar.length ? 'שמור כלקוח חדש והזמנה' : 'שמור לקוח והזמנה') : 'שמור הזמנה'}${
-    missLive.length && customerChosen ? ` עם ${missLive.length === 1 ? 'פרט חסר' : `${missLive.length} פרטים חסרים`}` : ''}`;
+    missCount && customerChosen ? ` עם ${missCount === 1 ? 'פרט חסר' : `${missCount} פרטים חסרים`}` : ''}`;
   const fade = reduce ? { initial: { opacity: 0 }, animate: { opacity: 1 } } : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 } };
 
   /* ---------- חלקי הטופס ---------- */
@@ -664,11 +670,17 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
               )}
               <Row>{branchField}</Row>
               <Row>
-                <L label="ערוץ / מספר פניה">
-                  {/* האפשרויות – רק מה שהוגדר ב"ערוצי קבלה" בהגדרות; אפשר גם להקליד חופשי (למשל מספר פניה) */}
-                  <input className="input" value={channel} onChange={(e) => { setChannel(e.target.value); clearErr('channel'); }} placeholder="בחרו למטה או הקלידו, למשל מספר פניה" {...inv('channel')} />
-                  <ChannelPicks value={channel} onPick={(v) => { setChannel(v); clearErr('channel'); }} />
+                <L label="ערוץ" req>
+                  {/* רשימה סגורה – רק הערוצים הפעילים מ"הגדרות ← רשימות ← ערוצי קבלה" */}
+                  <select className={`input no-channel ${channelId ? '' : 'is-empty'}`} value={channelId} onChange={(e) => { setChannelId(e.target.value); clearErr('channel'); }} {...inv('channel')}>
+                    <option value="">בחר ערוץ…</option>
+                    {channels.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+                  </select>
                   {err('channel')}
+                </L>
+                <L label="מספר קריאה">
+                  <input className="input input--ltr" value={callRef} onChange={(e) => { setCallRef(e.target.value); clearErr('callRef'); }} placeholder="לא חובה" maxLength={60} {...inv('callRef')} />
+                  {err('callRef')}
                 </L>
               </Row>
             </Section>
@@ -695,9 +707,10 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           </form>
 
           {errors.form && <p className="cform__formerr no-formerr" role="alert"><CircleAlert size={16} aria-hidden="true" /> {errors.form}</p>}
-          {(missLive.length > 0 || dup || similar.length > 0 || !!badLine) && (customerChosen || dup || !!badLine) && (
+          {(missCount > 0 || dup || similar.length > 0 || !!badLine) && (customerChosen || dup || !!badLine) && (
             <ul className="no-missing" aria-live="polite" aria-label="לפני השמירה">
               {badLine && <li className="no-missing__block"><CircleAlert size={16} aria-hidden="true" /><span><b>שורה לא שלמה ב{categoryOf(badLine)}</b> – חסרים כמות או סוג / מוצר, ובלעדיהם אי אפשר לשמור. <button type="button" className="link no-missing__go" onClick={() => setReveal((n) => n + 1)}>הצג</button></span></li>}
+              {needChannel && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חובה לפני שמירה:</b> <button type="button" className="link no-missing__go" onClick={() => goTo('channel')}>ערוץ</button></span></li>}
               {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים:</b> {missKeys.map((k, i) => <span key={k}>{i > 0 && ', '}<button type="button" className="link no-missing__go" onClick={() => goTo(k)}>{missLabel(k)}</button></span>)} – אפשר לשמור עכשיו, וההזמנה תסומן כחסרה עד שישלימו.</span></li>}
               {dup && <li><CircleAlert size={16} aria-hidden="true" /><span><b>יש הזמנה דומה</b> (<Ltr>{dup.id}</Ltr> · <Ltr>{dup.time}</Ltr>) – השמירה תיצור הזמנה נוספת.</span></li>}
               {similar.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>לקוח דומה כבר קיים</b> ({similar[0].c.name}) – השמירה תפתח לקוח חדש.</span></li>}

@@ -144,7 +144,14 @@ export type Order = {
   accountPhone?: string;
   handler: string;
   handlerUid?: string;
+  /* ערוץ: channelId – פריט ברשימה הסגורה (settings/lists.channels); channel – השם בזמן השמירה (לגרסאות ישנות ולייצוא).
+     להצגה, לסינון ולקיבוץ – רק channelLabel (data/channels.ts), אף פעם לא channel ישירות */
   channel: string;
+  channelId?: string;
+  /* הטקסט החופשי הישן של הזמנה מלפני הרשימה הסגורה – נשמר כאן כשנבחר לה ערוץ בפעם הראשונה (לרוב מספר פנייה) */
+  channelLegacy?: string;
+  /* מספר קריאה – טקסט חופשי, לא חובה */
+  callRef?: string;
   delivery: 'delivery' | 'pickup';
   address?: string;
   contactName?: string;

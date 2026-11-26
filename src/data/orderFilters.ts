@@ -1,16 +1,20 @@
 /* סינון הזמנות – הגדרה אחת לכל המסכים (הזמנות, דוח מפורט, ובהמשך סיכום לתפעול).
    כל ממד: מה לוקחים מההזמנה, ואיך מציגים את הערך. הערכים נשמרים בכתובת הדף (אותם מפתחות בכל מסך). */
+import { UNCLASSIFIED, UNCLASSIFIED_TEXT, channelLabel, getChannels } from './channels';
 import { METHOD_LABEL, OUTCOME_LABEL, STAGE_LABEL, outcomeOf, stageOf, type Order, type Outcome, type Stage } from './types';
 
-export type FilterKey = 'cluster' | 'branch' | 'method' | 'handler' | 'outcome' | 'stage';
+export type FilterKey = 'cluster' | 'branch' | 'channel' | 'method' | 'handler' | 'outcome' | 'stage';
 export type FilterValues = Partial<Record<FilterKey, string>>;
 
 const OUTCOME_ORDER: Outcome[] = ['open', 'ontime', 'late', 'partial', 'cancelled'];
+/* ערוצים בסדר הרשימה בהגדרות; שם שלא ברשימה אחריהם, ו"לא מסווג" בסוף */
+const channelRank = (label: string) => { if (label === UNCLASSIFIED) return 1e6; const i = getChannels().findIndex((c) => c.label === label); return i < 0 ? 1e5 : i; };
 const STAGE_ORDER: Stage[] = ['open', 'in_q', 'delivered', 'partial', 'cancelled'];
 
 export const FILTER_DEFS: Record<FilterKey, { label: string; all: string; get: (o: Order) => string; text: (v: string) => string }> = {
   cluster: { label: 'אשכול', all: 'כל האשכולות', get: (o) => o.cluster, text: (v) => v },
   branch: { label: 'סניף', all: 'כל הסניפים', get: (o) => o.branchName, text: (v) => v },
+  channel: { label: 'ערוץ', all: 'כל הערוצים', get: (o) => channelLabel(o), text: (v) => (v === UNCLASSIFIED ? UNCLASSIFIED_TEXT : v) },
   method: { label: 'אמצעי תשלום', all: 'כל אמצעי התשלום', get: (o) => o.method, text: (v) => METHOD_LABEL[v] ?? v },
   handler: { label: 'מטפל', all: 'כל המטפלים', get: (o) => o.handler || o.createdBy, text: (v) => v },
   outcome: { label: 'סטטוס אספקה', all: 'כל הסטטוסים', get: (o) => outcomeOf(o), text: (v) => OUTCOME_LABEL[v as Outcome] ?? v },
@@ -30,6 +34,7 @@ export function filterOptions(orders: Order[], keys: FilterKey[], f: FilterValue
     let values = [...new Set(pool.map(def.get).filter(Boolean))];
     values = key === 'outcome' ? OUTCOME_ORDER.filter((v) => values.includes(v))
       : key === 'stage' ? STAGE_ORDER.filter((v) => values.includes(v))
+      : key === 'channel' ? values.sort((a, b) => channelRank(a) - channelRank(b) || a.localeCompare(b, 'he'))
       : values.sort((a, b) => def.text(a).localeCompare(def.text(b), 'he'));
     // ערך שנבחר נשאר ברשימה גם אם אין לו הזמנות בתצוגה – כדי שאפשר יהיה לראות ולבטל אותו
     const chosen = f[key];

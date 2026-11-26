@@ -11,6 +11,8 @@ import { LOCKED_FIELDS, monthOf, useLockedMonths } from './months';
 import { STATUS_LABEL, opsChangeFor, opsDayWord, opsReminderDate, opsReminderOnSave, orderAfterSave } from './types';
 import { useThresholds, type Thresholds } from './thresholds';
 import { setLateSplit } from './metrics';
+import { DEFAULT_LISTS, useLists, type ListItem } from './lists';
+import { setChannels } from './channels';
 import { useOpenTasks, type Task } from './tasks';
 import { needsFollowup, useQuotes, type Quote } from './quotes';
 import { toISODate } from '../lib/format';
@@ -71,6 +73,8 @@ type Store = {
   quotes: Quote[];
   quoteFollowups: Quote[];
   lockedMonths: string[];
+  /* רשימת הערוצים הנוכחית – זהות המערך משתנה כשהרשימה משתנה; להוסיף ל-useMemo שמחשב שמות ערוצים (channelLabel) */
+  channels: ListItem[];
   lockFix: LockFixRequest | null;
   confirmLockFix: (reason: string) => void;
   endLockFix: () => void;
@@ -89,6 +93,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const { th: thresholds } = useThresholds();
   // גבול פיצול האיחורים לכל המסכים (data/metrics.ts) – נקבע כבר ברינדור, לפני שהמסכים מחשבים
   setLateSplit(thresholds.lateSplitMinutes);
+  // רשימת הערוצים לשם הערוץ בכל המסכים (data/channels.ts) – גם היא נקבעת ברינדור
+  const { lists } = useLists();
+  const channels = (lists ?? DEFAULT_LISTS).channels;
+  setChannels(channels);
   const tasks = useOpenTasks();
   const { items: quotes } = useQuotes('open');
   const [now, setNow] = useState(() => new Date());
@@ -214,7 +222,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const quoteFollowups = useMemo(() => quotes.filter((q) => needsFollowup(q, now, thresholds.quoteFollowupHours)), [quotes, now, thresholds.quoteFollowupHours]);
 
   // ערך קבוע בין רינדורים כשדבר לא השתנה – כדי שכל מי שקורא מה-store לא יתרנדר סתם
-  const value = useMemo(() => ({ now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }), [now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix]);
+  const value = useMemo(() => ({ channels, now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }), [channels, now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix]);
 
   return (
     <Ctx.Provider value={value}>

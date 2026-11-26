@@ -26,6 +26,17 @@ describe('סינון הזמנות', () => {
     expect(opts).toEqual(['open', 'in_q', 'delivered', 'partial', 'cancelled'].filter((v) => opts.includes(v)));
     expect(filterOptions(ALL, ['stage'], {})[0].options.find((o) => o.value === 'in_q')?.label).toBe('הוקלד ל-Q');
   });
+  it('ערוץ – לפי channelLabel, כולל "לא מסווג" לטקסט ישן', () => {
+    expect(ids({ channel: 'מכירות' })).toEqual([1001]);
+    expect(ids({ channel: 'מוקד' })).toEqual([1005]);
+    expect(ids({ channel: 'טלפון' })).toEqual([1006]); // ערוץ מושבת – עדיין מוצג ומסונן
+    const legacy = ids({ channel: 'לא מסווג' });
+    expect(legacy).toContain(1002);
+    expect(legacy).not.toContain(1017); // בלי ערוץ בכלל – לא "לא מסווג"
+    const opts = filterOptions(ALL, ['channel'], {})[0].options;
+    expect(opts.map((o) => o.value)).toEqual(['מכירות', 'מוקד', 'טלפון', 'לא מסווג']);
+    expect(opts.find((o) => o.value === 'לא מסווג')?.label).toBe('לא מסווג (טקסט ישן)');
+  });
   it('מטפל ריק – לפי מי שיצר', () => {
     const o = { ...LEGACY[0], handler: '', createdBy: 'נציג ב' };
     expect(matchesFilters(o, { handler: 'נציג ב' })).toBe(true);

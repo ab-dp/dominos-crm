@@ -11,6 +11,7 @@ import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/for
 import type { XSheet } from '../../lib/xlsx';
 import { STAGE_LABEL, closeLabel, methodText, stageOf, type Order } from '../../data/types';
 import { OpsTag } from './OpsTag';
+import { channelLabel } from '../../data/channels';
 import { FixButton } from './OrderActions';
 import { NextStep, StageTrack, nextStepLabel } from './OrderTimeline';
 import './OrdersTable.css';
@@ -73,6 +74,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
             {showDate && <th>תאריך</th>}
             <th>לקוח</th>
             <th>סניף</th>
+            <th className="c-channel">ערוץ</th>
             <th className="num">סכום</th>
             <th>שלב</th>
             <th>אמצעי</th>
@@ -164,7 +166,7 @@ function DayRow({ date, rows }: { date: string; rows: OrderView[] }) {
   const sum = day.reduce((t, r) => t + r.amount, 0);
   return (
     <tr className="oday" aria-hidden="true">
-      <th colSpan={11}>
+      <th colSpan={12}>
         <span className="oday__name">{weekday(date)} <Ltr>{fmtDate(date)}</Ltr></span>
         <span className="oday__meta">{day.length === 1 ? 'הזמנה אחת' : <><Ltr>{day.length}</Ltr> הזמנות</>}{sum > 0 && <> · <Ltr>{fmtMoney(sum)}</Ltr></>}</span>
       </th>
@@ -239,6 +241,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, 
         <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}<OpsTag o={o} /></span>
         {o.branchPhone && <span className="orow__sub"><PhoneIcon size={14} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>}
       </td>
+      <td className="c-channel">{channelLabel(o) ? (o.channelId ? channelLabel(o) : <span className="muted" title={o.channel}>{channelLabel(o)}</span>) : <Missing>חסר</Missing>}</td>
       <td className="num">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</td>
       <td className="orow__marks c-marks"><StageTrack o={o} /></td>
       <td>{methodText(o)}</td>

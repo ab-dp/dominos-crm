@@ -24,7 +24,7 @@ export const rangeText = (from: string, to: string) => (from === to
   : `${weekday(from)} ${dm(from)} – ${weekday(to)} ${fmtDate(to)}`);
 
 export function OpsSummaryPage() {
-  const { orders, now } = useStore();
+  const { orders, now, channels } = useStore();
   const toast = useToast();
   const [mode, setMode] = useState<Mode>(() => (now.getDay() === 4 ? 'weekend' : 'tomorrow'));
   const [custom, setCustom] = useState(() => tomorrowRange(now));
@@ -38,8 +38,9 @@ export function OpsSummaryPage() {
   const [params, setParams] = useSearchParams();
   const cluster = params.get('cluster') ?? '';
   const branch = params.get('branch') ?? '';
+  const channel = params.get('channel') ?? '';
   const cust = params.get('customer') ?? '';
-  const fv: FilterValues = useMemo(() => ({ cluster, branch }), [cluster, branch]);
+  const fv: FilterValues = useMemo(() => ({ cluster, branch, channel }), [cluster, branch, channel]);
   const custRef = useRef<HTMLInputElement>(null);
   const setMany = (patch: Record<string, string | null>) => {
     const p = new URLSearchParams(params);
@@ -48,12 +49,12 @@ export function OpsSummaryPage() {
   };
   const setCust = (v: string) => setMany({ customer: v || null });
   // "הצג הכל": הבאנר נעלם, ולכן הפוקוס עובר לשדה הלקוח – לא הולך לאיבוד
-  const showAll = () => { setMany({ cluster: null, branch: null, customer: null }); requestAnimationFrame(() => custRef.current?.focus()); };
+  const showAll = () => { setMany({ cluster: null, branch: null, channel: null, customer: null }); requestAnimationFrame(() => custRef.current?.focus()); };
 
   const inDates = useMemo(() => (bad ? [] : orders.filter((o) => inRange(o, from, to) && inSummary(o))), [orders, from, to, bad]);
-  const dims = useMemo(() => filterOptions(inDates, ['cluster', 'branch'], fv).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)), [inDates, fv]);
+  const dims = useMemo(() => filterOptions(inDates, ['cluster', 'branch', 'channel'], fv).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)), [inDates, fv, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const q = cust.trim();
-  const clusters = useMemo(() => groupByCluster(inDates.filter((o) => matchesFilters(o, fv) && (!q || o.customerName.includes(q)))), [inDates, fv, q]);
+  const clusters = useMemo(() => groupByCluster(inDates.filter((o) => matchesFilters(o, fv) && (!q || o.customerName.includes(q)))), [inDates, fv, q, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const filterText = [filtersText(fv), q && `לקוח "${q}"`].filter(Boolean).join(' · ');
 
   const pdf = async (list: ClusterGroup[], name: string) => {

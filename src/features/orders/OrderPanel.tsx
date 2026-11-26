@@ -25,8 +25,7 @@ import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
 const STEP_ACTIONS = ['q', 'close'];
 import { OrderDocsSection } from './OrderDocs';
-import { EditKv, useOrderSave } from './OrderEdit';
-import { ChannelPicks } from './ChannelPicks';
+import { ChannelEdit, EditKv, useOrderSave } from './OrderEdit';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import './OrderPanel.css';
 
@@ -65,7 +64,7 @@ export function OrderPanel() {
             <Dialog.Overlay asChild forceMount>
               <motion.div className="panel-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
             </Dialog.Overlay>
-            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} aria-labelledby="panel-title" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table, .pgs')) e.preventDefault(); }}
+            <Dialog.Content asChild forceMount dir="rtl" aria-describedby={undefined} aria-labelledby="panel-title" onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast} onEscapeKeyDown={(e) => { if ((document.activeElement as HTMLElement | null)?.closest('.ib-table, .pgs, .kv.is-editing')) e.preventDefault(); }}
               onOpenAutoFocus={(e) => { e.preventDefault(); document.getElementById('panel-title')?.focus(); }}
               onCloseAutoFocus={restoreFocus}>
               <motion.div
@@ -208,8 +207,9 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           {tab === 'more' && (
             <Section id="details" title="פרטים נוספים">
               <Kv k="לקוח" v={<button className="link" onClick={openCustomer}>{o.customerName} · לתיק הלקוח</button>} />
-              <EditKv k="ערוץ / מספר פניה" readOnly={cancelled} value={o.channel} display={o.channel || <Missing />} placeholder="לא נרשם" validate={(v) => (v ? '' : 'חובה: ערוץ או מספר פניה')} onSave={(v) => save({ channel: v }, 'ערוץ / מספר פניה')}
-                picks={(draft, pick) => <ChannelPicks value={draft} onPick={pick} keepFocus />} />
+              <ChannelEdit o={o} readOnly={cancelled} />
+              <EditKv k="מספר קריאה" allowCard readOnly={cancelled} value={o.callRef ?? ''} display={o.callRef ? <Ltr>{o.callRef}</Ltr> : undefined} placeholder="אין" maxLength={60} validate={(v) => (v.length > 60 ? 'עד 60 תווים' : '')} onSave={(v) => save({ callRef: v || undefined }, 'מספר הקריאה')} />
+              {o.channelLegacy && <Kv k="ערוץ (טקסט ישן)" v={o.channelLegacy} />}
               <Kv k="מטפל" v={<HandlerEdit o={o} />} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
               {o.branchPhone && <Kv k="טלפון הסניף" v={<Ltr>{fmtPhone(o.branchPhone)}</Ltr>} />}
@@ -281,7 +281,7 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 /* יומן ההזמנה – נקרא מ-auditLog, שאי אפשר לערוך או למחוק (נאכף בשרת) */
 export const FIELD: Record<string, string> = {
   status: 'סטטוס', payment: 'תשלום', qNumber: "מס' Q", qAmount: 'סכום Q', branchApproval: 'עדכון בתפעול', poNumber: 'תעודת רכש',
-  date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ',
+  date: 'תאריך', time: 'שעה', amount: 'סכום לחיוב', docName: 'מסמך שצורף', contactName: 'איש קשר', contactPhone: 'טלפון', channel: 'ערוץ', channelId: 'ערוץ', channelLegacy: 'ערוץ (טקסט ישן)', callRef: 'מספר קריאה',
   delivery: 'סוג אספקה', instructions: 'הערות להזמנה', contents: 'פירוט', deliveryFee: 'דמי משלוח', method: 'אמצעי תשלום', methodNote: 'פירוט אמצעי התשלום', accountPhone: 'טלפון הקפה',
   qGapAck: 'פער מול Q', qCancelAck: 'ביטול ב-Q', items: 'פריטים', partialNote: 'מה סופק', cancelReason: 'סיבת ביטול', cancelNote: 'פירוט ביטול', note: 'הערה', branchName: 'סניף', address: 'כתובת', customerName: 'לקוח', customerId: 'לקוח', postCloseFix: 'תיקון לאחר סגירה', calcAmount: 'סכום מחושב',
   opsNotified: 'נשלח בקבוצת תפעול', changedAfterApproval: 'שונתה לאחר אישור', changedAfterQ: 'שונתה אחרי הקלדה ל-Q', hold: 'בהמתנה', late: 'איחור', qNeedsUpdate: 'עדכון ב-Q אחרי שינוי', billingNote: 'הערות להנהלת חשבונות', careCount: 'תיעודי טיפול', topic: 'נושא', comp: 'פיצוי', compAmount: 'סכום הפיצוי', text: 'איך טיפלנו',

@@ -25,6 +25,13 @@ export const QUOTES: Quote[] = [
   quote(1038, { status: 'sent', customerId: undefined, fee: { name: 'משלוח', price: 30 }, lines: [{ category: 'משקאות', name: 'שתייה', qty: 5, unitPrice: 12 }, { category: 'פיצות', name: 'אישית', qty: 3, unitPrice: 30.5 }], lastActivityAt: ts('2026-11-24T07:30:00.000Z') }),
 ];
 
+/* ערוצי קבלה לבדיקות: שניים פעילים ואחד מושבת (נקבעים ב-setup.ts, כמו ב-store) */
+export const CHANNELS = [
+  { id: 'sales', label: 'מכירות', active: true },
+  { id: 'callcenter', label: 'מוקד', active: true },
+  { id: 'phone', label: 'טלפון', active: false },
+];
+
 /* "עכשיו" קבוע לכל הבדיקות: יום ד׳ 25.11.2026, 10:00 בבוקר */
 export const NOW = new Date(2026, 10, 25, 10, 0, 0);
 export const TODAY = '2026-11-25';
@@ -70,7 +77,7 @@ function order(id: number, o: Partial<Order>): Order {
 
 export const LEGACY: Order[] = [
   // 1. הזמנה רגילה של היום: עודכן בתפעול, עוד לא ב-Q
-  order(1001, { amount: 670, branchApproval: { manager: 'מנהל', at: '2026-11-24T19:00:00.000Z' }, items: [pizza('משפחתית', 10, 55, ['זיתים', 'פטריות']), drink(10)], instructions: 'לחתוך ל-12 משולשים' }),
+  order(1001, { channelId: 'sales', channel: 'מכירות', amount: 670, branchApproval: { manager: 'מנהל', at: '2026-11-24T19:00:00.000Z' }, items: [pizza('משפחתית', 10, 55, ['זיתים', 'פטריות']), drink(10)], instructions: 'לחתוך ל-12 משולשים' }),
   // 2. ערך ישן 'new', ערוץ חופשי עם מספר פנייה, תכולה בטקסט בלבד
   order(1002, { status: 'new', channel: 'וואטסאפ 4512', contents: '12 משפחתיות, 6 שתייה', amount: 750, date: TOMORROW }),
   // 3. ממתין לאישור לקוח, מחר, משלוח בלי כתובת, אשראי
@@ -78,9 +85,9 @@ export const LEGACY: Order[] = [
   // 4. מאושר ועודכן בתפעול, מחר, הוקלד ל-Q, לא נשלח בקבוצה
   order(1004, { date: TOMORROW, branchApproval: { manager: '', at: '2026-11-24T18:00:00.000Z' }, qNumber: 'cs401', qAmount: 500, opsNotified: false, items: [pizza('משפחתית דקה', 8, 62.5)], amount: 500, ...BR_B }),
   // 5. הוקלד ל-Q היום, נשלח בקבוצה, פער מול Q
-  order(1005, { qNumber: 'cs402', qAmount: 480, opsNotified: true, items: [pizza('משפחתית', 9, 55)], amount: 495, branchApproval: { manager: 'מנהל', at: '2026-11-24T19:00:00.000Z' } }),
+  order(1005, { channelId: 'callcenter', channel: 'מוקד', callRef: '77120', qNumber: 'cs402', qAmount: 480, opsNotified: true, items: [pizza('משפחתית', 9, 55)], amount: 495, branchApproval: { manager: 'מנהל', at: '2026-11-24T19:00:00.000Z' } }),
   // 6. סופקה באיחור של 25 דקות, עם תיעוד טיפול
-  order(1006, { date: '2026-11-18', status: 'delivered', late: { minutes: 25 }, qNumber: 'cs350', qAmount: 990, amount: 990, payment: 'paid', careCount: 1, careAt: '2026-11-19', items: [pizza('משפחתית', 18, 55)] }),
+  order(1006, { channelId: 'phone', channel: 'טלפון ישן', date: '2026-11-18', status: 'delivered', late: { minutes: 25 }, qNumber: 'cs350', qAmount: 990, amount: 990, payment: 'paid', careCount: 1, careAt: '2026-11-19', items: [pizza('משפחתית', 18, 55)] }),
   // 7. סופקה חלקית, איחור בלי דקות
   order(1007, { date: '2026-11-19', status: 'partial', partialNote: 'חסרו 2 פיצות', late: { minutes: 0 }, qNumber: 'cs351', qAmount: 550, amount: 660, items: [pizza('אקסטרה', 12, 55)], ...BR_B }),
   // 8. בוטלה אחרי שהוקלדה ל-Q – הביטול לא אושר בקופה

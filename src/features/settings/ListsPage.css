@@ -20,3 +20,4 @@
 .ladd .input { flex: 1; }
 .ladd__err { margin: var(--space-2) var(--space-4) 0; }
 @media (pointer: coarse) { .litem__actions { opacity: 1; } }
+.litem__actions .icon-btn:disabled { opacity: 0.35; cursor: default; }

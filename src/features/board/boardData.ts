@@ -3,6 +3,7 @@
 import type { OrderView } from '../../data/store';
 import { isExpired, type Quote } from '../../data/quotes';
 import { CLOSED, PIZZA, categoryOf } from '../../data/types';
+import { channelLabel } from '../../data/channels';
 import { missingOf } from '../../rules-engine/health';
 import { addDays, roundMoney, toISODate } from '../../lib/format';
 import { PRESET_LABEL, isDelivered, lateKind, onTime, pctOf, presetRange, revenue, revenueOf } from '../../data/metrics';
@@ -157,9 +158,16 @@ function rank(list: OrderView[], key: (o: OrderView) => string): Ranked[] {
   return [...m.values()].sort((a, b) => b.sum - a.sum || b.count - a.count)
     .map((e) => ({ name: e.name, count: e.count, sum: e.sum, missing: e.missing, share: total ? Math.round((e.sum / total) * 100) : 0, onTimePct: pctOf(e.done ? (e.done - e.late) / e.done : null) }));
 }
+/* לפי ערוץ: הדירוג הרגיל, ועוד פיצות וממוצע להזמנה. הזמנות עם טקסט ישן – תחת "לא מסווג" (channelLabel), כך שהסך תואם לשאר הבורד */
+export type ChannelRanked = Ranked & { pizzas: number; avg: number };
+function rankChannels(list: OrderView[]): ChannelRanked[] {
+  const pz = new Map<string, number>();
+  list.forEach((o) => { const k = channelLabel(o) || '—'; pz.set(k, (pz.get(k) ?? 0) + pizzasOf(o)); });
+  return rank(list, (o) => channelLabel(o)).map((r) => ({ ...r, pizzas: pz.get(r.name) ?? 0, avg: r.count ? Math.round(r.sum / r.count) : 0 }));
+}
 export function rankings(orders: OrderView[], r: Range) {
   const list = orders.filter((o) => inRange(o, r) && live(o));
-  return { customers: rank(list, (o) => o.customerName), clusters: rank(list, (o) => o.cluster), branches: rank(list, (o) => o.branchName), team: rank(list, (o) => o.handler) };
+  return { customers: rank(list, (o) => o.customerName), clusters: rank(list, (o) => o.cluster), branches: rank(list, (o) => o.branchName), team: rank(list, (o) => o.handler), channels: rankChannels(list) };
 }
 
 /* ---------- הצעות מחיר ---------- */
