@@ -35,7 +35,7 @@ export function registerText(o: OrderView) {
   ].filter(Boolean).join('\n');
 }
 
-export function RegisterBlock({ o }: { o: OrderView }) {
+export function RegisterBlock({ o, notesAbove = false }: { o: OrderView; notesAbove?: boolean }) {
   const save = useOrderSave(o);
   const toast = useToast();
   const [editItems, setEditItems] = useState(false);
@@ -88,11 +88,11 @@ export function RegisterBlock({ o }: { o: OrderView }) {
           </>
         )}
       </div>
-      <div className="reg__wide reg__note">
+      {!notesAbove && <div className="reg__wide reg__note">
         {/* הערות פנימיות להזמנה – אותו שדה של "הערות להזמנה" בהזמנה חדשה. לנציג שמקליד ל-Q; לא מופיעות בסיכום לתפעול */}
         <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
         <EarlierNotes o={o} />
-      </div>
+      </div>}
 
       <div className="reg__sum">
         <span className="kv__k">סכום לחיוב</span>

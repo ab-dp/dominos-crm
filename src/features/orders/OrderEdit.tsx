@@ -11,7 +11,6 @@ import { usePriceLists } from '../../data/priceLists';
 import { ItemsBuilder, PriceSource, isBlank, lineProblem, lineText, toSaved, useCatalog, type Line } from './ItemsBuilder';
 import { useStore, type OrderView } from '../../data/store';
 import { METHOD_LABEL, type Order } from '../../data/types';
-import { OpsTag } from './OpsTag';
 import { Button, Missing } from '../../design/components';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, roundMoney, sameMoney, toISODate, parseMoney as money } from '../../lib/format';
 import { cleanPhone, phoneError, CARD_RE } from '../../lib/names';
@@ -158,7 +157,7 @@ export function BranchEdit({ o }: { o: OrderView }) {
   if (!open) {
     return (
       <div className="kv kv--edit">
-        <span className="kv__k">סניף<OpsTag o={o} /></span>
+        <span className="kv__k">סניף</span>
         <button type="button" className="kv__v kv__btn" onClick={() => setOpen(true)} aria-label={`סניף: ${o.branchName || "חסר"}. לחץ לשינוי`}>
           <span className="kv__val">{o.branchId ? <>{o.branchName} <span className="muted">· אשכול {o.cluster}</span></> : <Missing />}</span>
           <Pencil size={14} className="kv__pen" aria-hidden="true" />

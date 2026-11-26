@@ -1,15 +1,19 @@
-/* תיק הזמנה בפאנל צדדי (אפיון 6.3): קודם "להעברה לקופה" – כל מה שצריך כדי להוריד את ההזמנה ל-Q, ושורת Q.
-   מתחת: ציר ההזמנה, ושאר הפרטים בלשוניות (פרטים נוספים · תשלום ומסמכים · היסטוריה). ההערות – רק בבלוק הקופה. */
+/* תיק הזמנה בפאנל צדדי: ראש רשומה בכחול-לילה (שם, מזהה, שורת עובדות, ציר שלבים, סכום) ←
+   הערות להזמנה בתיבה חמה (רק כשיש) ← גיליון אחד עם אזורים זה מתחת לזה, בלי לשוניות שמחביאות דברים:
+   להעברה לקופה (עם שורת Q) · הצעד הבא · תשלום ומסמכים · פרטים נוספים · היסטוריה (מקופלת) · תיעוד טיפול (בתחתית).
+   כל ערך עדיין נערך בלחיצה ונשמר מיד (עד שהעריכה המרכזית תחליף את זה). */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Maximize2, Minimize2, RefreshCw, X } from 'lucide-react';
+import { ChevronLeft, ClipboardPen, Maximize2, Minimize2, RefreshCw, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { HealthBadge, Missing, Tip } from '../../design/components';
-import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
+import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
+import { channelLabel } from '../../data/channels';
+import { OpsTag } from './OpsTag';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 
 import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
@@ -19,18 +23,17 @@ import { OrderTimeline } from './OrderTimeline';
 import { RegisterBlock, RegisterLocked } from './OrderRegister';
 import { HoldBanner } from './Hold';
 import { CareSection } from './Care';
-import { canCare } from '../../data/care';
+import { canCare, needsCare } from '../../data/care';
 import { DeleteOrder, HandlerEdit } from './AdminOrderActions';
 
 // פעולות שהן חלק מציר ההזמנה – מופיעות בציר, לא ברשימת הבעיות
 const STEP_ACTIONS = ['q', 'close'];
 import { OrderDocsSection } from './OrderDocs';
-import { ChannelEdit, EditKv, useOrderSave } from './OrderEdit';
+import { ChannelEdit, EarlierNotes, EditKv, useOrderSave } from './OrderEdit';
 import { keepOpenOnToast } from '../../app/ErrorBoundary';
 import './OrderPanel.css';
 
-type Tab = 'more' | 'pay' | 'history';
-const TABS: [Tab, string][] = [['more', 'פרטים נוספים'], ['pay', 'תשלום ומסמכים'], ['history', 'היסטוריה']];
+const jumpTo = (id: string) => document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 
 export function OrderPanel() {
   const panel = usePanel();
@@ -104,9 +107,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   const nav = useNavigate();
   // פוקוס בכותרת גם כשעוברים ישר להזמנה אחרת בלי לסגור (הכפתור שנלחץ כבר לא קיים)
   useEffect(() => { document.getElementById('panel-title')?.focus({ preventScroll: true }); }, []);
-  const [tab, setTab] = useState<Tab>('more');
-  useEffect(() => setTab('more'), [o.id]);
   const [scrolled, setScrolled] = useState(false);
+  const [notesTop] = useState(!!o.instructions); // הכרטיס נבנה מחדש לכל הזמנה (key), אז זה נקבע פעם אחת לכל הזמנה
   const gap = o.qAmount !== undefined && o.qAmount !== o.amount;
   const cancelled = o.status === 'cancelled';
   // "הקלד ל-Q" בציר מעביר לשורת Q שבבלוק הקופה – טופס אחד, לא שניים
@@ -120,17 +122,32 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   return (
     <>
       <div className={`panel__head ${scrolled ? 'is-scrolled' : ''}`}>
-        <div className="panel__row">
-          <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>הזמנה <Ltr>{o.id}</Ltr> · {o.customerName}</Dialog.Title>
-          <HealthBadge health={o.health} issues={o.issues} />
-          {viewers.length > 0 && (
-            <span className="viewers" role="status"><span className="viewers__dot" aria-hidden="true" />{viewers.map((v) => v.name.split(' ')[0]).join(', ')} {viewers.length === 1 ? 'פותח' : 'פותחים'} את ההזמנה כרגע</span>
-          )}
-          <span className="panel__spacer" />
-          <Tip label={full ? 'חזרה לפאנל' : 'מסך מלא'}>
-            <button className="icon-btn panel__full-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
-          </Tip>
-          <Dialog.Close asChild><button className="icon-btn panel__close" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
+        <div className="prec">
+          <div className="panel__row">
+            <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>{o.customerName} <span className="prec__id"><Ltr>#{o.id}</Ltr></span></Dialog.Title>
+            <HealthBadge health={o.health} issues={o.issues} />
+            {viewers.length > 0 && (
+              <span className="viewers" role="status"><span className="viewers__dot" aria-hidden="true" />{viewers.map((v) => v.name.split(' ')[0]).join(', ')} {viewers.length === 1 ? 'פותח' : 'פותחים'} את ההזמנה כרגע</span>
+            )}
+            <span className="panel__spacer" />
+            <Tip label={full ? 'חזרה לפאנל' : 'מסך מלא'}>
+              <button className="icon-btn panel__full-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
+            </Tip>
+            <Dialog.Close asChild><button className="icon-btn panel__close" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
+          </div>
+          {/* שורת עובדות – לקריאה; עריכה באזורים שבגוף הכרטיס */}
+          <dl className="prec__facts">
+            <div><dt>מועד</dt><dd>{weekday(o.date)} <Ltr>{fmtDate(o.date)}</Ltr>{o.time && <>, <Ltr>{o.time}</Ltr></>}</dd></div>
+            <div><dt>סניף</dt><dd>{o.branchName || <span className="prec__miss">חסר</span>}</dd></div>
+            <div className="prec__opt"><dt>אספקה</dt><dd>{o.delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</dd></div>
+            {channelLabel(o) && <div className="prec__opt"><dt>ערוץ</dt><dd>{channelLabel(o)}</dd></div>}
+            <div className="prec__opt"><dt>מטפל</dt><dd>{o.handler || o.createdBy || '—'}</dd></div>
+          </dl>
+          <div className="prec__track">
+            <OrderTimeline o={o} part="track" />
+            <OpsTag o={o} />
+            <span className="prec__sum"><small>סכום לחיוב</small><b>{o.amount > 0 ? <Money value={o.amount} /> : '—'}</b></span>
+          </div>
         </div>
         <AnimatePresence initial={false}>
           {remoteNote && (
@@ -178,33 +195,51 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         )}
         {cancelled && <CancelledNote o={o} />}
         <HoldBanner o={o} />
-        {/* הזמנה שנסגרה: תיעוד הטיפול בלקוח – בראש הכרטיס */}
-        {canCare(o) && <CareSection o={o} />}
-        {/* קודם כל: מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q. בהזמנה מבוטלת – לקריאה בלבד */}
-        {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} />}
+        {/* איחור / חלקית בלי תיעוד: תזכורת קטנה למעלה, והתיעוד עצמו בתחתית */}
+        {needsCare(o) && (
+          <button type="button" className="care-jump" onClick={() => jumpTo('sec-care')}>
+            <ClipboardPen size={16} aria-hidden="true" /> {o.status === 'partial' ? 'עוד לא תועד טיפול בלקוח' : 'סופקה באיחור – עוד לא תועד טיפול בלקוח'} <ChevronLeft size={16} aria-hidden="true" />
+          </button>
+        )}
+        {/* הערות להזמנה – ראשונות ובולטות, רק כשיש. כשאין – השדה נשאר בבלוק הקופה, להוספה */}
+        {notesTop && !cancelled && (
+          <section className="onotes" aria-label="הערות להזמנה">
+            <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
+            <EarlierNotes o={o} />
+          </section>
+        )}
+        <div className="psheet">
+        {/* מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q. בהזמנה מבוטלת – לקריאה בלבד */}
+        {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} notesAbove={notesTop} />}
 
         <div className="panel__flow">
-          <OrderTimeline o={o} onQ={cancelled ? undefined : focusQ} />
+          <OrderTimeline o={o} onQ={cancelled ? undefined : focusQ} part="next" />
           {/* פעולות שהן חלק מהציר מופיעות בציר עצמו – כאן רק שאר הבעיות */}
           {o.issues.some((i) => !STEP_ACTIONS.includes(i.action)) && (
             <div className="missing" role="list" aria-label="מה חסר">
               {o.issues.filter((i) => !STEP_ACTIONS.includes(i.action)).map((i) => (
                 <div key={i.rule} role="listitem" className={`missing__item missing__item--${i.severity}`}>
                   <span>{i.label}</span>
-                  <FixButton o={o} issue={i} onOpen={() => { if (i.rule === 2 || i.rule === 9) setTab('pay'); else document.querySelector('.reg')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }} />
+                  <FixButton o={o} issue={i} onOpen={() => jumpTo(i.rule === 2 || i.rule === 9 ? 'sec-payment' : 'h-reg')} />
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <nav className="panel__tabs panel__tabs--body" role="tablist" aria-label="עוד בתיק ההזמנה">
-          {TABS.map(([k, label]) => (
-            <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'is-on' : ''} onClick={() => setTab(k)}>{label}</button>
-          ))}
-        </nav>
-        <div role="tabpanel" aria-label={TABS.find(([k]) => k === tab)?.[1]}>
-          {tab === 'more' && (
+        <Section id="payment" title="תשלום ומסמכים">
+          <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
+          <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} {!cancelled && <PoEdit o={o} />}</span>} />
+          <div className="sums">
+            <div><span>סכום לחיוב</span><b>{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</b></div>
+            <div className={gap ? 'is-gap' : ''}>
+              <span>סכום Q</span>
+              <b>{o.qAmount !== undefined ? <Money value={o.qAmount} /> : '—'}</b>
+              {gap && <em>פער <Ltr>{fmtMoney(Math.abs((o.qAmount ?? 0) - o.amount))}</Ltr></em>}
+            </div>
+          </div>
+          <div className="psec__sub"><span className="kv__k">מסמכים</span><OrderDocsSection orderId={o.id} customerId={o.customerId} /></div>
+        </Section>
             <Section id="details" title="פרטים נוספים">
               <Kv k="לקוח" v={<button className="link" onClick={openCustomer}>{o.customerName} · לתיק הלקוח</button>} />
               <ChannelEdit o={o} readOnly={cancelled} />
@@ -218,27 +253,10 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
                   ולא מופיע בהעברה לקופה ובסיכום לתפעול. נטען מ"הנחיות חיוב" של הלקוח ביצירה */}
               <EditKv k="הערות להנהלת חשבונות" kind="textarea" value={o.billingNote ?? ''} placeholder="אין" onSave={(v) => save({ billingNote: v || undefined }, 'ההערות להנהלת חשבונות')} />
             </Section>
-          )}
-          {tab === 'pay' && (
-            <>
-              <Section id="payment" title="תשלום">
-                <Kv k="מצב תשלום" v={PAYMENT_LABEL[o.payment]} />
-                <Kv k="תעודת רכש" v={<span className="kv__edit">{o.poNumber ? <Ltr>{o.poNumber}</Ltr> : o.poRequired ? <Missing /> : <span className="muted">לא נרשם</span>} {!cancelled && <PoEdit o={o} />}</span>} />
-                <div className="sums">
-                  <div><span>סכום לחיוב</span><b>{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</b></div>
-                  <div className={gap ? 'is-gap' : ''}>
-                    <span>סכום Q</span>
-                    <b>{o.qAmount !== undefined ? <Money value={o.qAmount} /> : '—'}</b>
-                    {gap && <em>פער <Ltr>{fmtMoney(Math.abs((o.qAmount ?? 0) - o.amount))}</Ltr></em>}
-                  </div>
-                </div>
-              </Section>
-              <Section id="docs" title="מסמכים">
-                <OrderDocsSection orderId={o.id} customerId={o.customerId} />
-              </Section>
-            </>
-          )}
-          {tab === 'history' && <History o={o} />}
+        {/* היסטוריה מקופלת – היומן נטען רק כשפותחים */}
+        <HistorySection o={o} />
+        {/* תיעוד טיפול – בתחתית, בהזמנה שנסגרה */}
+        {canCare(o) && <div id="sec-care" className="psec-care"><CareSection o={o} /></div>}
         </div>
         {/* בטלפון אין שורה תחתונה – מחיקה בסוף התיק, רחוק מהאגודל */}
         <div className="panel__del-m"><DeleteOrder o={o} /></div>
@@ -246,7 +264,6 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
       <div className="panel__foot">
         <span className="muted">לחיצה על ערך פותחת עריכה · נשמר אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>
         <DeleteOrder o={o} />
-        <button className="link" onClick={panel.close}>חזרה לרשימה</button>
       </div>
     </>
   );
@@ -276,6 +293,16 @@ function Section({ id, title, children, action }: { id: string; title: string; c
 }
 function Kv({ k, v }: { k: string; v: ReactNode }) {
   return <div className="kv"><span className="kv__k">{k}</span><span className="kv__v">{v}</span></div>;
+}
+
+function HistorySection({ o }: { o: OrderView }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details className="sec phist" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
+      <summary className="sec__head phist__sum"><h3 className="sec__title">היסטוריה</h3><ChevronLeft size={16} aria-hidden="true" className="phist__chev" /></summary>
+      {open && <History o={o} />}
+    </details>
+  );
 }
 
 /* יומן ההזמנה – נקרא מ-auditLog, שאי אפשר לערוך או למחוק (נאכף בשרת) */
