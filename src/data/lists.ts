@@ -5,7 +5,7 @@ import { collection, doc, onSnapshot, serverTimestamp, writeBatch } from 'fireba
 import { auth, db } from '../lib/firebase';
 
 export type ListItem = { id: string; label: string; active: boolean; locked?: boolean };
-export type ListKey = 'channels' | 'cancelReasons' | 'paymentMethods' | 'docTypes' | 'leadSources' | 'leadFields' | 'lostReasons';
+export type ListKey = 'channels' | 'cancelReasons' | 'paymentMethods' | 'docTypes' | 'leadSources' | 'leadFields' | 'lostReasons' | 'careTopics' | 'careComps';
 export type Lists = Record<ListKey, ListItem[]>;
 
 export const LIST_META: Record<ListKey, { title: string; hint: string }> = {
@@ -16,6 +16,8 @@ export const LIST_META: Record<ListKey, { title: string; hint: string }> = {
   leadSources: { title: 'מקורות לידים', hint: 'מאיפה הגיע הלקוח הפוטנציאלי' },
   leadFields: { title: 'תחומים', hint: 'תחום העיסוק של העסק – לסינון ולקמפיינים' },
   lostReasons: { title: 'סיבות "לא רלוונטי"', hint: 'נבחרות כשליד נסגר בלי עסקה' },
+  careTopics: { title: 'נושאי תיעוד טיפול', hint: 'נבחרים בחלון "תיעוד שיחה על הזמנה". "איחור" ו"חוסר בהזמנה" נעולים – הם מוצעים לבד לפי איך ההזמנה נסגרה' },
+  careComps: { title: 'פיצויים', hint: 'נבחרים בתיעוד טיפול. "ללא" ו"התנצלות" בלי סכום; לכל השאר אפשר לרשום סכום' },
 };
 
 const item = (id: string, label: string, locked = false): ListItem => ({ id, label, active: true, ...(locked ? { locked } : {}) });
@@ -29,6 +31,8 @@ export const DEFAULT_LISTS: Lists = {
   leadSources: [item('referral', 'המלצה'), item('event', 'אירוע'), item('outbound', 'פנייה יזומה'), item('website', 'אתר'), item('inbound', 'פנה אלינו')],
   leadFields: [item('hitech', 'הייטק'), item('education', 'חינוך'), item('health', 'בריאות'), item('municipal', 'רשות מקומית'), item('security', 'ביטחון'), item('industry', 'תעשייה'), item('offices', 'משרדים'), item('events', 'אירועים'), item('other', 'אחר')],
   lostReasons: [item('price', 'מחיר'), item('competitor', 'עובדים עם ספק אחר'), item('noneed', 'אין צורך כרגע'), item('noanswer', 'לא עונים'), item('kosher', 'כשרות'), item('other', 'אחר')],
+  careTopics: [item('late', 'איחור', true), item('missing', 'חוסר בהזמנה', true), item('items', 'טעות בפריטים'), item('quality', 'איכות'), item('billing', 'חיוב'), item('other', 'אחר')],
+  careComps: [item('none', 'ללא', true), item('apology', 'התנצלות', true), item('credit', 'זיכוי'), item('discount', 'הנחה בהזמנה הבאה'), item('other', 'אחר')],
   docTypes: [item('po', 'תעודת רכש'), item('quote', 'הצעת מחיר'), item('invoice', 'חשבונית'), item('agreement', 'הסכם / טופס הקפה'), item('other', 'אחר')],
 };
 

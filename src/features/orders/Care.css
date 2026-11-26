@@ -23,3 +23,23 @@
 .care-form__btns { display: flex; align-items: center; gap: var(--space-3); }
 /* בטופס – הבחירות נשברות לשורות גם בטלפון (ולא גוללות הצידה כמו בסרגל הסינון) */
 .care-form .chips, .hold-form .chips { flex-wrap: wrap; overflow: visible; margin-inline-end: 0; padding-inline-end: 0; }
+
+/* שלב 6ג: שורה אחת בתחתית הכרטיס, וחלון נפרד */
+.care { margin: 0; padding: var(--space-3) 0 var(--space-1); border-radius: 0; background: transparent; box-shadow: none; border-top: 1px solid var(--line); }
+.care.is-hint { background: transparent; }
+.care.is-hint .care__head { padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--urgent-bg); }
+.care__title { margin-inline-end: 0; font-size: 16px; color: var(--navy); }
+.care__toggle { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-end: auto; padding: 0; border: 0; background: none; font: inherit; font-size: var(--text-table); color: var(--brand-700); cursor: pointer; }
+.care__toggle:hover { text-decoration: underline; text-underline-offset: 3px; }
+.care__chev { transition: transform var(--dur-quick) var(--ease); }
+.care__toggle[aria-expanded="true"] .care__chev { transform: rotate(-90deg); }
+@media (prefers-reduced-motion: reduce) { .care__chev { transition: none; } }
+.care__hint, .care__none { margin: 0; margin-inline-end: auto; font-size: var(--text-table); }
+.care__hint { color: var(--urgent-fg); font-weight: 500; }
+.care__none { color: var(--gray-600); }
+.care-form { margin-top: 0; }
+.care-form__order { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: 0; padding: var(--space-3); border-radius: var(--radius-panel); background: var(--zone); border: 1px solid var(--zone-line); }
+.care-form__order > div { display: grid; }
+.care-form__order dt { font-size: var(--text-micro); color: var(--gray-600); }
+.care-form__order dd { margin: 0; font-size: var(--text-table); font-weight: 500; }
+.care-form__date .input { width: auto; justify-self: start; }

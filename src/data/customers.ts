@@ -45,7 +45,7 @@ export type CustomerInput = Omit<Customer, 'id' | 'status' | 'createdAt' | 'crea
 export type CareOrder = { id: number; date: string; time: string; branchName: string; amount: number; outcome: string };
 export type Activity = {
   id: string; kind: 'note' | 'call' | 'followup' | 'care'; text: string; due?: string; by: string; byName: string; at?: Timestamp;
-  orderId?: string; order?: CareOrder; topic?: string; comp?: string; compAmount?: number;
+  orderId?: string; order?: CareOrder; topic?: string; comp?: string; compId?: string; compAmount?: number; callAt?: string;
 };
 
 export const EMPTY_CUSTOMER: CustomerInput = {

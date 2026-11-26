@@ -119,3 +119,5 @@
 .orange__note { font-size: var(--text-label); }
 .orange__note bdi { font-family: var(--font-mono); }
 .orange__err { font-size: var(--text-label); font-weight: 500; color: var(--danger-fg); }
+/* בתוך חלון / טופס – הבחירות נשברות לשורות ולא נגללות הצידה (בלי דהייה בקצה שחותכת אפשרות) */
+.sdialog__form .chips, .care-form .chips { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; -webkit-mask-image: none; mask-image: none; }
