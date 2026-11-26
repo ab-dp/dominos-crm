@@ -109,7 +109,8 @@ export function StageTrack({ o }: { o: OrderView }) {
 }
 
 /* הציר המלא בתיק ההזמנה: שלוש תחנות (לחיצה על תחנה – תיקון שלה), ומתחת – הצעד הבא וביטול */
-export function OrderTimeline({ o, onQ }: { o: OrderView; onQ?: () => void }) {
+/* part: 'track' – רק התחנות (בראש הרשומה, על רקע כחול-לילה); 'next' – רק הצעד הבא וביטול (בגוף הכרטיס) */
+export function OrderTimeline({ o, onQ, part = 'all' }: { o: OrderView; onQ?: () => void; part?: 'all' | 'track' | 'next' }) {
   const { requestStatus } = useStore();
   const [open, setOpen] = useState<null | 'open' | 'q' | 'close'>(null);
   const stage = stageOf(o);
@@ -136,9 +137,11 @@ export function OrderTimeline({ o, onQ }: { o: OrderView; onQ?: () => void }) {
     </li>
   );
 
+  const showNext = (cancelled || !closedDone) && part !== 'track';
+  if (part === 'next' && !showNext) return null;
   return (
-    <div className={`timeline-wrap ${cancelled ? 'is-cancelled' : ''}`}>
-      <ol className="otl" aria-label="ציר ההזמנה">
+    <div className={`timeline-wrap ${cancelled ? 'is-cancelled' : ''} ${part === 'track' ? 'timeline-wrap--rec' : ''} ${part === 'next' ? 'timeline-wrap--next' : ''}`}>
+      {part !== 'next' && <ol className="otl" aria-label="ציר ההזמנה">
         {step(0, 'open', 'פתוחה', <>נפתחה <Ltr>{fmtDate(o.createdAt)}</Ltr></>, st(0), null)}
         {step(1, 'q', 'הוקלד ל-Q',
           o.qNumber ? <><Ltr>{o.qNumber}</Ltr> · <Ltr>{fmtMoney(o.qAmount ?? o.amount)}</Ltr></> : null,
@@ -146,10 +149,10 @@ export function OrderTimeline({ o, onQ }: { o: OrderView; onQ?: () => void }) {
         {step(2, 'close', closedDone ? closeLabel(o) : 'סופקה',
           closedDone && o.status === 'partial' ? o.partialNote : null,
           closedDone ? 'done' : st(2), <CloseForm o={o} done={done} />)}
-      </ol>
+      </ol>}
 
       {/* בהזמנה שנסגרה (סופקה) אין צעד הבא – לא מציגים שורה ריקה */}
-      {(cancelled || !closedDone) && (
+      {showNext && (
         <div className="otl-next">
           {cancelled ? (
             /* הזמנה מבוטלת נעולה: הפעולה היחידה היא להחזיר אותה */

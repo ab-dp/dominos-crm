@@ -277,3 +277,119 @@
 
 /* ערוץ בהזמנה ישנה: הטקסט החופשי הקודם, ליד הבחירה */
 .kv__was { margin-inline-start: var(--space-2); font-size: var(--text-label); font-weight: 400; color: var(--gray-600); }
+
+/* ===================== v2: ראש רשומה, הערות, גיליון עם אזורים (שלב 6ב) ===================== */
+.panel__head { padding: 0; gap: 0; border-bottom: 0; }
+.panel__head > :not(.prec) { margin: var(--space-2) var(--space-5) 0; }
+.panel__head > :last-child:not(.prec) { margin-bottom: var(--space-2); }
+
+/* ראש רשומה בכחול-לילה */
+.prec { background: var(--navy); color: var(--rec-text); padding: var(--space-4) var(--space-5) var(--space-3); display: grid; gap: var(--space-3); }
+.prec .panel__title { color: var(--white); font-size: 24px; line-height: 1.25; letter-spacing: -.012em; }
+.prec__id { color: var(--rec-muted); font-size: 18px; font-weight: 500; margin-inline-start: var(--space-1); font-variant-numeric: tabular-nums; }
+.prec .panel__title .prec__id bdi { font-family: inherit; }
+.prec .icon-btn { color: var(--rec-muted); }
+.prec .icon-btn:hover { background: rgb(255 255 255 / .1); color: var(--white); }
+.prec .icon-btn:focus-visible { outline-color: var(--white); }
+.prec .viewers { background: rgb(255 255 255 / .06); border-color: var(--rec-line); color: var(--rec-text); }
+.prec__facts { display: flex; flex-wrap: wrap; row-gap: var(--space-2); margin: 0; }
+.prec__facts > div { display: grid; padding-inline: var(--space-4); border-inline-start: 1px solid var(--rec-line); min-width: 0; }
+.prec__facts > div:first-child { padding-inline-start: 0; border: 0; }
+.prec__facts dt { font-size: var(--text-micro); font-weight: 500; color: var(--rec-muted); }
+.prec__facts dd { margin: 0; font-size: var(--text-table); font-weight: 500; color: var(--white); white-space: nowrap; }
+.prec__miss { color: #F5C08A; }
+.prec__track { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding-top: var(--space-3); border-top: 1px solid var(--rec-line); }
+.prec__sum { margin-inline-start: auto; display: inline-flex; align-items: baseline; gap: var(--space-2); }
+.prec__sum small { font-size: var(--text-label); color: var(--rec-muted); }
+.prec__sum b { font-size: 28px; font-weight: 600; color: var(--white); font-variant-numeric: tabular-nums; }
+
+/* ציר השלבים על רקע כהה: קו דק עם נקודות */
+.timeline-wrap--rec .otl { gap: 0; }
+.timeline-wrap--rec .otl-step { flex: 0 0 auto; align-items: center; gap: var(--space-2); }
+.timeline-wrap--rec .otl-step__dot { width: 12px; height: 12px; font-size: 0; background: transparent; box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / .35); }
+.timeline-wrap--rec .otl-step__dot svg { display: none; }
+.timeline-wrap--rec .otl-step.is-done .otl-step__dot { background: var(--ok-mark); box-shadow: none; }
+.timeline-wrap--rec .otl-step.is-now .otl-step__dot { background: var(--white); box-shadow: 0 0 0 3px rgb(255 255 255 / .2); }
+.timeline-wrap--rec .otl-step__body { display: inline-flex; align-items: baseline; gap: var(--space-2); }
+.timeline-wrap--rec .otl-step__title, .timeline-wrap--rec .otl-step__edit { font-size: var(--text-label); font-weight: 500; color: var(--rec-text); text-decoration-color: rgb(255 255 255 / .3); }
+.timeline-wrap--rec .otl-step.is-now .otl-step__title { color: var(--white); font-weight: 600; }
+.timeline-wrap--rec .otl-step.is-todo .otl-step__title { color: var(--rec-muted); }
+.timeline-wrap--rec .otl-step__edit:hover { color: var(--white); }
+.timeline-wrap--rec .otl-step__detail { display: none; }
+.timeline-wrap--rec .otl-step__line { flex: none; width: 32px; height: 1px; margin: 0 var(--space-3); background: rgb(255 255 255 / .25); }
+.timeline-wrap--rec .otl-step.is-done .otl-step__line { background: var(--ok-mark); }
+.timeline-wrap--next .otl-next { border-top: 0; padding-top: 0; }
+
+/* גוף: רקע הדף מאחורי גיליון לבן אחד */
+.panel__body { background: var(--page); padding-top: var(--space-4); }
+.psheet { background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); padding: var(--space-2) var(--space-5) var(--space-3); }
+.psheet .reg { margin: var(--space-3) 0 var(--space-2); padding: 0; border: 1px solid var(--brand-100); overflow: hidden; }
+.psheet .reg__head { background: var(--brand-50); border-bottom-color: var(--brand-100); padding: var(--space-3) var(--space-4); margin: 0; }
+.psheet .reg__title { font-size: 16px; color: var(--navy); }
+.psheet .reg > :not(.reg__head) { margin-inline: var(--space-4); }
+.psheet .reg > :last-child { margin-bottom: var(--space-3); }
+.psheet .panel__flow { padding: var(--space-3) 0; }
+.psheet .sec { padding: var(--space-4) 0; border-bottom: 1px solid var(--line); }
+.psheet .sec__head { padding-bottom: var(--space-2); border-bottom: 1px solid var(--line-soft); }
+.psheet .sec__title { font-size: 16px; font-weight: 600; color: var(--navy); }
+.psec__sub { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+
+/* היסטוריה מקופלת */
+.phist { padding: var(--space-3) 0; }
+.phist__sum { cursor: pointer; list-style: none; border-bottom: 0 !important; padding-bottom: 0 !important; margin-bottom: 0; }
+.phist__sum::-webkit-details-marker { display: none; }
+.phist__chev { color: var(--gray-600); transition: transform var(--dur-quick) var(--ease); }
+.phist[open] .phist__chev { transform: rotate(-90deg); }
+.phist[open] .phist__sum { margin-bottom: var(--space-3); }
+@media (prefers-reduced-motion: reduce) { .phist__chev { transition: none; } }
+.psec-care { padding-top: var(--space-3); }
+
+/* הערות להזמנה: תיבה חמה מעל הגיליון */
+.onotes { margin-bottom: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--note-bg); border: 1px solid var(--note-line); border-radius: var(--radius-panel); }
+.onotes .kv { display: grid; grid-template-columns: 1fr; gap: var(--space-1); }
+.onotes .kv__k { font-size: var(--text-label); font-weight: 600; color: var(--note-fg); }
+.onotes .kv__v { font-size: 16px; line-height: 1.55; max-width: 70ch; color: var(--gray-900); white-space: pre-wrap; }
+
+/* איחור / חלקית בלי תיעוד – קישור קטן לתחתית */
+.care-jump { display: flex; align-items: center; gap: var(--space-2); width: 100%; margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--urgent-bg); border-radius: var(--radius); background: var(--white); color: var(--urgent-fg); font: inherit; font-size: var(--text-table); font-weight: 500; text-align: start; cursor: pointer; }
+.care-jump svg:last-child { margin-inline-start: auto; }
+.care-jump:hover { background: var(--urgent-bg); }
+
+@media (max-width: 700px) {
+  .prec { padding: var(--space-3) var(--space-4); gap: var(--space-2); }
+  .prec .panel__title { font-size: var(--text-card-title); }
+  .prec__opt { display: none !important; }
+  .prec__facts > div { padding-inline: var(--space-3); }
+  .prec__sum b { font-size: 24px; }
+  .psheet { padding-inline: var(--space-4) !important; }
+  .psheet .reg > :not(.reg__head) { margin-inline: var(--space-3); }
+  .psheet .reg__grid { grid-template-columns: 1fr; }
+  .timeline-wrap--rec .otl-step__line { width: 16px; margin: 0 var(--space-2); }
+  .psheet { padding: var(--space-1) var(--space-3) var(--space-2); }
+  .panel__body { padding-top: var(--space-3); }
+}
+/* כותרת שמקבלת פוקוס בפתיחה: קו תחתון עדין במקום מסגרת (המסגרת הלבנה נראתה כמו שדה) */
+/* הכותרת מקבלת פוקוס רק כדי שקורא מסך יתחיל ממנה (לא לחיצה) – בלי סימון חזותי שנראה כמו קישור או שדה */
+.prec .panel__title:focus-visible { outline: none; box-shadow: none; }
+/* תג חומרה על רקע כהה – על משטח בהיר, כדי שהצבע ימשיך לומר את המשמעות */
+.prec .health { height: 24px; display: inline-flex; align-items: center; border-radius: var(--radius-tag); padding: 0 var(--space-2); }
+.prec .health--critical { background: var(--danger-bg); }
+.prec .health--urgent { background: var(--urgent-bg); }
+.prec .health--missing { background: var(--missing-bg); }
+/* שורה תחתונה בגוון הדף – לא שכבה רביעית; מחיקה שקטה עד שתפריט ⋯ יגיע */
+.panel__foot { background: var(--page); }
+.psheet .reg .seg { flex-wrap: nowrap; }
+
+/* תחנה שהושלמה בראש הרשומה – לחיצה לתיקון: קו תחתון ברור בריחוף ובפוקוס */
+.timeline-wrap--rec .otl-step__edit:hover, .timeline-wrap--rec .otl-step__edit:focus-visible { text-decoration: underline solid rgb(255 255 255 / .8); text-decoration-thickness: 1px; }
+/* מסך מלא: ראש הרשומה מיושר לרוחב התוכן */
+.panel--full .prec > * { max-width: 920px; }
+/* הזמנה מבוטלת: פרטי ההזמנה המקופלים – בלי פס הקופה הכחול */
+.psheet .reg--locked { border-color: var(--line); }
+.psheet .reg--locked .reg__head { background: var(--white); border-bottom: 0; }
+@media (max-width: 700px) {
+  /* בטלפון כל הכרטיס נגלל יחד – ראש הרשומה והבאנרים לא תופסים את המסך */
+  .panel { overflow-y: auto; overscroll-behavior: contain; }
+  .panel__body { flex: none; overflow: visible; }
+  .prec__facts dd { white-space: normal; }
+}

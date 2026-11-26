@@ -9,6 +9,12 @@
   --navy-3: #1B3D6B;
   --navy-text: #C3D1E0;
   --navy-muted: #8DA2BA;
+  /* ראש רשומה (כרטיס הזמנה, ובהמשך לקוח / הצעה / ליד) – DESIGN.md "Record Header" */
+  --rec-text: #E3EBF3; --rec-muted: #A3B6CB; --rec-line: rgb(255 255 255 / .12);
+  /* שכבות גוון: רקע מאחורי הגיליון, ואזור פנימי (תיבת כתובת, שורת Q) */
+  --page: #E8ECF1; --zone: #F3F5F8; --zone-line: #E2E7ED;
+  /* הערות להזמנה – המשטח החם היחיד במערכת */
+  --note-bg: #FFF5E1; --note-line: #EBCF96; --note-fg: #6B4A07;
   --brand-50: #E8F2F7;
   --brand-100: #CFE4EF;
   --brand-300: #8DC0DA;   /* סדרה בהירה בגרפים ("עוד לא" / ותק קצר) */
