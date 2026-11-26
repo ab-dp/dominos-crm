@@ -430,6 +430,11 @@ service cloud.firestore {
         && request.resource.data.customerId is string
         && ((request.resource.data.get('leadId', null) is string
               && existsAfter(/databases/$(database)/documents/leads/$(request.resource.data.leadId)))
+            // משימת חזרה של הצעת מחיר – גם בלי לקוח במערכת (customerId ריק)
+            || (request.resource.data.get('quoteId', null) is int
+              && exists(quotePath(request.resource.data.quoteId))
+              && (request.resource.data.customerId == ''
+                || exists(/databases/$(database)/documents/customers/$(request.resource.data.customerId))))
             || exists(/databases/$(database)/documents/customers/$(request.resource.data.customerId)))
         && request.resource.data.text is string && request.resource.data.text.size() > 0 && noCard(request.resource.data.text)
         && request.resource.data.due is string && request.resource.data.due.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
@@ -450,7 +455,7 @@ service cloud.firestore {
     function quoteCounterPath() { return /databases/$(database)/documents/counters/quotes; }
     function quotePath(n) { return /databases/$(database)/documents/quotes/$(string(n)); }
     function validQuote(d) {
-      return d.status in ['draft', 'sent', 'noanswer', 'approved', 'rejected', 'ordered']
+      return d.status in ['draft', 'sent', 'handling', 'noanswer', 'approved', 'rejected', 'ordered']
         && d.customer is map && d.customer.get('name', '') is string && d.customer.get('name', '').size() <= 120
         && noCard(d.customer.get('name', '')) && noCard(d.customer.get('contact', '')) && noCard(d.customer.get('email', ''))
         && d.customer.get('phone', '') is string && d.customer.get('phone', '').size() <= 20
@@ -462,6 +467,9 @@ service cloud.firestore {
         && d.validDays is number && d.validDays >= 1 && d.validDays <= 120
         && noCard(opt(d, 'notes')) && noCard(opt(d, 'address')) && noCard(opt(d, 'lastNote')) && noCard(opt(d, 'rejectReason'))
         && (d.status != 'ordered' || (d.get('orderId', null) is int && exists(orderPath(d.orderId))))
+        && (d.get('noAnswerCount', 0) is int && d.get('noAnswerCount', 0) >= 0 && d.get('noAnswerCount', 0) <= 999)
+        && (opt(d, 'callAt') == '' || opt(d, 'callAt').matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'))
+        && opt(d, 'handler').size() <= 120
         && d.keys().size() <= 50;
     }
 
@@ -503,7 +511,7 @@ service cloud.firestore {
         allow create: if isActive()
           && request.resource.data.by == request.auth.uid
           && request.resource.data.keys().hasOnly(['text', 'kind', 'status', 'by', 'byName', 'at'])
-          && request.resource.data.kind in ['note', 'status']
+          && request.resource.data.kind in ['note', 'status', 'call', 'noanswer', 'resent', 'callback', 'handler']
           && request.resource.data.text is string && request.resource.data.text.size() > 0
           && noCard(request.resource.data.text);
         allow update, delete: if false;

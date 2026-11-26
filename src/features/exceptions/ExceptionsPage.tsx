@@ -9,7 +9,7 @@ import { CalendarClock, CircleCheckBig, Pencil, X } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useStore, type OrderView } from '../../data/store';
-import { setTaskDone, updateTask, type Task } from '../../data/tasks';
+import { setTaskDone, taskHref, updateTask, type Task } from '../../data/tasks';
 import { useToast } from '../../design/Toast';
 import { Button, Skeleton } from '../../design/components';
 import { Ltr, addDays, fmtDate, toISODate } from '../../lib/format';
@@ -213,7 +213,7 @@ function TaskGroup({ title, tone, list, when }: { title: string; tone: 'orange' 
     .then(() => toast({
       message: <>משימה סומנה כבוצעה · {t.customerName}</>,
       onUndo: () => { setTaskDone({ ...t, done: true }, false).catch(() => undefined); },
-      ...(t.leadId ? { action: { label: 'קבע צעד הבא', run: () => nav(`/leads/${t.leadId}`) } } : {}),
+      ...(t.leadId ? { action: { label: 'קבע צעד הבא', run: () => nav(`/leads/${t.leadId}`) } } : t.quoteId ? { action: { label: 'פתח הצעה', run: () => nav(`/quotes/${t.quoteId}`) } } : {}),
     }))
     // סימון שנכשל – התיבה חוזרת לריקה, כדי שלא תיראה כמו משימה שבוצעה
     .catch(() => { box.checked = false; toast({ tone: 'error', message: 'הסימון נכשל – בדוק חיבור' }); });
@@ -228,7 +228,7 @@ function TaskGroup({ title, tone, list, when }: { title: string; tone: 'orange' 
             </label>
             <span className="task-row__main">
               <span className="task-row__text">{t.text}</span>
-              <span className="task-row__meta"><Link to={t.leadId ? `/leads/${t.leadId}` : `/customers/${t.customerId}?tab=activity`}>{t.customerName || 'לקוח'}</Link>{t.leadId && <span className="muted"> (ליד)</span>} · {when(t.due)} · {t.byName}</span>
+              <span className="task-row__meta"><Link to={taskHref(t)}>{t.customerName || 'לקוח'}</Link>{t.leadId ? <span className="muted"> (ליד)</span> : t.quoteId ? <span className="muted"> (הצעה <Ltr>{t.quoteId}</Ltr>)</span> : null} · {when(t.due)} · {t.byName}</span>
             </span>
             <TaskEdit t={t} />
           </li>

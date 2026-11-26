@@ -4,21 +4,28 @@
    וממנו התזכורת "אין עדכון כבר יום". אין מחיקה; הצעה שאושרה הופכת להזמנה ומקושרת אליה. */
 import { useEffect, useState } from 'react';
 import {
-  collection, doc, onSnapshot, query, runTransaction, serverTimestamp, where, writeBatch, type DocumentData, type Timestamp,
+  collection, doc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, where, writeBatch, type DocumentData, type Timestamp, type Transaction,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { roundMoney, toISODate } from '../lib/format';
 import { CATEGORIES } from './types';
+import { addTaskTo } from './tasks';
 
 export const FIRST_QUOTE_NUMBER = 1001;
 
-export type QuoteStatus = 'draft' | 'sent' | 'noanswer' | 'approved' | 'rejected' | 'ordered';
+/* handling = "בטיפול": נשלחה, ומאז היה קשר עם הלקוח (שיחה, אין מענה, נשלחה שוב).
+   noanswer – סטטוס ישן: הצעות שסומנו כך ממשיכות להיראות ולעבוד; היום "אין מענה" הוא פעולה עם מונה ניסיונות */
+export type QuoteStatus = 'draft' | 'sent' | 'handling' | 'noanswer' | 'approved' | 'rejected' | 'ordered';
 export const QUOTE_STATUS_LABEL: Record<QuoteStatus, string> = {
-  draft: 'טיוטה', sent: 'נשלחה – ממתינה לתשובה', noanswer: 'אין מענה', approved: 'אושרה', rejected: 'נדחתה', ordered: 'הפכה להזמנה',
+  draft: 'טיוטה', sent: 'נשלחה – ממתינה לתשובה', handling: 'בטיפול', noanswer: 'אין מענה', approved: 'אושרה', rejected: 'נדחתה', ordered: 'הפכה להזמנה',
 };
-export const SHORT_STATUS: Record<QuoteStatus, string> = { draft: 'טיוטה', sent: 'נשלחה', noanswer: 'אין מענה', approved: 'אושרה', rejected: 'נדחתה', ordered: 'הפכה להזמנה' };
-export const WAITING: QuoteStatus[] = ['sent', 'noanswer'];
-export const OPEN_QUOTE: QuoteStatus[] = ['draft', 'sent', 'noanswer', 'approved'];
+export const SHORT_STATUS: Record<QuoteStatus, string> = { draft: 'טיוטה', sent: 'נשלחה', handling: 'בטיפול', noanswer: 'אין מענה', approved: 'אושרה', rejected: 'נדחתה', ordered: 'הפכה להזמנה' };
+export const WAITING: QuoteStatus[] = ['sent', 'handling', 'noanswer'];
+export const OPEN_QUOTE: QuoteStatus[] = ['draft', 'sent', 'handling', 'noanswer', 'approved'];
+/* "אשר והפוך להזמנה" – בכל הצעה, חוץ מנדחתה או כזו שכבר הפכה להזמנה */
+export const canConvert = (q: Pick<Quote, 'status'>) => q.status !== 'rejected' && q.status !== 'ordered';
+/* תאריך חזרה שהגיע (היום או שעבר) – בהצעה שעוד ממתינה לתשובה */
+export const callDue = (q: Pick<Quote, 'status' | 'callAt'>, today: string) => WAITING.includes(q.status) && !!q.callAt && q.callAt <= today;
 export const REJECT_REASONS = ['מחיר', 'הזמינו ממקום אחר', 'האירוע בוטל', 'אחר'];
 
 export type QuoteLine = { category: string; name: string; qty: number; unitPrice: number; itemId?: string; manual?: boolean };
@@ -43,6 +50,8 @@ export type Quote = {
   total: number;
   rejectReason?: string;
   orderId?: number;
+  noAnswerCount?: number; // כמה פעמים התקשרו ולא ענו
+  callAt?: string; // לחזור ללקוח בתאריך (YYYY-MM-DD); יש לו משימה פתוחה במסך היום. ריק = לא נקבע
   lastNote?: string; // ההערה האחרונה ביומן – לרשימה
   lastActivityAt?: Timestamp;
   statusAt?: Timestamp;
@@ -50,7 +59,8 @@ export type Quote = {
   handler: string; handlerUid: string;
   createdAt?: Timestamp; createdBy?: string; updatedBy?: string; updatedByName?: string;
 };
-export type QuoteNote = { id: string; text: string; kind: 'note' | 'status'; status?: QuoteStatus; by: string; byName: string; at?: Timestamp };
+export type QuoteNoteKind = 'note' | 'status' | 'call' | 'noanswer' | 'resent' | 'callback' | 'handler';
+export type QuoteNote = { id: string; text: string; kind: QuoteNoteKind; status?: QuoteStatus; by: string; byName: string; at?: Timestamp };
 
 export const EMPTY_QUOTE_CUSTOMER: QuoteCustomer = { name: '', contact: '', phone: '', email: '', taxId: '' };
 export const linesTotal = (lines: QuoteLine[]) => roundMoney(lines.reduce((t, l) => t + l.qty * l.unitPrice, 0));
@@ -59,7 +69,7 @@ export const addDays = (iso: string, n: number) => { const d = new Date(iso + 'T
 export const sortLines = (lines: QuoteLine[]) => [...lines].sort((a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category));
 
 /* פג תוקף: הצעה שעוד לא נסגרה ותאריך התוקף עבר */
-export const isExpired = (q: Pick<Quote, 'status' | 'validUntil'>, today: string) => ['draft', 'sent', 'noanswer'].includes(q.status) && !!q.validUntil && q.validUntil < today;
+export const isExpired = (q: Pick<Quote, 'status' | 'validUntil'>, today: string) => ['draft', 'sent', 'handling', 'noanswer'].includes(q.status) && !!q.validUntil && q.validUntil < today;
 /* כמה שעות עברו מהעדכון האחרון – רק בהצעה שממתינה לתשובה ובתוקף */
 export function staleHours(q: Quote, now: Date): number | null {
   if (!WAITING.includes(q.status) || isExpired(q, toISODate(now))) return null;
@@ -67,7 +77,13 @@ export function staleHours(q: Quote, now: Date): number | null {
   if (!s) return null;
   return Math.floor((now.getTime() / 1000 - s) / 3600);
 }
-export const needsFollowup = (q: Quote, now: Date, hours: number) => { const h = staleHours(q, now); return h !== null && h >= hours; };
+/* "אין עדכון כבר X שעות" – רק להצעה בלי תאריך חזרה. כשנקבע תאריך יש משימה פתוחה במסך היום, והיא התזכורת
+   (callAt מתאפס כשהמשימה מסומנת בוצעה), כדי שההצעה לא תיספר פעמיים */
+export const needsFollowup = (q: Quote, now: Date, hours: number) => {
+  if (q.callAt) return false;
+  const h = staleHours(q, now);
+  return h !== null && h >= hours;
+};
 
 export const fromDoc = (id: string, d: DocumentData): Quote => ({
   status: 'draft', customer: EMPTY_QUOTE_CUSTOMER, delivery: 'delivery', lines: [], validDays: 14, validUntil: '', issueDate: '', itemsTotal: 0, total: 0, handler: '', handlerUid: '',
@@ -121,7 +137,7 @@ const auditDoc = (entityId: string, action: string, before: unknown, after: unkn
 const clean = <T extends object>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
 const cleanLine = (l: QuoteLine): QuoteLine => clean({ ...l, name: l.name.trim() }) as QuoteLine;
 
-export type QuoteInput = Omit<Quote, 'id' | 'status' | 'lastNote' | 'lastActivityAt' | 'statusAt' | 'sentAt' | 'createdAt' | 'createdBy' | 'updatedBy' | 'updatedByName' | 'rejectReason' | 'orderId' | 'handler' | 'handlerUid'>;
+export type QuoteInput = Omit<Quote, 'id' | 'status' | 'noAnswerCount' | 'callAt' | 'lastNote' | 'lastActivityAt' | 'statusAt' | 'sentAt' | 'createdAt' | 'createdBy' | 'updatedBy' | 'updatedByName' | 'rejectReason' | 'orderId' | 'handler' | 'handlerUid'>;
 
 const summary = (i: QuoteInput) => ({ customer: i.customer.name || '—', lines: i.lines.length, total: i.total });
 
@@ -165,23 +181,48 @@ export async function saveQuote(q: Quote, input: QuoteInput) {
 }
 
 const STATUS_TEXT: Record<QuoteStatus, string> = {
-  draft: 'הוחזרה לטיוטה', sent: 'סומנה: נשלחה ללקוח', noanswer: 'סומנה: אין מענה מהלקוח', approved: 'סומנה: הלקוח אישר', rejected: 'סומנה: נדחתה', ordered: 'הפכה להזמנה',
+  draft: 'הוחזרה לטיוטה', sent: 'סומנה: נשלחה ללקוח', handling: 'הוחזרה לטיפול', noanswer: 'סומנה: אין מענה מהלקוח', approved: 'סומנה: הלקוח אישר', rejected: 'סומנה: נדחתה', ordered: 'הפכה להזמנה',
 };
+/* שינוי סטטוס – תמיד עם רשומה ביומן המעקב. note – הערה שנכתבה יחד עם השינוי */
+/* הצעה שכבר הפכה להזמנה – לא נוגעים בה שוב (שני נציגים / שתי לשוניות שהפכו אותה יחד) */
+export class QuoteOrderedError extends Error { constructor(public orderId?: number) { super('quote-ordered'); } }
+
+/* כל שינוי בהצעה נעשה בטרנזקציה מול הגרסה העדכנית בשרת: לחיצה כפולה או שני נציגים לא כותבים פעמיים,
+   והמונה / הטקסט מחושבים מהמצב האמיתי ולא מהעותק שעל המסך */
+async function onFresh(q: Quote, fn: (cur: Quote, tx: Transaction) => void) {
+  const ref = doc(db, 'quotes', String(q.id));
+  await runTransaction(db, async (tx) => {
+    const s = await tx.get(ref);
+    if (!s.exists()) throw new Error('not-found');
+    const cur = fromDoc(s.id, s.data());
+    if (cur.status === 'ordered') throw new QuoteOrderedError(cur.orderId);
+    fn(cur, tx);
+  });
+}
+
 /* שינוי סטטוס – תמיד עם רשומה ביומן המעקב. note – הערה שנכתבה יחד עם השינוי */
 export async function setQuoteStatus(q: Quote, status: QuoteStatus, note = '', extra: { rejectReason?: string; orderId?: number } = {}) {
   const u = me();
-  const batch = writeBatch(db);
-  const text = [status === 'ordered' && extra.orderId ? `הפכה להזמנה ${extra.orderId}` : STATUS_TEXT[status], status === 'rejected' && extra.rejectReason ? `סיבה: ${extra.rejectReason}` : '', note.trim()].filter(Boolean).join(' · ');
-  batch.update(doc(db, 'quotes', String(q.id)), {
-    status, statusAt: serverTimestamp(), lastActivityAt: serverTimestamp(), lastNote: text,
-    ...(status === 'sent' && !q.sentAt ? { sentAt: serverTimestamp() } : {}),
-    ...(status === 'rejected' ? { rejectReason: extra.rejectReason ?? '' } : {}),
-    ...(extra.orderId ? { orderId: extra.orderId } : {}),
-    updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name,
+  // אושרה / נדחתה / הפכה להזמנה – אין יותר למי לחזור: המשימה הפתוחה נסגרת ותאריך החזרה מתאפס
+  const closes = status === 'approved' || status === 'rejected' || status === 'ordered';
+  const open = closes ? await openQuoteTasks(q.id) : [];
+  await onFresh(q, (cur, tx) => {
+    if (cur.status === status) return; // כבר במצב הזה (לחיצה כפולה)
+    const ordered = status === 'ordered' && extra.orderId ? (cur.status === 'approved' ? `הפכה להזמנה ${extra.orderId}` : `הלקוח אישר והפכה להזמנה ${extra.orderId}`) : '';
+    const text = [ordered || STATUS_TEXT[status], status === 'rejected' && extra.rejectReason ? `סיבה: ${extra.rejectReason}` : '', note.trim()].filter(Boolean).join(' · ');
+    open.forEach((r) => tx.update(r, { done: true, doneBy: u.uid, doneByName: u.name, doneAt: serverTimestamp() }));
+    tx.update(doc(db, 'quotes', String(q.id)), {
+      status, statusAt: serverTimestamp(), lastActivityAt: serverTimestamp(), lastNote: text,
+      // הצעה שהפכה להזמנה בלי שסומנה "נשלחה" – נחשבת שנשלחה (לבורד: הצעות שנשלחו והמרה)
+      ...((status === 'sent' || status === 'ordered') && !cur.sentAt ? { sentAt: serverTimestamp() } : {}),
+      ...(status === 'rejected' ? { rejectReason: extra.rejectReason ?? '' } : {}),
+      ...(extra.orderId ? { orderId: extra.orderId } : {}),
+      ...(closes && cur.callAt ? { callAt: '' } : {}),
+      updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name,
+    });
+    tx.set(doc(collection(db, 'quotes', String(q.id), 'notes')), { text, kind: 'status', status, by: u.uid, byName: u.name, at: serverTimestamp() });
+    tx.set(doc(collection(db, 'auditLog')), auditDoc(String(q.id), 'status', { status: cur.status }, { status, ...extra }, note.trim() || undefined));
   });
-  batch.set(doc(collection(db, 'quotes', String(q.id), 'notes')), { text, kind: 'status', status, by: u.uid, byName: u.name, at: serverTimestamp() });
-  batch.set(doc(collection(db, 'auditLog')), auditDoc(String(q.id), 'status', { status: q.status }, { status, ...extra }, note.trim() || undefined));
-  await batch.commit();
 }
 
 /* הערת מעקב – מאפסת את התזכורת */
@@ -192,6 +233,58 @@ export async function addQuoteNote(q: Quote, text: string) {
   batch.update(doc(db, 'quotes', String(q.id)), { lastNote: text.trim().slice(0, 300), lastActivityAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
   batch.set(doc(collection(db, 'auditLog')), auditDoc(String(q.id), 'note', null, { note: text.trim().slice(0, 200) }));
   await batch.commit();
+}
+
+/* ---------- פעולות טיפול: כל לחיצה נרשמת ביומן המעקב עם שעה ושם ----------
+   שיחה / אין מענה / נשלחה שוב מעבירות הצעה שממתינה לתשובה ל"בטיפול". כל פעולה כזו סוגרת את משימת החזרה הקודמת,
+   ואפשר לקבוע איתה תאריך חזרה חדש – הוא נשמר על ההצעה (callAt) והופך למשימה במסך היום ביום שנקבע. */
+export type QuoteActionKind = 'call' | 'noanswer' | 'resent' | 'callback';
+const ACTION_TEXT: Record<QuoteActionKind, string> = { call: 'שיחה – ממתין להחלטה', noanswer: 'שיחה – אין מענה', resent: 'ההצעה נשלחה שוב', callback: 'נקבע מתי לחזור' };
+export const dayMonth = (iso: string) => iso.split('-').reverse().slice(0, 2).join('.');
+export const callbackTaskText = (q: Pick<Quote, 'id' | 'customer'>, note = '') =>
+  [`לחזור ללקוח – הצעה ${q.id}`, note.trim()].filter(Boolean).join(' · ');
+
+/* משימות החזרה הפתוחות של ההצעה – נסגרות בכל פעולה חדשה (גם אם תאריך החזרה כבר התאפס) */
+async function openQuoteTasks(id: number) {
+  const s = await getDocs(query(collection(db, 'tasks'), where('quoteId', '==', id), where('done', '==', false)));
+  return s.docs.map((d) => d.ref);
+}
+
+export async function quoteAction(q: Quote, kind: QuoteActionKind, note = '', callAt = '') {
+  if (kind === 'callback' && !callAt) throw new Error('callAt');
+  const u = me();
+  const open = await openQuoteTasks(q.id);
+  await onFresh(q, (cur, tx) => {
+    // הצעה שסומנה "אין מענה" בגרסה הישנה – כבר היה ניסיון אחד
+    const prev = cur.noAnswerCount ?? (cur.status === 'noanswer' ? 1 : 0);
+    const count = prev + 1;
+    const head = kind === 'noanswer' ? `${ACTION_TEXT.noanswer} (ניסיון ${count})` : kind === 'callback' ? '' : ACTION_TEXT[kind];
+    const text = [head, callAt ? `לחזור ב-${dayMonth(callAt)}` : '', note.trim()].filter(Boolean).join(' · ');
+    const toHandling = kind !== 'callback' && WAITING.includes(cur.status) && cur.status !== 'handling';
+    open.forEach((r) => tx.update(r, { done: true, doneBy: u.uid, doneByName: u.name, doneAt: serverTimestamp() }));
+    if (callAt) addTaskTo(tx, { customerId: cur.customerId ?? '', quoteId: cur.id, customerName: cur.customer.name.trim() || `הצעה ${cur.id}`, text: callbackTaskText(cur, kind === 'callback' ? note : ''), due: callAt });
+    tx.update(doc(db, 'quotes', String(q.id)), {
+      ...(toHandling ? { status: 'handling', statusAt: serverTimestamp() } : {}),
+      ...(kind === 'noanswer' ? { noAnswerCount: count } : {}),
+      callAt, lastNote: text.slice(0, 300), lastActivityAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name,
+    });
+    tx.set(doc(collection(db, 'quotes', String(q.id), 'notes')), { text, kind, ...(toHandling ? { status: 'handling' } : {}), by: u.uid, byName: u.name, at: serverTimestamp() });
+    tx.set(doc(collection(db, 'auditLog')), auditDoc(String(q.id), kind, { status: cur.status, callAt: cur.callAt ?? '', noAnswerCount: prev },
+      { status: toHandling ? 'handling' : cur.status, callAt, noAnswerCount: kind === 'noanswer' ? count : prev }, note.trim().slice(0, 200) || undefined));
+  });
+}
+
+/* משוך לטיפולך / העבר לטיפול… – ההעברה נרשמת ביומן המעקב */
+export async function setQuoteHandler(q: Quote, to: { uid: string; name: string }) {
+  const u = me();
+  await onFresh(q, (cur, tx) => {
+    if (to.uid === cur.handlerUid) return;
+    const was = cur.handler ? ` (במקום ${cur.handler})` : '';
+    const text = to.uid === u.uid ? `הטיפול נמשך ל${to.name}${was}` : `הטיפול הועבר ל${to.name}${was}`;
+    tx.update(doc(db, 'quotes', String(q.id)), { handler: to.name, handlerUid: to.uid, lastNote: text, lastActivityAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name });
+    tx.set(doc(collection(db, 'quotes', String(q.id), 'notes')), { text, kind: 'handler', by: u.uid, byName: u.name, at: serverTimestamp() });
+    tx.set(doc(collection(db, 'auditLog')), auditDoc(String(q.id), 'handler', { handler: cur.handler, handlerUid: cur.handlerUid }, { handler: to.name, handlerUid: to.uid }));
+  });
 }
 
 /* ---------- תנאים קבועים להצעה: settings/quotes. כולם קוראים, רק מנהל משנה ----------

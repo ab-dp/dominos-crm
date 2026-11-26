@@ -2,8 +2,8 @@
    בכל שורה: הערה אחרונה ביומן, והפעולה הבאה (אישור / אין מענה / נדחתה / הפוך להזמנה). */
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BellRing, FileText, Plus, Search, X } from 'lucide-react';
-import { SHORT_STATUS, WAITING, isExpired, needsFollowup, staleHours, useQuotes, type Quote } from '../../data/quotes';
+import { BellRing, CalendarClock, FileText, Plus, Search, X } from 'lucide-react';
+import { SHORT_STATUS, WAITING, callDue, dayMonth, isExpired, needsFollowup, staleHours, useQuotes, type Quote } from '../../data/quotes';
 import { useStore } from '../../data/store';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { Ltr, fmtDate, fmtMoney, toISODate } from '../../lib/format';
@@ -26,7 +26,9 @@ export function QuotesPage() {
 
   const lists = useMemo(() => {
     const live = (q: Quote) => !isExpired(q, today);
-    const byFollow = (a: Quote, b: Quote) => Number(needsFollowup(b, now, hours)) - Number(needsFollowup(a, now, hours)) || (staleHours(b, now) ?? 0) - (staleHours(a, now) ?? 0);
+    // למעלה: מה שצריך לחזור אליו עכשיו (הגיע תאריך החזרה, או אין עדכון מעבר לסף)
+    const urgent = (q: Quote) => Number(callDue(q, today) || needsFollowup(q, now, hours));
+    const byFollow = (a: Quote, b: Quote) => urgent(b) - urgent(a) || (staleHours(b, now) ?? 0) - (staleHours(a, now) ?? 0);
     return {
       waiting: items.filter((q) => WAITING.includes(q.status) && live(q)).sort(byFollow),
       draft: items.filter((q) => q.status === 'draft' && live(q)),
@@ -37,7 +39,7 @@ export function QuotesPage() {
   }, [items, now, today, hours]);
   const s = query.trim();
   const rows = lists[tab].filter((q) => !s || q.customer.name.includes(s) || q.customer.contact.includes(s) || String(q.id).includes(s));
-  const follow = lists.waiting.filter((q) => needsFollowup(q, now, hours)).length;
+  const follow = lists.waiting.filter((q) => callDue(q, today) || needsFollowup(q, now, hours)).length;
   const waitingSum = lists.waiting.reduce((t, q) => t + q.total, 0);
   const month = today.slice(0, 7);
   const won = items.filter((q) => (q.status === 'approved' || q.status === 'ordered') && q.issueDate.startsWith(month)).length;
@@ -91,18 +93,20 @@ export function QuotesPage() {
                 const late = needsFollowup(q, now, hours);
                 const exp = isExpired(q, today);
                 const h = staleHours(q, now);
+                const due = callDue(q, today);
                 return (
-                  <tr key={q.id} className={`qlrow ${late ? 'is-late' : ''}`} onClick={(e) => { if (!(e.target as HTMLElement).closest('button, a')) nav(`/quotes/${q.id}`); }}>
+                  <tr key={q.id} className={`qlrow ${late || due ? 'is-late' : ''}`} onClick={(e) => { if (!(e.target as HTMLElement).closest('button, a')) nav(`/quotes/${q.id}`); }}>
                     <td><button className="link qlrow__num" onClick={() => nav(`/quotes/${q.id}`)} aria-label={`פתח הצעה ${q.id}`}><Ltr>{q.id}</Ltr></button></td>
                     <td className="strong">{q.customer.name || <span className="muted">ללא שם</span>}{q.customer.contact && <span className="muted"> · {q.customer.contact}</span>}</td>
                     <td><Ltr>{fmtDate(q.issueDate)}</Ltr>{q.date && <span className="muted qlrow__sub">אספקה <Ltr>{fmtDate(q.date)}</Ltr></span>}</td>
                     <td className="num"><Ltr>{fmtMoney(q.total)}</Ltr></td>
-                    <td><span className={`qstat qstat--${exp ? 'expired' : q.status}`}>{exp ? 'פג תוקף' : SHORT_STATUS[q.status]}</span></td>
+                    <td><span className={`qstat qstat--${exp ? 'expired' : q.status}`}>{exp ? 'פג תוקף' : SHORT_STATUS[q.status]}</span>{q.handler && <span className="muted qlrow__sub">{q.handler}</span>}</td>
                     <td className="qlrow__last">
+                      {q.callAt && WAITING.includes(q.status) && <span className={`qlrow__call ${due ? 'is-due' : ''}`}><CalendarClock size={14} aria-hidden="true" /> {q.callAt === today ? 'לחזור היום' : <>לחזור ב-<Ltr>{dayMonth(q.callAt)}</Ltr></>}</span>}
                       {late && <span className="qlrow__late"><BellRing size={14} aria-hidden="true" /> אין עדכון {ago(h!)}</span>}
                       <span className="qlrow__note" title={q.lastNote}>{q.lastNote || <span className="muted">—</span>}</span>
                     </td>
-                    <td className="qlrow__act"><QuoteActions q={q} compact /></td>
+                    <td className="qlrow__act"><QuoteActions q={q} /></td>
                   </tr>
                 );
               })}
