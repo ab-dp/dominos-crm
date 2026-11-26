@@ -83,7 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       title: 'קטלוג',
       items: [
-        { to: '/pricelists', label: 'מחירונים', icon: <Tags size={20} /> },
+        { to: '/pricelists', label: 'תפריט ומחירונים', short: 'מחירונים', icon: <Tags size={20} /> },
         { to: '/branches', label: 'סניפים ואשכולות', icon: <Store size={20} /> },
       ],
     },

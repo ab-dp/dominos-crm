@@ -131,3 +131,20 @@ describe('ימי עסקים להצעות', () => {
     expect(addBusinessDays('2026-11-25', 5)).toBe('2026-12-02'); // שבוע עבודה
   });
 });
+
+/* שלב 7א: התפריט – בדיקת תקינות לפני שמירה */
+import { DEFAULT_MENU, menuProblem } from '../src/data/menu';
+describe('תפריט', () => {
+  it('ברירת המחדל תקינה, ופיצות עם כל השלבים', () => {
+    expect(menuProblem(DEFAULT_MENU)).toBe('');
+    expect(DEFAULT_MENU.categories[0].steps).toEqual({ variation: true, toppingKind: true, toppingText: true, split: true });
+  });
+  it('שם ריק או כפול – לא נשמר', () => {
+    const m = structuredClone(DEFAULT_MENU);
+    m.categories[0].items[0].name = '';
+    expect(menuProblem(m)).toMatch('בלי שם');
+    const d = structuredClone(DEFAULT_MENU);
+    d.categories[0].items[1].name = d.categories[0].items[0].name;
+    expect(menuProblem(d)).toMatch('פעמיים');
+  });
+});

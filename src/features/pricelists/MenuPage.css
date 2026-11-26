@@ -1,0 +1,52 @@
+/* עורך התפריט: עץ · קטגוריה · תצוגה חיה */
+.menu-ed__grid { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.4fr) minmax(300px, 1fr); gap: var(--space-4); align-items: start; }
+.menu-ed__tree, .menu-ed__cat, .menu-ed__preview { padding: var(--space-4); }
+.menu-ed__preview { position: sticky; top: calc(var(--topbar) + 12px); }
+.menu-ed__k { margin: 0 0 var(--space-2); font-size: var(--text-label); font-weight: 600; color: var(--gray-700); }
+.menu-ed__h { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); font-size: 16px; font-weight: 600; color: var(--navy); }
+.menu-ed__list + .menu-ed__list { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line-soft); }
+.menu-ed__list.is-compact { margin-top: 0; padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius); background: var(--zone); }
+.menu-ed__pick { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.litem.is-selected { background: var(--brand-50); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--brand-100); }
+.litem.is-selected .menu-ed__pick, .menu-ed__pick[aria-current="true"] { font-weight: 600; color: var(--brand-800); }
+.menu-ed__meta { font-size: var(--text-micro); }
+.menu-ed__exp { font-size: var(--text-label); margin-inline-end: var(--space-2); }
+.menu-ed__sub { flex-basis: 100%; margin-top: var(--space-2); }
+.litem:has(.menu-ed__sub) { flex-wrap: wrap; }
+.menu-ed__sys { list-style: none; margin: var(--space-4) 0 0; padding: var(--space-3) 0 0; border-top: 1px solid var(--line-soft); display: grid; gap: var(--space-2); font-size: var(--text-label); }
+.menu-ed__sys li { display: flex; align-items: baseline; gap: var(--space-1); flex-wrap: wrap; color: var(--gray-700); }
+.menu-ed__steps { margin: 0 0 var(--space-4); padding: 0; border: 0; display: grid; gap: var(--space-2); }
+.menu-ed__always { margin: 0; display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-label); color: var(--gray-600); }
+.menu-ed__step { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.menu-ed__step:has(input:checked) { border-color: var(--brand-100); background: var(--brand-50); }
+.menu-ed__step input { margin-top: 3px; }
+.menu-ed__step span { display: grid; }
+.menu-ed__step small { font-size: var(--text-micro); color: var(--gray-600); }
+.menu-ed__foot { margin-top: var(--space-3); font-size: var(--text-label); }
+
+/* התצוגה החיה – כמו מגש הבוחר המתוכנן (DESIGN.md "Options & Picker") */
+.mpv__cats { display: flex; flex-wrap: wrap; gap: 0 var(--space-3); border-bottom: 1px solid var(--line); margin-bottom: var(--space-3); }
+.mpv__cats button { height: 40px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; background: none; font: inherit; font-size: var(--text-table); font-weight: 500; color: var(--gray-600); cursor: pointer; }
+.mpv__cats button[aria-pressed="true"], .mpv__cats button.is-on { color: var(--gray-900); font-weight: 600; border-bottom-color: var(--brand-600); }
+.mpv__sys { height: 40px; display: inline-flex; align-items: center; font-size: var(--text-table); color: var(--gray-400, #9AA5B1); }
+.mpv__tray { display: grid; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-panel); background: var(--zone); border: 1px solid var(--zone-line); }
+.mpv__row { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: var(--space-2); align-items: center; }
+.mpv__label { font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
+.mpv__opts { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+.mpv__opt { height: 36px; padding: 0 var(--space-3); border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font: inherit; font-size: var(--text-label); color: var(--gray-900); cursor: pointer; }
+.mpv__opt.is-on { border-color: var(--brand-600); background: var(--brand-50); color: var(--brand-800); font-weight: 600; }
+.mpv__qty { display: inline-grid; place-items: center; min-width: 40px; height: 36px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1100px) { .menu-ed__grid { grid-template-columns: minmax(200px, 0.8fr) minmax(0, 1.4fr); } .menu-ed__preview { grid-column: 1 / -1; position: static; } }
+@media (max-width: 700px) { .menu-ed__grid { grid-template-columns: minmax(0, 1fr); } }
+/* עמודת הקטגוריות רחבה מספיק לשם, מונה ופעולות בשורה אחת */
+.menu-ed__grid { grid-template-columns: minmax(300px, 1fr) minmax(0, 1.35fr) minmax(300px, 1fr); }
+.menu-ed__tree .litem__label { white-space: nowrap; }
+.menu-ed__meta { white-space: nowrap; }
+@media (max-width: 1280px) { .menu-ed__grid { grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.3fr); } .menu-ed__preview { grid-column: 1 / -1; position: static; } }
+@media (max-width: 760px) {
+  .menu-ed__grid { grid-template-columns: minmax(0, 1fr); }
+  .menu-ed__tree .litem__label { white-space: normal; }
+  .litem__actions { flex-wrap: wrap; }
+}
+@media (max-width: 760px) { .menu-ed .litem__toggle, .menu-ed .icon-btn--sm, .menu-ed__pick { min-height: 44px; min-width: 44px; } }
