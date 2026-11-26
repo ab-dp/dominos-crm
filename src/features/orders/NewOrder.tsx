@@ -16,7 +16,7 @@ import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
 import { usePriceLists } from '../../data/priceLists';
 import { opsReminder, useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
-import { setQuoteStatus } from '../../data/quotes';
+import { QuoteOrderedError, isExpired as quoteExpired, setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, categoryOf, needsOpsUpdate } from '../../data/types';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -347,7 +347,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       }
       if (fq) {
         // ההזמנה כבר נשמרה; אם סימון ההצעה נכשל – רק מודיעים
-        await setQuoteStatus(fq, 'ordered', '', { orderId: n }).catch(() => toast({ tone: 'error', message: <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
+        await setQuoteStatus(fq, 'ordered', '', { orderId: n }).catch((x) => toast({ tone: 'error', message: x instanceof QuoteOrderedError
+          ? <>הזמנה <Ltr>{n}</Ltr> נשמרה, אבל הצעה <Ltr>{fq.id}</Ltr> כבר הפכה קודם להזמנה <Ltr>{x.orderId ?? ''}</Ltr> – בדקו שאין הזמנה כפולה</>
+          : <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
       }
       // הזמנה להיום/מחר שנוצרה אחרי שעת הסף – לא הייתה בסיכום לתפעול (opsChangeAt נכתב ב-createOrder)
       const savedAt = new Date();
@@ -596,6 +598,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                 <b>מתוך הצעת מחיר <Ltr>{fq.id}</Ltr>:</b> הלקוח, המועד, המשלוח והפריטים עם המחירים הועתקו.
                 {fq.lines.some((l) => l.category === 'פיצות') && ' נשאר לפרט בפיצות סוגים ותוספות (אפשר לפצל שורה לכמה שורות).'} אחרי השמירה ההצעה תסומן "הפכה להזמנה".
                 {!fq.customerId && ' הלקוח לא קיים במערכת – ייפתח לו תיק עם הפרטים מההצעה.'}
+                {quoteExpired(fq, today) && <b> ההצעה פג תוקפה – כדאי לבדוק שהמחירים עדיין נכונים.</b>}
               </p>
             )}
             {/* החלפת לקוח קיים / לקוח חדש: הופעה רכה בלבד – התוכן לא תלוי בסיום אנימציית יציאה */}

@@ -1,6 +1,6 @@
 /* ---------- סטטוס הצעה ---------- */
 .qstat { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; background: var(--gray-100); color: var(--gray-600); }
-.qstat--sent, .qstat--noanswer { background: var(--missing-bg); color: var(--missing-fg); }
+.qstat--sent, .qstat--handling, .qstat--noanswer { background: var(--missing-bg); color: var(--missing-fg); }
 .qstat--approved { background: var(--ok-bg); color: var(--ok-fg); }
 .qstat--ordered { background: var(--brand-50); color: var(--brand-800); }
 .qstat--rejected { background: var(--gray-100); color: var(--gray-700); }
@@ -94,7 +94,17 @@
 .qtrack__head { display: flex; align-items: center; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
 .qtrack__head .qe-sec__title { margin: 0; }
 .qtrack__late { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--urgent-fg); font-size: var(--text-label); font-weight: 500; }
-.qtrack__acts { margin-inline-start: auto; }
+.qtrack__owner { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); font-size: var(--text-table); color: var(--gray-700); }
+.qtrack__owner b { color: var(--gray-900); font-weight: 600; }
+.qtrack__acts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--gray-100); }
+.qtrack__acts:empty { display: none; }
+.qtag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
+.qtag--due { background: var(--urgent-bg); color: var(--urgent-fg); }
+.qtrack__text { display: flex; align-items: baseline; gap: var(--space-1); }
+.qtrack__ic { display: inline-flex; flex: none; color: var(--gray-600); transform: translateY(2px); }
+.qcb-date { width: auto; justify-self: start; }
+.qlrow__call { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-end: var(--space-2); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
+.qlrow__call.is-due { color: var(--urgent-fg); }
 .qtrack__add { display: flex; gap: var(--space-2); align-items: flex-start; margin-top: var(--space-3); }
 .qtrack__add textarea { flex: 1; min-height: 40px; resize: vertical; }
 .qtrack__log { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-2); max-height: 240px; overflow-y: auto; }

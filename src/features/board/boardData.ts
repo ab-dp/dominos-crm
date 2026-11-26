@@ -1,7 +1,7 @@
 /* חישובי הבורד – פונקציות טהורות, בלי תצוגה. סכומים לפי תאריך אספקה ובלי ביטולים (אלא אם נאמר אחרת).
    הכנסות, "סופקו בזמן" והתקופות – מ-data/metrics.ts, כמו בדוחות, כדי שהבורד והדוח יציגו אותו מספר. */
 import type { OrderView } from '../../data/store';
-import { isExpired, type Quote } from '../../data/quotes';
+import { WAITING, isExpired, type Quote } from '../../data/quotes';
 import { CLOSED, PIZZA, categoryOf } from '../../data/types';
 import { channelLabel } from '../../data/channels';
 import { missingOf } from '../../rules-engine/health';
@@ -174,7 +174,7 @@ export function rankings(orders: OrderView[], r: Range) {
 export function quotesSummary(quotes: Quote[], r: Range, now: Date, followups: number) {
   const today = iso(now);
   const soon = iso(addDays(now, 3));
-  const open = quotes.filter((q) => (q.status === 'sent' || q.status === 'noanswer' || q.status === 'approved') && !isExpired(q, today));
+  const open = quotes.filter((q) => (WAITING.includes(q.status) || q.status === 'approved') && !isExpired(q, today));
   const sent = quotes.filter((q) => q.issueDate >= r.from && q.issueDate <= r.to && q.status !== 'draft');
   const ordered = sent.filter((q) => q.status === 'ordered').length;
   return {

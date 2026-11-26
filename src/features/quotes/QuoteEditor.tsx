@@ -21,7 +21,7 @@ import { saveError } from '../../lib/saveError';
 import { Shell } from '../leads/LeadDialogs';
 import { buildCatalog, catalogFor, normName, type CatalogItem } from '../orders/ItemsBuilder';
 import { QuoteSheet, downloadSheetPdf, type SheetData } from './QuoteSheet';
-import { QuoteTrack } from './QuoteTrack';
+import { ConvertButton, QuoteTrack } from './QuoteTrack';
 import '../pages.css';
 import '../orders/ItemsBuilder.css';
 import './quotes.css';
@@ -307,7 +307,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
         <div>
           <h1 className="page__title">{quote ? <>הצעה <Ltr>{quote.id}</Ltr>{quote.customer.name && <> · {quote.customer.name}</>}</> : seed ? `הצעה חדשה (עותק של ${seed.id})` : 'הצעה חדשה'}</h1>
           <p className="page__sub">
-            {quote ? <><span className={`qstat qstat--${expired ? 'expired' : quote.status}`}>{expired ? 'פג תוקף' : QUOTE_STATUS_LABEL[quote.status]}</span> · נוצרה ב-<Ltr>{quote.issueDate.split('-').reverse().join('.')}</Ltr> ע"י {quote.handler}</>
+            {quote ? <><span className={`qstat qstat--${expired ? 'expired' : quote.status}`}>{expired ? 'פג תוקף' : QUOTE_STATUS_LABEL[quote.status]}</span> · נוצרה ב-<Ltr>{quote.issueDate.split('-').reverse().join('.')}</Ltr></>
               : 'המחירים כוללים מע"מ.'}
           </p>
         </div>
@@ -317,6 +317,8 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
             <button role="tab" aria-selected={view === 'preview'} className={view === 'preview' ? 'is-on' : ''} onClick={() => setView('preview')}>תצוגת ההצעה</button>
           </div>
           {quote && <Button icon={<Copy size={16} />} onClick={() => nav(`/quotes/new?from=${quote.id}`)}>שכפל</Button>}
+          {/* גלוי תמיד (חוץ מנדחתה / הוזמנה). שינויים שלא נשמרו נשמרים קודם, כדי שההזמנה תקבל את מה שרואים */}
+          {quote && <ConvertButton q={quote} prepare={async () => (!dirty ? quote : (await save()) ? { ...quote, ...input() } : null)} />}
         </div>
       </header>
       {restored && <p className="qe-restored" role="status"><RotateCcw size={16} aria-hidden="true" /> שוחזרה הצעה שהתחלתם ולא נשמרה. <button className="link" onClick={() => { try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* */ } setF(initialForm()); setSavedJson(sig(initialForm())); }}>התחל מחדש</button></p>}

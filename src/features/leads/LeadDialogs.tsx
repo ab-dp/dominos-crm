@@ -29,7 +29,7 @@ export function Shell({ title, sub, children, onClose, wide }: { title: string; 
       <Dialog.Portal>
         <Dialog.Overlay className="cmd-overlay" />
         <Dialog.Content className={`udialog sdialog ${wide ? 'ldialog--wide' : ''}`} dir="rtl" aria-describedby={sub ? 'ldialog-sub' : undefined} onPointerDownOutside={keepOpenOnToast} onInteractOutside={keepOpenOnToast}
-          onOpenAutoFocus={(e) => { e.preventDefault(); ((e.currentTarget as HTMLElement).querySelector('[data-autofocus], textarea, input, select') as HTMLElement | null)?.focus(); }}>
+          onOpenAutoFocus={(e) => { e.preventDefault(); const el = e.currentTarget as HTMLElement; ((el.querySelector('[data-autofocus]') ?? el.querySelector('textarea, input, select')) as HTMLElement | null)?.focus(); }}>
           <div className="sdialog__head">
             <Dialog.Title className="udialog__title">{title}</Dialog.Title>
             <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>

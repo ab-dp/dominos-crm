@@ -50,3 +50,34 @@ describe('סינון הזמנות', () => {
     expect(filtersText({})).toBe('');
   });
 });
+
+/* שלב 5: "בטיפול", תאריך חזרה ו"אשר והפוך להזמנה" */
+import { OPEN_QUOTE, WAITING as Q_WAITING, callDue, canConvert, isExpired as qExpired, needsFollowup as qFollow } from '../src/data/quotes';
+import { QUOTES as Q_FIX } from './fixtures/orders';
+describe('הצעות – בטיפול ותאריך חזרה', () => {
+  const stale = { ...Q_FIX[1], status: 'handling' as const }; // לא עודכנה יומיים
+  const now = new Date(2026, 10, 25, 10, 0, 0);
+  it('"בטיפול" נחשבת פתוחה, ממתינה ויכולה לפוג', () => {
+    expect(OPEN_QUOTE).toContain('handling');
+    expect(Q_WAITING).toContain('handling');
+    expect(qExpired({ status: 'handling', validUntil: '2026-11-20' }, '2026-11-25')).toBe(true);
+  });
+  it('כשנקבע תאריך חזרה – בלי "אין עדכון" (המשימה היא התזכורת)', () => {
+    expect(qFollow(stale, now, 24)).toBe(true);
+    expect(qFollow({ ...stale, callAt: '2026-11-25' }, now, 24)).toBe(false);
+    expect(qFollow({ ...stale, callAt: '2026-11-27' }, now, 24)).toBe(false);
+    expect(qFollow({ ...stale, callAt: '2026-11-24' }, now, 24)).toBe(false);
+  });
+  it('לחזור היום / שעבר – רק בהצעה שממתינה לתשובה', () => {
+    expect(callDue({ status: 'handling', callAt: '2026-11-25' }, '2026-11-25')).toBe(true);
+    expect(callDue({ status: 'noanswer', callAt: '2026-11-20' }, '2026-11-25')).toBe(true);
+    expect(callDue({ status: 'sent', callAt: '2026-11-26' }, '2026-11-25')).toBe(false);
+    expect(callDue({ status: 'approved', callAt: '2026-11-20' }, '2026-11-25')).toBe(false);
+    expect(callDue({ status: 'sent', callAt: '' }, '2026-11-25')).toBe(false);
+  });
+  it('"אשר והפוך להזמנה" – בכל סטטוס חוץ מנדחתה והוזמנה', () => {
+    expect(['draft', 'sent', 'handling', 'noanswer', 'approved'].every((s) => canConvert({ status: s as never }))).toBe(true);
+    expect(canConvert({ status: 'rejected' })).toBe(false);
+    expect(canConvert({ status: 'ordered' })).toBe(false);
+  });
+});
