@@ -149,11 +149,12 @@ export function ChannelEdit({ o, readOnly }: { o: OrderView; readOnly?: boolean 
   );
 }
 
-export function BranchEdit({ o }: { o: OrderView }) {
+export function BranchEdit({ o, readOnly }: { o: OrderView; readOnly?: boolean }) {
   const save = useOrderSave(o);
   const { items: branches } = useBranches();
   const { items: clusters } = useClusters();
   const [open, setOpen] = useState(false);
+  if (readOnly) return <div className="kv"><span className="kv__k">סניף</span><span className="kv__v">{o.branchId ? <>{o.branchName} <span className="muted">· אשכול {o.cluster}</span></> : <Missing />}</span></div>;
   if (!open) {
     return (
       <div className="kv kv--edit">
@@ -183,8 +184,9 @@ export function BranchEdit({ o }: { o: OrderView }) {
   );
 }
 
-export function DeliveryTypeEdit({ o }: { o: OrderView }) {
+export function DeliveryTypeEdit({ o, readOnly }: { o: OrderView; readOnly?: boolean }) {
   const save = useOrderSave(o);
+  if (readOnly) return <div className="kv"><span className="kv__k">סוג</span><span className="kv__v">{o.delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</span></div>;
   return (
     <div className="kv">
       <span className="kv__k">סוג</span>
@@ -200,10 +202,11 @@ export function DeliveryTypeEdit({ o }: { o: OrderView }) {
   );
 }
 
-export function MethodEdit({ o }: { o: OrderView }) {
+export function MethodEdit({ o, readOnly }: { o: OrderView; readOnly?: boolean }) {
   const save = useOrderSave(o);
   const { lists } = useLists();
   const methods = (lists?.paymentMethods ?? []).filter((m) => m.active || m.id === o.method);
+  if (readOnly) return <div className="kv"><span className="kv__k">אמצעי תשלום</span><span className="kv__v">{o.methodLabel ?? METHOD_LABEL[o.method] ?? o.method}</span></div>;
   return (
     <div className="kv">
       <span className="kv__k">אמצעי תשלום</span>
@@ -221,10 +224,10 @@ export function MethodEdit({ o }: { o: OrderView }) {
 }
 
 /* "אחר": מה אמצעי התשלום בפועל. נפתח לעריכה מיד כשבוחרים "אחר" בכרטיס; בלי פירוט – מסומן "חסר" */
-export function MethodNoteEdit({ o, justPicked }: { o: OrderView; justPicked?: boolean }) {
+export function MethodNoteEdit({ o, justPicked, readOnly }: { o: OrderView; justPicked?: boolean; readOnly?: boolean }) {
   const save = useOrderSave(o);
   return (
-    <EditKv k="פירוט אמצעי התשלום" value={o.methodNote ?? ''} display={o.methodNote || <Missing />} placeholder="למשל: קופון, פיצוי" autoEdit={justPicked}
+    <EditKv k="פירוט אמצעי התשלום" readOnly={readOnly} value={o.methodNote ?? ''} display={o.methodNote || <Missing />} placeholder="למשל: קופון, פיצוי" autoEdit={justPicked}
       onSave={(v) => save({ methodNote: v || undefined }, 'פירוט אמצעי התשלום')} />
   );
 }

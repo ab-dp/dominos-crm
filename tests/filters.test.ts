@@ -81,3 +81,38 @@ describe('הצעות – בטיפול ותאריך חזרה', () => {
     expect(canConvert({ status: 'ordered' })).toBe(false);
   });
 });
+
+/* שלב 6ד: עריכה מרכזית – נשלחים רק שדות מותרים ששונו */
+import { editPatch } from '../src/features/orders/editPatch';
+import { LEGACY as L6 } from './fixtures/orders';
+import type { NewOrderInput } from '../src/data/orders';
+describe('עריכה מרכזית – editPatch', () => {
+  const eo = L6.find((o) => o.items.length > 0 && o.address && o.channel) ?? L6[0];
+  const same = (o: typeof eo): NewOrderInput => ({ ...o, handler: 'מישהו אחר', status: 'cancelled', billingNote: 'אחר' } as unknown as NewOrderInput);
+  it('בלי שינוי – כלום (גם לא מטפל, סטטוס והערות להנה"ח)', () => {
+    expect(editPatch(eo, same(eo), { pricingTouched: false })).toEqual({});
+  });
+  it('שינוי שעה – רק השעה', () => {
+    expect(editPatch(eo, { ...same(eo), time: '19:45' }, { pricingTouched: false })).toEqual({ time: '19:45' });
+  });
+  it('ריק מול חסר – לא נחשב שינוי; מחיקת ערך – undefined', () => {
+    expect(editPatch({ ...eo, callRef: undefined }, { ...same(eo), callRef: '' } as NewOrderInput, { pricingTouched: false })).toEqual({});
+    expect(editPatch({ ...eo, callRef: 'A1' }, { ...same(eo), callRef: undefined } as NewOrderInput, { pricingTouched: false })).toEqual({ callRef: undefined });
+  });
+  it('סכום ופריטים – רק כשנגעו בהם', () => {
+    const changed = { ...same(eo), amount: 1, items: [] } as NewOrderInput;
+    expect(editPatch(eo, changed, { pricingTouched: false })).toEqual({});
+    expect(editPatch(eo, changed, { pricingTouched: true })).toMatchObject({ amount: 1 });
+  });
+  it('מעבר לאיסוף עצמי לא מוחק את הכתובת', () => {
+    expect(editPatch(eo, { ...same(eo), delivery: 'pickup', address: undefined } as NewOrderInput, { pricingTouched: false })).toEqual(eo.delivery === 'pickup' ? {} : { delivery: 'pickup' });
+  });
+  it('ערוץ מהרשימה בהזמנה עם טקסט ישן – הטקסט עובר ל-channelLegacy', () => {
+    const old = { ...eo, channelId: undefined, channel: 'וואטסאפ', channelLegacy: undefined };
+    expect(editPatch(old, { ...same(old), channelId: 'sales', channel: 'מכירות' } as NewOrderInput, { pricingTouched: false })).toEqual({ channelId: 'sales', channel: 'מכירות', channelLegacy: 'וואטסאפ' });
+  });
+  it('סניף שלא הוחלף – לא נכתב מחדש; הוחלף – כל פרטי הסניף', () => {
+    expect(editPatch(eo, { ...same(eo), branchPhone: '000' } as NewOrderInput, { pricingTouched: false })).toEqual({});
+    expect(Object.keys(editPatch(eo, { ...same(eo), branchId: 'zz', branchName: 'חדש', branchPhone: '1', cluster: 'דרום' } as NewOrderInput, { pricingTouched: false })).sort()).toEqual(['branchId', 'branchName', 'branchPhone', 'cluster']);
+  });
+});

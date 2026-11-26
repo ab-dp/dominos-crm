@@ -86,11 +86,13 @@ export function catalogFor<T extends Pick<CatalogItem, 'category' | 'name' | 'un
 }
 
 /* מעבר משלוח ⇄ איסוף: שורות שהמחיר שלהן נלקח מהמחירון מתעדכנות (חוץ ממחיר ששונה ידנית). מחזיר כמה שורות השתנו */
-export function useRepriceOnDelivery(delivery: Delivery, catalog: CatalogItem[], setLines: (f: (ls: Line[]) => Line[]) => void, onChanged: (n: number) => void) {
+/* off – בעריכת הזמנה קיימת: מחירים קפואים, מעבר משלוח/איסוף לא מתמחר מחדש שורות ישנות בשקט */
+export function useRepriceOnDelivery(delivery: Delivery, catalog: CatalogItem[], setLines: (f: (ls: Line[]) => Line[]) => void, onChanged: (n: number) => void, off = false) {
   const prev = useRef(delivery);
   useEffect(() => {
     if (prev.current === delivery) return;
     prev.current = delivery;
+    if (off) return;
     let n = 0;
     setLines((ls) => ls.map((l) => {
       const it = l.itemId && !l.manualPrice ? catalog.find((x) => x.id === l.itemId) : undefined;

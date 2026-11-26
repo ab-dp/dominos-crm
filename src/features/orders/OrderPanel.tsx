@@ -6,11 +6,12 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ChevronLeft, ClipboardPen, Maximize2, Minimize2, RefreshCw, X } from 'lucide-react';
+import { ChevronLeft, ClipboardPen, Maximize2, Minimize2, Pencil, RefreshCw, X } from 'lucide-react';
+import { useFlag } from '../../data/flags';
 import { useAuth } from '../../auth/AuthContext';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
-import { HealthBadge, Missing, Tip } from '../../design/components';
+import { Button, HealthBadge, Missing, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
 import { channelLabel } from '../../data/channels';
 import { OpsTag } from './OpsTag';
@@ -108,7 +109,11 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   // פוקוס בכותרת גם כשעוברים ישר להזמנה אחרת בלי לסגור (הכפתור שנלחץ כבר לא קיים)
   useEffect(() => { document.getElementById('panel-title')?.focus({ preventScroll: true }); }, []);
   const [scrolled, setScrolled] = useState(false);
-  const [notesTop] = useState(!!o.instructions); // הכרטיס נבנה מחדש לכל הזמנה (key), אז זה נקבע פעם אחת לכל הזמנה
+  const [notesTop] = useState(!!o.instructions);
+  // עריכה מרכזית (מאחורי מתג): "עריכה" פותח את טופס ההזמנה עם כל הערכים, והערכים בכרטיס לקריאה בלבד
+  const central = useFlag('editForm');
+  const { openNewOrder } = useStore();
+  const ro = central || o.status === 'cancelled'; // הכרטיס נבנה מחדש לכל הזמנה (key), אז זה נקבע פעם אחת לכל הזמנה
   const gap = o.qAmount !== undefined && o.qAmount !== o.amount;
   const cancelled = o.status === 'cancelled';
   // "הקלד ל-Q" בציר מעביר לשורת Q שבבלוק הקופה – טופס אחד, לא שניים
@@ -130,6 +135,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <span className="viewers" role="status"><span className="viewers__dot" aria-hidden="true" />{viewers.map((v) => v.name.split(' ')[0]).join(', ')} {viewers.length === 1 ? 'פותח' : 'פותחים'} את ההזמנה כרגע</span>
             )}
             <span className="panel__spacer" />
+            {central && !cancelled && <Button size="sm" className="prec__edit" icon={<Pencil size={16} />} onClick={() => openNewOrder({ editOf: o })}>עריכה</Button>}
             <Tip label={full ? 'חזרה לפאנל' : 'מסך מלא'}>
               <button className="icon-btn panel__full-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
             </Tip>
@@ -204,13 +210,13 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         {/* הערות להזמנה – ראשונות ובולטות, רק כשיש. כשאין – השדה נשאר בבלוק הקופה, להוספה */}
         {notesTop && !cancelled && (
           <section className="onotes" aria-label="הערות להזמנה">
-            <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
+            <EditKv readOnly={central} k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
             <EarlierNotes o={o} />
           </section>
         )}
         <div className="psheet">
         {/* מה שצריך כדי להוריד את ההזמנה לקופה, ושורת Q. בהזמנה מבוטלת – לקריאה בלבד */}
-        {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} notesAbove={notesTop} />}
+        {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} notesAbove={notesTop} ro={central} />}
 
         <div className="panel__flow">
           <OrderTimeline o={o} onQ={cancelled ? undefined : focusQ} part="next" />
@@ -220,7 +226,7 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               {o.issues.filter((i) => !STEP_ACTIONS.includes(i.action)).map((i) => (
                 <div key={i.rule} role="listitem" className={`missing__item missing__item--${i.severity}`}>
                   <span>{i.label}</span>
-                  <FixButton o={o} issue={i} onOpen={() => jumpTo(i.rule === 2 || i.rule === 9 ? 'sec-payment' : 'h-reg')} />
+                  <FixButton o={o} issue={i} onOpen={() => central && !(i.rule === 2 || i.rule === 9) ? openNewOrder({ editOf: o }) : jumpTo(i.rule === 2 || i.rule === 9 ? 'sec-payment' : 'h-reg')} />
                 </div>
               ))}
             </div>
@@ -242,8 +248,8 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         </Section>
             <Section id="details" title="פרטים נוספים">
               <Kv k="לקוח" v={<button className="link" onClick={openCustomer}>{o.customerName} · לתיק הלקוח</button>} />
-              <ChannelEdit o={o} readOnly={cancelled} />
-              <EditKv k="מספר קריאה" allowCard readOnly={cancelled} value={o.callRef ?? ''} display={o.callRef ? <Ltr>{o.callRef}</Ltr> : undefined} placeholder="אין" maxLength={60} validate={(v) => (v.length > 60 ? 'עד 60 תווים' : '')} onSave={(v) => save({ callRef: v || undefined }, 'מספר הקריאה')} />
+              <ChannelEdit o={o} readOnly={ro} />
+              <EditKv k="מספר קריאה" allowCard readOnly={ro} value={o.callRef ?? ''} display={o.callRef ? <Ltr>{o.callRef}</Ltr> : undefined} placeholder="אין" maxLength={60} validate={(v) => (v.length > 60 ? 'עד 60 תווים' : '')} onSave={(v) => save({ callRef: v || undefined }, 'מספר הקריאה')} />
               {o.channelLegacy && <Kv k="ערוץ (טקסט ישן)" v={o.channelLegacy} />}
               <Kv k="מטפל" v={<HandlerEdit o={o} />} />
               <Kv k="נוצר ע״י" v={<>{o.createdBy} · <Ltr>{fmtDate(o.createdAt)}</Ltr></>} />
