@@ -31,7 +31,7 @@ import './AppShell.css';
 
 const BASE = import.meta.env.BASE_URL;
 
-/* בטלפון: לצפייה ולמעקב – היום, הזמנות, בורד, חריגים. כל השאר תחת "עוד" */
+/* בטלפון: לצפייה ולמעקב – היום, הזמנות, בורד, משימות וחריגים. כל השאר תחת "עוד" */
 const MOBILE_MAIN = ['/today', '/orders', '/board', '/exceptions'];
 
 type NavDef = { to: string; label: string; short?: string; icon: ReactNode; count?: number; alert?: boolean };
@@ -70,23 +70,28 @@ export function AppShell({ children }: { children: ReactNode }) {
     openNewOrder();
   }
 
+  /* התפריט לפי תהליך העבודה: מה עושים היום · מול מי מוכרים · על מה (קטלוג) · ניהול ומדידה */
   const groups: { title: string; items: NavDef[] }[] = [
     {
       title: 'עבודה יומית',
       items: [
         { to: '/today', label: 'היום', icon: <House size={20} />, count: todayCount },
         { to: '/orders', label: 'הזמנות', icon: <ClipboardList size={20} /> },
-        { to: '/board', label: 'בורד', icon: <LayoutDashboard size={20} /> },
-        { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length, alert: quoteFollowups.length > 0 },
         { to: '/ops', label: 'סיכום לתפעול', icon: <Truck size={20} /> },
-        { to: '/exceptions', label: 'חריגים ומשימות', short: 'חריגים', icon: <TriangleAlert size={20} />, count: redCount, alert: redCount > 0 },
+        { to: '/exceptions', label: 'משימות וחריגים', short: 'חריגים', icon: <TriangleAlert size={20} />, count: redCount, alert: redCount > 0 },
       ],
     },
     {
-      title: 'מאגרים',
+      title: 'לקוחות ומכירות',
       items: [
         { to: '/customers', label: 'לקוחות', icon: <Users size={20} /> },
+        { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length, alert: quoteFollowups.length > 0 },
         { to: '/leads', label: 'לקוחות פוטנציאליים', icon: <Target size={20} />, count: dueLeadSteps },
+      ],
+    },
+    {
+      title: 'קטלוג',
+      items: [
         { to: '/pricelists', label: 'מחירונים', icon: <Tags size={20} /> },
         { to: '/branches', label: 'סניפים ואשכולות', icon: <Store size={20} /> },
       ],
@@ -94,6 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     {
       title: 'ניהול',
       items: [
+        { to: '/board', label: 'בורד', icon: <LayoutDashboard size={20} /> },
         { to: '/reports', label: 'דוחות', icon: <ChartColumn size={20} /> },
         ...(isAdmin ? [{ to: '/settings', label: 'הגדרות', icon: <Settings size={20} />, count: pendingUsers }] : []),
       ],

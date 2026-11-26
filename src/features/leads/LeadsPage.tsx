@@ -9,6 +9,8 @@ import { useLists } from '../../data/lists';
 import { useStore } from '../../data/store';
 import { OPEN_STAGES, STAGES, STAGE_LABEL, deciderOf, isOpen, useLeads, type Lead, type LeadStage } from '../../data/leads';
 import { Button, EmptyState, Skeleton } from '../../design/components';
+import { FilterBar, type FilterDim } from '../../design/FilterBar';
+import { useUrlParams } from '../../lib/urlParams';
 import { Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
 import { usePref } from '../../lib/prefs';
 import { ActivityDialog, LostDialog, MoveDialog } from './LeadDialogs';
@@ -57,6 +59,9 @@ export function LeadsPage() {
           <div><dt>פוטנציאל בחודש</dt><dd><Ltr>{fmtMoney(potential)}</Ltr></dd></div>
           <div><dt>הפכו ללקוח החודש</dt><dd><Ltr>{wonThisMonth.length}</Ltr></dd></div>
         </dl>
+        <div className="page__head-end">
+          <Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>ליד חדש</Button>
+        </div>
       </header>
 
       <div className="tablebar">
@@ -64,9 +69,6 @@ export function LeadsPage() {
           <button className={view === 'board' ? 'is-on' : ''} aria-pressed={view === 'board'} onClick={() => setView('board')}><Kanban size={16} aria-hidden="true" /> לוח</button>
           <button className={view === 'table' ? 'is-on' : ''} aria-pressed={view === 'table'} onClick={() => setView('table')}><Table2 size={16} aria-hidden="true" /> טבלה</button>
           <button className={view === 'today' ? 'is-on' : ''} aria-pressed={view === 'today'} onClick={() => setView('today')}><ListChecks size={16} aria-hidden="true" /> המשימות שלי היום</button>
-        </div>
-        <div className="page__head-end">
-          <Button variant="primary" icon={<Plus size={16} />} onClick={() => setAdding(true)}>ליד חדש</Button>
         </div>
       </div>
 
@@ -192,11 +194,12 @@ function StageMenu({ lead, onMove }: { lead: Lead; onMove: (l: Lead, to: LeadSta
 /* ---------- טבלה עם סינונים ---------- */
 function LeadTable({ leads, today, onOpen }: { leads: Lead[]; today: string; onOpen: (l: Lead) => void }) {
   const { lists } = useLists();
-  const [stage, setStage] = useState<'open' | LeadStage | 'all'>('open');
-  const [field, setField] = useState('');
-  const [source, setSource] = useState('');
-  const [area, setArea] = useState('');
-  const [late, setLate] = useState(false);
+  const { get, setMany } = useUrlParams();
+  const stage = (get('lstage') || 'open') as 'open' | LeadStage | 'all';
+  const field = get('field');
+  const source = get('source');
+  const area = get('area');
+  const late = get('late') === '1';
   const [q, setQ] = useState('');
   const label = (key: 'leadFields' | 'leadSources', id: string) => lists?.[key].find((x) => x.id === id)?.label ?? '';
   const areas = useMemo(() => [...new Set(leads.map((l) => l.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he')), [leads]);
@@ -211,30 +214,18 @@ function LeadTable({ leads, today, onOpen }: { leads: Lead[]; today: string; onO
     .filter((l) => !s || l.name.includes(s) || l.tags.some((t) => t.includes(s)) || l.contacts.some((c) => c.name.includes(s) || (digits.length >= 3 && c.phone.includes(digits))))
     .sort((a, b) => (a.nextStep?.due ?? '9').localeCompare(b.nextStep?.due ?? '9'));
   const lateCount = leads.filter((l) => isOpen(l) && l.nextStep && l.nextStep.due < today).length;
-  const filtered = !!(field || source || area || late || s || stage !== 'open');
+  const dims: FilterDim[] = [
+    { key: 'lstage', label: 'שלב', all: 'כל הפתוחים', options: [...STAGES.map((x) => ({ value: x.id, label: x.label })), { value: 'all', label: 'הכל (גם סגורים)' }] },
+    { key: 'field', label: 'תחום', all: 'כל התחומים', options: (lists?.leadFields ?? []).map((x) => ({ value: x.id, label: x.label })) },
+    { key: 'area', label: 'אזור', all: 'כל האזורים', options: areas.map((a) => ({ value: a, label: a })) },
+    { key: 'source', label: 'מקור', all: 'כל המקורות', options: (lists?.leadSources ?? []).map((x) => ({ value: x.id, label: x.label })) },
+  ];
 
   return (
     <>
       <div className="tablebar">
-        <select className="input input--sm" value={stage} onChange={(e) => setStage(e.target.value as typeof stage)} aria-label="שלב">
-          <option value="open">כל הפתוחים</option>
-          {STAGES.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-          <option value="all">הכל</option>
-        </select>
-        <select className="input input--sm" value={field} onChange={(e) => setField(e.target.value)} aria-label="תחום">
-          <option value="">כל התחומים</option>
-          {(lists?.leadFields ?? []).map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-        </select>
-        <select className="input input--sm" value={area} onChange={(e) => setArea(e.target.value)} aria-label="אזור">
-          <option value="">כל האזורים</option>
-          {areas.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
-        <select className="input input--sm" value={source} onChange={(e) => setSource(e.target.value)} aria-label="מקור">
-          <option value="">כל המקורות</option>
-          {(lists?.leadSources ?? []).map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-        </select>
-        <button className={`chip ${late ? 'is-on' : ''}`} aria-pressed={late} onClick={() => setLate(!late)}>צעד הבא באיחור <Ltr>{lateCount}</Ltr></button>
-        {filtered && <button className="link" onClick={() => { setStage('open'); setField(''); setSource(''); setArea(''); setLate(false); setQ(''); }}>ניקוי סינון</button>}
+        <FilterBar dims={dims} values={{ lstage: stage === 'open' ? '' : stage, field, area, source }} onChange={setMany} extraActive={(s ? 1 : 0) + (late ? 1 : 0)} alsoClear={['late']} onClearAll={() => setQ('')} />
+        <button className={`chip ${late ? 'is-on' : ''}`} aria-pressed={late} onClick={() => setMany({ late: late ? null : '1' })}>צעד הבא באיחור <Ltr>{lateCount}</Ltr></button>
         <label className="tablebar__search">
           <Search size={16} aria-hidden="true" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם, איש קשר, טלפון או תגית" aria-label="חיפוש ליד" />

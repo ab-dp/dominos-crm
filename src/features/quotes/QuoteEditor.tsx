@@ -3,6 +3,7 @@
    פרטי הלקוח – לא חובה. "הורדת PDF" שומרת ומורידה; אחרי ההורדה שואלים אם לסמן שההצעה נשלחה. */
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { listHref } from '../../lib/urlParams';
 import { ArrowRight, Check, CircleAlert, Copy, Download, FileText, Link2, Plus, RotateCcw, Save, Trash2, Unlink } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { newId, primaryContact, useCustomers, type Customer } from '../../data/customers';
@@ -302,7 +303,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
 
   return (
     <div className="page qe">
-      <button className="auth__back" onClick={() => nav('/quotes')}><ArrowRight size={16} aria-hidden="true" /> הצעות מחיר</button>
+      <button className="auth__back" onClick={() => nav(listHref('/quotes'))}><ArrowRight size={16} aria-hidden="true" /> הצעות מחיר</button>
       <header className="page__head qe__head">
         <div>
           <h1 className="page__title">{quote ? <>הצעה <Ltr>{quote.id}</Ltr>{quote.customer.name && <> · {quote.customer.name}</>}</> : seed ? `הצעה חדשה (עותק של ${seed.id})` : 'הצעה חדשה'}</h1>

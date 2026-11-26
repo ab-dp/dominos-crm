@@ -2,6 +2,7 @@
    מכאן מתעדים, מעבירים שלב, סוגרים כ"לא רלוונטי" או הופכים ללקוח. */
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { listHref } from '../../lib/urlParams';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { ArrowRight, CalendarClock, Check, ChevronDown, Mail, MapPin, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon, RotateCcw, Star, Target, UserCheck, UserRound, XCircle } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
@@ -57,7 +58,7 @@ function FileBody({ l, all }: { l: Lead; all: Lead[] }) {
 
   return (
     <div className="page cfile lfile">
-      <button className="auth__back" onClick={() => nav('/leads')}><ArrowRight size={16} aria-hidden="true" /> לקוחות פוטנציאליים</button>
+      <button className="auth__back" onClick={() => nav(listHref('/leads'))}><ArrowRight size={16} aria-hidden="true" /> לקוחות פוטנציאליים</button>
 
       <header className="cfile__head card">
         <div className="cfile__title-row">

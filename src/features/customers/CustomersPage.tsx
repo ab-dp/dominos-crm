@@ -6,6 +6,8 @@ import { customerGaps, primaryContact, useCustomers, type Customer, type Custome
 import { useLists } from '../../data/lists';
 import { usePriceLists } from '../../data/priceLists';
 import { Button, EmptyState, Skeleton, Tip } from '../../design/components';
+import { FilterBar, type FilterDim } from '../../design/FilterBar';
+import { useUrlParams } from '../../lib/urlParams';
 import { Ltr, fmtPhone, toISODate } from '../../lib/format';
 import { useToast } from '../../design/Toast';
 import { usePref } from '../../lib/prefs';
@@ -21,7 +23,12 @@ export function CustomersPage() {
   const { items: priceLists } = usePriceLists();
   const nav = useNavigate();
   const [type, setType] = usePref<TypeFilter>('customersType', 'regular');
-  const [showInactive, setShowInactive] = useState(false);
+  const { get, setMany } = useUrlParams();
+  const fMethod = get('method');
+  const fPl = get('pl');
+  const fStatus = get('cstatus') as '' | 'all' | 'inactive'; // ריק = פעילים בלבד
+  /* סטטוס אחד לטבלה, למספרים בלשוניות ולמונה "פרטים חסרים" */
+  const statusOk = (c: Customer) => (fStatus === 'all' ? true : fStatus === 'inactive' ? c.status !== 'active' : c.status === 'active');
   const [gapsOnly, setGapsOnly] = usePref('customersGapsOnly', false); // "השלמת תיק לקוח": רק לקוחות שחסרים להם פרטים. נשמר בין כניסות
   const [q, setQ] = useState('');
   const [adding, setAdding] = useState(false);
@@ -41,15 +48,23 @@ export function CustomersPage() {
   const digits = s.replace(/\D/g, '');
   const rows = live
     .filter((c) => type === 'all' || c.type === type)
-    .filter((c) => showInactive || c.status === 'active')
+    .filter(statusOk)
+    .filter((c) => !fMethod || c.paymentMethod === fMethod)
+    .filter((c) => !fPl || (fPl === '__none' ? !c.priceListId : c.priceListId === fPl))
     .filter((c) => !gapsOnly || customerGaps(c).length > 0)
     .filter((c) => !s || c.name.toLowerCase().includes(s)
       || (digits.length >= 3 && (c.taxId.includes(digits) || c.accountPhone.includes(digits) || c.contacts.some((x) => x.phone.includes(digits))))
       || c.contacts.some((x) => x.name.includes(q.trim())));
-  const gapCount = live.filter((c) => (type === 'all' || c.type === type) && c.status === 'active' && customerGaps(c).length > 0).length;
+  const gapCount = live.filter((c) => (type === 'all' || c.type === type) && statusOk(c) && customerGaps(c).length > 0).length;
   const activeCount = live.filter((c) => c.status === 'active').length;
   const accountCount = live.filter((c) => c.status === 'active' && c.paymentMethod === 'account').length;
-  const counts = { regular: live.filter((c) => c.type === 'regular' && (showInactive || c.status === 'active')).length, occasional: live.filter((c) => c.type === 'occasional' && (showInactive || c.status === 'active')).length };
+  const counts = { regular: live.filter((c) => c.type === 'regular' && statusOk(c)).length, occasional: live.filter((c) => c.type === 'occasional' && statusOk(c)).length };
+
+  const dims: FilterDim[] = [
+    { key: 'method', label: 'אמצעי תשלום', all: 'כל אמצעי התשלום', options: (lists?.paymentMethods ?? []).filter((m) => m.active !== false || m.id === fMethod).map((m) => ({ value: m.id, label: m.label })) },
+    { key: 'pl', label: 'מחירון', all: 'כל המחירונים', options: [...priceLists.filter((p) => p.active || p.id === fPl).map((p) => ({ value: p.id, label: p.name })), { value: '__none', label: 'בלי מחירון' }] },
+    { key: 'cstatus', label: 'סטטוס', all: 'פעילים', options: [{ value: 'inactive', label: 'לא פעילים' }, { value: 'all', label: 'פעילים ולא פעילים' }] },
+  ];
 
   /* ייצוא לאקסל: הלקוחות שמוצגים עכשיו (לפי הסינון), וגיליון שני עם כל אנשי הקשר שלהם */
   const exportXlsx = async () => {
@@ -96,14 +111,14 @@ export function CustomersPage() {
         </div>
       </header>
 
+      <div className="tabs" role="tablist" aria-label="סוג לקוח">
+        {([['regular', 'קבועים', counts.regular], ['occasional', 'מזדמנים', counts.occasional], ['all', 'הכל', counts.regular + counts.occasional]] as [TypeFilter, string, number][]).map(([k, label, n]) => (
+          <button key={k} role="tab" aria-selected={type === k} className={`tab ${type === k ? 'is-on' : ''}`} onClick={() => setType(k)}>{label}<span className="tab__count"><Ltr>{n}</Ltr></span></button>
+        ))}
+      </div>
       <div className="tablebar">
-        <div className="seg" role="group" aria-label="סוג לקוח">
-          <button className={type === 'regular' ? 'is-on' : ''} aria-pressed={type === 'regular'} onClick={() => setType('regular')}>קבועים <Ltr>{counts.regular}</Ltr></button>
-          <button className={type === 'occasional' ? 'is-on' : ''} aria-pressed={type === 'occasional'} onClick={() => setType('occasional')}>מזדמנים <Ltr>{counts.occasional}</Ltr></button>
-          <button className={type === 'all' ? 'is-on' : ''} aria-pressed={type === 'all'} onClick={() => setType('all')}>הכל</button>
-        </div>
+        <FilterBar dims={dims} values={{ method: fMethod, pl: fPl, cstatus: fStatus }} onChange={setMany} extraActive={(q.trim() ? 1 : 0) + (gapsOnly ? 1 : 0)} onClearAll={() => { setQ(''); setGapsOnly(false); }} />
         <button className={`chip ${gapsOnly ? 'is-on' : ''}`} aria-pressed={gapsOnly} onClick={() => setGapsOnly(!gapsOnly)}>פרטים חסרים <Ltr>{gapCount}</Ltr></button>
-        <label className="check-inline"><input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> הצג לא פעילים</label>
         <label className="tablebar__search">
           <Search size={16} aria-hidden="true" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="שם, ח.פ, טלפון, טלפון הקפה או איש קשר" aria-label="חיפוש לקוח" />
