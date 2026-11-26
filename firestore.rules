@@ -164,6 +164,7 @@ service cloud.firestore {
         && d.topic is string && d.topic.size() > 0 && d.topic.size() <= 40
         && d.get('comp', '') is string && d.get('comp', '').size() <= 40
         && (!('compAmount' in d) || (d.compAmount is number && d.compAmount >= 0 && d.compAmount < 100000))
+        && (!('callAt' in d) || (d.callAt is string && d.callAt.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
         && d.order is map && d.text.size() <= 2000;
     }
 

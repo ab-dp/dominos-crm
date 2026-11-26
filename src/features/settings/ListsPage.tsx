@@ -82,7 +82,7 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
           <li key={it.id} className={`litem ${it.active ? '' : 'is-inactive'}`}>
             {editing === it.id ? (
               <span className="litem__edit">
-                <input className="input input--sm" autoFocus value={draft} aria-label="שם הפריט"
+                <input className="input input--sm" autoFocus value={draft} maxLength={40} aria-label="שם הפריט"
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); rename(it); } if (e.key === 'Escape') { e.preventDefault(); setEditing(null); } }} />
                 <button className="icon-btn icon-btn--sm icon-btn--ok" aria-label="שמור" onClick={() => rename(it)}><Check size={16} /></button>
@@ -109,7 +109,7 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
         ))}
       </ul>
       <form className="ladd" onSubmit={(e) => { e.preventDefault(); add(); }}>
-        <input className="input input--sm" value={newLabel} onChange={(e) => { setNewLabel(e.target.value); setErr(''); }} placeholder="פריט חדש" aria-label={`פריט חדש ב${LIST_META[k].title}`} />
+        <input className="input input--sm" value={newLabel} maxLength={40} onChange={(e) => { setNewLabel(e.target.value); setErr(''); }} placeholder="פריט חדש" aria-label={`פריט חדש ב${LIST_META[k].title}`} />
         <Button size="sm" type="submit" icon={<Plus size={16} />} disabled={!newLabel.trim()}>הוסף</Button>
       </form>
       {err && <p className="pop__err ladd__err" role="alert">{err}</p>}

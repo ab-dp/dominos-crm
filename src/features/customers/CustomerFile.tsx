@@ -22,7 +22,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { CATEGORIES, CLOSED } from '../../data/types';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { usePanel } from '../../app/PanelContext';
-import { needsCare } from '../../data/care';
+import { needsCare, noComp } from '../../data/care';
 import { OrdersTable } from '../orders/OrdersTable';
 import { CustomerDocsSection } from '../orders/OrderDocs';
 import { BarChart } from '../reports/BarChart';
@@ -741,9 +741,9 @@ function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextA
               /* תיעוד טיפול: הנושא והפיצוי, כרטיס ההזמנה (לחיצה פותחת אותה), ואיך טיפלנו */
               <span className="acare">
                 <span>
-                  <span className="akind akind--care">תיעוד טיפול</span> <b>{a.byName}</b>
+                  <span className="akind akind--care">תיעוד טיפול</span> <b>{a.byName}</b>{a.callAt && <span className="muted"> · שיחה ב-<Ltr>{fmtDate(a.callAt)}</Ltr></span>}
                   {a.topic && <span className="acare__tag">{a.topic}</span>}
-                  {a.comp && a.comp !== 'ללא' && <span className="acare__tag acare__tag--comp">פיצוי: {a.comp}{a.compAmount ? <> · <Ltr>{fmtMoney(a.compAmount)}</Ltr></> : null}</span>}
+                  {!noComp(a) && <span className="acare__tag acare__tag--comp">פיצוי: {a.comp}{a.compAmount ? <> · <Ltr>{fmtMoney(a.compAmount)}</Ltr></> : null}</span>}
                 </span>
                 {a.order && (
                   <button type="button" className="acare__order" onClick={(e) => panel.open(a.order!.id, e.currentTarget)}>
