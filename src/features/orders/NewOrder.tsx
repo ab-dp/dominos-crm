@@ -785,7 +785,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
             </div>
           ) : (
           <div className="cform__foot">
-            <Button variant="primary" loading={busy} onClick={submit} kbd="Ctrl+Enter">{saveLabel}</Button>
+            <Button variant="primary" loading={busy} onClick={submit}>{saveLabel}</Button>
             <Button variant="ghost" onClick={requestClose}>ביטול</Button>
             <span className="norder__sum" aria-live="polite">
               {finalAmount > 0 && <><Ltr>{fmtMoney(finalAmount)}</Ltr>{time && <> · <Ltr>{time}</Ltr></>}{branchObj && <> · {branchObj.name}</>}</>}

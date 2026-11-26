@@ -36,7 +36,7 @@ export function CareSection({ o }: { o: OrderView }) {
         ) : hint ? (
           <span className="care__hint">{o.status === 'partial' ? 'סופקה חלקית' : 'סופקה באיחור'} – עוד לא תועד</span>
         ) : <span className="care__none">אין עדיין</span>}
-        {canAdd && <Button size="sm" variant={hint ? 'primary' : 'secondary'} icon={<Plus size={16} />} onClick={() => setAdding(true)}>הוסף תיעוד</Button>}
+        {canAdd && <Button id="care-add" size="sm" variant={hint ? 'primary' : 'secondary'} icon={<Plus size={16} />} onClick={() => setAdding(true)}>הוסף תיעוד</Button>}
       </div>
       {open && !!items?.length && (
         <ol className="care__list" id={`care-list-${o.id}`}>
@@ -124,7 +124,7 @@ function CareDialog({ o, onClose, onSaved }: { o: OrderView; onClose: () => void
         </div>
         {err && <p className="cform__err" role="alert">{err}</p>}
         <div className="udialog__actions">
-          <Button variant="primary" type="submit" loading={busy} kbd="Ctrl+Enter">שמור בתיק הלקוח</Button>
+          <Button variant="primary" type="submit" loading={busy}>שמור בתיק הלקוח</Button>
           <Button variant="ghost" type="button" onClick={onClose}>ביטול</Button>
         </div>
       </form>

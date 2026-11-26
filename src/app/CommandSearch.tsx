@@ -173,7 +173,6 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
           </div>
         </li>
       </ul>
-      <div className="cmd__foot"><kbd className="kbd">↑</kbd><kbd className="kbd">↓</kbd> מעבר · <kbd className="kbd">Enter</kbd> פתיחה · <kbd className="kbd">Esc</kbd> סגירה</div>
     </>
   );
 }

@@ -13,10 +13,9 @@ type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: 'sm' | 'md' | 'lg';
   icon?: ReactNode;
   loading?: boolean;
-  kbd?: string;
 };
 export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
-  { variant = 'secondary', size = 'md', icon, loading, kbd, children, className = '', disabled, ...rest },
+  { variant = 'secondary', size = 'md', icon, loading, children, className = '', disabled, ...rest },
   ref,
 ) {
   return (
@@ -29,7 +28,6 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
     >
       {loading ? <Loader2 className="btn__spin" size={16} aria-hidden="true" /> : icon}
       {children && <span className="btn__label">{children}</span>}
-      {kbd && <kbd className="kbd btn__kbd" aria-hidden="true">{kbd}</kbd>}
     </button>
   );
 });

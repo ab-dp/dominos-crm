@@ -43,12 +43,15 @@ export function HandlerEdit({ o }: { o: OrderView }) {
 }
 
 /* מחיקה לגמרי – עם סיבה (נשמרת ביומן) */
-export function DeleteOrder({ o }: { o: OrderView }) {
+/* control – נפתחת מתפריט "עוד" בראש הכרטיס: בלי קישור משלה, רק החלון */
+export function DeleteOrder({ o, control }: { o: OrderView; control?: { open: boolean; setOpen: (v: boolean) => void } }) {
   const { isAdmin } = useAuth();
   const { lockedMonths } = useStore();
   const panel = usePanel();
   const toast = useToast();
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = control ? control.open : ownOpen;
+  const setOpen = control ? control.setOpen : setOwnOpen;
   const [reason, setReason] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -67,7 +70,7 @@ export function DeleteOrder({ o }: { o: OrderView }) {
   };
   return (
     <>
-      <button className="link del-order" onClick={() => setOpen(true)}><Trash2 size={14} aria-hidden="true" /> מחק הזמנה</button>
+      {!control && <button className="link del-order" onClick={() => setOpen(true)}><Trash2 size={14} aria-hidden="true" /> מחק הזמנה</button>}
       {open && (
         <Shell title={`מחיקת הזמנה ${o.id}`} sub={locked ? undefined : <>{o.customerName} · ההזמנה, ההערות והמסמכים שלה יימחקו לגמרי. ביומן תישאר רשומה עם הסיבה.</>} onClose={() => setOpen(false)}>
           {locked ? (
