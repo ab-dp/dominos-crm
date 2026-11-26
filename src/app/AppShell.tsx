@@ -34,7 +34,7 @@ const BASE = import.meta.env.BASE_URL;
 /* בטלפון: לצפייה ולמעקב – היום, הזמנות, בורד, משימות וחריגים. כל השאר תחת "עוד" */
 const MOBILE_MAIN = ['/today', '/orders', '/board', '/exceptions'];
 
-type NavDef = { to: string; label: string; short?: string; icon: ReactNode; count?: number; alert?: boolean };
+type NavDef = { to: string; label: string; short?: string; icon: ReactNode; count?: number; alert?: boolean; due?: boolean };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { orders, now, openNewOrder, closeNewOrder, dueTasks, quoteFollowups } = useStore();
@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   /* אין פעמון: מסך "היום" הוא המקום שמראה מה לעשות. המספרים בתפריט = המספר הראשי של המסך.
      אדום בתפריט רק לקטגוריה שיש בה משהו קריטי שלא טופל: חריגות (אדום) והצעות מחיר שלא חזרו אליהן */
   const dueLeadSteps = dueTasks.filter((t) => t.leadId).length;
-  const todayCount = openTaskCount(todayTaskCounts(orders, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 }));
+  const todayCount = openTaskCount(todayTaskCounts(orders, now, { dueTasks: dueTasks.length, quoteFollowups: 0, pendingUsers: isAdmin ? pendingUsers : 0 }));
   // הזמנות עם חריגה קריטית – אותו מספר כמו "קריטי" בראש מסך החריגים (הזמנה עם שתי בעיות נספרת פעם אחת)
   const redCount = ordersWithSeverity(orders, 'red');
 
@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       title: 'לקוחות ומכירות',
       items: [
         { to: '/customers', label: 'לקוחות', icon: <Users size={20} /> },
-        { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length, alert: quoteFollowups.length > 0 },
+        { to: '/quotes', label: 'הצעות מחיר', icon: <FileText size={20} />, count: quoteFollowups.length, due: quoteFollowups.length > 0 },
         { to: '/leads', label: 'לקוחות פוטנציאליים', icon: <Target size={20} />, count: dueLeadSteps },
       ],
     },
@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <span className="nav__icon" aria-hidden="true">{it.icon}</span>
                       {/* בתפריט התחתון של הטלפון מוצג שם קצר; השם המלא נשאר לקורא מסך */}
                       <span className="nav__label"><span className={it.short ? "nav__full" : undefined}>{it.label}</span>{it.short && <span className="nav__short" aria-hidden="true">{it.short}</span>}</span>
-                      {!!it.count && <span className={`nav__count ${it.alert ? 'nav__count--alert' : ''}`}><Ltr>{it.count}</Ltr></span>}
+                      {!!it.count && <span className={`nav__count ${it.alert ? 'nav__count--alert' : it.due ? 'nav__count--due' : ''}`}><Ltr>{it.count}</Ltr></span>}
                     </NavItem>
                   </li>
                 ))}
@@ -201,7 +201,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Link key={it.to} to={it.to} className="menu__item" onClick={() => setMoreOpen(false)}>
                     <span className="nav__icon" aria-hidden="true">{it.icon}</span>
                     <span className="more-menu__label">{it.label}</span>
-                    {!!it.count && <span className={`nav__count ${it.alert ? 'nav__count--alert' : ''}`}><Ltr>{it.count}</Ltr></span>}
+                    {!!it.count && <span className={`nav__count ${it.alert ? 'nav__count--alert' : it.due ? 'nav__count--due' : ''}`}><Ltr>{it.count}</Ltr></span>}
                   </Link>
                 ))}
               </Popover.Content>

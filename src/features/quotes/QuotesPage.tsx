@@ -10,8 +10,17 @@ import { FilterBar, type FilterDim } from '../../design/FilterBar';
 import { useUrlParams } from '../../lib/urlParams';
 import { Ltr, fmtDate, fmtMoney, toISODate } from '../../lib/format';
 import { QuoteActions, ago } from './QuoteTrack';
+
 import '../pages.css';
 import './quotes.css';
+
+/* "עודכן 26.11 10:42" – מתי עודכנה ההצעה לאחרונה (סטטוס או פעולת טיפול) */
+const updatedAt = (q: Quote) => {
+  const s = q.lastActivityAt?.seconds ?? q.statusAt?.seconds;
+  if (!s) return '';
+  const d = new Date(s * 1000);
+  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
 
 type Tab = 'waiting' | 'draft' | 'approved' | 'closed' | 'all';
 const TABS: [Tab, string][] = [['waiting', 'ממתינות למענה'], ['draft', 'טיוטות'], ['approved', 'אושרו'], ['closed', 'נדחו ופג תוקף'], ['all', 'הכל']];
@@ -109,14 +118,17 @@ export function QuotesPage() {
                 const h = staleHours(q, now);
                 const due = callDue(q, today);
                 return (
-                  <tr key={q.id} className={`qlrow ${late || due ? 'is-late' : ''}`} onClick={(e) => { if (!(e.target as HTMLElement).closest('button, a')) nav(`/quotes/${q.id}`); }}>
+                  <tr key={q.id} className={`qlrow ${due ? 'is-due' : late ? 'is-late' : ''}`} onClick={(e) => { if (!(e.target as HTMLElement).closest('button, a')) nav(`/quotes/${q.id}`); }}>
                     <td><button className="link qlrow__num" onClick={() => nav(`/quotes/${q.id}`)} aria-label={`פתח הצעה ${q.id}`}><Ltr>{q.id}</Ltr></button></td>
                     <td className="strong">{q.customer.name || <span className="muted">ללא שם</span>}{q.customer.contact && <span className="muted"> · {q.customer.contact}</span>}</td>
                     <td><Ltr>{fmtDate(q.issueDate)}</Ltr>{q.date && <span className="muted qlrow__sub">אספקה <Ltr>{fmtDate(q.date)}</Ltr></span>}</td>
                     <td className="num"><Ltr>{fmtMoney(q.total)}</Ltr></td>
                     <td><span className={`qstat qstat--${exp ? 'expired' : q.status}`}>{exp ? 'פג תוקף' : SHORT_STATUS[q.status]}</span>{q.handler && <span className="muted qlrow__sub">{q.handler}</span>}</td>
                     <td className="qlrow__last">
-                      {q.callAt && WAITING.includes(q.status) && <span className={`qlrow__call ${due ? 'is-due' : ''}`}><CalendarClock size={14} aria-hidden="true" /> {q.callAt === today ? 'לחזור היום' : <>לחזור ב-<Ltr>{dayMonth(q.callAt)}</Ltr></>}</span>}
+                      <span className="qlrow__meta">
+                        {q.callAt && WAITING.includes(q.status) && <span className={`qlrow__call ${due ? 'is-due' : ''}`}><CalendarClock size={14} aria-hidden="true" /> {due ? (q.callAt === today ? 'לחזור היום' : <>לחזור · מ-<Ltr>{dayMonth(q.callAt)}</Ltr></>) : <>לחזור ב-<Ltr>{dayMonth(q.callAt)}</Ltr></>}</span>}
+                        {updatedAt(q) && <span className="qlrow__upd">עודכן <Ltr>{updatedAt(q)}</Ltr></span>}
+                      </span>
                       {late && <span className="qlrow__late"><BellRing size={14} aria-hidden="true" /> אין עדכון {ago(h!)}</span>}
                       <span className="qlrow__note" title={q.lastNote}>{q.lastNote || <span className="muted">—</span>}</span>
                     </td>

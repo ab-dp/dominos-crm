@@ -15,6 +15,8 @@
   --page: #E8ECF1; --zone: #F3F5F8; --zone-line: #E2E7ED;
   /* הערות להזמנה – המשטח החם היחיד במערכת */
   --note-bg: #FFF5E1; --note-line: #EBCF96; --note-fg: #6B4A07;
+  /* "הגיע זמן לחזור" בהצעות מחיר – צבע אחד בולט ושונה (טורקיז עמוק), רק לזה */
+  --due: #0F6E6E; --due-bg: #DCEFF3; --due-line: #9BCFD8;
   --brand-50: #E8F2F7;
   --brand-100: #CFE4EF;
   --brand-300: #8DC0DA;   /* סדרה בהירה בגרפים ("עוד לא" / ותק קצר) */

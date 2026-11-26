@@ -14,7 +14,7 @@ import { setLateSplit } from './metrics';
 import { DEFAULT_LISTS, useLists, type ListItem } from './lists';
 import { setChannels } from './channels';
 import { useOpenTasks, type Task } from './tasks';
-import { needsFollowup, useQuotes, type Quote } from './quotes';
+import { callDue, needsFollowup, useQuotes, type Quote } from './quotes';
 import { toISODate } from '../lib/format';
 import type { Order, OrderStatus } from './types';
 
@@ -103,7 +103,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const { lists } = useLists();
   const channels = (lists ?? DEFAULT_LISTS).channels;
   setChannels(channels);
-  const tasks = useOpenTasks();
+  // משימות חזרה של הצעות (נוצרו בשלב 5) לא מוצגות במסך היום ובמשימות – ההצעות מסומנות בכרטיסיית הצעות המחיר
+  const allTasks = useOpenTasks();
+  const tasks = useMemo(() => allTasks.filter((t) => !t.quoteId), [allTasks]);
   const { items: quotes } = useQuotes('open');
   const [now, setNow] = useState(() => new Date());
   const [newOrder, setNewOrder] = useState<NewOrderRequest | null>(null);
@@ -231,7 +233,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const endLockFix = useCallback(() => setLockFix((r) => { r?.done?.('cancelled'); return null; }), []);
   const today = toISODate(now);
   const dueTasks = useMemo(() => tasks.filter((t) => t.due <= today), [tasks, today]);
-  const quoteFollowups = useMemo(() => quotes.filter((q) => needsFollowup(q, now, thresholds.quoteFollowupHours)), [quotes, now, thresholds.quoteFollowupHours]);
+  /* הצעות שצריך לחזור אליהן עכשיו: הגיע תאריך החזרה, או (הצעה ישנה בלי תאריך) אין עדכון מעבר לסף. למונה בתפריט ולבורד – לא למסך היום */
+  const quoteFollowups = useMemo(() => quotes.filter((q) => callDue(q, today) || needsFollowup(q, now, thresholds.quoteFollowupHours)), [quotes, now, today, thresholds.quoteFollowupHours]);
 
   // ערך קבוע בין רינדורים כשדבר לא השתנה – כדי שכל מי שקורא מה-store לא יתרנדר סתם
   const value = useMemo(() => ({ channels, now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix }), [channels, now, orders, loading, error, update, updateMany, newOrder, openNewOrder, closeNewOrder, requestStatus, closing, endClosing, thresholds, tasks, dueTasks, quotes, quoteFollowups, conflict, resolveConflict, requestChange, changeReq, endChange, lockedMonths, lockFix, confirmLockFix, endLockFix]);

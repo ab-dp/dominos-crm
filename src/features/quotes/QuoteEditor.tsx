@@ -9,7 +9,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { newId, primaryContact, useCustomers, type Customer } from '../../data/customers';
 import { DELIVERY_CAT, pizzaCount, usePriceLists, type PriceItem } from '../../data/priceLists';
 import {
-  EMPTY_QUOTE_CUSTOMER, QUOTE_STATUS_LABEL, addDays, createQuote, isExpired, linesTotal, saveQuote, setQuoteStatus, useQuote, useQuoteTerms, useQuotes,
+  EMPTY_QUOTE_CUSTOMER, QUOTE_STATUS_LABEL, WAITING, addDays, createQuote, isExpired, linesTotal, saveQuote, setQuoteStatus, useQuote, useQuoteTerms, useQuotes,
   type Quote, type QuoteCustomer, type QuoteInput, type QuoteLine,
 } from '../../data/quotes';
 import { useStore } from '../../data/store';
@@ -304,15 +304,13 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
   return (
     <div className="page qe">
       <button className="auth__back" onClick={() => nav(listHref('/quotes'))}><ArrowRight size={16} aria-hidden="true" /> הצעות מחיר</button>
-      <header className="page__head qe__head">
-        <div>
-          <h1 className="page__title">{quote ? <>הצעה <Ltr>{quote.id}</Ltr>{quote.customer.name && <> · {quote.customer.name}</>}</> : seed ? `הצעה חדשה (עותק של ${seed.id})` : 'הצעה חדשה'}</h1>
-          <p className="page__sub">
-            {quote ? <><span className={`qstat qstat--${expired ? 'expired' : quote.status}`}>{expired ? 'פג תוקף' : QUOTE_STATUS_LABEL[quote.status]}</span> · נוצרה ב-<Ltr>{quote.issueDate.split('-').reverse().join('.')}</Ltr></>
-              : 'המחירים כוללים מע"מ.'}
-          </p>
-        </div>
-        <div className="page__head-end">
+      {/* ראש רשומה בכחול-לילה – כמו בכרטיס הזמנה: לקוח ומספר, סטטוס, שורת עובדות וסכום */}
+      <header className="qrec">
+        <div className="qrec__row">
+          <h1 className="qrec__title">{quote ? <>{quote.customer.name || 'הצעת מחיר'} <span className="qrec__id"><Ltr>#{quote.id}</Ltr></span></> : seed ? `הצעה חדשה (עותק של ${seed.id})` : 'הצעה חדשה'}</h1>
+          {quote && <span className={`qstat qstat--${expired ? 'expired' : quote.status}`}>{expired ? 'פג תוקף' : QUOTE_STATUS_LABEL[quote.status]}</span>}
+          <span className="qrec__spacer" />
+          <div className="qrec__acts">
           <div className="seg qe__view" role="tablist" aria-label="תצוגה">
             <button role="tab" aria-selected={view === 'edit'} className={view === 'edit' ? 'is-on' : ''} onClick={() => setView('edit')}>עריכה</button>
             <button role="tab" aria-selected={view === 'preview'} className={view === 'preview' ? 'is-on' : ''} onClick={() => setView('preview')}>תצוגת ההצעה</button>
@@ -320,7 +318,19 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
           {quote && <Button icon={<Copy size={16} />} onClick={() => nav(`/quotes/new?from=${quote.id}`)}>שכפל</Button>}
           {/* גלוי תמיד (חוץ מנדחתה / הוזמנה). שינויים שלא נשמרו נשמרים קודם, כדי שההזמנה תקבל את מה שרואים */}
           {quote && <ConvertButton q={quote} prepare={async () => (!dirty ? quote : (await save()) ? { ...quote, ...input() } : null)} />}
+          </div>
         </div>
+        {quote ? (
+          <div className="qrec__bottom">
+            <dl className="qrec__facts">
+              <div><dt>נוצרה</dt><dd><Ltr>{quote.issueDate.split('-').reverse().join('.')}</Ltr></dd></div>
+              <div><dt>בתוקף עד</dt><dd><Ltr>{(quote.validUntil || addDays(quote.issueDate, quote.validDays)).split('-').reverse().join('.')}</Ltr></dd></div>
+              <div><dt>מטפל</dt><dd>{quote.handler || '—'}</dd></div>
+              {quote.callAt && WAITING.includes(quote.status) && <div><dt>לחזור</dt><dd className={quote.callAt <= today ? 'qrec__due' : ''}>{quote.callAt === today ? 'היום' : <Ltr>{quote.callAt.split('-').reverse().slice(0, 2).join('.')}</Ltr>}</dd></div>}
+            </dl>
+            <span className="qrec__sum"><small>סה"כ להצעה</small><b><Ltr>{fmtMoney(quote.total)}</Ltr></b></span>
+          </div>
+        ) : <p className="qrec__sub">המחירים כוללים מע"מ.</p>}
       </header>
       {restored && <p className="qe-restored" role="status"><RotateCcw size={16} aria-hidden="true" /> שוחזרה הצעה שהתחלתם ולא נשמרה. <button className="link" onClick={() => { try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* */ } setF(initialForm()); setSavedJson(sig(initialForm())); }}>התחל מחדש</button></p>}
 

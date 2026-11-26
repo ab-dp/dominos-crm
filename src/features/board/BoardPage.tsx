@@ -618,7 +618,7 @@ function QuotesSection({ q, go }: { q: ReturnType<typeof quotesSummary>; go: (to
       )}>
       <ul className="bchecks bchecks--row">
         <li><button type="button" onClick={() => go('/quotes?tab=approved')}><span>אושרו וממתינות להזמנה</span><b><Ltr>{num(q.approved)}</Ltr></b></button></li>
-        <li><button type="button" onClick={() => go('/quotes?tab=waiting')} className={q.followups ? 'is-alert' : ''}><span>לחזור ללקוח – אין מענה</span><b><Ltr>{num(q.followups)}</Ltr></b></button></li>
+        <li><button type="button" onClick={() => go('/quotes?tab=waiting')} className={q.followups ? 'is-alert' : ''}><span>לחזור ללקוח</span><b><Ltr>{num(q.followups)}</Ltr></b></button></li>
         <li><button type="button" onClick={() => go('/quotes?tab=waiting')}><span>תוקפן נגמר בשלושה ימים</span><b><Ltr>{num(q.expiring)}</Ltr></b></button></li>
       </ul>
     </Section>

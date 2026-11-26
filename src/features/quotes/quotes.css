@@ -99,12 +99,12 @@
 .qtrack__acts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--gray-100); }
 .qtrack__acts:empty { display: none; }
 .qtag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
-.qtag--due { background: var(--urgent-bg); color: var(--urgent-fg); }
+.qtag--due { background: var(--due); color: var(--white); }
 .qtrack__text { display: flex; align-items: baseline; gap: var(--space-1); }
 .qtrack__ic { display: inline-flex; flex: none; color: var(--gray-600); transform: translateY(2px); }
 .qcb-date { width: auto; justify-self: start; }
 .qlrow__call { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-end: var(--space-2); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
-.qlrow__call.is-due { color: var(--urgent-fg); }
+
 .qtrack__add { display: flex; gap: var(--space-2); align-items: flex-start; margin-top: var(--space-3); }
 .qtrack__add textarea { flex: 1; min-height: 40px; resize: vertical; }
 .qtrack__log { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-2); max-height: 240px; overflow-y: auto; }
@@ -184,3 +184,49 @@
 /* פחות טקסט על המסך: הסבר שמלמד איך לעבוד מופיע רק כשעובדים על החלק הזה */
 .qe-hint { font-size: var(--text-micro); }
 .qe-sec:not(:focus-within) .qe-hint--edit { visibility: hidden; } /* שומר מקום – שום דבר לא זז ברגע הלחיצה */
+
+/* ===================== שלב 5ב: עומק – ראש רשומה, ו"הגיע זמן לחזור" בצבע אחד ===================== */
+.qrec { margin: 0 0 var(--space-4); padding: var(--space-4) var(--space-5); border-radius: var(--radius-panel); background: var(--navy); color: var(--rec-text); display: grid; gap: var(--space-3); box-shadow: var(--shadow-card); }
+.qrec__row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.qrec__title { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -.012em; line-height: 1.25; color: var(--white); }
+.qrec__id { color: var(--rec-muted); font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.qrec__spacer { flex: 1; }
+.qrec__acts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.qrec__acts .btn--secondary { background: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .18); color: var(--white); }
+.qrec__acts .btn--secondary svg { color: var(--rec-muted); }
+.qrec__acts .btn--secondary:hover { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); }
+.qrec__acts .btn--primary { border-color: rgb(255 255 255 / .22); }
+.qrec .qe__view { background: rgb(255 255 255 / .08); }
+.qrec .qe__view button { color: var(--rec-muted); }
+.qrec .qe__view .is-on { background: var(--white); color: var(--gray-900); }
+.qrec__bottom { display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; padding-top: var(--space-3); border-top: 1px solid var(--rec-line); }
+.qrec__facts { display: flex; flex-wrap: wrap; row-gap: var(--space-2); margin: 0; }
+.qrec__facts > div { display: grid; padding-inline: var(--space-4); border-inline-start: 1px solid var(--rec-line); }
+.qrec__facts > div:first-child { padding-inline-start: 0; border: 0; }
+.qrec__facts dt { font-size: var(--text-micro); font-weight: 500; color: var(--rec-muted); }
+.qrec__facts dd { margin: 0; font-size: var(--text-table); font-weight: 500; color: var(--white); white-space: nowrap; }
+.qrec__facts dd.qrec__due { justify-self: start; padding: 0 var(--space-2); border-radius: var(--radius-tag); background: var(--due-bg); color: var(--due); font-weight: 600; }
+.qrec__sum { margin-inline-start: auto; display: inline-flex; align-items: baseline; gap: var(--space-2); }
+.qrec__sum small { font-size: var(--text-label); color: var(--rec-muted); }
+.qrec__sum b { font-size: 28px; font-weight: 600; color: var(--white); font-variant-numeric: tabular-nums; }
+.qrec__sub { margin: 0; font-size: var(--text-label); color: var(--rec-muted); }
+.qrec .qstat { height: 24px; }
+
+/* כרטיס המעקב: אזור עבודה בולט, כותרת בכחול-לילה */
+.qtrack { border-top: 3px solid var(--navy); }
+.qtrack .qe-sec__title, .qe-sec__title { color: var(--navy); font-size: 16px; }
+
+/* רשימה: "הגיע זמן לחזור" – רקע עדין בצבע אחד ותגית מלאה בולטת; "אין עדכון" (הצעה ישנה בלי תאריך) – נשאר כתום */
+.qlrow.is-due td { background: var(--due-bg); }
+.qlrow.is-due:hover td { background: color-mix(in srgb, var(--due-bg) 80%, var(--due-line)); }
+.qlrow__meta { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-bottom: 2px; }
+.qlrow__call { margin-inline-end: 0; }
+.qlrow__call.is-due { height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); background: var(--due); color: var(--white); font-weight: 600; }
+.qlrow__upd { font-size: var(--text-micro); color: var(--gray-600); white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .qrec { padding: var(--space-3) var(--space-4); }
+  .qrec__title { font-size: var(--text-card-title); }
+  .qrec__sum b { font-size: 22px; }
+  .qrec__facts > div { padding-inline: var(--space-3); }
+}
