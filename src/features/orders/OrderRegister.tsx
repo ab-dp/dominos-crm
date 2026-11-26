@@ -35,7 +35,8 @@ export function registerText(o: OrderView) {
   ].filter(Boolean).join('\n');
 }
 
-export function RegisterBlock({ o, notesAbove = false }: { o: OrderView; notesAbove?: boolean }) {
+/* ro – העריכה המרכזית פעילה: הערכים לקריאה בלבד (העריכה בטופס "עריכה"); שורת Q, השהיה ו"העתק הכל" נשארות */
+export function RegisterBlock({ o, notesAbove = false, ro = false }: { o: OrderView; notesAbove?: boolean; ro?: boolean }) {
   const save = useOrderSave(o);
   const toast = useToast();
   const [editItems, setEditItems] = useState(false);
@@ -59,38 +60,38 @@ export function RegisterBlock({ o, notesAbove = false }: { o: OrderView; notesAb
         </span>
       </div>
       <div className="reg__grid">
-        <EditKv k="תאריך" kind="date" value={o.date} display={<>{weekday(o.date)} {showDate(o.date)}</>} validate={validDate} onSave={(v) => save({ date: v }, 'תאריך האספקה')} />
-        <EditKv k="שעה" kind="time" value={o.time} display={o.time ? <Ltr>{o.time}</Ltr> : <Missing />} validate={validTime} onSave={(v) => save({ time: v }, 'שעת האספקה')} />
-        <BranchEdit o={o} />
+        <EditKv readOnly={ro} k="תאריך" kind="date" value={o.date} display={<>{weekday(o.date)} {showDate(o.date)}</>} validate={validDate} onSave={(v) => save({ date: v }, 'תאריך האספקה')} />
+        <EditKv readOnly={ro} k="שעה" kind="time" value={o.time} display={o.time ? <Ltr>{o.time}</Ltr> : <Missing />} validate={validTime} onSave={(v) => save({ time: v }, 'שעת האספקה')} />
+        <BranchEdit o={o} readOnly={ro} />
         <div className="kv"><span className="kv__k">לקוח</span><span className="kv__v">{o.customerName}</span></div>
-        <MethodEdit o={o} />
+        <MethodEdit o={o} readOnly={ro} />
         {o.method === 'account'
-          ? <EditKv k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />
-          : o.method === 'other' ? <MethodNoteEdit o={o} justPicked={justPickedOther} />
+          ? <EditKv readOnly={ro} k="טלפון הקפה" kind="phone" value={o.accountPhone ? fmtPhone(o.accountPhone) : ''} display={showPhone(o.accountPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={(v) => (v ? phoneError(v) : 'חובה בהקפה: טלפון ההקפה')} onSave={(v) => save({ accountPhone: v }, 'טלפון ההקפה')} />
+          : o.method === 'other' ? <MethodNoteEdit o={o} justPicked={justPickedOther} readOnly={ro} />
           : <span aria-hidden="true" />}
-        <EditKv k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <Missing />} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
-        <EditKv k="טלפון איש הקשר" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />
-        <DeliveryTypeEdit o={o} />
+        <EditKv readOnly={ro} k="איש קשר לקבלה" value={o.contactName ?? ''} display={o.contactName || <Missing />} placeholder="מי מקבל את ההזמנה" onSave={(v) => save({ contactName: v || undefined }, 'איש הקשר')} />
+        <EditKv readOnly={ro} k="טלפון איש הקשר" kind="phone" value={o.contactPhone ? fmtPhone(o.contactPhone) : ''} display={showPhone(o.contactPhone) ?? <Missing />} placeholder="05X-XXXXXXX" validate={validPhone} onSave={(v) => save({ contactPhone: v || undefined }, 'הטלפון')} />
+        <DeliveryTypeEdit o={o} readOnly={ro} />
         {o.delivery === 'delivery' && (
           <div className="reg__wide">
-            <EditKv k="כתובת" value={o.address ?? ''} display={o.address || <Missing>חסרה</Missing>} placeholder="רחוב, מספר, עיר" onSave={(v) => save({ address: v || undefined }, 'הכתובת')} />
+            <EditKv readOnly={ro} k="כתובת" value={o.address ?? ''} display={o.address || <Missing>חסרה</Missing>} placeholder="רחוב, מספר, עיר" onSave={(v) => save({ address: v || undefined }, 'הכתובת')} />
           </div>
         )}
       </div>
 
       <div className="reg__items">
-        <div className="reg__items-head"><span className="kv__k">תכולת ההזמנה</span>{!editItems && <button className="link" onClick={() => setEditItems(true)}>עריכה</button>}</div>
+        <div className="reg__items-head"><span className="kv__k">תכולת ההזמנה</span>{!editItems && !ro && <button className="link" onClick={() => setEditItems(true)}>עריכה</button>}</div>
         {editItems ? <ItemsEditor o={o} onDone={() => setEditItems(false)} /> : (
           <>
             {o.contents && <p className="order-contents">{o.contents}</p>}
             {o.items.length > 0 && <><ItemsCompact o={o} />{o.items.some((i) => i.unitPrice > 0) && <PriceRows items={o.items} />}</>}
-            {!o.contents && o.items.length === 0 && <p><Missing>חסרה תכולת ההזמנה</Missing> · <button className="link" onClick={() => setEditItems(true)}>הוסף פירוט</button></p>}
+            {!o.contents && o.items.length === 0 && <p><Missing>חסרה תכולת ההזמנה</Missing>{!ro && <> · <button className="link" onClick={() => setEditItems(true)}>הוסף פירוט</button></>}</p>}
           </>
         )}
       </div>
       {!notesAbove && <div className="reg__wide reg__note">
         {/* הערות פנימיות להזמנה – אותו שדה של "הערות להזמנה" בהזמנה חדשה. לנציג שמקליד ל-Q; לא מופיעות בסיכום לתפעול */}
-        <EditKv k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
+        <EditKv readOnly={ro} k="הערות להזמנה" kind="textarea" value={o.instructions ?? ''} placeholder="אין" onSave={(v) => save({ instructions: v || undefined }, 'ההערות')} />
         <EarlierNotes o={o} />
       </div>}
 

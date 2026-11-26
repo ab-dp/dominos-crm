@@ -22,12 +22,15 @@ export function ChangeDialog() {
 function ChangeForm({ onClose }: { onClose: () => void }) {
   const { changeReq, update } = useStore();
   const { profile } = useAuth();
-  const { order: o, patch, what } = changeReq!;
+  const { order: o, patch, what, base } = changeReq!;
   const keys = (Object.keys(patch) as (keyof Order)[]).filter((k) => JSON.stringify(o[k]) !== JSON.stringify(patch[k]));
   const sensitive = keys.filter((k) => SENSITIVE.includes(k));
   const [flagQ, setFlagQ] = useState(!!o.qNumber);
 
   const save = () => {
+    // התוצאה עוברת לשמירה עצמה; סגירת החלון אחרי זה לא תדווח "בוטל"
+    const done = changeReq!.done;
+    changeReq!.done = undefined;
     const prevBefore = o.changedAfterQ?.before ?? {};
     const before = { ...Object.fromEntries(sensitive.map((k) => [k, o[k] ?? null])), ...prevBefore }; // נשמרים הערכים כפי שהיו לפני השינוי הראשון
     const fields = [...new Set([...(o.changedAfterQ?.fields ?? []), ...sensitive.map(String)])];
@@ -35,7 +38,7 @@ function ChangeForm({ onClose }: { onClose: () => void }) {
       ...patch,
       changedAfterQ: { at: new Date().toISOString(), by: profile?.name ?? '', fields, before },
       ...(flagQ ? { qNeedsUpdate: true } : {}),
-    }, <>שינוי אחרי הקלדה ל-Q נשמר: {what} · הזמנה <Ltr>{o.id}</Ltr></>);
+    }, <>שינוי אחרי הקלדה ל-Q נשמר: {what} · הזמנה <Ltr>{o.id}</Ltr></>, base, done);
     onClose();
   };
 

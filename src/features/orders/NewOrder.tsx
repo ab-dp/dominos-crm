@@ -17,7 +17,8 @@ import { createOrder, findDuplicate, type NewOrderInput } from '../../data/order
 import { usePriceLists } from '../../data/priceLists';
 import { opsReminder, useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
 import { QuoteOrderedError, isExpired as quoteExpired, setQuoteStatus } from '../../data/quotes';
-import { METHOD_LABEL, categoryOf, needsOpsUpdate } from '../../data/types';
+import { METHOD_LABEL, categoryOf, needsOpsUpdate, type Order } from '../../data/types';
+import { editPatch } from './editPatch';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday, parseMoney as money } from '../../lib/format';
@@ -53,7 +54,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const panel = usePanel();
   const reduce = useReducedMotion();
   const { profile } = useAuth();
-  const { orders, now, thresholds } = useStore();
+  const { orders, now, thresholds, requestChange } = useStore();
   const { items: customers } = useCustomers();
   const { items: branches } = useBranches();
   const { items: clusters } = useClusters();
@@ -71,36 +72,47 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const tomorrow = toISODate(addDays(now, 1));
   /* מהצעת מחיר: הלקוח, המועד, המשלוח והשורות (כמות ומחיר) עוברים לטופס. נשאר לפרט סוגים ותוספות */
   const fq = initial.fromQuote;
+  /* עריכת הזמנה קיימת: אותו טופס, עם כל הערכים מתמונת המצב ברגע הפתיחה (eo). נשלחים רק השדות ששונו (editPatch) */
+  const eo: Order | undefined = initial.editOf;
+  // לקוח שהוחלף בעריכה – רק אז נטענים הפרטים הקבועים שלו (בפתיחה לא דורסים את מה ששמור בהזמנה)
+  const customerChanged = useRef(false);
   /* מזהה הלקוח שהפרטים מההצעה שייכים אליו. לא מתאפס בהרצה חוזרת של אותו לקוח (StrictMode), רק כשמחליפים לקוח */
   const prefill = useRef<string | null>(fq?.customerId || null);
 
   const [mode, setMode] = useState<NewOrderMode>(initial.customerName || initial.mode === 'newCustomer' || (fq && !fq.customerId) ? 'newCustomer' : 'full');
-  const [customerId, setCustomerId] = useState(initial.customerId ?? fq?.customerId ?? '');
+  const [customerId, setCustomerId] = useState(eo?.customerId ?? initial.customerId ?? fq?.customerId ?? '');
   const [nc, setNc] = useState({ name: initial.customerName ?? fq?.customer.name ?? '', type: 'occasional' as Customer['type'], taxId: fq?.customer.taxId ?? '', contactName: fq?.customer.contact ?? '', contactPhone: fq?.customer.phone ? fmtPhone(fq.customer.phone) : '', paymentMethod: 'credit', accountPhone: '' });
-  const [date, setDate] = useState(initial.date ?? (fq?.date && fq.date >= today ? fq.date : today));
-  const [time, setTime] = useState(fq?.time ?? '');
-  const [branch, setBranch] = useState<BranchChoice | null>(null);
-  const [delivery, setDelivery] = useState<'delivery' | 'pickup'>(fq?.delivery ?? 'delivery');
+  const [date, setDate] = useState(eo?.date ?? initial.date ?? (fq?.date && fq.date >= today ? fq.date : today));
+  const [time, setTime] = useState(eo?.time ?? fq?.time ?? '');
+  const [branch, setBranch] = useState<BranchChoice | null>(eo?.branchId ? { branchId: eo.branchId, clusterId: '' } : null);
+  const [delivery, setDelivery] = useState<'delivery' | 'pickup'>(eo?.delivery ?? fq?.delivery ?? 'delivery');
   const [addressId, setAddressId] = useState('');
-  const [address, setAddress] = useState(fq?.address ?? '');
+  const [address, setAddress] = useState(eo?.address ?? fq?.address ?? '');
   const [contactId, setContactId] = useState('');
-  const [contact, setContact] = useState({ name: fq?.customerId ? fq.customer.contact : '', phone: fq?.customerId && fq.customer.phone ? fmtPhone(fq.customer.phone) : '' });
-  const [fee, setFee] = useState(fq?.fee?.price ? String(fq.fee.price) : '');
-  const [override, setOverride] = useState<string | null>(null); // סכום לחיוב שהוקלד ידנית
+  const [contact, setContact] = useState(eo ? { name: eo.contactName ?? '', phone: eo.contactPhone ? fmtPhone(eo.contactPhone) : '' } : { name: fq?.customerId ? fq.customer.contact : '', phone: fq?.customerId && fq.customer.phone ? fmtPhone(fq.customer.phone) : '' });
+  const [fee, setFee] = useState(eo ? (eo.deliveryFee ? String(eo.deliveryFee) : '') : fq?.fee?.price ? String(fq.fee.price) : '');
+  /* סכום לחיוב שהוקלד ידנית. בעריכה: סכום קיים ששונה מסכום הפריטים (או בלי פריטים) נשאר כמו שהוא – פתיחת הטופס לא משנה אותו */
+  const [override, setOverride] = useState<string | null>(() => {
+    if (!eo) return null;
+    const sum = roundMoney(eo.items.reduce((t, l) => t + l.qty * l.unitPrice, 0) + (eo.delivery === 'delivery' ? eo.deliveryFee ?? 0 : 0));
+    if (!(eo.amount > 0)) return null;
+    return !eo.items.length || eo.calcAmount !== undefined || Math.abs(sum - eo.amount) > 0.004 ? String(eo.amount) : null;
+  });
   const [poFile, setPoFile] = useState<File | null>(null);
-  const [lines, setLines] = useState<Line[]>(() => (fq?.lines ?? []).map((l) => ({ key: newId(), group: l.category, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.unitPrice ? { manualPrice: true } : {}) })));
+  const [lines, setLines] = useState<Line[]>(() => (eo ? eo.items.map((it) => ({ ...it, key: newId() }))
+    : (fq?.lines ?? []).map((l) => ({ key: newId(), group: l.category, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.unitPrice ? { manualPrice: true } : {}) }))));
   // הזמנה בתאריך שעבר – לתיעוד בלבד: נשמרת ישר כסגורה, לפי התוצאה
   const [outcome, setOutcome] = useState<'' | 'delivered' | 'late' | 'partial' | 'cancelled'>('');
   const [lateMin, setLateMin] = useState('');
   const [pastQ, setPastQ] = useState('');
   const [pastReason, setPastReason] = useState('');
-  const [channelId, setChannelId] = useState('');
-  const [callRef, setCallRef] = useState('');
-  const [method, setMethod] = useState('');
-  const [methodNote, setMethodNote] = useState(''); // באמצעי תשלום "אחר": מה האמצעי בפועל
-  const [accountPhone, setAccountPhone] = useState('');
-  const [poNumber, setPoNumber] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [channelId, setChannelId] = useState(eo?.channelId ?? '');
+  const [callRef, setCallRef] = useState(eo?.callRef ?? '');
+  const [method, setMethod] = useState(eo?.method ?? '');
+  const [methodNote, setMethodNote] = useState(eo?.methodNote ?? ''); // באמצעי תשלום "אחר": מה האמצעי בפועל
+  const [accountPhone, setAccountPhone] = useState(eo?.accountPhone ? fmtPhone(eo.accountPhone) : '');
+  const [poNumber, setPoNumber] = useState(eo?.poNumber ?? '');
+  const [instructions, setInstructions] = useState(eo?.instructions ?? '');
   // הערות להנהלת חשבונות: null = כמו 'הנחיות חיוב' של הלקוח; מקופל עד שפותחים
   const [billing, setBilling] = useState<string | null>(null);
   const [showBilling, setShowBilling] = useState(false);
@@ -130,6 +142,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
      איש הקשר לא נטען לבד – הוא משתנה מהזמנה להזמנה, ולכן מוצע לבחירה ("האם זה איש הקשר?") כדי שלא תצא הזמנה עם איש קשר ישן. */
   useEffect(() => {
     if (!c) return;
+    if (eo && !customerChanged.current) return; // עריכה: הפרטים כבר מההזמנה
+    if (eo) toast({ message: <>נטענו הפרטים הקבועים של {c.name}: אמצעי תשלום, טלפון הקפה וכתובת. איש הקשר התאפס.</> });
     const addr = c.addresses[0];
     const fromQuote = prefill.current === c.id;
     if (!fromQuote) prefill.current = null;
@@ -147,16 +161,24 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     if (fromQuote) return;
     setContactId('');
     setContact({ name: '', phone: '' });
+    if (eo) return; // עריכה: הפריטים והמחירון של ההזמנה נשארים גם כשמחליפים לקוח
     setLines([]);
     setPlSel(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c?.id]);
 
 
+  /* עריכה: האשכול של הסניף השמור (נדרש לבוחר הסניפים) – אחרי שהסניפים נטענו */
+  useEffect(() => {
+    if (!eo || !branch || branch.clusterId) return;
+    const b = branches.find((x) => x.id === branch.branchId);
+    if (b) setBranch({ branchId: b.id, clusterId: b.clusterId });
+  }, [branches]); // eslint-disable-line react-hooks/exhaustive-deps
+
   /* ---------- פריטים ומחיר ---------- */
   const catalog = useCatalog(priceList, c, delivery);
-  useRepriceOnDelivery(delivery, catalog, setLines, (n) => { if (n) toast({ message: <>המחירים עודכנו ל{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</> }); });
-  const past = !!date && date < today; // תאריך שעבר – הזמנה לתיעוד בלבד
+  useRepriceOnDelivery(delivery, catalog, setLines, (n) => { if (n) toast({ message: <>המחירים עודכנו ל{delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</> }); }, !!eo);
+  const past = !eo && !!date && date < today; // תאריך שעבר – הזמנה לתיעוד בלבד (לא בעריכה)
   const real = lines.filter((l) => !isBlank(l)); // השורה הריקה שבסוף הטבלה לא נחשבת
   const linesTotal = roundMoney(real.reduce((t, l) => t + l.qty * l.unitPrice, 0));
   const badLine = real.find(lineProblem); // שורה שהתחילו למלא בלי כמות / סוג – חוסמת שמירה
@@ -173,7 +195,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const isManual = canOverride && override !== null && finalAmount !== total;
 
   /* ---------- כפילויות ---------- */
-  const dup = isNew ? undefined : findDuplicate(orders, { customerId, date, time, branchId: branch?.branchId ?? '' }, thresholds.nearMinutes);
+  // בעריכה – רק כשהזיזו את ההזמנה (לקוח / תאריך / שעה / סניף), לא על הזמנה דומה שכבר הייתה שם
+  const moved = !eo || eo.customerId !== customerId || eo.date !== date || eo.time !== time || eo.branchId !== (branch?.branchId ?? '');
+  const dup = isNew || !moved ? undefined : findDuplicate(eo ? orders.filter((o) => o.id !== eo.id) : orders, { customerId, date, time, branchId: branch?.branchId ?? '' }, thresholds.nearMinutes);
   const ncPhone = cleanPhone(nc.contactPhone);
   const ncTax = cleanTaxId(nc.taxId);
   const taxTwin = isNew && ncTax ? customers.find((x) => x.taxId === ncTax && x.status !== 'merged') : undefined;
@@ -194,7 +218,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const newContact = !!c && !contactId && !!(contact.name.trim() || contactPhoneClean) && !c.contacts.some((p) => (contactPhoneClean && p.phone === contactPhoneClean) || (!contactPhoneClean && p.name === contact.name.trim()));
   const newAddress = !!c && delivery === 'delivery' && !!address.trim() && !c.addresses.some((a) => a.address.trim() === address.trim());
 
-  const channels = (lists?.channels ?? []).filter((x) => x.active);
+  // בעריכה – גם הערוץ השמור, אם הושבת מאז
+  const channels = (lists?.channels ?? []).filter((x) => x.active || (eo && x.id === eo.channelId));
   const methods = (lists?.paymentMethods ?? []).filter((m) => m.active || m.id === method || m.id === nc.paymentMethod);
   const effMethod = isNew ? nc.paymentMethod : method;
   const effAccountPhone = isNew ? nc.accountPhone : accountPhone;
@@ -214,14 +239,15 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     } else {
       if (!c) e.customer = 'חובה: בחר לקוח';
       if (!contact.phone.trim()) m.contactPhone = MISS;
-      else { const pe = phoneError(contact.phone); if (pe) e.contactPhone = pe; }
+      else if (!(eo && cleanPhone(contact.phone) === (eo.contactPhone ?? ''))) { const pe = phoneError(contact.phone); if (pe) e.contactPhone = pe; }
     }
     if (!date) e.date = 'חובה: תאריך אספקה';
     if (!time) m.time = MISS;
     else if (!/^\d{2}:\d{2}$/.test(time)) e.time = 'שעה לא תקינה';
     if (!branch) m.branch = MISS;
     // ערוץ חובה – חריג לכלל "שמירה עם פרטים חסרים מותרת": בלי ערוץ אי אפשר לשמור (הפילוח "לפי ערוץ" נשען עליו)
-    if (!channelId || !channels.some((x) => x.id === channelId)) e.channel = 'בחרו ערוץ';
+    // בעריכה של הזמנה ישנה בלי ערוץ מהרשימה – לא חוסם (הערוץ חובה רק ביצירה)
+    if ((!eo || eo.channelId || channelId) && (!channelId || !channels.some((x) => x.id === channelId))) e.channel = 'בחרו ערוץ';
     if (callRef.trim().length > 60) e.callRef = 'מספר קריאה: עד 60 תווים';
     if (delivery === 'delivery' && !address.trim()) m.address = MISS;
     if (isManual && finalAmount <= 0) m.final = MISS;
@@ -237,7 +263,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     if (c?.poRequired && !poNumber.trim()) m.po = MISS;
     if (effMethod === 'account') {
       if (!cleanPhone(effAccountPhone)) m[isNew ? 'ncAccount' : 'account'] = MISS;
-      else { const pe = phoneError(effAccountPhone); if (pe) e[isNew ? 'ncAccount' : 'account'] = pe; }
+      else if (!(eo && cleanPhone(effAccountPhone) === (eo.accountPhone ?? ''))) { const pe = phoneError(effAccountPhone); if (pe) e[isNew ? 'ncAccount' : 'account'] = pe; }
     }
     if (effMethod === 'other' && !methodNote.trim()) m.methodNote = MISS;
     if (CARD_RE.test(poNumber)) e.po = 'אסור לרשום כאן מספר כרטיס אשראי';
@@ -282,16 +308,26 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     return true;
   };
 
+  /* בעריכה: האם נגעו בפריטים / דמי המשלוח / הסכום. אם לא – הסכום והפריטים לא נשלחים בכלל (הזמנה ישנה עם "תכולה" בטקסט נשארת כמו שהיא) */
+  const pricingTouched = () => !!eo && (
+    JSON.stringify(toSaved(lines)) !== JSON.stringify(toSaved(eo.items.map((it) => ({ ...it, key: '' }))))
+    || (delivery === eo.delivery && feeValue !== (eo.delivery === 'delivery' ? eo.deliveryFee ?? 0 : 0))
+    // סכום – רק כשיש ממה לחשב אותו (פריטים או דמי משלוח); בלי פריטים הסכום השמור לא נוגעים בו
+    || (canOverride && Math.abs(finalAmount - eo.amount) > 0.004));
+
   const submit = async () => {
     if (busy || !validate()) return;
     const b = branchObj; // אפשר לשמור בלי סניף – ההזמנה תסומן כחסרה עד שישובץ
+    const keepBranch = !!eo && branch?.branchId === eo.branchId; // עריכה בלי החלפת סניף – הפרטים השמורים כמו שהם
     const customerName = isNew ? nc.name.trim() : c!.name;
     const input: NewOrderInput = {
       customerId: c?.id ?? '',
       customerName,
       date, time,
-      branchId: b?.id ?? '', branchName: b?.name ?? '', branchPhone: b?.phone ?? '',
-      cluster: b ? clusters.find((x) => x.id === b.clusterId)?.name ?? '' : '',
+      ...(keepBranch ? { branchId: eo!.branchId, branchName: eo!.branchName, branchPhone: eo!.branchPhone, cluster: eo!.cluster } : {
+        branchId: b?.id ?? '', branchName: b?.name ?? '', branchPhone: b?.phone ?? '',
+        cluster: b ? clusters.find((x) => x.id === b.clusterId)?.name ?? '' : '',
+      }),
       amount: finalAmount,
       calcAmount: isManual && !totalOnly ? total : undefined,
       // כל הזמנה שנכנסת למערכת כבר אושרה על ידי הלקוח
@@ -323,6 +359,26 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       instructions: instructions.trim() || undefined,
       billingNote: (billing ?? c?.billingInstructions ?? '').trim() || undefined,
     };
+    if (eo) {
+      /* עריכה: רק השדות ששונו לעומת תמונת המצב, מתוך רשימת שדות מותרים (לא מטפל, סטטוס, יוצר, הערות להנה"ח).
+         ואז, לפי הסדר: חלון "שינוי אחרי הקלדה ל-Q" ← סיבה בחודש נעול ← שמירה מול תמונת המצב (התנגשות = ConflictDialog) */
+      const patch = editPatch(eo, input, { pricingTouched: pricingTouched() });
+      if (!Object.keys(patch).length) { toast({ message: <>לא שונה דבר · הזמנה <Ltr>{eo.id}</Ltr></> }); onClose(); return; }
+      setBusy(true);
+      const result = await requestChange(eo, patch, 'עריכת ההזמנה', eo);
+      setBusy(false);
+      // בוטל באחד החלונות או נכשל – הטופס נשאר פתוח עם כל מה שהוקלד
+      if (result === 'cancelled') return;
+      if (result === 'failed') { setErrors({ form: 'השינויים לא נשמרו – בדקו חיבור ונסו שוב' }); return; }
+      if (result === 'saved' && c && ((saveContact && newContact) || (saveAddress && newAddress))) {
+        updateCustomer(c, {
+          ...(saveContact && newContact ? { contacts: [...c.contacts, { id: newId(), name: contact.name.trim(), role: '', phone: contactPhoneClean, email: '', primary: c.contacts.length === 0 }] } : {}),
+          ...(saveAddress && newAddress ? { addresses: [...c.addresses, { id: newId(), label: '', address: address.trim(), directions: '', preferredBranchId: branchObj?.id ?? '' }] } : {}),
+        }, `נוסף מתוך עריכת הזמנה ${eo.id}`).catch(() => toast({ tone: 'error', message: 'השמירה בתיק הלקוח נכשלה – אפשר להוסיף שם ידנית' }));
+      }
+      onClose();
+      return;
+    }
     const draft = isNew ? {
       ...EMPTY_CUSTOMER,
       name: nc.name.trim(), type: nc.type, taxId: ncTax, paymentMethod: nc.paymentMethod,
@@ -368,7 +424,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const err = (k: string) => errors[k] ? <span className={`cform__err ${errors[k] === MISS ? 'cform__err--miss' : ''}`} id={`no-${k}`} role={errors[k] === MISS ? undefined : 'alert'}>{errors[k]}</span> : null;
   const inv = (k: string) => ({ 'data-field': k, 'aria-invalid': (!!errors[k] && errors[k] !== MISS) || undefined, 'data-miss': errors[k] === MISS || undefined, 'aria-describedby': errors[k] ? `no-${k}` : undefined });
   const customerChosen = isNew ? nc.name.trim().length > 0 : !!c;
-  const saveLabel = badLine ? `השלם שורה ב${categoryOf(badLine)}` : `${dup ? 'שמור כהזמנה נוספת' : isNew ? (similar.length ? 'שמור כלקוח חדש והזמנה' : 'שמור לקוח והזמנה') : 'שמור הזמנה'}${
+  const saveLabel = badLine ? `השלם שורה ב${categoryOf(badLine)}` : eo ? 'שמור שינויים' : `${dup ? 'שמור כהזמנה נוספת' : isNew ? (similar.length ? 'שמור כלקוח חדש והזמנה' : 'שמור לקוח והזמנה') : 'שמור הזמנה'}${
     missCount && customerChosen ? ` עם ${missCount === 1 ? 'פרט חסר' : `${missCount} פרטים חסרים`}` : ''}`;
   const fade = reduce ? { initial: { opacity: 0 }, animate: { opacity: 1 } } : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 } };
 
@@ -459,10 +515,12 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
     </>
   );
 
+  const legacyContents = eo?.contents?.trim() ? <p className="no-pricenote" role="note"><b>פירוט ישן (טקסט):</b> {eo.contents}</p> : null;
   const itemsSection = (
     <Section title="פריטים ומחיר">
       {c?.priceNote && <p className="no-pricenote" role="note"><b>הערת מחיר:</b> {c.priceNote}</p>}
       {/* מקור המחיר: מחירון (של הלקוח, כללי, או בלי); משלוח/איסוף נקבע בחלק "אספקה" */}
+      {legacyContents}
       <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={delivery} />
       <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => clearErr('amount', 'contents')} revealProblems={reveal} />
       {real.length === 0 && (
@@ -542,7 +600,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           {c?.poRequired && <span className="cform__hint">הלקוח בדרך כלל עובד עם תעודת רכש</span>}
         </L>
       </Row>
-      <FileDrop file={poFile} onFile={setPoFile} busy={busy} />
+      {!eo && <FileDrop file={poFile} onFile={setPoFile} busy={busy} />}
     </>
   );
 
@@ -553,8 +611,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
         <textarea className="input cform__ta" rows={2} value={instructions} onChange={(e) => { setInstructions(e.target.value); clearErr('instructions'); }} placeholder="למשל: להגיע לשער האחורי, להתקשר 10 דקות לפני" {...inv('instructions')} />
         {err('instructions')}
       </L>
-      {/* פנימי להנהלת החשבונות – מקופל, כדי שלא יתבלבל עם 'הערות להזמנה' */}
-      {showBilling || billing !== null ? (
+      {/* פנימי להנהלת החשבונות – מקופל, כדי שלא יתבלבל עם 'הערות להזמנה'. בעריכה – רק בכרטיס ("פרטים נוספים") */}
+      {eo ? null : showBilling || billing !== null ? (
         <div className="no-billing-f">
         <L label="הערות להנהלת חשבונות" wide>
           <textarea className="input cform__ta" rows={2} value={billing ?? c?.billingInstructions ?? ''} onChange={(e) => setBilling(e.target.value)} placeholder="למשל: למי לשלוח את החשבונית בסוף החודש" />
@@ -581,14 +639,14 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           onChangeCapture={markDirty} onInputCapture={markDirty}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}>
           <div className="cform__head norder__head">
-            <Dialog.Title className="udialog__title">{fq ? <>הזמנה מהצעה <Ltr>{fq.id}</Ltr></> : 'הזמנה חדשה'}</Dialog.Title>
-            <div className="seg norder__modes" role="tablist" aria-label="סוג ההזמנה">
+            <Dialog.Title className="udialog__title">{eo ? <>עריכת הזמנה <Ltr>{eo.id}</Ltr></> : fq ? <>הזמנה מהצעה <Ltr>{fq.id}</Ltr></> : 'הזמנה חדשה'}</Dialog.Title>
+            {!eo && <div className="seg norder__modes" role="tablist" aria-label="סוג ההזמנה">
               {MODES.map(([m, label, icon]) => (
                 <button type="button" key={m} role="tab" aria-selected={mode === m} className={mode === m ? 'is-on' : ''} onClick={() => { setMode(m); setErrors({}); }}>
                   {icon}{label}
                 </button>
               ))}
-            </div>
+            </div>}
             <Dialog.Close asChild><button className="icon-btn" aria-label="סגור"><X size={16} /></button></Dialog.Close>
           </div>
 
@@ -636,8 +694,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
                 ) : (
                   <Section title="לקוח">
                     <CustomerPicker customers={customers} value={customerId} invalid={!!errors.customer}
-                      onChange={(id) => { setCustomerId(id); clearErr('customer'); markDirty(); }}
-                      onNew={(name) => { setNc((x) => ({ ...x, name })); setMode('newCustomer'); setErrors({}); }} />
+                      onChange={(id) => { if (id !== customerId) customerChanged.current = true; setCustomerId(id); clearErr('customer'); markDirty(); }}
+                      onNew={(name) => { if (eo) { toast({ message: 'בעריכה אפשר לבחור רק לקוח קיים' }); return; } setNc((x) => ({ ...x, name })); setMode('newCustomer'); setErrors({}); }} />
                     {err('customer')}
                     {c && c.type === 'occasional' && orders.some((o) => o.customerId === c.id && o.status !== 'cancelled') && (
                       <p className="no-suggest no-regular">
@@ -715,13 +773,13 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
               {badLine && <li className="no-missing__block"><CircleAlert size={16} aria-hidden="true" /><span><b>שורה לא שלמה ב{categoryOf(badLine)}</b> – חסרים כמות או סוג / מוצר, ובלעדיהם אי אפשר לשמור. <button type="button" className="link no-missing__go" onClick={() => setReveal((n) => n + 1)}>הצג</button></span></li>}
               {needChannel && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חובה לפני שמירה:</b> <button type="button" className="link no-missing__go" onClick={() => goTo('channel')}>ערוץ</button></span></li>}
               {missLive.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>חסרים:</b> {missKeys.map((k, i) => <span key={k}>{i > 0 && ', '}<button type="button" className="link no-missing__go" onClick={() => goTo(k)}>{missLabel(k)}</button></span>)} – אפשר לשמור עכשיו, וההזמנה תסומן כחסרה עד שישלימו.</span></li>}
-              {dup && <li><CircleAlert size={16} aria-hidden="true" /><span><b>יש הזמנה דומה</b> (<Ltr>{dup.id}</Ltr> · <Ltr>{dup.time}</Ltr>) – השמירה תיצור הזמנה נוספת.</span></li>}
+              {dup && <li><CircleAlert size={16} aria-hidden="true" /><span><b>יש הזמנה דומה</b> (<Ltr>{dup.id}</Ltr> · <Ltr>{dup.time}</Ltr>) {eo ? '– באותו מועד ולקוח.' : '– השמירה תיצור הזמנה נוספת.'}</span></li>}
               {similar.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /><span><b>לקוח דומה כבר קיים</b> ({similar[0].c.name}) – השמירה תפתח לקוח חדש.</span></li>}
             </ul>
           )}
           {askClose ? (
             <div className="cform__foot no-confirm" role="alertdialog" aria-labelledby="no-confirm-q">
-              <span id="no-confirm-q" className="no-confirm__q"><CircleAlert size={16} aria-hidden="true" /> ההזמנה עוד לא נשמרה. לסגור בלי לשמור?</span>
+              <span id="no-confirm-q" className="no-confirm__q"><CircleAlert size={16} aria-hidden="true" /> {eo ? 'השינויים עוד לא נשמרו' : 'ההזמנה עוד לא נשמרה'}. לסגור בלי לשמור?</span>
               <Button ref={stayRef} variant="secondary" onClick={() => setAskClose(false)}>המשך לערוך</Button>
               <Button variant="danger" onClick={onClose}>סגור בלי לשמור</Button>
             </div>

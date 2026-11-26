@@ -7,6 +7,7 @@ import { ThresholdsPage } from './ThresholdsPage';
 import { QuoteTermsPage } from './QuoteTermsPage';
 import { ErrorsPage } from './ErrorsPage';
 import { GoalsPage } from './GoalsPage';
+import { FlagsPage } from './FlagsPage';
 
 export function SettingsPage() {
   const { isAdmin } = useAuth();
@@ -21,6 +22,7 @@ export function SettingsPage() {
         <NavLink to="/settings/thresholds" className={({ isActive }) => (isActive ? 'is-on' : '')}>ספי התראות</NavLink>
         <NavLink to="/settings/quotes" className={({ isActive }) => (isActive ? 'is-on' : '')}>הצעות מחיר</NavLink>
         <NavLink to="/settings/goals" className={({ isActive }) => (isActive ? 'is-on' : '')}>יעדים</NavLink>
+        <NavLink to="/settings/flags" className={({ isActive }) => (isActive ? 'is-on' : '')}>תצוגה מוקדמת</NavLink>
         <NavLink to="/settings/errors" className={({ isActive }) => (isActive ? 'is-on' : '')}>תקלות</NavLink>
       </nav>
       <Routes>
@@ -30,6 +32,7 @@ export function SettingsPage() {
         <Route path="thresholds" element={<ThresholdsPage />} />
         <Route path="quotes" element={<QuoteTermsPage />} />
         <Route path="goals" element={<GoalsPage />} />
+        <Route path="flags" element={<FlagsPage />} />
         <Route path="errors" element={<ErrorsPage />} />
       </Routes>
     </>

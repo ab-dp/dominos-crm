@@ -121,3 +121,5 @@
 .orange__err { font-size: var(--text-label); font-weight: 500; color: var(--danger-fg); }
 /* בתוך חלון / טופס – הבחירות נשברות לשורות ולא נגללות הצידה (בלי דהייה בקצה שחותכת אפשרות) */
 .sdialog__form .chips, .care-form .chips { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; -webkit-mask-image: none; mask-image: none; }
+.flagcard { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); margin-bottom: var(--space-3); }
+.flagcard p { margin: var(--space-1) 0 0; }

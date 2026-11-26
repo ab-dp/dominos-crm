@@ -21,9 +21,14 @@ import type { Order, OrderStatus } from './types';
 export type OrderView = Order & { issues: Issue[]; health: Health };
 
 export type NewOrderMode = 'full' | 'newCustomer';
-export type ChangeRequest = { order: Order; patch: Partial<Order>; what: string };
+/* base – תמונת המצב של ההזמנה כשנפתח טופס העריכה: השמירה נבדקת מולה (התנגשות), ולא מול העותק החי */
+export type ChangeRequest = { order: Order; patch: Partial<Order>; what: string; base?: Order; done?: Done };
 /* שדות שמשנים את מה שהוקלד בקופה (Q) */
-export const SENSITIVE: (keyof Order)[] = ['date', 'time', 'branchId', 'delivery', 'address', 'amount', 'items'];
+/* customerName – החלפת לקוח (בטופס העריכה) בהזמנה שכבר הוקלדה ל-Q היא שינוי שהקופה צריכה לדעת */
+export const SENSITIVE: (keyof Order)[] = ['date', 'time', 'branchId', 'delivery', 'address', 'amount', 'items', 'customerName'];
+/* תוצאת שמירה – לטופס העריכה, שנשאר פתוח עד שיודעים: נשמר · בוטל באחד החלונות · הושאר השינוי של משתמש אחר · נכשל */
+export type SaveResult = 'saved' | 'cancelled' | 'theirs' | 'failed';
+type Done = (r: SaveResult) => void;
 /* "שונתה אחרי הקלדה ל-Q": רק הזמנה שהוקלדה ל-Q או שנסגרה. שינוי בהזמנה פתוחה נשמר רגיל */
 export const isLocked = (o: Order) => !!o.qNumber || o.status === 'delivered' || o.status === 'partial' || o.status === 'cancelled';
 /* הודעת השמירה: "ההזמנה למחר – לעדכן את התפעול" כשהשינוי (או היצירה) צריך עדכון בתפעול */
@@ -37,19 +42,20 @@ function withOpsReminder(message: ReactNode, before: Order[], patch: Partial<Ord
   }
   return message;
 }
-export type ConflictState = { error: ConflictError; patch: Partial<Order>; message: ReactNode };
+export type ConflictState = { error: ConflictError; patch: Partial<Order>; message: ReactNode; done?: Done };
 export type ClosingRequest = { order: Order; status: 'partial' | 'cancelled' };
 /* fromQuote – הזמנה מהצעת מחיר שאושרה: הלקוח, המועד והשורות עוברים לטופס, ואחרי השמירה ההצעה מסומנת "הפכה להזמנה" */
-export type NewOrderRequest = { mode?: NewOrderMode; customerId?: string; date?: string; customerName?: string; fromQuote?: Quote };
+/* editOf – עריכת הזמנה קיימת באותו טופס (תמונת מצב ברגע הפתיחה) */
+export type NewOrderRequest = { mode?: NewOrderMode; customerId?: string; date?: string; customerName?: string; fromQuote?: Quote; editOf?: Order };
 /* שינוי בהזמנה של חודש נעול – ממתין לסיבה לפני השמירה */
-export type LockFixRequest = { ids: number[]; patch: Partial<Order>; message: ReactNode; months: string[] };
+export type LockFixRequest = { ids: number[]; patch: Partial<Order>; message: ReactNode; months: string[]; base?: Order; done?: Done };
 
 type Store = {
   now: Date;
   orders: OrderView[];
   loading: boolean;
   error: string;
-  update: (id: number, patch: Partial<Order>, message: ReactNode) => void;
+  update: (id: number, patch: Partial<Order>, message: ReactNode, base?: Order, done?: Done) => void;
   updateMany: (ids: number[], patch: Partial<Order>, message: ReactNode) => void;
   newOrder: NewOrderRequest | null;
   openNewOrder: (r?: NewOrderRequest) => void;
@@ -62,7 +68,7 @@ type Store = {
   /* שמירה שהתנגשה בשינוי של משתמש אחר – מוצגת השוואה ובוחרים מה להשאיר */
   conflict: ConflictState | null;
   /* עריכה מתיק ההזמנה: שדה רגיש בהזמנה שאושרה פותח קודם חלון "שינוי אחרי אישור" */
-  requestChange: (o: Order, patch: Partial<Order>, what: string) => void;
+  requestChange: (o: Order, patch: Partial<Order>, what: string, base?: Order) => Promise<SaveResult>;
   changeReq: ChangeRequest | null;
   endChange: () => void;
   resolveConflict: (keepMine: boolean) => void;
@@ -127,21 +133,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [raw, now, thresholds],
   );
 
-  const updateMany = useCallback(async (ids: number[], patch: Partial<Order>, message: ReactNode, fixReason?: string) => {
-    // הזמנות ישנות (מחודשים קודמים, מדוח או מתיק לקוח) לא נמצאות ברשימה החיה – נטענות מהשרת לפני השמירה
-    let before = rawRef.current.filter((o) => ids.includes(o.id));
+  const updateMany = useCallback(async (ids: number[], patch: Partial<Order>, message: ReactNode, fixReason?: string, base?: Order, done: Done = () => undefined) => {
+    // הזמנות ישנות (מחודשים קודמים, מדוח או מתיק לקוח) לא נמצאות ברשימה החיה – נטענות מהשרת לפני השמירה.
+    // טופס עריכה: הבסיס הוא תמונת המצב מרגע הפתיחה – כך שינוי של משתמש אחר בזמן העריכה מזוהה כהתנגשות ולא נדרס
+    let before = base && ids.length === 1 && base.id === ids[0] ? [base] : rawRef.current.filter((o) => ids.includes(o.id));
     const missing = ids.filter((id) => !before.some((o) => o.id === id));
     if (missing.length) {
       try {
         const snaps = await Promise.all(missing.map((id) => getDoc(doc(db, 'orders', String(id)))));
         before = [...before, ...snaps.filter((s) => s.exists()).map((s) => fromDoc(s.id, s.data()!))];
-      } catch { toast({ tone: 'error', message: 'השמירה נכשלה – בדוק חיבור ונסה שוב.' }); return; }
+      } catch { toast({ tone: 'error', message: 'השמירה נכשלה – בדוק חיבור ונסה שוב.' }); done('failed'); return; }
     }
-    if (!before.length) return;
+    if (!before.length) { done('failed'); return; }
     // חודש נעול: שינוי סכום/תאריך/סטטוס/תשלום מחייב סיבה – קודם שואלים, ואז שומרים עם הסיבה
     const touchesLocked = (Object.keys(patch) as (keyof Order)[]).some((k) => LOCKED_FIELDS.includes(k));
     const months = touchesLocked ? [...new Set(before.flatMap((o) => [monthOf(o.date), ...(patch.date ? [monthOf(patch.date)] : [])]))].filter((m) => lockedRef.current.includes(m)) : [];
-    if (months.length && !fixReason) { setLockFix({ ids, patch, message, months }); return; }
+    if (months.length && !fixReason) { setLockFix({ ids, patch, message, months, base, done }); return; }
     if (fixReason) patch = { ...patch, postCloseFix: { reason: fixReason, by: auth.currentUser?.displayName ?? '', at: serverTimestamp() } };
     const source = ids.length > 1 ? 'bulk' : 'inline';
     // הזמנה אחת: שמירה בטוחה שלא דורסת שינוי של משתמש אחר. כמה הזמנות (סימון מרובה): כתיבה רגילה.
@@ -149,7 +156,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // תזכורת "לעדכן בתפעול" בהודעה (גם כשההזמנה יוצאת מסיכום שכבר נשלח – הוזזה או בוטלה)
     const shown = withOpsReminder(message, before, patch, thresholdsRef.current.opsCutoff);
     write
-      .then(() => toast({
+      .then(() => { done('saved'); toast({
         message: shown,
         onUndo: () => {
           // מחזירים לכל הזמנה את הערכים שהיו לה לפני השינוי
@@ -171,9 +178,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ? <>הביטול לא בוצע – {e.byName || 'משתמש אחר'} שינה את ההזמנה בינתיים</>
             : 'הביטול נכשל – בדוק חיבור' }));
         },
-      }))
+      }); })
       .catch((e) => {
-        if (e instanceof ConflictError) { setConflict({ error: e, patch, message }); return; }
+        if (e instanceof ConflictError) { setConflict({ error: e, patch, message, done }); return; }
+        done('failed');
         toast({ tone: 'error', message: `${saveError(e)} – השינוי לא נשמר` });
       });
   }, [toast]);
@@ -182,16 +190,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const resolveConflict = useCallback((keepMine: boolean) => {
     const c = conflict;
     setConflict(null);
+    if (c && !keepMine) c.done?.('theirs');
     if (c && keepMine) {
       // נשמר על בסיס הערכים העדכניים, כך שרק השדות שבחרתי משתנים
       const shown = withOpsReminder(c.message, [c.error.current], c.patch, thresholdsRef.current.opsCutoff);
       updateOrderSafe(c.error.current, c.patch, 'inline', 'נשמר אחרי התנגשות')
-        .then(() => toast({ message: shown }))
-        .catch(() => toast({ tone: 'error', message: 'השמירה נכשלה שוב – פתח את התיק מחדש ונסה' }));
+        .then(() => { c.done?.('saved'); toast({ message: shown }); })
+        .catch(() => { c.done?.('failed'); toast({ tone: 'error', message: 'השמירה נכשלה שוב – פתח את התיק מחדש ונסה' }); });
     }
   }, [conflict, toast]);
 
-  const update = useCallback((id: number, patch: Partial<Order>, message: ReactNode) => updateMany([id], patch, message), [updateMany]);
+  const update = useCallback((id: number, patch: Partial<Order>, message: ReactNode, base?: Order, done?: Done) => updateMany([id], patch, message, undefined, base, done), [updateMany]);
   const openNewOrder = useCallback((r: NewOrderRequest = {}) => setNewOrder(r), []);
   const closeNewOrder = useCallback(() => setNewOrder(null), []);
   const requestStatus = useCallback((o: Order, s: OrderStatus) => {
@@ -205,18 +214,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }, <>סטטוס: {STATUS_LABEL[s]} · הזמנה <bdi dir="ltr">{o.id}</bdi></>);
   }, [updateMany]);
   const endClosing = useCallback(() => setClosing(null), []);
-  const requestChange = useCallback((o: Order, patch: Partial<Order>, what: string) => {
-    const touches = (Object.keys(patch) as (keyof Order)[]).some((k) => SENSITIVE.includes(k) && JSON.stringify(o[k]) !== JSON.stringify(patch[k]));
-    if (touches && isLocked(o)) { setChangeReq({ order: o, patch, what }); return; }
-    updateMany([o.id], patch, <>שינוי נשמר: {what} · הזמנה <bdi dir="ltr">{o.id}</bdi></>);
-  }, [updateMany]);
-  const endChange = useCallback(() => setChangeReq(null), []);
+  const requestChange = useCallback((o: Order, patch: Partial<Order>, what: string, base?: Order) => new Promise<SaveResult>((done) => {
+    // "הוקלד ל-Q / נסגרה" נבדק מול ההזמנה החיה – בטופס עריכה תמונת המצב ישנה, ומישהו אולי הקליד ל-Q בינתיים
+    const live = rawRef.current.find((x) => x.id === o.id) ?? o;
+    const touches = (Object.keys(patch) as (keyof Order)[]).some((k) => SENSITIVE.includes(k) && JSON.stringify(live[k]) !== JSON.stringify(patch[k]));
+    if (touches && isLocked(live)) { setChangeReq({ order: live, patch, what, base, done }); return; }
+    updateMany([o.id], patch, <>שינוי נשמר: {what} · הזמנה <bdi dir="ltr">{o.id}</bdi></>, undefined, base, done);
+  }), [updateMany]);
+  // סגירת חלון "שינוי אחרי Q" בלי שמירה
+  const endChange = useCallback(() => setChangeReq((r) => { r?.done?.('cancelled'); return null; }), []);
   const confirmLockFix = useCallback((reason: string) => {
     const r = lockFix;
     setLockFix(null);
-    if (r) updateMany(r.ids, r.patch, r.message, reason);
+    if (r) updateMany(r.ids, r.patch, r.message, reason, r.base, r.done);
   }, [lockFix, updateMany]);
-  const endLockFix = useCallback(() => setLockFix(null), []);
+  const endLockFix = useCallback(() => setLockFix((r) => { r?.done?.('cancelled'); return null; }), []);
   const today = toISODate(now);
   const dueTasks = useMemo(() => tasks.filter((t) => t.due <= today), [tasks, today]);
   const quoteFollowups = useMemo(() => quotes.filter((q) => needsFollowup(q, now, thresholds.quoteFollowupHours)), [quotes, now, thresholds.quoteFollowupHours]);

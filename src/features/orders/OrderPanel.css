@@ -393,3 +393,8 @@
   .panel__body { flex: none; overflow: visible; }
   .prec__facts dd { white-space: normal; }
 }
+
+/* "עריכה" על רקע כהה: לבן שקוף עם קו לבן */
+.prec .prec__edit { background: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .18); color: var(--white); }
+.prec .prec__edit svg { color: var(--rec-muted); }
+.prec .prec__edit:hover { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); }
