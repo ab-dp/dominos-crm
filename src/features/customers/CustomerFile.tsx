@@ -1,6 +1,7 @@
 /* תיק לקוח במסך מלא (אפיון 6.6) – המקום לראות את כל התמונה על הלקוח. */
 import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { listHref } from '../../lib/urlParams';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { motion, useReducedMotion } from 'motion/react';
 import {
@@ -103,7 +104,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
 
   return (
     <div className="page cfile">
-      <button className="auth__back" onClick={() => nav('/customers')}><ArrowRight size={16} aria-hidden="true" /> לקוחות</button>
+      <button className="auth__back" onClick={() => nav(listHref('/customers'))}><ArrowRight size={16} aria-hidden="true" /> לקוחות</button>
 
       {/* ---------- כותרת ---------- */}
       <header className="cfile__head card">

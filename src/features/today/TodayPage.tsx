@@ -23,7 +23,7 @@ import './TodayPage.css';
 export function TodayPage() {
   const { orders, now, dueTasks, loading, error, quoteFollowups } = useStore();
   const reduce = useReducedMotion();
-  // 'כולם / שלי' נשמר לכל משתמש, ומשותף ל'היום' ול'חריגים ומשימות'
+  // 'כולם / שלי' נשמר לכל משתמש, ומשותף ל'היום' ול'משימות וחריגים'
   const [mine, setMine] = usePref('scope:mine', false);
   const { profile, isAdmin } = useAuth();
   const pendingUsers = usePendingRequests();

@@ -1,4 +1,4 @@
-/* חריגים ומשימות (אפיון 9): כל מה שדורש טיפול, במקום אחד. שורה לכל הזמנה עם כל הבעיות שלה והכפתור שפותר את העיקרית,
+/* משימות וחריגים (אפיון 9): כל מה שדורש טיפול, במקום אחד. שורה לכל הזמנה עם כל הבעיות שלה והכפתור שפותר את העיקרית,
    מקובץ לפי החומרה; ובצד – משימות המעקב מתיקי הלקוחות. מבוסס על אותו מנוע של מסך "היום". */
 import { useMemo, useState, type FormEvent } from 'react';
 import * as Popover from '@radix-ui/react-popover';
@@ -37,7 +37,7 @@ export function ExceptionsPage() {
   const panel = usePanel();
   const reduce = useReducedMotion();
   const [params, setParams] = useSearchParams();
-  // "כולם / שלי" נשמר לכל משתמש, ומשותף ל"היום" ול"חריגים ומשימות"
+  // "כולם / שלי" נשמר לכל משתמש, ומשותף ל"היום" ול"משימות וחריגים"
   const [mine, setMine] = usePref('scope:mine', false);
   const raw = params.get('rule');
   const chip = raw === null ? null : CHIPS.find((c) => c.key === raw || c.rules.includes(Number(raw))) ?? null;
@@ -66,7 +66,7 @@ export function ExceptionsPage() {
     <div className="page exc">
       <header className="page__head">
         <div>
-          <h1 className="page__title">חריגים ומשימות</h1>
+          <h1 className="page__title">משימות וחריגים</h1>
           <p className="page__sub">שורה לכל הזמנה, לפי חומרה, עם הכפתור שפותר את הבעיה העיקרית</p>
         </div>
         <dl className="head-stats">

@@ -1,11 +1,13 @@
 /* הצעות מחיר: כל ההצעות במקום אחד. ברירת המחדל – "ממתינות למענה", ומה שלא עודכן מעבר לסף (ספי התראות) – למעלה ומסומן.
    בכל שורה: הערה אחרונה ביומן, והפעולה הבאה (אישור / אין מענה / נדחתה / הפוך להזמנה). */
 import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { BellRing, CalendarClock, FileText, Plus, Search, X } from 'lucide-react';
 import { SHORT_STATUS, WAITING, callDue, dayMonth, isExpired, needsFollowup, staleHours, useQuotes, type Quote } from '../../data/quotes';
 import { useStore } from '../../data/store';
 import { Button, EmptyState, Skeleton } from '../../design/components';
+import { FilterBar, type FilterDim } from '../../design/FilterBar';
+import { useUrlParams } from '../../lib/urlParams';
 import { Ltr, fmtDate, fmtMoney, toISODate } from '../../lib/format';
 import { QuoteActions, ago } from './QuoteTrack';
 import '../pages.css';
@@ -18,8 +20,10 @@ export function QuotesPage() {
   const { items, loading, error } = useQuotes('all');
   const { now, thresholds } = useStore();
   const nav = useNavigate();
-  const [params, setParams] = useSearchParams();
-  const tab = (params.get('tab') as Tab) || 'waiting';
+  const { get, setMany } = useUrlParams();
+  const tab = (get('tab') as Tab) || 'waiting';
+  const fHandler = get('handler');
+  const fCall = get('call') as '' | 'today' | 'late';
   const [query, setQuery] = useState('');
   const today = toISODate(now);
   const hours = thresholds.quoteFollowupHours;
@@ -38,7 +42,16 @@ export function QuotesPage() {
     } satisfies Record<Tab, Quote[]>;
   }, [items, now, today, hours]);
   const s = query.trim();
-  const rows = lists[tab].filter((q) => !s || q.customer.name.includes(s) || q.customer.contact.includes(s) || String(q.id).includes(s));
+  /* חזרה ללקוח: היום / באיחור – רק בהצעה שממתינה לתשובה */
+  const callState = (q: Quote) => (!q.callAt || !WAITING.includes(q.status) ? '' : q.callAt === today ? 'today' : q.callAt < today ? 'late' : '');
+  const dims: FilterDim[] = [
+    { key: 'handler', label: 'מטפל', all: 'כל המטפלים', options: [...new Set([...lists[tab].map((q) => q.handler), fHandler].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he')).map((v) => ({ value: v, label: v })) },
+    ...(tab !== 'waiting' && tab !== 'all' ? [] : [{ key: 'call', label: 'חזרה ללקוח', all: 'הכל', options: [{ value: 'today', label: 'לחזור היום' }, { value: 'late', label: 'תאריך החזרה עבר' }] }]),
+  ];
+  const rows = lists[tab]
+    .filter((q) => !fHandler || q.handler === fHandler)
+    .filter((q) => !fCall || callState(q) === fCall)
+    .filter((q) => !s || q.customer.name.includes(s) || q.customer.contact.includes(s) || String(q.id).includes(s));
   const follow = lists.waiting.filter((q) => callDue(q, today) || needsFollowup(q, now, hours)).length;
   const waitingSum = lists.waiting.reduce((t, q) => t + q.total, 0);
   const month = today.slice(0, 7);
@@ -63,12 +76,13 @@ export function QuotesPage() {
       <div className="tabs" role="tablist" aria-label="הצעות מחיר">
         {TABS.map(([k, label]) => (
           <button key={k} role="tab" aria-selected={tab === k} className={`tab ${tab === k ? 'is-on' : ''} ${k === 'waiting' && follow ? 'tab--alert' : ''}`}
-            onClick={() => { const p = new URLSearchParams(params); p.set('tab', k); setParams(p, { replace: true }); }}>
+            onClick={() => setMany({ tab: k, ...(k === 'waiting' || k === 'all' ? {} : { call: null }) })}>
             {label}<span className="tab__count"><Ltr>{lists[k].length}</Ltr></span>
           </button>
         ))}
       </div>
       <div className="tablebar">
+        <FilterBar dims={dims} values={{ handler: fHandler, call: fCall }} onChange={setMany} extraActive={query.trim() ? 1 : 0} onClearAll={() => setQuery('')} />
         <label className="tablebar__search">
           <Search size={16} aria-hidden="true" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="סינון: לקוח, איש קשר, מס' הצעה" aria-label="סינון הצעות" />
@@ -80,7 +94,7 @@ export function QuotesPage() {
         <div className="card">
           <EmptyState icon={<FileText size={20} />} title={items.length ? 'אין הצעות בתצוגה הזו' : 'עוד אין הצעות מחיר'}
             action={!items.length && <Button variant="primary" icon={<Plus size={16} />} onClick={() => nav('/quotes/new')}>הצעה חדשה</Button>}>
-            {items.length ? (tab === 'waiting' ? 'כל ההצעות שנשלחו קיבלו תשובה ✓' : '') : 'הצעה שמורה נשארת כאן עם כל היסטוריית המעקב שלה.'}
+            {items.length ? (tab === 'waiting' && !fHandler && !fCall && !s ? 'כל ההצעות שנשלחו קיבלו תשובה ✓' : '') : 'הצעה שמורה נשארת כאן עם כל היסטוריית המעקב שלה.'}
           </EmptyState>
         </div>
       ) : (
