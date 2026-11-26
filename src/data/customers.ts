@@ -195,7 +195,7 @@ async function mergeItems(sourceId: string) {
     getDocs(query(collection(db, 'tasks'), where('customerId', '==', sourceId))),
     getDocs(query(collection(db, 'orderDocs'), where('customerId', '==', sourceId))),
   ]);
-  return { orders: orders.docs, quotes: quotes.docs, tasks: tasks.docs.filter((d) => d.data().done === false && !d.data().leadId), docs: docs.docs };
+  return { orders: orders.docs, quotes: quotes.docs, tasks: tasks.docs.filter((d) => d.data().done === false && !d.data().leadId && !d.data().quoteId), docs: docs.docs };
 }
 export async function mergeCounts(sourceId: string): Promise<MergeCounts> {
   const i = await mergeItems(sourceId);

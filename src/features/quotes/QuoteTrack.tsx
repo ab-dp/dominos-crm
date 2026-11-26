@@ -9,7 +9,7 @@ import {
 import { usePanel } from '../../app/PanelContext';
 import { useAuth } from '../../auth/AuthContext';
 import {
-  QUOTE_STATUS_LABEL, QuoteOrderedError, REJECT_REASONS, WAITING, addQuoteNote, callDue, canConvert, dayMonth, isExpired, quoteAction, setQuoteHandler, setQuoteStatus, staleHours,
+  QUOTE_STATUS_LABEL, QuoteOrderedError, REJECT_REASONS, addBusinessDays, WAITING, addQuoteNote, callDue, canConvert, dayMonth, isExpired, quoteAction, setQuoteHandler, setQuoteStatus, staleHours,
   useQuoteNotes, type Quote, type QuoteActionKind, type QuoteNoteKind, type QuoteStatus,
 } from '../../data/quotes';
 import { useStaff } from '../../data/staff';
@@ -29,12 +29,7 @@ const when = (s?: number) => {
   const d = new Date(s * 1000);
   return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
-/* בעוד n ימים, בלי שבת */
-const daysAhead = (now: Date, n: number) => {
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + n, 12);
-  if (d.getDay() === 6) d.setDate(d.getDate() + 1);
-  return toISODate(d);
-};
+
 
 /* פתיחת הזמנה חדשה מההצעה. prepare – בעורך: שמירת שינויים שלא נשמרו לפני ההעתקה (מחזיר null אם השמירה נכשלה) */
 export function ConvertButton({ q, size = 'md', quiet, prepare }: { q: Quote; size?: 'sm' | 'md'; quiet?: boolean; prepare?: () => Promise<Quote | null> }) {
@@ -176,7 +171,7 @@ export function QuoteTrack({ q }: { q: Quote }) {
   );
 }
 
-/* פעולת טיפול: הערה (לא חובה) ומתי לחזור. "אין מענה" מציע מחר כברירת מחדל */
+/* פעולת טיפול: הערה (לא חובה) ומתי לחזור – תמיד נקבע תאריך; ברירת מחדל יום העסקים הבא (ראשון–חמישי) */
 const ACTION_COPY: Record<QuoteActionKind, { title: string; submit: string; note: string }> = {
   noanswer: { title: 'התקשרתי – אין מענה', submit: 'שמור', note: 'למשל: השארתי הודעה' },
   call: { title: 'דיברתי – ממתין להחלטה', submit: 'שמור', note: 'מה נאמר בשיחה' },
@@ -186,17 +181,19 @@ const ACTION_COPY: Record<QuoteActionKind, { title: string; submit: string; note
 function ActionDialog({ q, kind, onClose }: { q: Quote; kind: QuoteActionKind; onClose: () => void }) {
   const toast = useToast();
   const { now } = useStore();
-  const presets: [string, string][] = [['מחר', daysAhead(now, 1)], ['בעוד יומיים', daysAhead(now, 2)], ['בעוד שבוע', daysAhead(now, 7)]];
+  const todayIso = toISODate(now);
+  const presets: [string, string][] = [['יום העסקים הבא', addBusinessDays(todayIso, 1)], ['בעוד יומיים', addBusinessDays(todayIso, 2)], ['בעוד שבוע', addBusinessDays(todayIso, 5)]];
   // תאריך חזרה שכבר נקבע ועוד לא עבר – נשאר מסומן, כדי שפעולה חדשה לא תמחק אותו בטעות
-  const kept = q.callAt && q.callAt >= toISODate(now) ? q.callAt : '';
-  const [callAt, setCallAt] = useState(kept || (kind === 'noanswer' || kind === 'callback' ? presets[0][1] : ''));
+  // רק תאריך עתידי נשמר כברירת מחדל – חזרה שהגיעה היום עוברת ליום העסקים הבא, אחרת ההצעה נשארת מסומנת
+  const kept = q.callAt && q.callAt > toISODate(now) ? q.callAt : '';
+  const [callAt, setCallAt] = useState(kept || presets[0][1]);
   const [note, setNote] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const today = toISODate(now);
   const copy = ACTION_COPY[kind];
   const go = async () => {
-    if (kind === 'callback' && !callAt) return setErr('בחרו תאריך');
+    if (!callAt) return setErr('בחרו מתי לחזור');
     if (callAt && callAt < today) return setErr('התאריך כבר עבר');
     if (CARD_RE.test(note)) return setErr('אסור לרשום מספר כרטיס אשראי');
     setBusy(true);
@@ -210,13 +207,12 @@ function ActionDialog({ q, kind, onClose }: { q: Quote; kind: QuoteActionKind; o
     <Shell title={copy.title} sub={<>הצעה <Ltr>{q.id}</Ltr>{q.customer.name && <> · {q.customer.name}</>}</>} onClose={onClose}>
       <form className="sdialog__form" onSubmit={(e) => { e.preventDefault(); go(); }}>
         <div className="field">
-          <span className="field__label" id="qcb-l">לחזור ללקוח {kind !== 'callback' && <span className="muted">(לא חובה)</span>}</span>
+          <span className="field__label" id="qcb-l">לחזור ללקוח</span>
           <div className="chips" role="radiogroup" aria-labelledby="qcb-l">
-            {kind !== 'callback' && <button type="button" role="radio" aria-checked={!callAt} className={`chip ${!callAt ? 'is-on' : ''}`} onClick={() => { setCallAt(''); setErr(''); }}>בלי</button>}
             {presets.map(([l, v]) => <button type="button" role="radio" key={l} aria-checked={callAt === v} className={`chip ${callAt === v ? 'is-on' : ''}`} onClick={() => { setCallAt(v); setErr(''); }}>{l}</button>)}
           </div>
           <input type="date" className="input input--sm qcb-date" min={today} value={callAt} aria-label="או תאריך אחר" onChange={(e) => { setCallAt(e.target.value); setErr(''); }} />
-          {callAt && <span className="field__hint">תופיע משימה במסך היום ב-<Ltr>{dayMonth(callAt)}</Ltr></span>}
+          {callAt && <span className="field__hint">יסומן ברשימת ההצעות ב-<Ltr>{dayMonth(callAt)}</Ltr></span>}
         </div>
         <label className="field"><span className="field__label">הערה <span className="muted">(לא חובה)</span></span>
           <input className="input" value={note} maxLength={300} onChange={(e) => { setNote(e.target.value); setErr(''); }} placeholder={copy.note} data-autofocus />

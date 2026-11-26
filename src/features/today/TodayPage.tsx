@@ -2,7 +2,7 @@
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { UserPlus, ChevronLeft, CircleCheckBig, OctagonAlert, PackageCheck, Send, ListChecks, ClipboardX, Download, FileText, Scale } from 'lucide-react';
+import { UserPlus, ChevronLeft, CircleCheckBig, OctagonAlert, PackageCheck, Send, ListChecks, ClipboardX, Download, Scale } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { usePendingRequests } from '../../auth/usePendingRequests';
 import { useStore } from '../../data/store';
@@ -21,7 +21,7 @@ import './TodayPage.css';
 
 
 export function TodayPage() {
-  const { orders, now, dueTasks, loading, error, quoteFollowups } = useStore();
+  const { orders, now, dueTasks, loading, error } = useStore();
   const reduce = useReducedMotion();
   // 'כולם / שלי' נשמר לכל משתמש, ומשותף ל'היום' ול'משימות וחריגים'
   const [mine, setMine] = usePref('scope:mine', false);
@@ -36,7 +36,8 @@ export function TodayPage() {
      הספירה משותפת לתפריט (todayTasks.ts) – המספר ליד "היום" הוא בדיוק מספר המשימות כאן */
   // הזמנות של היום שבהמתנה – נספרות ב'להקליד ל-Q' (הן עוד לא ירדו), ומצוינות בנפרד
   const held = scope.filter((o) => o.date === today && !o.qNumber && !!o.hold && o.status !== 'cancelled').length;
-  const c = todayTaskCounts(scope, now, { dueTasks: dueTasks.length, quoteFollowups: quoteFollowups.length, pendingUsers: isAdmin ? pendingUsers : 0 });
+  // חזרות להצעות מחיר לא במסך היום (החלטה 26.11) – מסומנות בכרטיסיית הצעות המחיר
+  const c = todayTaskCounts(scope, now, { dueTasks: dueTasks.length, quoteFollowups: 0, pendingUsers: isAdmin ? pendingUsers : 0 });
   const red = redTasks(scope, c);
   const tasks: { key: TaskKey; title: string; sub?: string; icon: ReactNode; count: number; to: string; unit: [string, string] }[] = [
     { key: 'urgent', title: 'חריגות', sub: 'חיוב שנכשל, ביטול שלא בוצע ב-Q', icon: <OctagonAlert size={20} />, count: c.urgent, to: '/exceptions', unit: ['הזמנה', 'הזמנות'] },
@@ -44,7 +45,6 @@ export function TodayPage() {
     { key: 'q', title: 'להקליד ל-Q', sub: held ? `הזמנות של היום · מתוכן ${held} בהמתנה` : 'הזמנות של היום', icon: <Send size={20} />, count: c.q, to: '/orders?tab=today&filter=q', unit: ['הזמנה', 'הזמנות'] },
     { key: 'other', title: 'לבדוק מול הקופה', sub: 'פער מול Q, אשראי שלא חויב, שינוי שלא עודכן', icon: <Scale size={20} />, count: c.other, to: '/exceptions', unit: ['הזמנה', 'הזמנות'] },
     { key: 'missing', title: 'להשלים פרטים חסרים', icon: <ClipboardX size={20} />, count: c.missing, to: '/exceptions?rule=8', unit: ['הזמנה', 'הזמנות'] },
-    { key: 'quotes', title: 'לחזור על הצעות מחיר', sub: 'אין עדכון מהלקוח', icon: <FileText size={20} />, count: c.quotes, to: '/quotes?tab=waiting', unit: ['הצעה', 'הצעות'] },
     { key: 'followups', title: 'משימות מעקב להיום', icon: <ListChecks size={20} />, count: c.followups, to: '/exceptions', unit: ['משימה', 'משימות'] },
     { key: 'users', title: 'בקשות הצטרפות לאישור', icon: <UserPlus size={20} />, count: c.users, to: '/settings/users', unit: ['בקשה', 'בקשות'] },
   ];

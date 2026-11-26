@@ -9,7 +9,6 @@ import {
 import { auth, db } from '../lib/firebase';
 import { roundMoney, toISODate } from '../lib/format';
 import { CATEGORIES } from './types';
-import { addTaskTo } from './tasks';
 
 export const FIRST_QUOTE_NUMBER = 1001;
 
@@ -24,8 +23,15 @@ export const WAITING: QuoteStatus[] = ['sent', 'handling', 'noanswer'];
 export const OPEN_QUOTE: QuoteStatus[] = ['draft', 'sent', 'handling', 'noanswer', 'approved'];
 /* "אשר והפוך להזמנה" – בכל הצעה, חוץ מנדחתה או כזו שכבר הפכה להזמנה */
 export const canConvert = (q: Pick<Quote, 'status'>) => q.status !== 'rejected' && q.status !== 'ordered';
+/* יום עסקים: ראשון עד חמישי. "יום העסקים הבא" אחרי from (בלי שישי ושבת) */
+export function addBusinessDays(fromIso: string, n = 1): string {
+  const d = new Date(fromIso + 'T12:00:00');
+  let left = n;
+  while (left > 0) { d.setDate(d.getDate() + 1); if (d.getDay() !== 5 && d.getDay() !== 6) left--; }
+  return toISODate(d);
+}
 /* תאריך חזרה שהגיע (היום או שעבר) – בהצעה שעוד ממתינה לתשובה */
-export const callDue = (q: Pick<Quote, 'status' | 'callAt'>, today: string) => WAITING.includes(q.status) && !!q.callAt && q.callAt <= today;
+export const callDue = (q: Pick<Quote, 'status' | 'callAt'> & { validUntil?: string }, today: string) => WAITING.includes(q.status) && !!q.callAt && q.callAt <= today && !isExpired({ status: q.status, validUntil: q.validUntil ?? '' }, today);
 export const REJECT_REASONS = ['מחיר', 'הזמינו ממקום אחר', 'האירוע בוטל', 'אחר'];
 
 export type QuoteLine = { category: string; name: string; qty: number; unitPrice: number; itemId?: string; manual?: boolean };
@@ -77,8 +83,8 @@ export function staleHours(q: Quote, now: Date): number | null {
   if (!s) return null;
   return Math.floor((now.getTime() / 1000 - s) / 3600);
 }
-/* "אין עדכון כבר X שעות" – רק להצעה בלי תאריך חזרה. כשנקבע תאריך יש משימה פתוחה במסך היום, והיא התזכורת
-   (callAt מתאפס כשהמשימה מסומנת בוצעה), כדי שההצעה לא תיספר פעמיים */
+/* "אין עדכון כבר X שעות" – רק להצעה ישנה בלי תאריך חזרה. מאז 26.11 כל פעולה וכל סטטוס שממתין לתשובה קובעים תאריך,
+   והוא התזכורת (callDue) – כדי שההצעה לא תיספר פעמיים */
 export const needsFollowup = (q: Quote, now: Date, hours: number) => {
   if (q.callAt) return false;
   const h = staleHours(q, now);
@@ -205,6 +211,8 @@ export async function setQuoteStatus(q: Quote, status: QuoteStatus, note = '', e
   const u = me();
   // אושרה / נדחתה / הפכה להזמנה – אין יותר למי לחזור: המשימה הפתוחה נסגרת ותאריך החזרה מתאפס
   const closes = status === 'approved' || status === 'rejected' || status === 'ordered';
+  // סומנה שנשלחה / חזרה לטיפול – ממתינה לתשובה, אז נקבע מיד מתי לחזור (יום העסקים הבא), אלא אם כבר נקבע תאריך עתידי
+  const waits = WAITING.includes(status);
   const open = closes ? await openQuoteTasks(q.id) : [];
   await onFresh(q, (cur, tx) => {
     if (cur.status === status) return; // כבר במצב הזה (לחיצה כפולה)
@@ -218,6 +226,7 @@ export async function setQuoteStatus(q: Quote, status: QuoteStatus, note = '', e
       ...(status === 'rejected' ? { rejectReason: extra.rejectReason ?? '' } : {}),
       ...(extra.orderId ? { orderId: extra.orderId } : {}),
       ...(closes && cur.callAt ? { callAt: '' } : {}),
+      ...(waits && !(cur.callAt && cur.callAt > toISODate(new Date())) ? { callAt: addBusinessDays(toISODate(new Date())) } : {}),
       updatedAt: serverTimestamp(), updatedBy: u.uid, updatedByName: u.name,
     });
     tx.set(doc(collection(db, 'quotes', String(q.id), 'notes')), { text, kind: 'status', status, by: u.uid, byName: u.name, at: serverTimestamp() });
@@ -236,13 +245,12 @@ export async function addQuoteNote(q: Quote, text: string) {
 }
 
 /* ---------- פעולות טיפול: כל לחיצה נרשמת ביומן המעקב עם שעה ושם ----------
-   שיחה / אין מענה / נשלחה שוב מעבירות הצעה שממתינה לתשובה ל"בטיפול". כל פעולה כזו סוגרת את משימת החזרה הקודמת,
-   ואפשר לקבוע איתה תאריך חזרה חדש – הוא נשמר על ההצעה (callAt) והופך למשימה במסך היום ביום שנקבע. */
+   שיחה / אין מענה / נשלחה שוב מעבירות הצעה שממתינה לתשובה ל"בטיפול".
+   תאריך חזרה (callAt) תמיד נקבע: מה שבחרו, ואם לא בחרו – יום העסקים הבא (ראשון–חמישי). כשהוא מגיע ההצעה מסומנת
+   ברשימת ההצעות ובמונה בתפריט – לא כמשימה במסך היום (החלטה 26.11). משימות ישנות שנוצרו להצעות נסגרות בפעולה הבאה. */
 export type QuoteActionKind = 'call' | 'noanswer' | 'resent' | 'callback';
 const ACTION_TEXT: Record<QuoteActionKind, string> = { call: 'שיחה – ממתין להחלטה', noanswer: 'שיחה – אין מענה', resent: 'ההצעה נשלחה שוב', callback: 'נקבע מתי לחזור' };
 export const dayMonth = (iso: string) => iso.split('-').reverse().slice(0, 2).join('.');
-export const callbackTaskText = (q: Pick<Quote, 'id' | 'customer'>, note = '') =>
-  [`לחזור ללקוח – הצעה ${q.id}`, note.trim()].filter(Boolean).join(' · ');
 
 /* משימות החזרה הפתוחות של ההצעה – נסגרות בכל פעולה חדשה (גם אם תאריך החזרה כבר התאפס) */
 async function openQuoteTasks(id: number) {
@@ -250,8 +258,9 @@ async function openQuoteTasks(id: number) {
   return s.docs.map((d) => d.ref);
 }
 
-export async function quoteAction(q: Quote, kind: QuoteActionKind, note = '', callAt = '') {
-  if (kind === 'callback' && !callAt) throw new Error('callAt');
+export async function quoteAction(q: Quote, kind: QuoteActionKind, note = '', chosen = '') {
+  if (kind === 'callback' && !chosen) throw new Error('callAt');
+  const callAt = chosen || addBusinessDays(toISODate(new Date()));
   const u = me();
   const open = await openQuoteTasks(q.id);
   await onFresh(q, (cur, tx) => {
@@ -262,7 +271,6 @@ export async function quoteAction(q: Quote, kind: QuoteActionKind, note = '', ca
     const text = [head, callAt ? `לחזור ב-${dayMonth(callAt)}` : '', note.trim()].filter(Boolean).join(' · ');
     const toHandling = kind !== 'callback' && WAITING.includes(cur.status) && cur.status !== 'handling';
     open.forEach((r) => tx.update(r, { done: true, doneBy: u.uid, doneByName: u.name, doneAt: serverTimestamp() }));
-    if (callAt) addTaskTo(tx, { customerId: cur.customerId ?? '', quoteId: cur.id, customerName: cur.customer.name.trim() || `הצעה ${cur.id}`, text: callbackTaskText(cur, kind === 'callback' ? note : ''), due: callAt });
     tx.update(doc(db, 'quotes', String(q.id)), {
       ...(toHandling ? { status: 'handling', statusAt: serverTimestamp() } : {}),
       ...(kind === 'noanswer' ? { noAnswerCount: count } : {}),

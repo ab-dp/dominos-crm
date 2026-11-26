@@ -116,3 +116,18 @@ describe('עריכה מרכזית – editPatch', () => {
     expect(Object.keys(editPatch(eo, { ...same(eo), branchId: 'zz', branchName: 'חדש', branchPhone: '1', cluster: 'דרום' } as NewOrderInput, { pricingTouched: false })).sort()).toEqual(['branchId', 'branchName', 'branchPhone', 'cluster']);
   });
 });
+
+/* שלב 5ב: יום עסקים = ראשון עד חמישי */
+import { addBusinessDays } from '../src/data/quotes';
+describe('ימי עסקים להצעות', () => {
+  it('יום העסקים הבא', () => {
+    expect(addBusinessDays('2026-11-25')).toBe('2026-11-26'); // ד׳ ← ה׳
+    expect(addBusinessDays('2026-11-26')).toBe('2026-11-29'); // ה׳ ← א׳
+    expect(addBusinessDays('2026-11-27')).toBe('2026-11-29'); // ו׳ ← א׳
+    expect(addBusinessDays('2026-11-28')).toBe('2026-11-29'); // ש׳ ← א׳
+  });
+  it('כמה ימי עסקים קדימה', () => {
+    expect(addBusinessDays('2026-11-26', 2)).toBe('2026-11-30'); // ה׳ + 2 ← ב׳
+    expect(addBusinessDays('2026-11-25', 5)).toBe('2026-12-02'); // שבוע עבודה
+  });
+});
