@@ -36,6 +36,7 @@ const CustomerFile = named(() => import('./features/customers/CustomerFile'), 'C
 const LeadsPage = named(() => import('./features/leads/LeadsPage'), 'LeadsPage');
 const LeadFile = named(() => import('./features/leads/LeadFile'), 'LeadFile');
 const PriceListsPage = named(() => import('./features/pricelists/PriceListsPage'), 'PriceListsPage');
+const MenuPage = named(() => import('./features/pricelists/MenuPage'), 'MenuPage');
 const ExceptionsPage = named(() => import('./features/exceptions/ExceptionsPage'), 'ExceptionsPage');
 const ReportsHub = named(() => import('./features/reports/ReportsPage'), 'ReportsHub');
 const ReportView = named(() => import('./features/reports/ReportsPage'), 'ReportView');
@@ -109,6 +110,7 @@ function Gate() {
               <Route path="/leads" element={<LeadsPage />} />
               <Route path="/leads/:id" element={<LeadFile />} />
               <Route path="/pricelists" element={<PriceListsPage />} />
+              <Route path="/pricelists/menu" element={<MenuPage />} />
               <Route path="/quotes" element={<QuotesPage />} />
               <Route path="/quotes/new" element={<QuotePage />} />
               <Route path="/quotes/:id" element={<QuotePage />} />

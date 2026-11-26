@@ -3,7 +3,7 @@
    לקוחות משויכים מכאן או מתיק הלקוח; מחירון של לקוח נבחר לבד בהצעת מחיר ובהזמנה. שינוי מחירון לא משנה הזמנות והצעות קיימות. */
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, Copy, Pencil, Plus, Search, Tags, Trash2, Users, X } from 'lucide-react';
+import { BookOpen, Check, Copy, Pencil, Plus, Search, Tags, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Shell } from '../leads/LeadDialogs';
 import {
@@ -26,6 +26,7 @@ const sameName = (a: string, b: string) => { const k = (x: string) => x.replace(
 export function PriceListsPage() {
   const { items, loading, error } = usePriceLists();
   const { items: customers } = useCustomers();
+  const { isAdmin } = useAuth(); // התפריט – מנהל בלבד
   const toast = useToast();
   const [params, setParams] = useSearchParams();
   const [creating, setCreating] = useState(false);
@@ -55,7 +56,10 @@ export function PriceListsPage() {
           <h1 className="page__title">מחירונים</h1>
           <p className="page__sub">מוצרים ומחירים לפי קטגוריה. המחירים כוללים מע"מ.</p>
         </div>
-        <div className="page__head-end"><Button variant="primary" icon={<Plus size={16} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button></div>
+        <div className="page__head-end">
+          {isAdmin && <Link className="btn btn--secondary btn--md" to="/pricelists/menu"><BookOpen size={16} aria-hidden="true" /><span className="btn__label">תפריט</span></Link>}
+          <Button variant="primary" icon={<Plus size={16} />} onClick={() => setCreating(true)} disabled={creating}>מחירון חדש</Button>
+        </div>
       </header>
 
       {error ? <div className="card"><EmptyState icon={<Tags size={20} />} title="לא ניתן לטעון">{error}</EmptyState></div> : (
