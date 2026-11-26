@@ -56,7 +56,7 @@ function Table({ t, onRow }: { t: STable; onRow?: (i: number, el: HTMLElement) =
 }
 
 export function PeriodReport() {
-  const { now } = useStore();
+  const { now, channels } = useStore();
   const nav = useNavigate();
   const toast = useToast();
   const panel = usePanel();
@@ -73,7 +73,7 @@ export function PeriodReport() {
   };
 
   const { orders, loading, error, reload } = useOrdersRange(from, to);
-  const ot = useMemo(() => ordersTable(orders), [orders]);
+  const ot = useMemo(() => ordersTable(orders), [orders, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const sum = useMemo(() => summary(orders, from, to), [orders, from, to]);
   const noQ = useMemo(() => missingQ(orders).length, [orders]);
   const [busy, setBusy] = useState(false);

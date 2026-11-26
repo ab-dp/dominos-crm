@@ -1,6 +1,6 @@
-/* הגדרות ← רשימות: הוספה, שינוי שם בתוך השורה, הפעלה/השבתה. אין מחיקה – פריט לא פעיל נשאר בהזמנות הישנות. */
+/* הגדרות ← רשימות: הוספה, שינוי שם בתוך השורה, הפעלה/השבתה ושינוי סדר (חצים). אין מחיקה – פריט לא פעיל נשאר בהזמנות הישנות. */
 import { useState } from 'react';
-import { Check, Lock, Pencil, Plus, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Lock, Pencil, Plus, X } from 'lucide-react';
 import { LIST_META, saveList, useLists, type ListItem, type ListKey, type Lists } from '../../data/lists';
 import { Button, EmptyState, Skeleton, Tip } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -37,9 +37,12 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
   const [newLabel, setNewLabel] = useState('');
   const [err, setErr] = useState('');
 
+  const [saving, setSaving] = useState(false);
   const commit = async (next: ListItem[], msg: string) => {
+    setSaving(true);
     try { await saveList(k, next, items, lists); toast({ message: msg, onUndo: () => saveList(k, items, next, { ...lists, [k]: next }) }); }
     catch { toast({ tone: 'error', message: 'השמירה נכשלה – רק מנהל מערכת יכול לשנות רשימות' }); }
+    finally { setSaving(false); }
   };
 
   const add = async () => {
@@ -58,6 +61,16 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
     await commit(items.map((x) => (x.id === it.id ? { ...x, label } : x)), 'השם עודכן');
   };
 
+  /* סדר הרשימה = סדר הבחירה בטפסים */
+  const move = (i: number, dir: -1 | 1) => {
+    if (saving) return; // שמירה קודמת עוד בדרך – אחרת שתי לחיצות מהירות מחושבות מאותה רשימה ומבטלות זו את זו
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    void commit(next, `"${items[i].label}" הוזז ${dir < 0 ? 'למעלה' : 'למטה'}`);
+  };
+
   return (
     <section className="card lcard" aria-labelledby={`h-${k}`}>
       <div className="lcard__head">
@@ -65,7 +78,7 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
         <p className="muted lcard__hint">{LIST_META[k].hint}</p>
       </div>
       <ul className="litems">
-        {items.map((it) => (
+        {items.map((it, i) => (
           <li key={it.id} className={`litem ${it.active ? '' : 'is-inactive'}`}>
             {editing === it.id ? (
               <span className="litem__edit">
@@ -81,6 +94,8 @@ function ListCard({ k, lists }: { k: ListKey; lists: Lists }) {
                 {it.locked && <Tip label="פריט מערכת – לא ניתן להשבית"><span className="litem__lock" role="img" tabIndex={0} aria-label="פריט מערכת"><Lock size={14} /></span></Tip>}
                 {!it.active && <span className="tag-inactive">לא פעיל</span>}
                 <span className="litem__actions">
+                  <button className="icon-btn icon-btn--sm" aria-label={`הזז למעלה: ${it.label}`} disabled={saving || i === 0} onClick={() => move(i, -1)}><ChevronUp size={14} /></button>
+                  <button className="icon-btn icon-btn--sm" aria-label={`הזז למטה: ${it.label}`} disabled={saving || i === items.length - 1} onClick={() => move(i, 1)}><ChevronDown size={14} /></button>
                   <button className="icon-btn icon-btn--sm" aria-label={`שנה שם: ${it.label}`} onClick={() => { setEditing(it.id); setDraft(it.label); }}><Pencil size={14} /></button>
                   {!it.locked && (
                     <button className="litem__toggle" onClick={() => commit(items.map((x) => (x.id === it.id ? { ...x, active: !x.active } : x)), `"${it.label}" ${it.active ? 'הושבת' : 'הופעל'}`)}>

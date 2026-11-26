@@ -9,7 +9,7 @@ export type ListKey = 'channels' | 'cancelReasons' | 'paymentMethods' | 'docType
 export type Lists = Record<ListKey, ListItem[]>;
 
 export const LIST_META: Record<ListKey, { title: string; hint: string }> = {
-  channels: { title: 'ערוצי קבלה', hint: 'האפשרויות בשדה "ערוץ" בהזמנה. אפשר גם להקליד שם טקסט חופשי' },
+  channels: { title: 'ערוצי קבלה', hint: 'הבחירה בשדה "ערוץ" בהזמנה (חובה). השבתה מסתירה מהבחירה, וההזמנות שכבר שויכו ממשיכות להציג אותו' },
   cancelReasons: { title: 'סיבות ביטול', hint: 'נבחרות בחלון "בוטלה"' },
   paymentMethods: { title: 'אמצעי תשלום', hint: 'ארבעת הבסיסיים נעולים – הדוחות נשענים עליהם. "אחר" פותח בהזמנה שדה לפירוט' },
   docTypes: { title: 'סוגי מסמכים', hint: 'לסיווג קבצים בתיק הזמנה ובתיק לקוח' },
@@ -21,7 +21,9 @@ export const LIST_META: Record<ListKey, { title: string; hint: string }> = {
 const item = (id: string, label: string, locked = false): ListItem => ({ id, label, active: true, ...(locked ? { locked } : {}) });
 
 export const DEFAULT_LISTS: Lists = {
-  channels: [item('phone', 'טלפון'), item('whatsapp', 'WhatsApp'), item('email', 'מייל')],
+  // הערכים הישנים (טלפון, WhatsApp) מושבתים ולא נמחקים – הזמנות שכבר שויכו אליהם ממשיכות להציג אותם
+  channels: [item('sales', 'מכירות'), item('peltone', 'קובץ פעלטון'), item('email', 'מייל'), item('birthday', 'יום הולדת'), item('callcenter', 'מוקד'), item('wellb', 'well-b'),
+    { id: 'phone', label: 'טלפון', active: false }, { id: 'whatsapp', label: 'WhatsApp', active: false }],
   cancelReasons: [item('customer', 'הלקוח ביטל'), item('branch', 'הסניף לא יכול לבצע'), item('date', 'שינוי מועד'), item('dup', 'הזמנה כפולה'), item('other', 'אחר')],
   paymentMethods: [item('credit', 'אשראי', true), item('account', 'הקפה', true), item('cash', 'מזומן', true), item('other', 'אחר', true)],
   leadSources: [item('referral', 'המלצה'), item('event', 'אירוע'), item('outbound', 'פנייה יזומה'), item('website', 'אתר'), item('inbound', 'פנה אלינו')],

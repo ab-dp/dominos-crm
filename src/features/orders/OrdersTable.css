@@ -132,3 +132,6 @@
 .hold-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; margin-inline-start: var(--space-2); background: var(--hold-bg); color: var(--hold-fg); }
 /* יש תיעוד טיפול בתיק הלקוח */
 .care-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; margin-inline-start: var(--space-2); background: var(--brand-50); color: var(--brand-700); }
+
+/* ערוץ: עמודה צרה אחרי "סניף" (בטלפון מוסתרת, כמו שאר העמודות) */
+.otable .c-channel { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-label); }

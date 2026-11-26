@@ -17,7 +17,7 @@ import { reportName, reportSheet } from './reportExcel';
 import { downloadXlsx } from '../../lib/xlsx';
 import { useProgressive } from '../../lib/useProgressive';
 import { FilterBar } from '../../design/FilterBar';
-import { filterOptions, matchesFilters, type FilterValues } from '../../data/orderFilters';
+import { FILTER_DEFS, filterOptions, matchesFilters, type FilterValues } from '../../data/orderFilters';
 import '../pages.css';
 import './ReportsPage.css';
 
@@ -69,7 +69,7 @@ export function ReportView() {
 }
 
 function Report({ def }: { def: ReportDef }) {
-  const { now } = useStore();
+  const { now, channels } = useStore();
   const nav = useNavigate();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
@@ -82,7 +82,8 @@ function Report({ def }: { def: ReportDef }) {
   const method = params.get('method') ?? '';
   const outcome = (params.get('outcome') ?? '') as Outcome | '';
   const handler = params.get('handler') ?? '';
-  const fv: FilterValues = useMemo(() => ({ cluster, branch, method, outcome, handler }), [cluster, branch, method, outcome, handler]);
+  const channel = params.get('channel') ?? '';
+  const fv: FilterValues = useMemo(() => ({ cluster, branch, channel, method, outcome, handler }), [cluster, branch, channel, method, outcome, handler]);
   const [cust, setCust] = useState('');
   const set = (patch: Record<string, string | null>) => {
     const p = new URLSearchParams(params);
@@ -91,22 +92,22 @@ function Report({ def }: { def: ReportDef }) {
   };
 
   const { orders: raw, loading, error, reload } = useOrdersRange(from, to);
-  const dims = useMemo(() => filterOptions(raw, ['cluster', 'branch', 'method', 'outcome', 'handler'], fv).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)), [raw, fv]);
-  const orders = useMemo(() => raw.filter((o) => matchesFilters(o, fv) && (!cust.trim() || o.customerName.includes(cust.trim()))), [raw, fv, cust]);
-  const res: ReportResult = useMemo(() => def.compute(orders), [def, orders]);
+  const dims = useMemo(() => filterOptions(raw, ['cluster', 'branch', 'channel', 'method', 'outcome', 'handler'], fv).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)), [raw, fv, channels]); // eslint-disable-line react-hooks/exhaustive-deps
+  const orders = useMemo(() => raw.filter((o) => matchesFilters(o, fv) && (!cust.trim() || o.customerName.includes(cust.trim()))), [raw, fv, cust, channels]); // eslint-disable-line react-hooks/exhaustive-deps
+  const res: ReportResult = useMemo(() => def.compute(orders), [def, orders, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const prog = useProgressive(res.rows.length, res);
   const [picked, setPicked] = useState<Row | null>(null);
   const [view, setView] = useState<'chart' | 'table'>('chart');
-  const filtered = !!(cluster || branch || cust.trim() || method || outcome || handler);
+  const filtered = !!(cluster || branch || channel || cust.trim() || method || outcome || handler);
   const panel = usePanel();
 
   const [exporting, setExporting] = useState(false);
   const exportXlsx = async () => {
     setExporting(true);
     try {
-      const filterText = filtered ? `מסונן: ${[cluster, branch, cust.trim(), method && (METHOD_LABEL[method] ?? method), outcome && OUTCOME_LABEL[outcome], handler].filter(Boolean).join(' · ')}` : '';
+      const filterText = filtered ? `מסונן: ${[cluster, branch, channel && FILTER_DEFS.channel.text(channel), cust.trim(), method && (METHOD_LABEL[method] ?? method), outcome && OUTCOME_LABEL[outcome], handler].filter(Boolean).join(' · ')}` : '';
       await downloadXlsx(`${reportName(def)} ${fmtDate(from)}-${fmtDate(to)}`, [reportSheet(def, res, `${fmtDate(from)} – ${fmtDate(to)}`, filterText)]);
-      logReportExport(def.id, { from, to, rows: res.rows.length, filters: { cluster, branch, customer: cust.trim(), method, outcome, handler } }).catch(() => undefined);
+      logReportExport(def.id, { from, to, rows: res.rows.length, filters: { cluster, branch, channel, customer: cust.trim(), method, outcome, handler } }).catch(() => undefined);
       toast({ message: <>הדוח יוצא לאקסל · <Ltr>{res.rows.length}</Ltr> שורות</> });
     } catch {
       toast({ tone: 'error', message: 'הייצוא נכשל – נסה שוב' });

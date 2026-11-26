@@ -120,9 +120,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/today" className="topbar__logo" aria-label="Domino's CRM – חזרה למסך היום">
           <img src={`${BASE}logo-tile.svg`} alt="" />
         </Link>
-        <button className="search-trigger" onClick={() => setSearchOpen(true)} aria-label="חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון (/)">
+        <button className="search-trigger" onClick={() => setSearchOpen(true)} aria-label="חיפוש: הזמנה, לקוח, מס' Q, מס' קריאה, ח.פ, טלפון (/)">
           <Search size={16} aria-hidden="true" />
-          <span className="search-trigger__full">חיפוש: הזמנה, לקוח, מס' Q, ח.פ, טלפון…</span>
+          <span className="search-trigger__full">חיפוש: הזמנה, לקוח, מס' Q, מס' קריאה, ח.פ, טלפון…</span>
           <span className="search-trigger__short" aria-hidden="true">חיפוש הזמנה או לקוח</span>
           <kbd className="kbd">/</kbd>
         </button>

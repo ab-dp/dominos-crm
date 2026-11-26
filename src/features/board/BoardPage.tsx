@@ -10,6 +10,7 @@ import { db } from '../../lib/firebase';
 import { useStore, type OrderView } from '../../data/store';
 import { fromDoc } from '../../data/orders';
 import { METHOD_LABEL } from '../../data/types';
+import { UNCLASSIFIED } from '../../data/channels';
 import { useGoals, type Goals } from '../../data/goals';
 import { usePref } from '../../lib/prefs';
 import { Button, Skeleton } from '../../design/components';
@@ -17,19 +18,19 @@ import { Ltr, addDays, fmtDate, fmtMoney, toISODate } from '../../lib/format';
 import { lateLabel, lateSplit } from '../../data/metrics';
 import {
   NO_FILTERS, PERIOD_LABEL, applyFilters, byDay, collections, delta, goalPace, horizon, periodRanges, quotesSummary, rankings, sales, service,
-  type DayPoint, type Filters, type Period, type Range, type Ranked,
+  type DayPoint, type Filters, type Period, type Range, type Ranked, type ChannelRanked,
 } from './boardData';
 import '../pages.css';
 import '../reports/ReportsPage.css';
 import './Board.css';
 
-type SectionKey = 'upcoming' | 'sales' | 'service' | 'collections' | 'customers' | 'branches' | 'team' | 'quotes';
+type SectionKey = 'upcoming' | 'sales' | 'service' | 'collections' | 'customers' | 'branches' | 'channels' | 'team' | 'quotes';
 const SECTIONS: Record<SectionKey, string> = {
   upcoming: 'הזמנות קרובות', sales: 'מכירות', service: 'עמידה בזמנים', collections: 'גבייה ובקרת קופה',
-  customers: 'לקוחות', branches: 'סניפים ואשכולות', team: 'צוות', quotes: 'הצעות מחיר',
+  customers: 'לקוחות', branches: 'סניפים ואשכולות', channels: 'לפי ערוץ', team: 'צוות', quotes: 'הצעות מחיר',
 };
-const DEFAULT_ORDER: SectionKey[] = ['upcoming', 'sales', 'service', 'collections', 'customers', 'branches', 'team', 'quotes'];
-const WIDE: SectionKey[] = ['upcoming', 'sales', 'team', 'quotes'];
+const DEFAULT_ORDER: SectionKey[] = ['upcoming', 'sales', 'service', 'collections', 'customers', 'branches', 'channels', 'team', 'quotes'];
+const WIDE: SectionKey[] = ['upcoming', 'sales', 'channels', 'team', 'quotes'];
 type Layout = { order: SectionKey[]; hidden: SectionKey[] };
 
 /* ---------- ניסוחים ---------- */
@@ -77,7 +78,7 @@ function Section({ id, title, meta, tool, lead, children }: { id: string; title:
 }
 
 export function BoardPage() {
-  const { orders, now, quotes, loading, quoteFollowups } = useStore();
+  const { orders, now, quotes, loading, quoteFollowups, channels } = useStore();
   const goals = useGoals();
   const nav = useNavigate();
   const [period, setPeriod] = usePref<Period>('board:period', 'month');
@@ -108,7 +109,7 @@ export function BoardPage() {
   const sv = useMemo(() => service(scoped, cur, now), [scoped, cur.from, cur.to, now]); // eslint-disable-line react-hooks/exhaustive-deps
   const svp = useMemo(() => service(scoped, prev, now), [scoped, prev.from, prev.to, now]); // eslint-disable-line react-hooks/exhaustive-deps
   const col = useMemo(() => collections(scopedLive, now), [scopedLive, now]);
-  const rk = useMemo(() => rankings(scoped, cur), [scoped, cur.from, cur.to]); // eslint-disable-line react-hooks/exhaustive-deps
+  const rk = useMemo(() => rankings(scoped, cur), [scoped, cur.from, cur.to, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const qs = useMemo(() => quotesSummary(quotes, cur, now, quoteFollowups.length), [quotes, cur.from, cur.to, now, quoteFollowups.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const busy = loading || (usingRemote && remote.loading);
   /* התקופה נבחרת פעם אחת למעלה – לא חוזרת בכל כרטיס */
@@ -122,6 +123,7 @@ export function BoardPage() {
     collections: () => <CollectionsSection c={col} go={nav} />,
     customers: () => <CustomersSection rows={rk.customers} customers={s.customers} />,
     branches: () => <BranchesSection clusters={rk.clusters} branches={rk.branches} />,
+    channels: () => <ChannelsSection rows={rk.channels} />,
     team: () => <TeamSection rows={rk.team} />,
     quotes: () => <QuotesSection q={qs} go={nav} />,
   };
@@ -542,6 +544,37 @@ function BranchesSection({ clusters, branches }: { clusters: Ranked[]; branches:
       tool={<div className="seg seg--sm" role="group" aria-label="פילוח"><button className={by === 'clusters' ? 'is-on' : ''} aria-pressed={by === 'clusters'} onClick={() => setBy('clusters')}>אשכולות</button><button className={by === 'branches' ? 'is-on' : ''} aria-pressed={by === 'branches'} onClick={() => setBy('branches')}>סניפים</button></div>}
       lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : <p>{by === 'clusters' ? 'אשכול' : 'סניף'} <b>{top.name}</b> מוביל, עם <Ltr>{top.share}%</Ltr> מההכנסות.</p>}>
       {top && <Share rows={rows} limit={6} extra={(r) => (r.onTimePct === null ? null : <> · <Ltr>{r.onTimePct}%</Ltr> בזמן</>)} />}
+    </Section>
+  );
+}
+/* לפי ערוץ: הזמנות · פיצות · הכנסות · חלק · ממוצע להזמנה · % בזמן. "לא מסווג" = הזמנות ישנות עם טקסט ערוץ חופשי */
+function ChannelsSection({ rows }: { rows: ChannelRanked[] }) {
+  const top = rows[0];
+  // הערוץ המוביל – רק מבין המסווגים ("לא מסווג" הוא הזמנות ישנות, לא ערוץ); אין מסווגים – בלי משפט
+  const lead = rows.find((r) => r.name !== UNCLASSIFIED && r.name !== '—');
+  return (
+    <Section id="ch" title="לפי ערוץ"
+      lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : lead ? <p>הערוץ המוביל בתקופה: <b>{lead.name}</b>, עם <Ltr>{lead.share}%</Ltr> מההכנסות.</p> : undefined}>
+      {top && (
+        <div className="report__scroll">
+          <table className="rtable rtable--stack bteam">
+            <thead><tr><th>ערוץ</th><th className="num">הזמנות</th><th className="num">פיצות</th><th className="num">הכנסות</th><th className="num">חלק מההכנסות</th><th className="num">ממוצע להזמנה</th><th className="num">סופקו בזמן</th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.name}>
+                  <td data-label="ערוץ">{r.name === UNCLASSIFIED ? <span title="הזמנות ישנות עם טקסט ערוץ חופשי">{UNCLASSIFIED}</span> : r.name}</td>
+                  <td className="num" data-label="הזמנות"><Ltr>{num(r.count)}</Ltr></td>
+                  <td className="num" data-label="פיצות"><Ltr>{num(r.pizzas)}</Ltr></td>
+                  <td className="num" data-label="הכנסות"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
+                  <td className="num" data-label="חלק מההכנסות"><Ltr>{r.share}%</Ltr></td>
+                  <td className="num" data-label="ממוצע להזמנה"><Ltr>{fmtMoney(r.avg)}</Ltr></td>
+                  <td className="num" data-label="סופקו בזמן">{r.onTimePct === null ? <span className="muted">—</span> : <Ltr>{r.onTimePct}%</Ltr>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </Section>
   );
 }

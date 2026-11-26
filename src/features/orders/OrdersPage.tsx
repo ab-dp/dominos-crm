@@ -13,6 +13,7 @@ import { Ltr, addDays, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/f
 import { OrdersTable } from './OrdersTable';
 import { FilterBar } from '../../design/FilterBar';
 import { filterOptions, filtersText, matchesFilters, type FilterKey, type FilterValues } from '../../data/orderFilters';
+import { callRefMatch } from '../../data/channels';
 import '../pages.css';
 
 /* לשוניות: היום · מחר · עתידיות (כל מה שאחרי היום, כולל מחר) · פתוחות שעבר מועדן · לפי תאריכים (כל טווח, גם עתידי וגם ארכיון) · ארכיון.
@@ -37,7 +38,7 @@ const dayDiff = (a: string, b: string) => Math.round((new Date(b + 'T12:00').get
 const monthStart = (iso: string, back: number) => { const d = new Date(iso + 'T12:00'); return toISODate(new Date(d.getFullYear(), d.getMonth() - back, 1)); };
 
 export function OrdersPage() {
-  const { orders, now, loading, error, thresholds } = useStore();
+  const { orders, now, loading, error, thresholds, channels } = useStore();
   const [params, setParams] = useSearchParams();
   // ערך לא מוכר בכתובת (קישור ישן או שגוי) – "היום", ולא מסך שבור
   const raw = params.get('tab') as Tab | null;
@@ -49,7 +50,7 @@ export function OrdersPage() {
   const filter = filterKey ? filters[filterKey] : undefined;
   /* סינון לפי ממדים (אשכול, סניף, תשלום, מטפל, שלב, סטטוס אספקה) – אותו רכיב ואותם מפתחות כמו בדוחות.
      שלב בכל הלשוניות (בהיום/מחר/עתידיות/שעבר מועדן מופיעים בפועל רק פתוחה והוקלד ל-Q) */
-  const dimKeys: FilterKey[] = raw === 'archive' || raw === 'range' ? ['cluster', 'branch', 'method', 'handler', 'stage', 'outcome'] : ['cluster', 'branch', 'method', 'handler', 'stage'];
+  const dimKeys: FilterKey[] = raw === 'archive' || raw === 'range' ? ['cluster', 'branch', 'channel', 'method', 'handler', 'stage', 'outcome'] : ['cluster', 'branch', 'channel', 'method', 'handler', 'stage'];
   const dimSig = dimKeys.map((k) => params.get(k) ?? '').join('|');
   const dimValues = useMemo(() => Object.fromEntries(dimKeys.map((k) => [k, params.get(k) ?? ''])) as FilterValues,
     [dimSig, raw]);
@@ -99,10 +100,10 @@ export function OrdersPage() {
   const rows = useMemo(() => lists[tab]
     .filter((o) => !filter || filter.test(o))
     .filter((o) => matchesFilters(o, dimValues))
-    .filter((o) => !q || o.customerName.toLowerCase().includes(q) || String(o.id).includes(q) || (o.qNumber ?? '').toLowerCase().includes(q) || o.branchName.includes(q)),
-  [lists, tab, filter, q, dimValues]);
+    .filter((o) => !q || o.customerName.toLowerCase().includes(q) || String(o.id).includes(q) || (o.qNumber ?? '').toLowerCase().includes(q) || o.branchName.includes(q) || callRefMatch(o, q)),
+  [lists, tab, filter, q, dimValues, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const dims = useMemo(() => filterOptions(lists[tab], dimKeys, dimValues).map((d) => (d.key === 'cluster' ? { ...d, clears: ['branch'] } : d)),
-    [lists, tab, dimValues]);
+    [lists, tab, dimValues, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const dimText = filtersText(dimValues);
   const total = revenue(rows);
   const needs = rows.filter((o) => o.health === 'critical' || o.health === 'urgent').length;
@@ -188,7 +189,7 @@ export function OrdersPage() {
         </div>
         <label className="tablebar__search">
           <Search size={16} aria-hidden="true" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="סינון בטבלה: לקוח, מס' הזמנה, Q, סניף" aria-label="סינון בטבלה" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="סינון בטבלה: לקוח, מס' הזמנה, Q, סניף, מס' קריאה" aria-label="סינון בטבלה" />
           {query && <button onClick={() => setQuery('')} aria-label="נקה סינון"><X size={14} /></button>}
         </label>
         <div className="seg seg--sm" role="group" aria-label="צפיפות הטבלה">

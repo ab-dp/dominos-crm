@@ -1,6 +1,7 @@
 /* סיכום תקופה – דוח להנהלה. פונקציות טהורות: מהזמנות לטבלאות, שמשמשות גם את המסך וגם את קובץ האקסל.
    כלל אחיד כמו בשאר הדוחות: לפי תאריך אספקה וסכום Q (ואם לא הוקלד – הסכום לחיוב). סכומים בלי הזמנות שבוטלו. */
 import { OUTCOME_LABEL, methodText, PIZZA, STAGE_LABEL, categoryOf, stageOf, type Order } from '../../data/types';
+import { channelLabel, channelLegacyText } from '../../data/channels';
 import { addDays, roundMoney, toISODate } from '../../lib/format';
 import { LATE_SPLIT_HINT, ON_TIME_HINT, isDelivered, isLive, lateKind, lateLabel, lateSplit, onTime, revenue, type Preset } from '../../data/metrics';
 
@@ -48,17 +49,17 @@ export function ordersTable(all: Order[]): STable {
     cols: [
       { label: 'תאריך', kind: 'date', width: 12 }, { label: 'שעה', kind: 'code', width: 8 }, { label: "מס' הזמנה", kind: 'id', width: 11 },
       { label: 'לקוח', kind: 'text', width: 28 }, { label: 'סניף', kind: 'text', width: 20 }, { label: 'אשכול', kind: 'text', width: 18 },
-      { label: 'ערוץ', kind: 'text', width: 12 }, { label: 'פריטים', kind: 'num', width: 9 }, { label: "מס' Q", kind: 'code', width: 12 },
+      { label: 'ערוץ', kind: 'text', width: 12 }, { label: 'ערוץ (טקסט ישן)', kind: 'text', width: 16 }, { label: 'פריטים', kind: 'num', width: 9 }, { label: "מס' Q", kind: 'code', width: 12 },
       { label: 'סכום Q', kind: 'money', width: 12 }, { label: 'אמצעי תשלום', kind: 'text', width: 13 }, { label: 'סטטוס', kind: 'text', width: 20 },
       { label: 'דקות איחור', kind: 'num', width: 11 },
     ],
     ids: list.map((o) => o.id),
     rows: list.map((o) => [
-      o.date, o.time || null, o.id, o.customerName, o.branchName, o.cluster || null, o.channel || null, itemCount(o), o.qNumber || null,
+      o.date, o.time || null, o.id, o.customerName, o.branchName, o.cluster || null, channelLabel(o) || null, channelLegacyText(o) || null, itemCount(o), o.qNumber || null,
       o.qAmount ?? null, methodText(o), statusText(o),
       o.late ? (o.late.minutes || 'לא צוין') : null,
     ]),
-    total: ['סה"כ', null, null, `${l.length} הזמנות`, null, null, null, null, null, sumQ(l), null, null, null],
+    total: ['סה"כ', null, null, `${l.length} הזמנות`, null, null, null, null, null, null, sumQ(l), null, null, null],
   };
 }
 /* הזמנה בלי סכום Q – הסה"כ לוקח במקומה את הסכום לחיוב */

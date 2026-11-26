@@ -1,6 +1,7 @@
 /* הגדרות הדוחות (אפיון 10). כל דוח: פונקציה טהורה מהזמנות לשורות וסיכום – קל לבדוק מול חישוב ידני.
    כלל אחיד: לפי תאריך אספקה וסכום Q (ואם לא הועברה – סכום לחיוב). סכומים בלי הזמנות שבוטלו; הביטולים נספרים בנפרד. */
-import { OUTCOME_LABEL, methodText, PAYMENT_LABEL, itemsText, outcomeOf, type Order, type Outcome } from '../../data/types';
+import { OUTCOME_LABEL, methodText, PAYMENT_LABEL, PIZZA, categoryOf, itemsText, outcomeOf, type Order, type Outcome } from '../../data/types';
+import { channelLabel, channelLegacyText, getChannels, UNCLASSIFIED } from '../../data/channels';
 import { LATE_SPLIT_HINT, ON_TIME_HINT, isDelivered, isLive, lateSplit, onTime, pctOf, revenue, revenueOf } from '../../data/metrics';
 import { fmtDate } from '../../lib/format';
 
@@ -56,7 +57,7 @@ export const REPORTS: ReportDef[] = [
       const rows = [...all].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).map((o) => ({
         id: String(o.id), orders: [o],
         cells: {
-          date: fmtDate(o.date), time: o.time, id: o.id, customer: o.customerName, branch: o.branchName, cluster: o.cluster, channel: o.channel,
+          date: fmtDate(o.date), time: o.time, id: o.id, customer: o.customerName, branch: o.branchName, cluster: o.cluster, channel: channelLabel(o), channelLegacy: channelLegacyText(o), callRef: o.callRef ?? '',
           handler: o.handler || o.createdBy, items: orderItemsText(o), amount: o.amount, q: o.qNumber ?? '', qAmount: o.qAmount ?? '',
           method: methodText(o), payment: PAYMENT_LABEL[o.payment], outcome: deliveryText(o),
           lateMin: o.late?.minutes || '', reason: o.status === 'cancelled' ? [o.cancelReason, o.cancelNote].filter(Boolean).join(' · ') : o.status === 'partial' ? o.partialNote ?? '' : '',
@@ -75,7 +76,7 @@ export const REPORTS: ReportDef[] = [
         ],
         cols: [
           { key: 'date', label: 'תאריך', kind: 'date' }, { key: 'time', label: 'שעה', kind: 'date' }, { key: 'id', label: "מס' הזמנה", kind: 'num' }, { key: 'customer', label: 'לקוח' },
-          { key: 'branch', label: 'סניף' }, { key: 'cluster', label: 'אשכול' }, { key: 'channel', label: 'ערוץ' }, { key: 'handler', label: 'מטפל' }, { key: 'items', label: 'פריטים' },
+          { key: 'branch', label: 'סניף' }, { key: 'cluster', label: 'אשכול' }, { key: 'channel', label: 'ערוץ' }, { key: 'channelLegacy', label: 'ערוץ (טקסט ישן)' }, { key: 'callRef', label: 'מספר קריאה', kind: 'text' }, { key: 'handler', label: 'מטפל' }, { key: 'items', label: 'פריטים' },
           { key: 'amount', label: 'לחיוב', kind: 'money' }, { key: 'q', label: "מס' Q", kind: 'date' }, { key: 'qAmount', label: 'סכום Q', kind: 'money' },
           { key: 'method', label: 'אמצעי תשלום' }, { key: 'payment', label: 'תשלום' }, { key: 'outcome', label: 'סטטוס אספקה' }, { key: 'lateMin', label: 'דקות איחור', kind: 'num' },
           { key: 'reason', label: 'סיבה / מה סופק' }, { key: 'po', label: 'תעודת רכש', kind: 'date' }, { key: 'notes', label: 'הערות' },
@@ -114,6 +115,25 @@ export const REPORTS: ReportDef[] = [
         note: ON_TIME_NOTE(),
         rows, totals: { cluster: 'סה"כ', name: '', count: l.length, sum: sum(l), avg: avg(l), ontime: onTimeCell(all), late: t.late, lateMajor: t.lateMajor, partial: t.partial, cancelled: all.length - l.length },
         chart: { valueKey: 'sum', labelKey: 'name', title: 'סך לפי סניף', kind: 'category', money: true },
+      };
+    },
+  },
+  {
+    id: 'channels', title: 'לפי ערוץ', desc: 'מאיפה מגיעות ההזמנות – הזמנות, פיצות, סך, חלק מהסך, ממוצע ועמידה בזמנים לכל ערוץ',
+    compute: (all) => {
+      const l = live(all); const total = sum(l);
+      const pizzas = (list: Order[]) => list.reduce((t, o) => t + o.items.filter((i) => categoryOf(i) === PIZZA).reduce((s2, i) => s2 + i.qty, 0), 0);
+      const rank = (name: string) => (name === UNCLASSIFIED ? 1e6 : name === '—' ? 2e6 : ((i) => (i < 0 ? 1e5 : i))(getChannels().findIndex((c) => c.label === name)));
+      const rows = [...groupBy(all, (o) => channelLabel(o)).entries()].map(([name, list]) => {
+        const lv = live(list);
+        return { id: name, orders: list, cells: { name, count: lv.length, pizzas: pizzas(lv), sum: sum(lv), share: pct(sum(lv), total), avg: avg(lv), ontime: onTimeCell(list), cancelled: list.length - lv.length } };
+      }).sort((a, b) => (b.cells.sum as number) - (a.cells.sum as number) || rank(a.id) - rank(b.id));
+      return {
+        cols: [{ key: 'name', label: 'ערוץ' }, { key: 'count', label: 'הזמנות', kind: 'num' }, { key: 'pizzas', label: 'פיצות', kind: 'num' }, { key: 'sum', label: 'סך', kind: 'money' },
+          { key: 'share', label: 'חלק מהסך', kind: 'pct' }, { key: 'avg', label: 'ממוצע להזמנה', kind: 'money' }, { key: 'ontime', label: 'סופקו בזמן', kind: 'pct' }, { key: 'cancelled', label: 'בוטלו', kind: 'num' }],
+        note: `"${UNCLASSIFIED}" – הזמנות ישנות עם טקסט ערוץ חופשי, מלפני הרשימה הסגורה.`,
+        rows, totals: { name: 'סה"כ', count: l.length, pizzas: pizzas(l), sum: total, share: 100, avg: avg(l), ontime: onTimeCell(all), cancelled: all.length - l.length },
+        chart: { valueKey: 'sum', labelKey: 'name', title: 'סך לפי ערוץ', kind: 'category', money: true },
       };
     },
   },

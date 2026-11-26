@@ -1,10 +1,11 @@
 /* חיפוש גלובלי כפלטת פקודות: הזמנות (מס' הזמנה, מס' Q, שם, טלפון), הצעות מחיר, לקוחות ולקוחות פוטנציאליים. חיצים + Enter.
    לקוחות ולידים נטענים רק כשהחלון פתוח – בלי קריאות מהשרת כל עוד לא מחפשים.
-   מספר הזמנה/הצעה או מס' Q שלא נמצאים ברשימה החיה (מלפני החודש הקודם) – נבדקים מול השרת, קריאה אחת או שתיים לחיפוש */
+   מספר הזמנה/הצעה, מס' Q או מספר קריאה שלא נמצאים ברשימה החיה (מלפני החודש הקודם) – נבדקים מול השרת, עד שלוש קריאות לחיפוש */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, query, where, type DocumentData } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { fromDoc as orderFromDoc } from '../data/orders';
+import { callRefMatch } from '../data/channels';
 import { SHORT_STATUS, fromDoc as quoteFromDoc, type Quote } from '../data/quotes';
 import type { Order } from '../data/types';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -43,7 +44,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
 
   const orderItem = (o: Order, group: string): Item => ({
     key: `o${o.id}`, group, icon: <FileText size={16} aria-hidden="true" />, title: o.customerName,
-    meta: <>הזמנה <Ltr>{o.id}</Ltr> · <Ltr>{fmtDate(o.date)}</Ltr> <Ltr>{o.time}</Ltr> · {o.branchName}{o.qNumber && <> · <Ltr>{o.qNumber}</Ltr></>}</>,
+    meta: <>הזמנה <Ltr>{o.id}</Ltr> · <Ltr>{fmtDate(o.date)}</Ltr> <Ltr>{o.time}</Ltr> · {o.branchName}{o.qNumber && <> · <Ltr>{o.qNumber}</Ltr></>}{o.callRef && <> · קריאה <Ltr>{o.callRef}</Ltr></>}</>,
     tag: ORDER_STAGE[stageOf(o)], run: () => onPick(o.id),
   });
   const quoteItem = (x: Quote): Item => ({
@@ -52,25 +53,30 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
     run: () => { close(); nav(`/quotes/${x.id}`); },
   });
 
-  /* חיפוש בשרת: מספר (4–7 ספרות) – הזמנה והצעה באותו מספר; מס' Q (אותיות ואז ספרות, למשל cs669) – הזמנה לפי Q */
+  /* חיפוש בשרת: מספר (4–7 ספרות) – הזמנה והצעה באותו מספר; מס' Q (אותיות ואז ספרות, למשל cs669) – הזמנה לפי Q.
+     שאילתה של 3–60 תווים שיש בה ספרה – גם הזמנה לפי מספר קריאה (callRef, שוויון מדויק – בלי אינדקס).
+     חיפוש שם לא שולח שאילתה לשרת, כדי לא לבזבז קריאות */
   useEffect(() => {
     const raw = q.trim();
     setRemote([]);
     const isNum = /^\d{4,7}$/.test(raw);
     const isQ = !isNum && /^[a-z]{1,4}\d{2,}$/i.test(raw);
-    if (!isNum && !isQ) return;
+    const isRef = raw.length >= 3 && raw.length <= 60 && /d/.test(raw);
+    if (!isNum && !isQ && !isRef) return;
     let alive = true;
     const t = setTimeout(async () => {
       try {
         const out: Item[] = [];
-        if (isNum) {
-          const [o, qt] = await Promise.all([getDoc(doc(db, 'orders', raw)), getDoc(doc(db, 'quotes', raw))]);
-          if (o.exists()) out.push(orderItem(orderFromDoc(o.id, o.data()), 'הזמנות'));
-          if (qt.exists()) out.push(quoteItem(quoteFromDoc(qt.id, qt.data())));
-        } else {
-          const snap = await getDocs(query(collection(db, 'orders'), where('qNumber', 'in', [...new Set([raw, raw.toLowerCase(), raw.toUpperCase()])]), limit(3)));
-          snap.docs.forEach((d) => out.push(orderItem(orderFromDoc(d.id, d.data()), 'הזמנות')));
-        }
+        const [o, qt, qs, refs] = await Promise.all([
+          isNum ? getDoc(doc(db, 'orders', raw)) : null, isNum ? getDoc(doc(db, 'quotes', raw)) : null,
+          isQ ? getDocs(query(collection(db, 'orders'), where('qNumber', 'in', [...new Set([raw, raw.toLowerCase(), raw.toUpperCase()])]), limit(3))) : null,
+          isRef ? getDocs(query(collection(db, 'orders'), where('callRef', '==', raw), limit(3))) : null,
+        ]);
+        const add = (id: string, data: DocumentData) => { if (!out.some((x) => x.key === `o${id}`)) out.push(orderItem(orderFromDoc(id, data), 'הזמנות')); };
+        if (o?.exists()) add(o.id, o.data());
+        qs?.docs.forEach((d) => add(d.id, d.data()));
+        refs?.docs.forEach((d) => add(d.id, d.data()));
+        if (qt?.exists()) out.push(quoteItem(quoteFromDoc(qt.id, qt.data())));
         if (alive) setRemote(out);
       } catch { /* בלי חיבור – נשארות התוצאות מהרשימה החיה */ }
     }, 300);
@@ -84,7 +90,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
     const phoneHit = (p?: string) => digits.length >= 3 && !!p && p.includes(digits);
     if (!s) return orders.filter((o) => o.health === 'critical' || o.health === 'urgent').slice(0, 6).map((o) => orderItem(o, 'דורש טיפול עכשיו'));
     const os = orders.filter((o) =>
-      String(o.id).includes(s) || o.customerName.toLowerCase().includes(s) || (o.qNumber ?? '').toLowerCase().includes(s)
+      String(o.id).includes(s) || o.customerName.toLowerCase().includes(s) || (o.qNumber ?? '').toLowerCase().includes(s) || callRefMatch(o, s)
       || phoneHit(o.contactPhone) || phoneHit(o.accountPhone)).slice(0, 6).map((o) => orderItem(o, 'הזמנות'));
     const qs = quotes.filter((x) => (digits.length >= 3 && String(x.id).includes(digits)) || (s.length >= 2 && x.customer.name.toLowerCase().includes(s)))
       .slice(0, 3).map(quoteItem);
@@ -127,7 +133,7 @@ function SearchBody({ close, onPick }: { close: () => void; onPick: (id: number)
           autoFocus
           value={q}
           onChange={(e) => { setQ(e.target.value); setActive(0); }}
-          placeholder="מס' הזמנה, מס' Q, הצעה, לקוח, ליד או טלפון"
+          placeholder="מס' הזמנה, מס' Q, מס' קריאה, הצעה, לקוח, ליד או טלפון"
           aria-label="חיפוש"
           role="combobox"
           aria-expanded="true"
