@@ -82,7 +82,7 @@ export function StyleGuidePage() {
       <section className="card sg__sec">
         <h2 className="card__title">כפתורים חכמים</h2>
         <div className="sg__row">
-          <Button variant="primary" icon={<Plus size={16} />} kbd="N">הזמנה חדשה</Button>
+          <Button variant="primary" icon={<Plus size={16} />}>הזמנה חדשה</Button>
           <Button>משני</Button>
           <Button variant="ghost">שקט</Button>
           <Button variant="fix">סמן הועברה ל-Q</Button>

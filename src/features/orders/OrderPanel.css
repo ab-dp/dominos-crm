@@ -398,3 +398,71 @@
 .prec .prec__edit { background: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .18); color: var(--white); }
 .prec .prec__edit svg { color: var(--rec-muted); }
 .prec .prec__edit:hover { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); }
+
+/* ===================== שלב 6ה: כל הפעולות בראש הכרטיס ===================== */
+.prec__acts { display: inline-flex; align-items: center; gap: var(--space-2); }
+.prec__divider { width: 1px; height: 20px; margin-inline: var(--space-1); background: var(--rec-line); }
+/* ביטול – "מסוכן שקט" שמתאים לכחול-לילה: טקסט אדום-בהיר בלי מילוי; קו ומילוי עדינים בריחוף. תמיד פותח אישור */
+.prec .prec__cancel { background: transparent; border-color: transparent; color: #FFB4AB; }
+.prec .prec__cancel svg { color: #FFB4AB; }
+.prec .prec__cancel:hover { background: rgb(255 140 130 / .12); border-color: rgb(255 180 171 / .4); }
+/* פעולה משנית על הכחול (החזר מביטול, תעד טיפול) – כמו "עריכה" */
+.prec .prec__act, .pbar .prec__act { background: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .18); color: var(--white); }
+.prec .prec__act svg { color: var(--rec-muted); }
+.prec .prec__act:hover { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); }
+/* "לרישום Q" – מתאר כחול-בהיר (לא מלא): הכפתור הראשי הוא "רישום Q" בבלוק הקופה */
+.prec .prec__act--brand { background: transparent; border-color: #7CC2E6; color: #CDEAF8; }
+.prec .prec__act--brand:hover { background: rgb(124 194 230 / .14); }
+/* "סמן סופקה" – הראשי: כחול דומינוס עם קו לבן עדין (הכחול לבדו לא נבדל מהכחול-לילה) */
+.prec .prec__next .btn--primary { border-color: rgb(255 255 255 / .32); }
+.prec .btn:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.prec .prec__next .btn--primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--navy), 0 0 0 4px var(--white); }
+.prec__step { display: inline-flex; }
+.prec__step:empty { display: none; }
+.prec__step:not(:empty) + .prec__sum { padding-inline-start: var(--space-4); border-inline-start: 1px solid var(--rec-line); }
+.prec__sum { margin-inline-start: 0; }
+.prec__track .otl { margin-inline-end: auto; }
+.prec__track { justify-content: flex-start; }
+.timeline-wrap--rec { margin-inline-end: auto; }
+/* איש קשר: שם נחתך, טלפון אף פעם לא */
+.prec__contact dd { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
+.prec__trunc { max-inline-size: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prec__tel { flex: none; color: var(--white); text-decoration: none; font-variant-numeric: tabular-nums; }
+.prec__tel:hover { text-decoration: underline; text-underline-offset: 3px; }
+.prec__m-only { display: none; }
+/* סרגל הפעולות של הטלפון – מוסתר בדסקטופ */
+.pbar { display: none; }
+.panel__foot { display: none !important; }
+
+@media (max-width: 700px) {
+  .prec__cancel, .prec .prec__edit, .panel__full-btn, .prec__divider, .prec__step { display: none !important; }
+  .prec__m-only { display: flex; }
+  .prec__more, .panel__close { width: 44px; height: 44px; }
+  .prec__facts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-3); }
+  .prec__facts > div { padding-inline: 0 !important; border: 0 !important; }
+  .prec__trunc { max-inline-size: 12ch; }
+  .pbar { position: sticky; bottom: 0; z-index: 2; display: flex; gap: var(--space-2); padding: var(--space-2) var(--space-4) calc(var(--space-2) + env(safe-area-inset-bottom, 0px)); background: var(--page); border-top: 1px solid var(--line); }
+  .pbar > *, .pbar .prec__next, .pbar .prec__next .btn { flex: 1; }
+  .pbar .btn { min-height: 44px; }
+  .pbar .prec__act { background: var(--white); border-color: var(--gray-200); color: var(--gray-900); }
+  .pbar .prec__act svg { color: var(--gray-600); }
+  .pbar .pbar__edit { flex: 0 0 auto; }
+}
+/* שורה 1 בשורה אחת: שם ארוך נחתך, הפעולות והסגירה תמיד באותה שורה */
+.prec .panel__row { flex-wrap: nowrap; }
+.prec .panel__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prec .panel__row > :not(.panel__title):not(.panel__spacer) { flex: none; }
+.prec__facts > div { padding-inline: var(--space-3); }
+/* ראש הכרטיס לא רחב מהפאנל: שם ארוך נחתך במקום לדחוף את הסגירה והסכום החוצה */
+.panel__head { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.prec { min-width: 0; }
+.prec > * { min-width: 0; }
+.prec .panel__title { display: flex; align-items: baseline; gap: var(--space-1); overflow: visible; }
+.prec__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prec__id { flex: none; }
+.prec__facts dd { display: flex; align-items: baseline; gap: var(--space-1); }
+.prec__trunc--branch { max-inline-size: 22ch; }
+
+/* "פותח כרגע" לא דוחק את הכותרת: נחתך, ובמסך צר נשארת רק הנקודה */
+.prec .panel__row > .viewers { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 900px) { .prec .viewers { font-size: 0; gap: 0; padding: 4px; } }

@@ -221,7 +221,7 @@ export function ActivityDialog({ lead, onClose }: { lead: Lead; onClose: () => v
         </div>
         <StepFields step={step} onChange={(s) => { setStep(s); setErrs((x) => ({ ...x, step: '' })); }} err={errs.step} />
         {errs.form && <p className="cform__formerr" role="alert"><OctagonAlert size={16} aria-hidden="true" /> {errs.form}</p>}
-        <div className="udialog__actions"><Button variant="primary" type="submit" loading={busy} kbd="Ctrl+Enter">שמור</Button><Button variant="ghost" type="button" onClick={onClose}>ביטול</Button></div>
+        <div className="udialog__actions"><Button variant="primary" type="submit" loading={busy}>שמור</Button><Button variant="ghost" type="button" onClick={onClose}>ביטול</Button></div>
       </form>
     </Shell>
   );

@@ -57,7 +57,7 @@ export function OrdersTable({ rows, showDate = true, emptyText, caption, density
   const toggle = useCallback((id: number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]), []);
 
   if (rows.length === 0) {
-    return <EmptyState icon={<ClipboardList size={20} />} title={emptyText}>אפשר ליצור הזמנה חדשה מהכפתור למעלה או בלחיצה על <kbd className="kbd">N</kbd></EmptyState>;
+    return <EmptyState icon={<ClipboardList size={20} />} title={emptyText}>אפשר ליצור הזמנה חדשה מהכפתור למעלה</EmptyState>;
   }
 
   const allOn = selected.length === rows.length;

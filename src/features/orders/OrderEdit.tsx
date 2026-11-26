@@ -85,7 +85,7 @@ export function EditKv({ k, value, display, kind = 'text', placeholder, validate
               </span>
             </span>
           )}
-          {err ? <span className="cform__err" role="alert">{err}</span> : <span className="kv__hint">{kind === 'textarea' ? 'Ctrl+Enter לשמירה' : 'Enter לשמירה'} · Esc לביטול</span>}
+          {err && <span className="cform__err" role="alert">{err}</span>}
         </span>
       ) : (
         <button ref={btn} type="button" className="kv__v kv__btn" onClick={() => setEditing(true)} aria-label={`${k}: ${value || 'ריק'}. לחץ לעריכה`}>

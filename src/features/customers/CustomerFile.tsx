@@ -722,7 +722,7 @@ function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextA
         <div className="composer__row">
           {kind === 'followup' && <label className="check-inline">תאריך <input className="input input--sm" type="date" value={due} onChange={(e) => { setDue(e.target.value); setErr(''); }} /></label>}
           {err && <span className="pop__err" role="alert">{err}</span>}
-          <Button size="sm" variant="primary" type="submit" className="composer__send" kbd="Ctrl+Enter">שמור</Button>
+          <Button size="sm" variant="primary" type="submit" className="composer__send">שמור</Button>
         </div>
       </form>
       {careN > 0 && (

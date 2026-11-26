@@ -6,14 +6,16 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ChevronLeft, ClipboardPen, Maximize2, Minimize2, Pencil, RefreshCw, X } from 'lucide-react';
+import * as Dropdown from '@radix-ui/react-dropdown-menu';
+import { Ban, ChevronLeft, ClipboardPen, History as HistoryIcon, Maximize2, Minimize2, MoreHorizontal, Pencil, RefreshCw, RotateCcw, Trash2, X } from 'lucide-react';
+import { NextStep } from './OrderTimeline';
+import { methodText, stageOf } from '../../data/types';
 import { useFlag } from '../../data/flags';
 import { useAuth } from '../../auth/AuthContext';
 import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { Button, HealthBadge, Missing, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
-import { channelLabel } from '../../data/channels';
 import { OpsTag } from './OpsTag';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 
@@ -112,7 +114,22 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   const [notesTop] = useState(!!o.instructions);
   // עריכה מרכזית (מאחורי מתג): "עריכה" פותח את טופס ההזמנה עם כל הערכים, והערכים בכרטיס לקריאה בלבד
   const central = useFlag('editForm');
-  const { openNewOrder } = useStore();
+  const { openNewOrder, requestStatus } = useStore();
+  const { isAdmin } = useAuth();
+  const [delOpen, setDelOpen] = useState(false);
+  const [histOpen, setHistOpen] = useState(false);
+  const closedOk = o.status === 'delivered' || o.status === 'partial';
+  const canCancel = o.status !== 'cancelled' && !closedOk;
+  const openHistory = () => { setHistOpen(true); requestAnimationFrame(() => jumpTo('sec-history')); };
+  /* הצעד הבא – כפתור אחד לפי השלב, בראש הכרטיס (ובטלפון בסרגל התחתון) */
+  const next = () => {
+    if (o.hold) return null; // בהמתנה – הפעולות בפס הסגול
+    if (cancelled) return <Button className="prec__act" icon={<RotateCcw size={16} />} onClick={() => requestStatus(o, 'approved')}>החזר מביטול</Button>;
+    if (closedOk) return needsCare(o) ? <Button className="prec__act" icon={<ClipboardPen size={16} />} onClick={() => { jumpTo('sec-care'); setTimeout(() => (document.getElementById('care-add') as HTMLButtonElement | null)?.click(), 250); }}>תעד טיפול</Button> : null;
+    // פתוחה: מעביר לשדה Q בבלוק הקופה ("רישום Q" שם נשאר הכפתור הראשי) – לכן כאן מתאר, לא מלא
+    if (stageOf(o) === 'open') return <Button className="prec__act prec__act--brand" onClick={focusQ}>לרישום Q</Button>;
+    return <span className="prec__next"><NextStep o={o} size="md" variant="primary" /></span>;
+  };
   const ro = central || o.status === 'cancelled'; // הכרטיס נבנה מחדש לכל הזמנה (key), אז זה נקבע פעם אחת לכל הזמנה
   const gap = o.qAmount !== undefined && o.qAmount !== o.amount;
   const cancelled = o.status === 'cancelled';
@@ -124,34 +141,54 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
   };
   const openCustomer = () => { panel.close(); nav(`/customers/${o.customerId}`); };
 
+  const barNext = next(); // בטלפון – בסרגל התחתון
+
   return (
     <>
       <div className={`panel__head ${scrolled ? 'is-scrolled' : ''}`}>
         <div className="prec">
           <div className="panel__row">
-            <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}>{o.customerName} <span className="prec__id"><Ltr>#{o.id}</Ltr></span></Dialog.Title>
+            <Dialog.Title id="panel-title" className="panel__title" tabIndex={-1}><span className="prec__name">{o.customerName}</span> <span className="prec__id"><Ltr>#{o.id}</Ltr></span></Dialog.Title>
             <HealthBadge health={o.health} issues={o.issues} />
             {viewers.length > 0 && (
               <span className="viewers" role="status"><span className="viewers__dot" aria-hidden="true" />{viewers.map((v) => v.name.split(' ')[0]).join(', ')} {viewers.length === 1 ? 'פותח' : 'פותחים'} את ההזמנה כרגע</span>
             )}
             <span className="panel__spacer" />
-            {central && !cancelled && <Button size="sm" className="prec__edit" icon={<Pencil size={16} />} onClick={() => openNewOrder({ editOf: o })}>עריכה</Button>}
+            {/* פעולות ההזמנה – במקום אחד: עריכה · ביטול · עוד (היסטוריה, מחיקה למנהל) */}
+            <span className="prec__acts">
+              {central && !cancelled && <Button className="prec__edit" icon={<Pencil size={16} />} onClick={() => openNewOrder({ editOf: o })}>עריכה</Button>}
+              {canCancel && <Button className="prec__cancel" icon={<Ban size={16} />} onClick={() => requestStatus(o, 'cancelled')}>ביטול הזמנה</Button>}
+              <Dropdown.Root dir="rtl">
+                <Dropdown.Trigger asChild><button className="icon-btn prec__more" aria-label="עוד פעולות להזמנה"><MoreHorizontal size={20} /></button></Dropdown.Trigger>
+                <Dropdown.Portal>
+                  <Dropdown.Content className="menu" align="end" sideOffset={6} onCloseAutoFocus={(e) => e.preventDefault()}>
+                    {central && !cancelled && <Dropdown.Item className="menu__item prec__m-only" onSelect={() => setTimeout(() => openNewOrder({ editOf: o }), 0)}><Pencil size={16} aria-hidden="true" /> עריכה</Dropdown.Item>}
+                    <Dropdown.Item className="menu__item" onSelect={openHistory}><HistoryIcon size={16} aria-hidden="true" /> היסטוריה</Dropdown.Item>
+                    {canCancel && <><Dropdown.Separator className="menu__sep prec__m-only" /><Dropdown.Item className="menu__item menu__item--danger prec__m-only" onSelect={() => setTimeout(() => requestStatus(o, 'cancelled'), 0)}><Ban size={16} aria-hidden="true" /> ביטול הזמנה</Dropdown.Item></>}
+                    {isAdmin && <><Dropdown.Separator className="menu__sep" /><Dropdown.Item className="menu__item menu__item--danger" onSelect={() => setTimeout(() => setDelOpen(true), 0)}><Trash2 size={16} aria-hidden="true" /> מחק הזמנה</Dropdown.Item></>}
+                  </Dropdown.Content>
+                </Dropdown.Portal>
+              </Dropdown.Root>
+            </span>
+            <span className="prec__divider" aria-hidden="true" />
             <Tip label={full ? 'חזרה לפאנל' : 'מסך מלא'}>
               <button className="icon-btn panel__full-btn" onClick={() => setFull(!full)} aria-label={full ? 'חזרה לפאנל' : 'מסך מלא'}>{full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
             </Tip>
-            <Dialog.Close asChild><button className="icon-btn panel__close" aria-label="סגור תיק הזמנה (Esc)"><X size={20} /></button></Dialog.Close>
+            <Dialog.Close asChild><button className="icon-btn panel__close" aria-label="סגור תיק הזמנה"><X size={20} /></button></Dialog.Close>
           </div>
           {/* שורת עובדות – לקריאה; עריכה באזורים שבגוף הכרטיס */}
           <dl className="prec__facts">
-            <div><dt>מועד</dt><dd>{weekday(o.date)} <Ltr>{fmtDate(o.date)}</Ltr>{o.time && <>, <Ltr>{o.time}</Ltr></>}</dd></div>
-            <div><dt>סניף</dt><dd>{o.branchName || <span className="prec__miss">חסר</span>}</dd></div>
-            <div className="prec__opt"><dt>אספקה</dt><dd>{o.delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח'}</dd></div>
-            {channelLabel(o) && <div className="prec__opt"><dt>ערוץ</dt><dd>{channelLabel(o)}</dd></div>}
-            <div className="prec__opt"><dt>מטפל</dt><dd>{o.handler || o.createdBy || '—'}</dd></div>
+            <div><dt>מועד</dt><dd>{weekday(o.date)} <Ltr>{fmtDate(o.date).slice(0, 5)}</Ltr>{o.time && <>, <Ltr>{o.time}</Ltr></>}</dd></div>
+            <div><dt>סניף · אספקה</dt><dd><span className="prec__trunc prec__trunc--branch" title={o.branchName}>{o.branchName || <span className="prec__miss">חסר</span>}</span> · {o.delivery === 'pickup' ? 'איסוף' : 'משלוח'}</dd></div>
+            <div className="prec__contact"><dt>איש קשר</dt><dd>{o.contactName || o.contactPhone
+              ? <><span className="prec__trunc" title={o.contactName}>{o.contactName}</span>{o.contactPhone && <a className="prec__tel" href={`tel:${o.contactPhone}`}><Ltr>{fmtPhone(o.contactPhone)}</Ltr></a>}</>
+              : <span className="prec__miss">חסר</span>}</dd></div>
+            <div><dt>תשלום</dt><dd>{methodText(o)}{o.method === 'account' && (o.accountPhone ? <> · <Ltr>{fmtPhone(o.accountPhone)}</Ltr></> : <> · <span className="prec__miss">חסר טלפון</span></>)}</dd></div>
           </dl>
           <div className="prec__track">
             <OrderTimeline o={o} part="track" />
             <OpsTag o={o} />
+            <span className="prec__step">{next()}</span>
             <span className="prec__sum"><small>סכום לחיוב</small><b>{o.amount > 0 ? <Money value={o.amount} /> : '—'}</b></span>
           </div>
         </div>
@@ -201,12 +238,6 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         )}
         {cancelled && <CancelledNote o={o} />}
         <HoldBanner o={o} />
-        {/* איחור / חלקית בלי תיעוד: תזכורת קטנה למעלה, והתיעוד עצמו בתחתית */}
-        {needsCare(o) && (
-          <button type="button" className="care-jump" onClick={() => jumpTo('sec-care')}>
-            <ClipboardPen size={16} aria-hidden="true" /> {o.status === 'partial' ? 'עוד לא תועד טיפול בלקוח' : 'סופקה באיחור – עוד לא תועד טיפול בלקוח'} <ChevronLeft size={16} aria-hidden="true" />
-          </button>
-        )}
         {/* הערות להזמנה – ראשונות ובולטות, רק כשיש. כשאין – השדה נשאר בבלוק הקופה, להוספה */}
         {notesTop && !cancelled && (
           <section className="onotes" aria-label="הערות להזמנה">
@@ -219,7 +250,6 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
         {cancelled ? <RegisterLocked o={o} /> : <RegisterBlock o={o} notesAbove={notesTop} ro={central} />}
 
         <div className="panel__flow">
-          <OrderTimeline o={o} onQ={cancelled ? undefined : focusQ} part="next" />
           {/* פעולות שהן חלק מהציר מופיעות בציר עצמו – כאן רק שאר הבעיות */}
           {o.issues.some((i) => !STEP_ACTIONS.includes(i.action)) && (
             <div className="missing" role="list" aria-label="מה חסר">
@@ -260,17 +290,21 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
               <EditKv k="הערות להנהלת חשבונות" kind="textarea" value={o.billingNote ?? ''} placeholder="אין" onSave={(v) => save({ billingNote: v || undefined }, 'ההערות להנהלת חשבונות')} />
             </Section>
         {/* היסטוריה מקופלת – היומן נטען רק כשפותחים */}
-        <HistorySection o={o} />
+        <HistorySection o={o} open={histOpen} setOpen={setHistOpen} />
         {/* תיעוד טיפול – בתחתית, בהזמנה שנסגרה */}
         {canCare(o) && <div id="sec-care" className="psec-care"><CareSection o={o} /></div>}
         </div>
         {/* בטלפון אין שורה תחתונה – מחיקה בסוף התיק, רחוק מהאגודל */}
-        <div className="panel__del-m"><DeleteOrder o={o} /></div>
+
       </div>
-      <div className="panel__foot">
-        <span className="muted">לחיצה על ערך פותחת עריכה · נשמר אוטומטית · <kbd className="kbd">Esc</kbd> לסגירה</span>
-        <DeleteOrder o={o} />
-      </div>
+      {/* בטלפון: סרגל פעולות דביק – הצעד הבא ועריכה. ביטול ומחיקה בתפריט "עוד" (רחוק מהאגודל) */}
+      {(barNext || (central && !cancelled)) && (
+        <div className="pbar">
+          {barNext}
+          {central && !cancelled && <Button className="pbar__edit" icon={<Pencil size={16} />} onClick={() => openNewOrder({ editOf: o })}>עריכה</Button>}
+        </div>
+      )}
+      <DeleteOrder o={o} control={{ open: delOpen, setOpen: setDelOpen }} />
     </>
   );
 }
@@ -301,10 +335,9 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
   return <div className="kv"><span className="kv__k">{k}</span><span className="kv__v">{v}</span></div>;
 }
 
-function HistorySection({ o }: { o: OrderView }) {
-  const [open, setOpen] = useState(false);
+function HistorySection({ o, open, setOpen }: { o: OrderView; open: boolean; setOpen: (v: boolean) => void }) {
   return (
-    <details className="sec phist" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
+    <details id="sec-history" className="sec phist" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
       <summary className="sec__head phist__sum"><h3 className="sec__title">היסטוריה</h3><ChevronLeft size={16} aria-hidden="true" className="phist__chev" /></summary>
       {open && <History o={o} />}
     </details>

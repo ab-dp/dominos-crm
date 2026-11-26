@@ -7,7 +7,7 @@ import {
   Truck,
   LayoutDashboard,
 } from 'lucide-react';
-import { Button, Tip, useHotkey } from '../design/components';
+import { Button, Tip } from '../design/components';
 import { useStore } from '../data/store';
 import { useAuth } from '../auth/AuthContext';
 import { openTaskCount, todayTaskCounts } from '../features/today/todayTasks';
@@ -48,16 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pendingUsers = usePendingRequests();
   const firstName = (profile?.name ?? '').split(' ')[0];
 
-  useHotkey('/', () => setSearchOpen(true));
-  useHotkey('n', () => newOrder());
-  /* Ctrl+K / ⌘K – הקיצור המוכר לחיפוש, עובד גם מתוך שדה ובמקלדת עברית (לפי מיקום המקש) */
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.code === 'KeyK' || e.key.toLowerCase() === 'k')) { e.preventDefault(); setSearchOpen(true); }
-    };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, []);
+  /* בלי קיצורי מקלדת במערכת (החלטה 26.11) – אפשר ללחוץ בטעות, ואף אחד לא משתמש. רק Enter לאישור וחצים למעבר */
 
   /* אין פעמון: מסך "היום" הוא המקום שמראה מה לעשות. המספרים בתפריט = המספר הראשי של המסך.
      אדום בתפריט רק לקטגוריה שיש בה משהו קריטי שלא טופל: חריגות (אדום) והצעות מחיר שלא חזרו אליהן */
@@ -126,15 +117,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/today" className="topbar__logo" aria-label="Domino's CRM – חזרה למסך היום">
           <img src={`${BASE}logo-tile.svg`} alt="" />
         </Link>
-        <button className="search-trigger" onClick={() => setSearchOpen(true)} aria-label="חיפוש: הזמנה, לקוח, מס' Q, מס' קריאה, ח.פ, טלפון (/)">
+        <button className="search-trigger" onClick={() => setSearchOpen(true)} aria-label="חיפוש: הזמנה, לקוח, מס' Q, מס' קריאה, ח.פ, טלפון">
           <Search size={16} aria-hidden="true" />
           <span className="search-trigger__full">חיפוש: הזמנה, לקוח, מס' Q, מס' קריאה, ח.פ, טלפון…</span>
           <span className="search-trigger__short" aria-hidden="true">חיפוש הזמנה או לקוח</span>
-          <kbd className="kbd">/</kbd>
         </button>
 
         <div className="topbar__actions">
-          <Button variant="primary" icon={<Plus size={16} />} kbd="N" onClick={newOrder}>הזמנה חדשה</Button>
+          <Button variant="primary" icon={<Plus size={16} />} onClick={newOrder}>הזמנה חדשה</Button>
 
           <div className="user">
             <span className="user__avatar" aria-hidden="true">{firstName[0] ?? '?'}</span>

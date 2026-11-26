@@ -55,7 +55,7 @@ export function QForm({ o, done, inline, primary = true, onCancel }: { o: OrderV
       <Field label="מס' הזמנה ב-Q (חובה)">{numInput}</Field>
       <Field label="הסכום שירד ב-Q (₪, חובה)">{amtInput}</Field>
       {error}
-      <div className="pop__row"><Button variant="primary" size="sm" type="submit" kbd="Enter">שמור</Button></div>
+      <div className="pop__row"><Button variant="primary" size="sm" type="submit">שמור</Button></div>
     </form>
   );
 }
@@ -85,7 +85,7 @@ function PoForm({ o, done }: { o: OrderView; done: () => void }) {
       <Field label="מס' תעודת רכש">
         <input className="input input--ltr" autoFocus value={v} onChange={(e) => setV(e.target.value)} />
       </Field>
-      <div className="pop__row"><Button variant="primary" size="sm" type="submit" kbd="Enter">שמור</Button></div>
+      <div className="pop__row"><Button variant="primary" size="sm" type="submit">שמור</Button></div>
     </form>
   );
 }
