@@ -67,7 +67,8 @@ export type Branch = { id: string; name: string; cluster: string; phone: string 
    toppings – הפירוט (בפיצה: תוספות; בנלווים: שם המוצר). parts – חלוקה לחצי-חצי או רבעים: טקסט פירוט לכל חלק, מופרד בפסיקים (אז toppings ריק).
    רשימה של טקסטים ולא רשימה של רשימות – Firestore לא שומר רשימה בתוך רשימה.
    detail – הערה לשורה. manualPrice – המחיר שונה ידנית ולא מתעדכן במעבר משלוח/איסוף */
-export type OrderItem = { itemId?: string; group?: string; name: string; toppings?: string[]; parts?: string[]; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean };
+/* menuId / toppingKind – שורה שנבחרה בבוחר המדורג (שלב 7ג): הסוג בתפריט וסוג התוספת. רשות; השם נשמר כטקסט, אז שינוי בתפריט לא משנה הזמנות עבר */
+export type OrderItem = { itemId?: string; group?: string; name: string; toppings?: string[]; parts?: string[]; detail?: string; qty: number; unitPrice: number; manualPrice?: boolean; menuId?: string; toppingKind?: string };
 const FRACTION: Record<number, string> = { 2: '½', 4: '¼' };
 export const partsText = (parts: string[]) => parts.map((p) => `${FRACTION[parts.length] ?? ''} ${p || 'רגילה'}`.trim()).join(' | ');
 export const splitPart = (p: string) => p.split(',').map((x) => x.trim()).filter(Boolean);

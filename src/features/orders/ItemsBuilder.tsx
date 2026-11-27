@@ -16,7 +16,7 @@ import './ItemsBuilder.css';
 
 /* tText / pText – הטקסט כפי שמוקלד (פסיק בסוף, "12."), עד שיוצאים מהשדה. autoName – סוג הפיצה הועתק מהשורה הקודמת ולא נכתב. לא נשמרים */
 export type Line = OrderItem & { key: string; tText?: string; pText?: string; autoName?: boolean; gid?: string }; // gid – הכרטיס של סוג הפיצה, לא נשמר
-export type CatalogItem = PriceItem & { unit?: number; custom: boolean };
+export type CatalogItem = PriceItem & { unit?: number; custom: boolean; kindUnits?: Record<string, number>; listUnit?: number };
 type Delivery = 'delivery' | 'pickup';
 const NO_LIST = '__none';
 
@@ -43,7 +43,14 @@ export function buildCatalog(priceList: PriceList | undefined, customer: Custome
     const cp = customer && customer.priceListId === priceList?.id ? customer.customPrices.find((p) => p.itemId === i.id) : undefined;
     const own = !!cp && !!cp.price && cp.price !== i.price; // מחיר מיוחד למשלוח (0 = אין)
     const unit = delivery === 'pickup' ? cp?.pickupPrice ?? priceOf(i, 'pickup') : own ? cp!.price : i.price;
-    return { ...i, unit, custom: delivery === 'pickup' ? cp?.pickupPrice !== undefined : own };
+    // מחיר לפי סוג תוספת: ייחודי ללקוח לסוג, ואם אין – מחיר המחירון לסוג (לא המחיר הייחודי של "עם תוספת")
+    const kinds = new Set([...Object.keys(i.kindPrices ?? {}), ...Object.keys(cp?.kindPrices ?? {})]);
+    const kindUnits = Object.fromEntries([...kinds].map((k) => {
+      const c = cp?.kindPrices?.[k];
+      const own = delivery === 'pickup' ? c?.pickupPrice ?? c?.price : c?.price;
+      return [k, own ?? priceOf(i, delivery, k)];
+    }).filter(([, v]) => typeof v === 'number' && (v as number) > 0)) as Record<string, number>;
+    return { ...i, unit, custom: delivery === 'pickup' ? cp?.pickupPrice !== undefined : own, kindUnits, listUnit: priceOf(i, delivery) };
   });
 }
 
@@ -75,6 +82,8 @@ function useHints() {
   }, [orders]);
 }
 
+const NO_HINTS = { names: (_c: string) => [] as string[], tops: [] as string[], lastPrice: (_c: string, _n: string) => undefined as number | undefined };
+
 /* מחירון: מוצרים עם מחיר באותה קטגוריה ששמם דומה למה שהוקלד ("משפחתית" ↔ "פיצה משפחתית עם תוספת").
    אין התאמה – כל המוצרים של הקטגוריה (עד 6) */
 export const normName = (s: string) => s.replace(/["'׳״\s\-–]/g, '').replace(/(ות|ים|ה|ת)$/, '');
@@ -96,9 +105,11 @@ export function useRepriceOnDelivery(delivery: Delivery, catalog: CatalogItem[],
     let n = 0;
     setLines((ls) => ls.map((l) => {
       const it = l.itemId && !l.manualPrice ? catalog.find((x) => x.id === l.itemId) : undefined;
-      if (!it?.unit || it.unit === l.unitPrice) return l;
+      // שורה מהבוחר המדורג – לפי סוג התוספת שלה (ואם אין מחיר לסוג – מחיר השורה)
+      const unit = it && l.toppingKind && l.toppingKind !== 'with' ? it.kindUnits?.[l.toppingKind] ?? it.listUnit ?? it.unit : it?.unit;
+      if (!unit || unit === l.unitPrice) return l;
       n++;
-      return { ...l, unitPrice: it.unit, pText: undefined };
+      return { ...l, unitPrice: unit, pText: undefined };
     }));
     setTimeout(() => onChanged(n), 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -141,10 +152,14 @@ const PART_PH: Record<number, string[]> = { 2: ['חצי 1', 'חצי 2'], 4: ['ר
 type Field = 'qty' | 'name' | 'tops' | 'price' | `part${number}`;
 
 /* revealProblems: מונה – כל הגדלה (שמירה שנחסמה, "הצג") עוברת ללשונית של השורה הלא שלמה הראשונה ומעמידה עליה את הסמן */
-export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProblems = 0 }: { lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[]; onTouched?: () => void; revealProblems?: number }) {
-  const hints = useHints();
+/* tab – קטגוריה שנקבעת מבחוץ (הבוחר המדורג): אז שורת הלשוניות כאן מוסתרת, חוץ מכשיש שורות "אחר" ישנות */
+export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProblems = 0, noHints = false, tab: outerTab }: { lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[]; onTouched?: () => void; revealProblems?: number; noHints?: boolean; tab?: string }) {
+  const allHints = useHints();
+  // noHints – הבוחר המדורג פעיל: בלי הצעות שנלמדות מהיסטוריה (שמות, תוספות, "בפעם האחרונה"); רק מה שבמחירון
+  const hints = noHints ? NO_HINTS : allHints;
   const rootRef = useRef<HTMLDivElement>(null);
-  const [tab, setTab] = useState(() => (lines.length ? categoryOf(lines[0]) : PIZZA));
+  const [tab, setTab] = useState(() => outerTab ?? (lines.length ? categoryOf(lines[0]) : PIZZA));
+  useEffect(() => { if (outerTab && CATEGORIES.includes(outerTab)) setTab(outerTab); }, [outerTab]);
   useEffect(() => {
     if (!revealProblems) return;
     const used = pricesUsed(lines);
@@ -175,7 +190,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
   const draft: Line = { key: draftKey, group: tab, name: '', qty: 0, unitPrice: 0 };
   const rows = tab === OTHER ? catLines : [...catLines, draft];
   // תוספות שכבר נכתבו בהזמנה הזו קודם, ואז מההזמנות הקודמות
-  const topHints = useMemo(() => [...new Set([...lines.flatMap((l) => [...(l.toppings ?? []), ...(l.parts ?? []).flatMap(splitPart)]), ...hints.tops])], [lines, hints.tops]);
+  const topHints = useMemo(() => (noHints ? [] : [...new Set([...lines.flatMap((l) => [...(l.toppings ?? []), ...(l.parts ?? []).flatMap(splitPart)]), ...hints.tops])]), [lines, hints.tops, noHints]);
   // פיצות: הכרטיסים עובדים רק על שורות הפיצה, שאר הקטגוריות נשמרות כמו שהן
   const pizzaLines = useMemo(() => lines.filter((l) => categoryOf(l) === PIZZA), [lines]);
   // שורות הפיצה נשארות במקומן (במקום השורה הראשונה שלהן, או בהתחלה)
@@ -217,7 +232,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
 
   return (
     <div className="ib" ref={rootRef}>
-      <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
+      {(!outerTab || showOther || lines.some(lineProblem)) && <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
         {tabs.map((c) => {
           const n = count(c);
           const bad = lines.some((l) => categoryOf(l) === c && lineProblem(l));
@@ -228,10 +243,10 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
             </button>
           );
         })}
-      </div>
+      </div>}
 
       {tab === PIZZA ? (
-        <PizzaGroups lines={pizzaLines} setLines={setPizza} catalog={catalog} topHints={topHints} onTouched={onTouched} revealProblems={revealProblems} pricesUsed={pricesUsed(lines)}
+        <PizzaGroups lines={pizzaLines} setLines={setPizza} catalog={catalog} topHints={topHints} onTouched={onTouched} revealProblems={revealProblems} pricesUsed={pricesUsed(lines)} noQuick={noHints}
           typeHints={[...new Set([...catalog.filter((x) => x.category === PIZZA).map((x) => x.name), ...hints.names(PIZZA)])]} lastPrice={(n) => hints.lastPrice(PIZZA, n)} />
       ) : (
       <div className={`ib-table ${pizza ? 'ib-table--pizza' : ''}`} role="table" aria-label={`פריטים – ${tab}`}>

@@ -19,6 +19,8 @@ import { opsReminder, useStore, type NewOrderMode, type NewOrderRequest } from '
 import { QuoteOrderedError, isExpired as quoteExpired, setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, categoryOf, needsOpsUpdate, type Order } from '../../data/types';
 import { editPatch } from './editPatch';
+import { MenuPicker } from './MenuPicker';
+import { useFlag } from '../../data/flags';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, addDays, fmtDate, fmtMoney, fmtPhone, roundMoney, toISODate, weekday, parseMoney as money } from '../../lib/format';
@@ -55,6 +57,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const reduce = useReducedMotion();
   const { profile } = useAuth();
   const { orders, now, thresholds, requestChange } = useStore();
+  // הבוחר המדורג (מאחורי מתג) – ובלי הצעות מהיסטוריה
+  const picker = useFlag('picker');
+  const [pickCat, setPickCat] = useState('פיצות');
   const { items: customers } = useCustomers();
   const { items: branches } = useBranches();
   const { items: clusters } = useClusters();
@@ -522,12 +527,10 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       {/* מקור המחיר: מחירון (של הלקוח, כללי, או בלי); משלוח/איסוף נקבע בחלק "אספקה" */}
       {legacyContents}
       <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={delivery} />
-      <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => clearErr('amount', 'contents')} revealProblems={reveal} />
-      {real.length === 0 && (
-        <p className={`no-items-empty ${errors.contents ? 'is-err' : ''}`}>
-          בחרו קטגוריה ומלאו שורה: כמות, סוג או מוצר{' '}ותוספות. מחיר לשורה – רשות; אפשר לכתוב רק סכום כולל להזמנה.
-        </p>
-      )}
+      {picker && <MenuPicker catalog={catalog} onCategory={setPickCat} counts={(n) => real.filter((l) => categoryOf(l) === n).reduce((t, l) => t + l.qty, 0)}
+        onAdd={(l) => { setLines((ls) => [...ls, l]); clearErr('amount', 'contents'); markDirty(); }} />}
+      <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => clearErr('amount', 'contents')} revealProblems={reveal} noHints={picker} tab={picker ? pickCat : undefined} />
+      {errors.contents && real.length === 0 && <p className="no-items-empty is-err">חסרים פריטים</p>}
       {err('amount')}
       {/* סיכום בשורה אחת: פריטים · דמי משלוח · סה"כ. שינוי הסכום הסופי – רק כשצריך */}
       <div className={`ib-sum ${isManual && !totalOnly ? 'is-manual' : ''}`}>
@@ -554,7 +557,6 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           ))}
       </div>
       {err('final')}
-      <p className="muted no-hint">המחיר נשמר בתוך ההזמנה. שינוי מחירון בעתיד לא ישנה אותה.</p>
     </Section>
   );
 
@@ -570,9 +572,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
             </select>
           )}
         {c && (method === c.paymentMethod
-          ? <span className="cform__hint muted"><Check size={14} aria-hidden="true" /> אמצעי התשלום הקבוע של הלקוח</span>
+          ? null
           : <span className="cform__hint">שונה בהזמנה הזו בלבד · הקבוע של הלקוח: {methods.find((m) => m.id === c.paymentMethod)?.label ?? METHOD_LABEL[c.paymentMethod] ?? c.paymentMethod} <button type="button" className="link" onClick={() => { setMethod(c.paymentMethod); setAccountPhone(c.accountPhone ? fmtPhone(c.accountPhone) : ''); }}>חזור לקבוע</button></span>)}
-        {isNew && <span className="cform__hint muted">יישמר כאמצעי התשלום הקבוע של הלקוח</span>}
       </L>
       {/* "אחר": נפתח שדה לפירוט – מה אמצעי התשלום בפועל */}
       {effMethod === 'other' && (
@@ -616,7 +617,6 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
         <div className="no-billing-f">
         <L label="הערות להנהלת חשבונות" wide>
           <textarea className="input cform__ta" rows={2} value={billing ?? c?.billingInstructions ?? ''} onChange={(e) => setBilling(e.target.value)} placeholder="למשל: למי לשלוח את החשבונית בסוף החודש" />
-          <span className="cform__hint">פנימי – לא מופיע בהעברה לקופה ובסיכום לתפעול</span>
         </L>
         </div>
       ) : (

@@ -13,6 +13,7 @@ import {
   type Quote, type QuoteCustomer, type QuoteInput, type QuoteLine,
 } from '../../data/quotes';
 import { useStore } from '../../data/store';
+import { useFlag } from '../../data/flags';
 import { CATEGORIES } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -151,7 +152,8 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
     [...allQuotes].sort((a, b) => a.id - b.id).forEach((q) => q.id !== quote?.id && q.lines.forEach((l) => { if (l.unitPrice > 0) m.set(`${l.category}|${normName(l.name)}`, l.unitPrice); }));
     return m;
   }, [allQuotes, quote?.id]);
-  const nameHints = (cat: string) => [...new Set([...catalog.filter((i) => i.category === cat).map((i) => i.name), ...allQuotes.flatMap((q) => q.lines.filter((l) => l.category === cat).map((l) => l.name.trim()))])].filter(Boolean).slice(0, 80);
+  const noHistory = useFlag('picker'); // הבוחר המדורג פעיל – בלי הצעות שנלמדות מהצעות קודמות
+  const nameHints = (cat: string) => [...new Set([...catalog.filter((i) => i.category === cat).map((i) => i.name), ...(noHistory ? [] : allQuotes.flatMap((q) => q.lines.filter((l) => l.category === cat).map((l) => l.name.trim())))])].filter(Boolean).slice(0, 80);
 
   /* ---------- שורות ---------- */
   const catLines = f.lines.filter((l) => l.category === tab);

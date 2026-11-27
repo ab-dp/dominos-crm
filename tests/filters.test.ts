@@ -181,3 +181,45 @@ describe('קישור לתפריט – יחיד ורבים', () => {
     expect(suggestMenuLink('משפחתיות – עבה', opts)).toBe('thick');
   });
 });
+
+/* שלב 7ג: הבוחר המדורג – מחיר לפי סוג תוספת, וטקסט התוספות שנשמר */
+import { priceFor, pickedToppings } from '../src/features/orders/MenuPicker';
+import type { CatalogItem } from '../src/features/orders/ItemsBuilder';
+describe('בוחר מדורג', () => {
+  const cat = structuredClone(DEFAULT_MENU.categories[0]); // פיצות
+  const family = cat.items.find((i) => i.id === 'family')!;
+  const ci = (o: Partial<CatalogItem>): CatalogItem => ({ id: 'x', category: 'פיצות', name: '', active: true, custom: false, ...o });
+  it('מחירון מקושר עם מחירים לפי סוג', () => {
+    const cat2 = [ci({ id: 'a', name: 'משפחתית', menuId: 'family', unit: 60, kindUnits: { without: 48, meat: 70 } })];
+    expect(priceFor(cat2, cat, family, 'with').unit).toBe(60);
+    expect(priceFor(cat2, cat, family, 'without').unit).toBe(48);
+    expect(priceFor(cat2, cat, family, 'mix').unit).toBe(60); // בלי מחיר לסוג – כמו "עם תוספת"
+  });
+  it('מחירון ישן לפי שם, שורה לכל סוג תוספת', () => {
+    const old = [ci({ id: 'w', name: 'משפחתיות – עם תוספת', unit: 62 }), ci({ id: 'n', name: 'משפחתיות – ללא', unit: 50 })];
+    expect(priceFor(old, cat, family, 'without')).toMatchObject({ unit: 50, line: { id: 'n' } });
+    expect(priceFor(old, cat, family, 'with')).toMatchObject({ unit: 62, line: { id: 'w' } });
+  });
+  it('בלי שורה במחירון – בלי מחיר', () => {
+    expect(priceFor([], cat, family, 'with')).toEqual({});
+  });
+  it('טקסט התוספות', () => {
+    expect(pickedToppings('ללא', 'without', 'זיתים')).toEqual([]);
+    expect(pickedToppings('עם תוספת', 'with', 'זיתים, בצל')).toEqual(['זיתים', 'בצל']);
+    expect(pickedToppings('בשרית', 'meat', 'פפרוני')).toEqual(['בשרית', 'פפרוני']);
+  });
+});
+describe('בוחר מדורג – מקרי קצה', () => {
+  const cat = structuredClone(DEFAULT_MENU.categories[0]);
+  const family = cat.items.find((i) => i.id === 'family')!;
+  const ci = (o: Partial<CatalogItem>): CatalogItem => ({ id: 'x', category: 'פיצות', name: '', active: true, custom: false, ...o });
+  it('מחירון ישן רק עם "עם תוספת" ו"ללא": בשרית לוקחת את "עם תוספת"', () => {
+    const old = [ci({ id: 'n', name: 'משפחתיות – ללא', unit: 50 }), ci({ id: 'w', name: 'משפחתיות – עם תוספת', unit: 62 })];
+    expect(priceFor(old, cat, family, 'meat')).toMatchObject({ unit: 62, line: { id: 'w' } });
+  });
+  it('לקוח עם מחיר ייחודי ל"עם תוספת" ובלי מחיר לסוג – מחיר המחירון (החלטה 27.11)', () => {
+    const c = [ci({ id: 'a', name: 'משפחתית', menuId: 'family', unit: 55, listUnit: 60 })];
+    expect(priceFor(c, cat, family, 'with').unit).toBe(55);
+    expect(priceFor(c, cat, family, 'mix').unit).toBe(60);
+  });
+});

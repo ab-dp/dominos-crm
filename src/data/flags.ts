@@ -6,10 +6,11 @@ import { useAuth } from '../auth/AuthContext';
 import { auth, db } from '../lib/firebase';
 
 export type FlagMode = 'off' | 'admin' | 'all';
-export type Flags = { editForm: FlagMode };
-export const DEFAULT_FLAGS: Flags = { editForm: 'off' };
+export type Flags = { editForm: FlagMode; picker: FlagMode };
+export const DEFAULT_FLAGS: Flags = { editForm: 'off', picker: 'off' };
 export const FLAG_META: Record<keyof Flags, { title: string; hint: string }> = {
   editForm: { title: 'עריכה מרכזית בכרטיס הזמנה', hint: 'כפתור "עריכה" שפותח את טופס ההזמנה עם כל הערכים ושמירה אחת, במקום עריכה בלחיצה על כל ערך' },
+  picker: { title: 'בוחר פריטים מדורג', hint: 'בהזמנה: קטגוריה ← סוג ← וריאציה ← סוג תוספת ← תוספות ← חלוקה, עם מחיר מהמחירון לפי סוג התוספת; בלי הצעות מהיסטוריה' },
 };
 const valid = (v: unknown): v is FlagMode => v === 'off' || v === 'admin' || v === 'all';
 
@@ -17,7 +18,7 @@ let cached: Flags = DEFAULT_FLAGS;
 export function useFlags(): Flags {
   const [flags, setFlags] = useState<Flags>(cached);
   useEffect(() => onSnapshot(doc(db, 'settings', 'flags'),
-    (s) => { const d = s.data() ?? {}; cached = { editForm: valid(d.editForm) ? d.editForm : 'off' }; setFlags(cached); },
+    (s) => { const d = s.data() ?? {}; cached = { editForm: valid(d.editForm) ? d.editForm : 'off', picker: valid(d.picker) ? d.picker : 'off' }; setFlags(cached); },
     () => setFlags(DEFAULT_FLAGS)), []);
   return flags;
 }
