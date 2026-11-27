@@ -122,8 +122,9 @@
 
 @media (max-width: 700px) {
   /* בטלפון: שורת פעולות משלה מתחת לסימונים, כדי לא לדחוק את שם הלקוח */
-  .otable--orders tr.orow { grid-template-areas: "time cust health" "marks marks marks" "act act act" !important; }
-  .otable--orders td.c-act { justify-self: stretch; }
+  /* שלב 9: השלב והפעולה באותה שורה – הזמנה אחת תופסת פחות גובה */
+  .otable--orders tr.orow { grid-template-areas: "time cust health" "marks marks act" !important; align-items: center; }
+  .otable--orders td.c-act { justify-self: end; }
   /* אזורי לחיצה של 44px במגע */
   .otable--orders .c-act .btn, .otable--orders .row-more { height: var(--control-lg); min-width: var(--control-lg); }
   .c-act__in { display: flex; justify-content: flex-end; flex-wrap: wrap; }

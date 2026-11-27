@@ -464,3 +464,10 @@
 /* "פותח כרגע" לא דוחק את הכותרת: נחתך, ובמסך צר נשארת רק הנקודה */
 .prec .panel__row > .viewers { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 900px) { .prec .viewers { font-size: 0; gap: 0; padding: 4px; } }
+
+/* טלפון: כותרת הקופה בשורה אחת; "העתק הכל" – אייקון בלבד (הטקסט נשאר לקורא מסך) */
+@media (max-width: 560px) {
+  .reg__title { white-space: nowrap; }
+  .reg__copy { min-width: 44px; min-height: 44px; justify-content: center; }
+  .reg__copy-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}

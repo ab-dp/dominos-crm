@@ -56,7 +56,7 @@ export function RegisterBlock({ o, notesAbove = false, ro = false }: { o: OrderV
         <span className="reg__head-end">
           {/* הלקוח לא עונה / חסר משהו – מעבירים להמתנה וממשיכים להזמנה הבאה */}
           <HoldButton o={o} />
-          <button type="button" className="link reg__copy" onClick={copy}><Copy size={14} aria-hidden="true" /> העתק הכל</button>
+          <button type="button" className="link reg__copy" onClick={copy}><Copy size={14} aria-hidden="true" /> <span className="reg__copy-t">העתק הכל</span></button>
         </span>
       </div>
       <div className="reg__grid">

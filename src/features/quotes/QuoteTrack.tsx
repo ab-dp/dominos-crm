@@ -44,7 +44,7 @@ export function ConvertButton({ q, size = 'md', quiet, prepare }: { q: Quote; si
     if (ready) openNewOrder({ fromQuote: ready });
   };
   return (
-    <Button size={size} variant={quiet ? 'secondary' : 'primary'} icon={<ClipboardList size={16} />} loading={busy} onClick={go}>
+    <Button size={size} variant={size === 'sm' ? 'fix' : quiet ? 'secondary' : 'primary'} icon={<ClipboardList size={16} />} loading={busy} onClick={go}>
       {q.status === 'approved' ? 'הפוך להזמנה' : 'אשר והפוך להזמנה'}
     </Button>
   );
