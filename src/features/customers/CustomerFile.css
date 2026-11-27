@@ -140,3 +140,96 @@
 .ov__care-open { font-size: var(--text-label); color: var(--gray-600); }
 .monthly__major { font-size: var(--text-micro); font-weight: 500; color: var(--urgent-fg); }
 .cfile__plkind td:first-child { padding-inline-start: var(--space-5); font-size: var(--text-label); color: var(--gray-600); }
+
+/* ---------- שלב 8: שורת מדדים שקטה בכותרת ---------- */
+.cfile__metrics { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--gray-100); }
+.cfile__metric { display: grid; gap: 2px; }
+.cfile__metric dt { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+.cfile__metric dd { margin: 0; font: 600 var(--text-table) var(--font-mono); color: var(--gray-900); font-variant-numeric: tabular-nums; }
+
+/* ---------- ציר זמן (DESIGN.md "Timeline") ---------- */
+
+.tl-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; grid-template-rows: auto 1fr; gap: var(--space-4); align-items: start; }
+.tl-main { min-width: 0; grid-column: 1; grid-row: 1 / span 2; }
+.tl-opennow { grid-column: 2; grid-row: 1; }
+.tl-wrap > .tl-side { grid-column: 2; grid-row: 2; }
+.tl-open__more { margin-top: var(--space-2); font-size: var(--text-label); }
+.tl-compose__lbl { flex: none; white-space: nowrap; }
+.tl-compose { display: grid; gap: var(--space-2); margin: var(--space-3); padding: var(--space-3); border-radius: var(--radius-panel); background: var(--zone); border: 1px solid var(--zone-line); }
+.tl-compose .seg { justify-self: start; }
+.tl-compose__ta { height: auto; min-height: 64px; padding: var(--space-2) var(--space-3); resize: vertical; font: inherit; background: var(--white); }
+.tl-compose__row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.tl-compose__field { display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap; font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
+.tl-compose__ref { max-width: 280px; }
+.tl-compose__send { margin-inline-start: auto; }
+.tl-filter { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); padding: 0 var(--space-4) var(--space-2); border-bottom: 1px solid var(--gray-100); font-size: var(--text-table); }
+.tl-filter__label { color: var(--gray-600); }
+.tl-filter button { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 32px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; background: none; font: inherit; color: var(--gray-600); cursor: pointer; }
+.tl-filter button:hover { color: var(--gray-900); }
+.tl-filter button.is-on { color: var(--gray-900); font-weight: 600; border-bottom-color: var(--brand-600); }
+.tl-filter button:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }
+.tl-filter__n { font: 500 var(--text-micro) var(--font-mono); color: var(--gray-500); }
+.tl-empty { margin: 0; padding: var(--space-5) var(--space-4); font-size: var(--text-table); }
+.tl { list-style: none; margin: 0; padding: var(--space-2) var(--space-4) var(--space-3); }
+.tl-day { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--gray-100); }
+.tl-day:last-child { border-bottom: 0; }
+.tl-day__h { margin: 0; padding-top: 2px; font-size: var(--text-label); font-weight: 600; color: var(--gray-700); }
+.tl-day__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); position: relative; }
+/* קו אנכי דק לאורך היום, ואייקון חד-צבעי עליו */
+.tl-day__list::before { content: ""; position: absolute; inset-block: 4px; inset-inline-start: 9px; width: 1px; background: var(--gray-200); }
+.tl-ev { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: var(--space-3); position: relative; }
+.tl-ev__icon { display: grid; place-items: center; width: 20px; height: 22px; background: var(--white); color: var(--gray-600); position: relative; }
+.tl-ev--order .tl__ref, .tl-ev--quote .tl__ref { padding: 0; font-weight: 600; }
+.tl-ev__main { display: grid; gap: 4px; min-width: 0; font-size: var(--text-table); }
+.tl-ev__head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2); }
+.tl-ev__kind { font-weight: 600; color: var(--gray-900); }
+.tl-ev__meta { margin-inline-start: auto; font-size: var(--text-label); color: var(--gray-600); white-space: nowrap; }
+.tl-ev__facts { display: flex; flex-wrap: wrap; align-items: center; color: var(--gray-700); font-size: var(--text-label); }
+.tl-ev__facts > span + span::before { content: ""; display: inline-block; width: 1px; height: 12px; margin: 0 var(--space-2); background: var(--gray-200); vertical-align: middle; }
+.tl-ev__text { margin: 0; white-space: pre-line; overflow-wrap: anywhere; color: var(--gray-900); }
+.tl__ref { display: inline-block; padding: 0 var(--space-1); border: 0; border-radius: var(--radius-tag); background: none; font: inherit; font-weight: 500; color: var(--brand-700); text-decoration: none; cursor: pointer; }
+.tl__ref:hover { background: var(--brand-50); }
+.tl__ref:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 1px; }
+.tl__tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 600; }
+.tl__tag--late { background: var(--danger-bg); color: var(--danger-fg); }
+.tl__tag--comp { background: var(--ok-bg); color: var(--ok-fg); font-weight: 500; }
+.tl__task { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-1); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--zone); border: 1px solid var(--zone-line); font-size: var(--text-label); font-weight: 500; }
+.tl__task > span { margin-inline-end: auto; }
+.tl-more { display: flex; justify-content: center; padding: 0 var(--space-4) var(--space-4); }
+
+/* עמודת צד */
+.tl-side { display: grid; gap: var(--space-3); align-content: start; }
+.tl-box { padding: var(--space-3) var(--space-4); }
+.tl-box__h { margin: 0 0 var(--space-2); font-size: var(--text-table); font-weight: 600; }
+.tl-box__empty { margin: 0; font-size: var(--text-label); }
+.tl-box__text { margin: 0; font-size: var(--text-label); white-space: pre-line; overflow-wrap: anywhere; color: var(--gray-700); }
+.tl-open, .tl-plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tl-open__row, .tl-open__task { display: flex; align-items: center; gap: var(--space-2); width: calc(100% + 2 * var(--space-2)); min-height: 36px; padding: var(--space-1) var(--space-2); margin-inline: calc(-1 * var(--space-2)); border: 0; border-radius: var(--radius); background: none; font: inherit; font-size: var(--text-label); color: var(--gray-900); text-align: start; text-decoration: none; cursor: pointer; box-sizing: border-box; }
+.tl-open__task { cursor: default; }
+.tl-open__row:hover { background: var(--gray-50); }
+.tl-open__row:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 1px; }
+.tl-open__main { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tl-open__state { flex: none; font-size: var(--text-micro); font-weight: 600; color: var(--gray-600); }
+.tl-open__state.is-due { color: var(--due); }
+.tl-open__state.is-hold { color: var(--hold-fg); }
+.tl-plain li { display: flex; align-items: baseline; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-label); }
+.tl-plain li > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tl-plain__link { flex: none; color: var(--brand-700); text-decoration: none; }
+.tl-plain__icon { flex: none; color: var(--gray-500); transform: translateY(2px); }
+
+@media (max-width: 1100px) {
+  .tl-wrap { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .tl-opennow, .tl-main, .tl-wrap > .tl-side { grid-column: 1; grid-row: auto; }
+  .tl-opennow { order: -1; }
+  .tl-wrap > .tl-side { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+@media (max-width: 700px) {
+  .tl-day { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+  .tl-compose { margin: var(--space-2); }
+  .tl-compose__field { flex: 1 1 100%; }
+  .tl-compose__ref { max-width: none; flex: 1; min-width: 0; }
+  .tl-open__row, .tl-open__task { min-height: 44px; }
+  .tl-filter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .tl-filter button { min-height: 44px; white-space: nowrap; }
+  .tl__task .btn, .tl-open__task .icon-btn { min-height: 44px; min-width: 44px; }
+}

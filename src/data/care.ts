@@ -53,7 +53,7 @@ export function useOrderCare(customerId: string, orderId: number) {
   useEffect(() => {
     if (!customerId) { setItems([]); return; }
     return onSnapshot(query(collection(db, 'customers', customerId, 'activity'), where('orderId', '==', String(orderId))),
-      (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Activity).sort((a, b) => (b.at?.seconds ?? 9e9) - (a.at?.seconds ?? 9e9))),
+      (s) => setItems(s.docs.map((d) => ({ id: d.id, ...d.data() }) as Activity).filter((a) => a.kind === 'care').sort((a, b) => (b.at?.seconds ?? 9e9) - (a.at?.seconds ?? 9e9))),
       () => setItems([]));
   }, [customerId, orderId]);
   return items;

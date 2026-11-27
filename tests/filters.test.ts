@@ -252,3 +252,42 @@ describe('בוחר – וריאציות במחירון (7ד)', () => {
     expect(priceFor(r2, cat, cc, 'with', 'v2').unit).toBe(80);
   });
 });
+
+import { buildTimeline, dayLabel, filterTimeline } from '../src/features/customers/CustomerTimeline';
+import type { Activity } from '../src/data/customers';
+import type { OrderView } from '../src/data/store';
+import { LEGACY as L8, QUOTES as Q8 } from './fixtures/orders';
+describe('ציר זמן בתיק לקוח (שלב 8)', () => {
+  const now = new Date(2026, 10, 25, 10, 0);
+  const ts = (d: Date) => ({ toDate: () => d, seconds: d.getTime() / 1000 }) as unknown as Activity['at'];
+  const orders = L8.slice(0, 2).map((o) => ({ ...o, issues: [], health: 'ok' }) as unknown as OrderView);
+  const quotes = Q8.slice(0, 1);
+  const acts: Activity[] = [
+    { id: 'n1', kind: 'call', text: 'שיחה', by: 'u', byName: 'דנה', at: ts(new Date(2026, 10, 24, 9, 30)) },
+    { id: 'n2', kind: 'note', text: 'נשמרת עכשיו', by: 'u', byName: 'דנה' },
+  ];
+  const ev = buildTimeline(orders, quotes, acts, now);
+  it('כל המקורות בציר אחד, מהחדש לישן, בלי כפילויות', () => {
+    expect(ev).toHaveLength(orders.length + quotes.length + acts.length);
+    expect(new Set(ev.map((e) => e.id)).size).toBe(ev.length);
+    for (let i = 1; i < ev.length; i++) expect(ev[i - 1].at >= ev[i].at).toBe(true);
+  });
+  it('רשומה שעוד לא קיבלה חותמת – בראש, היום', () => {
+    expect(ev[0].id).toBe('an2');
+    expect(ev[0].day).toBe('2026-11-25');
+  });
+  it('שעה מקומית מהחותמת', () => {
+    expect(ev.find((e) => e.id === 'an1')!.at).toBe('2026-11-24T09:30');
+  });
+  it('מסנן: שיחות והערות / הזמנות / משימות', () => {
+    expect(filterTimeline(ev, 'notes').map((e) => e.id).sort()).toEqual(['an1', 'an2']);
+    expect(filterTimeline(ev, 'orders').every((e) => e.kind === 'order')).toBe(true);
+    expect(filterTimeline(ev, 'tasks')).toHaveLength(0);
+    expect(filterTimeline(ev, 'all')).toHaveLength(ev.length);
+  });
+  it('כותרות יום', () => {
+    expect(dayLabel('2026-11-25', '2026-11-25')).toBe('היום');
+    expect(dayLabel('2026-11-24', '2026-11-25')).toBe('אתמול');
+    expect(dayLabel('2026-11-22', '2026-11-25')).toBe('יום ראשון 22.11.2026');
+  });
+});

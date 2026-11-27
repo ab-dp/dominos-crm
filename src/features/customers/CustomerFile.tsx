@@ -1,15 +1,15 @@
 /* תיק לקוח במסך מלא (אפיון 6.6) – המקום לראות את כל התמונה על הלקוח. */
-import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { listHref } from '../../lib/urlParams';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { motion, useReducedMotion } from 'motion/react';
 import {
-  ArrowRight, Check, ClipboardList, FileCheck2, GitMerge, Mail, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon,
+  ArrowRight, Check, ClipboardList, FileCheck2, FileText, GitMerge, Mail, MessageSquarePlus, MoreHorizontal, Pencil, Phone as PhoneIcon,
   Plus, Star, Trash2, UserCheck, UserRound, UserX, Wallet,
 } from 'lucide-react';
 import {
-  addActivity, customerGaps, newId, primaryContact, updateCustomer, useActivity, useCustomerHistory, useCustomers, withMerged,
+  customerGaps, newId, primaryContact, updateCustomer, useActivity, useCustomerHistory, useCustomers, withMerged,
   type Address, type Contact, type Customer,
 } from '../../data/customers';
 import { useBranches, useClusters } from '../../data/branches';
@@ -23,7 +23,7 @@ import { useStore, type OrderView } from '../../data/store';
 import { CATEGORIES, CLOSED } from '../../data/types';
 import { healthOf, issuesFor } from '../../rules-engine/health';
 import { usePanel } from '../../app/PanelContext';
-import { needsCare, noComp } from '../../data/care';
+import { needsCare } from '../../data/care';
 import { OrdersTable } from '../orders/OrdersTable';
 import { CustomerDocsSection } from '../orders/OrderDocs';
 import { BarChart } from '../reports/BarChart';
@@ -31,21 +31,24 @@ import '../reports/ReportsPage.css';
 import { Button, EmptyState, Field, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { cleanAmount, Ltr, fmtDate, fmtMoney, fmtPhone, toISODate } from '../../lib/format';
-import { isLive, lateSplit, onTime, revenue, revenueOf } from '../../data/metrics';
+import { isLive, lateSplit, onTime, pctOf, revenue, revenueOf } from '../../data/metrics';
 import { cleanPhone, phoneError, CARD_RE, EMAIL_RE } from '../../lib/names';
 import { CustomerForm } from './CustomerForm';
+import { TimelineTab } from './CustomerTimeline';
 import { MergeDialog } from './MergeDialog';
 import '../pages.css';
 import './CustomerFile.css';
 
-type Tab = 'overview' | 'orders' | 'quotes' | 'monthly' | 'prices' | 'payment' | 'contacts' | 'docs' | 'activity' | 'history';
-/* עשר הלשוניות בארבע קבוצות. לכל לשונית כתובת משלה (?tab=), כך ש"אחורה" וקישור לעמית מגיעים לאותו מקום */
+type Tab = 'timeline' | 'overview' | 'orders' | 'quotes' | 'monthly' | 'prices' | 'payment' | 'contacts' | 'docs' | 'history';
+/* שלב 8: ציר זמן (ברירת מחדל) · הזמנות · הצעות מחיר · פרטים ומחירון · נתונים. לכל לשונית כתובת משלה (?tab=).
+   הלשונית הישנה "הערות ומשימות" (?tab=activity) נפתחת בציר הזמן */
 type Group = { key: string; label: string; tabs: [Tab, string][] };
 const GROUPS: Group[] = [
-  { key: 'overview', label: 'סקירה', tabs: [['overview', 'סקירה']] },
-  { key: 'orders', label: 'הזמנות והצעות', tabs: [['orders', 'הזמנות'], ['quotes', 'הצעות מחיר'], ['monthly', 'סיכום חודשי']] },
-  { key: 'details', label: 'פרטים ומחירון', tabs: [['contacts', 'אנשי קשר וכתובות'], ['prices', 'מחירון'], ['payment', 'תשלום והקפה']] },
-  { key: 'activity', label: 'פעילות', tabs: [['activity', 'הערות ומשימות'], ['docs', 'מסמכים'], ['history', 'היסטוריית שינויים']] },
+  { key: 'timeline', label: 'ציר זמן', tabs: [['timeline', 'ציר זמן']] },
+  { key: 'orders', label: 'הזמנות', tabs: [['orders', 'הזמנות']] },
+  { key: 'quotes', label: 'הצעות מחיר', tabs: [['quotes', 'הצעות מחיר']] },
+  { key: 'details', label: 'פרטים ומחירון', tabs: [['contacts', 'אנשי קשר וכתובות'], ['prices', 'מחירון'], ['payment', 'תשלום והקפה'], ['docs', 'מסמכים']] },
+  { key: 'data', label: 'נתונים', tabs: [['overview', 'סקירה'], ['monthly', 'סיכום חודשי'], ['history', 'היסטוריית שינויים']] },
 ];
 const ALL_TABS = GROUPS.flatMap((g) => g.tabs.map(([t]) => t));
 const groupOf = (t: Tab) => GROUPS.find((g) => g.tabs.some(([x]) => x === t))!;
@@ -83,25 +86,32 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
   const { items: priceLists } = usePriceLists();
   const [params, setParams] = useSearchParams();
   const raw = params.get('tab') as Tab | null;
-  const tab: Tab = raw && ALL_TABS.includes(raw) ? raw : 'overview';
-  const setTab = (t: Tab) => { const p = new URLSearchParams(params); if (t === 'overview') p.delete('tab'); else p.set('tab', t); setParams(p, { replace: true }); };
+  const tab: Tab = raw && ALL_TABS.includes(raw) ? raw : 'timeline';
+  const setTab = (t: Tab) => { const p = new URLSearchParams(params); if (t === 'timeline') p.delete('tab'); else p.set('tab', t); setParams(p, { replace: true }); };
   const group = groupOf(tab);
   const [editing, setEditing] = useState(false);
   const [merging, setMerging] = useState(false);
   const noteRef = useRef<HTMLTextAreaElement>(null);
+  const [composeReq, setComposeReq] = useState<{ kind: 'note' | 'call' | 'followup'; n: number }>({ kind: 'note', n: 0 });
+  // "תיעודי טיפול" בסקירה – פותח את הציר מסונן לתיעודים (פעם אחת; כניסה רגילה – הכל)
+  const [startFilter, setStartFilter] = useState<'all' | 'care'>('all');
+  useEffect(() => { if (tab !== 'timeline') setStartFilter('all'); }, [tab]);
+  const acts = useActivity(withMerged(c));
+  const ids = withMerged(c);
   const pc = primaryContact(c);
   const method = lists?.paymentMethods.find((m) => m.id === c.paymentMethod)?.label ?? c.paymentMethod;
   const pl = priceLists.find((p) => p.id === c.priceListId);
   const sharing = c.accountPhone ? all.filter((x) => x.id !== c.id && x.status !== 'merged' && x.accountPhone === c.accountPhone) : [];
 
-  const { now, openNewOrder, thresholds } = useStore();
+  const { now, openNewOrder, thresholds, tasks: allTasks } = useStore();
+  const tasks = useMemo(() => allTasks.filter((t) => ids.includes(t.customerId) && !t.leadId), [allTasks, ids.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
   const { orders: rawOrders, loading: ordersLoading } = useCustomerOrders(c.id);
   const quotes = useQuotes({ customerId: c.id });
   const corders = useMemo<OrderView[]>(() => rawOrders.map((o) => { const issues = issuesFor(o, now, thresholds); return { ...o, issues, health: healthOf(issues) }; }), [rawOrders, now, thresholds]);
   const openCount = corders.filter((o) => !CLOSED.includes(o.status)).length;
   const countOf = (t: Tab) => (t === 'orders' && !ordersLoading ? openCount : t === 'quotes' && !quotes.loading ? quotes.items.length : null);
-
-  const openNote = () => { setTab('activity'); setTimeout(() => noteRef.current?.focus(), 50); };
+  // "תיעוד שיחה" / הערה: לציר הזמן, עם הסוג שנבחר והסמן בתיבה
+  const compose = (kind: 'note' | 'call') => { setTab('timeline'); setComposeReq((r) => ({ kind, n: Date.now() + r.n })); };
 
   return (
     <div className="page cfile">
@@ -122,7 +132,8 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
           </div>
           <div className="cfile__actions">
             <Button variant="primary" icon={<Plus size={16} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })} disabled={c.status !== 'active'}>הזמנה</Button>
-            <Button icon={<MessageSquarePlus size={16} />} onClick={openNote}>הערה</Button>
+            <Button icon={<PhoneIcon size={16} />} onClick={() => compose('call')}>תיעוד שיחה</Button>
+            <Button icon={<FileText size={16} />} onClick={() => nav(`/quotes/new?customer=${c.id}`)} disabled={c.status !== 'active'}>הצעת מחיר</Button>
             <Button icon={<Pencil size={16} />} onClick={() => setEditing(true)}>עריכה</Button>
             <Dropdown.Root dir="rtl">
               <Dropdown.Trigger asChild><button className="icon-btn" aria-label="פעולות נוספות"><MoreHorizontal size={20} /></button></Dropdown.Trigger>
@@ -133,6 +144,7 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
                       <Star size={16} aria-hidden="true" /> הפוך ללקוח קבוע
                     </Dropdown.Item>
                   )}
+                  <Dropdown.Item className="menu__item" onSelect={() => compose('note')}><MessageSquarePlus size={16} aria-hidden="true" /> הערה</Dropdown.Item>
                   <Dropdown.Item className="menu__item" onSelect={() => setMerging(true)}><GitMerge size={16} aria-hidden="true" /> מיזוג עם לקוח אחר</Dropdown.Item>
                   <Dropdown.Separator className="menu__sep" />
                   {c.status === 'active'
@@ -161,13 +173,14 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
         {c.instructions && (
           <div className="cfile__note" role="note"><b>הנחיות קבועות</b><span>{c.instructions}</span></div>
         )}
+        <Metrics orders={corders} loading={ordersLoading} now={now} />
       </header>
 
       {/* ---------- טאבים ---------- */}
       <div className="tabs cfile__tabs" role="tablist" aria-label="תיק לקוח" onKeyDown={(e) => tabKeys(e, GROUPS, group, (g) => setTab(g.tabs[0][0]))}>
         {GROUPS.map((g) => {
           const on = g === group;
-          const n = g.key === 'orders' ? countOf('orders') : null;
+          const n = g.key === 'orders' ? countOf('orders') : g.key === 'quotes' ? countOf('quotes') : null;
           return (
             <button key={g.key} id={`cf-g-${g.key}`} role="tab" aria-selected={on} aria-controls="cf-panel" tabIndex={on ? 0 : -1} className={`tab ${on ? 'is-on' : ''}`} onClick={() => !on && setTab(g.tabs[0][0])}>
               {g.label}
@@ -192,7 +205,8 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
 
       {/* החלפת טאב: הופעה רכה בלבד – התוכן לא תלוי בסיום אנימציית יציאה */}
       <motion.div key={tab} id="cf-panel" role="tabpanel" aria-labelledby={group.tabs.length > 1 ? `cf-t-${tab}` : `cf-g-${group.key}`} className="cfile__panel" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.16 }}>
-          {tab === 'overview' && <Overview c={c} onTab={setTab} orders={corders} loading={ordersLoading} />}
+          {tab === 'timeline' && <TimelineTab c={c} orders={corders} quotes={quotes.items} acts={acts} tasks={tasks} now={now} loading={ordersLoading || quotes.loading} composeReq={composeReq} onComposed={() => setComposeReq((r) => ({ ...r, n: 0 }))} taRef={noteRef} startFilter={startFilter} />}
+          {tab === 'overview' && <Overview c={c} onTab={setTab} onCare={() => { setStartFilter('care'); setTab('timeline'); }} orders={corders} loading={ordersLoading} />}
           {tab === 'orders' && <OrdersTab c={c} orders={corders} loading={ordersLoading} />}
           {tab === 'quotes' && <QuotesTab c={c} items={quotes.items} loading={quotes.loading} />}
           {tab === 'monthly' && <MonthlyTab orders={corders} loading={ordersLoading} />}
@@ -200,7 +214,6 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
           {tab === 'payment' && <PaymentTab c={c} sharing={sharing} method={method} onEdit={() => setEditing(true)} />}
           {tab === 'contacts' && <ContactsTab c={c} />}
           {tab === 'docs' && <CustomerDocsSection customerId={c.id} mergedFrom={c.mergedFrom} />}
-          {tab === 'activity' && <ActivityTab c={c} noteRef={noteRef} />}
           {tab === 'history' && <HistoryTab c={c} />}
       </motion.div>
 
@@ -210,13 +223,35 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
   );
 }
 
+/* ---------- שורת מדדים שקטה בכותרת: 12 חודשים אחרונים ---------- */
+function Metrics({ orders, loading, now }: { orders: OrderView[]; loading: boolean; now: Date }) {
+  const today = toISODate(now);
+  const since = toISODate(new Date(now.getFullYear() - 1, now.getMonth(), now.getDate() + 1));
+  const year = orders.filter((o) => isLive(o) && o.date >= since && o.date <= today);
+  const last = orders.filter((o) => isLive(o) && o.date <= today).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0];
+  const pct = pctOf(onTime(year).rate);
+  const unpaid = revenue(orders.filter((o) => isLive(o) && (o.payment === 'pending' || o.payment === 'failed') && o.date <= today));
+  const items: [string, ReactNode][] = [
+    ['הזמנות ב-12 חודשים', <Ltr key="a">{year.length}</Ltr>],
+    ['סך הזמנות', <Ltr key="b">{fmtMoney(revenue(year))}</Ltr>],
+    ['הזמנה אחרונה', last ? <Ltr key="c">{fmtDate(last.date)}</Ltr> : '—'],
+    ['סופקו בזמן', pct === null ? '—' : <Ltr key="d">{pct}%</Ltr>],
+    ['פתוח לתשלום', unpaid ? <Ltr key="e">{fmtMoney(unpaid)}</Ltr> : '—'],
+  ];
+  return (
+    <dl className="cfile__metrics" aria-label="מדדים – 12 חודשים">
+      {items.map(([k, v]) => <div key={k} className="cfile__metric"><dt>{k}</dt><dd>{loading ? <Skeleton w={48} h={16} /> : v}</dd></div>)}
+    </dl>
+  );
+}
+
 /* ---------- סקירה ---------- */
 const PERIODS: [number, string][] = [[1, 'החודש'], [3, '3 חודשים'], [12, '12 חודשים']];
 /* הכנסות – מ-data/metrics.ts, כמו בבורד ובדוחות. "החודש" = מה-1 ועד היום, גם בסקירה וגם בסיכומים החודשיים */
 const qSum = (list: OrderView[]) => revenue(list);
 
 /* סקירה: כמה תיעודי טיפול יש ללקוח (מהמונה שעל ההזמנות), ואיחורים / חלקיות שעוד לא תועדו */
-function CareCard({ orders, onTab }: { orders: OrderView[]; onTab: (t: Tab) => void }) {
+function CareCard({ orders, onCare }: { orders: OrderView[]; onCare: () => void }) {
   const n = orders.reduce((t, o) => t + (o.careCount ?? 0), 0);
   const last = orders.reduce((m, o) => (o.careAt && o.careAt > m ? o.careAt : m), '');
   const open = orders.filter(needsCare).length;
@@ -224,14 +259,14 @@ function CareCard({ orders, onTab }: { orders: OrderView[]; onTab: (t: Tab) => v
     <div className="card ov__card">
       <span className="kpi__label">תיעודי טיפול</span>
       {n
-        ? <button className="link ov__care" onClick={() => onTab('activity')}><Ltr>{n}</Ltr> {n === 1 ? 'תיעוד' : 'תיעודים'}{last && <> · האחרון <Ltr>{fmtDate(toISODate(new Date(last)))}</Ltr></>}</button>
+        ? <button className="link ov__care" onClick={onCare}><Ltr>{n}</Ltr> {n === 1 ? 'תיעוד' : 'תיעודים'}{last && <> · האחרון <Ltr>{fmtDate(toISODate(new Date(last)))}</Ltr></>}</button>
         : <span className="muted">אין</span>}
       {open > 0 && <span className="ov__care-open">{open === 1 ? 'הזמנה אחת' : <><Ltr>{open}</Ltr> הזמנות</>} באיחור / חלקית בלי תיעוד</span>}
     </div>
   );
 }
 
-function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) => void; orders: OrderView[]; loading: boolean }) {
+function Overview({ c, onTab, onCare, orders, loading }: { c: Customer; onTab: (t: Tab) => void; onCare: () => void; orders: OrderView[]; loading: boolean }) {
   const { now } = useStore();
   const panel = usePanel();
   const [months, setMonths] = useState(1);
@@ -284,7 +319,7 @@ function Overview({ c, onTab, orders, loading }: { c: Customer; onTab: (t: Tab) 
       <div className="ov__cards">
         {card('הזמנה אחרונה', last, 'אין עדיין הזמנות')}
         {card('הזמנה הבאה', next, 'אין הזמנה פתוחה')}
-        <CareCard orders={orders} onTab={onTab} />
+        <CareCard orders={orders} onCare={onCare} />
         <div className="card ov__card">
           <span className="kpi__label">פרטים חסרים</span>
           {missingOf(c).length === 0 ? <span className="ok-text"><Check size={14} aria-hidden="true" /> התיק מלא</span> : (
@@ -724,77 +759,6 @@ function AddressEditor({ value, branches, branchLabel, onSave, onCancel }: { val
 }
 
 /* ---------- פעילות: הערות, שיחות, משימות חזרה ---------- */
-function ActivityTab({ c, noteRef }: { c: Customer; noteRef: RefObject<HTMLTextAreaElement> }) {
-  const all = useActivity(withMerged(c));
-  const panel = usePanel();
-  // הכל / הערות ושיחות / תיעודי טיפול (נוצרים מכרטיס של הזמנה שנסגרה)
-  const [show, setShow] = useState<'all' | 'notes' | 'care'>('all');
-  const careN = all.filter((a) => a.kind === 'care').length;
-  const items = show === 'all' ? all : all.filter((a) => (show === 'care') === (a.kind === 'care'));
-  const toast = useToast();
-  const [kind, setKind] = useState<'note' | 'call' | 'followup'>('note');
-  const [text, setText] = useState('');
-  const [due, setDue] = useState('');
-  const [err, setErr] = useState('');
-  const KIND = { note: 'הערה', call: 'שיחה', followup: 'משימת חזרה' } as const;
-  const submit = async () => {
-    if (!text.trim()) return setErr('כתוב משהו לפני השמירה');
-    if (CARD_RE.test(text)) return setErr('אסור לרשום כאן מספר כרטיס אשראי');
-    if (kind === 'followup' && !due) return setErr('למשימת חזרה צריך תאריך');
-    try { await addActivity(c.id, { kind, text, due: kind === 'followup' ? due : undefined }, c.name); setText(''); setDue(''); setErr(''); toast({ message: `${KIND[kind]} נשמרה` }); }
-    catch { setErr('השמירה נכשלה'); }
-  };
-  return (
-    <div className="card">
-      <form className="composer" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <div className="seg seg--sm" role="radiogroup" aria-label="סוג">
-          {(Object.keys(KIND) as (keyof typeof KIND)[]).map((k) => <button type="button" key={k} role="radio" aria-checked={kind === k} className={kind === k ? 'is-on' : ''} onClick={() => setKind(k)}>{KIND[k]}</button>)}
-        </div>
-        <textarea ref={noteRef} className="input composer__ta" rows={2} value={text} onChange={(e) => { setText(e.target.value); setErr(''); }} placeholder={kind === 'call' ? 'מה סוכם בשיחה?' : kind === 'followup' ? 'למה לחזור ללקוח?' : 'הערה פנימית על הלקוח'} aria-label="תוכן"
-          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }} />
-        <div className="composer__row">
-          {kind === 'followup' && <label className="check-inline">תאריך <input className="input input--sm" type="date" value={due} onChange={(e) => { setDue(e.target.value); setErr(''); }} /></label>}
-          {err && <span className="pop__err" role="alert">{err}</span>}
-          <Button size="sm" variant="primary" type="submit" className="composer__send">שמור</Button>
-        </div>
-      </form>
-      {careN > 0 && (
-        <div className="seg seg--sm cfile__afilter" role="group" aria-label="הצג">
-          {([['all', 'הכל'], ['notes', 'הערות ושיחות'], ['care', `תיעודי טיפול (${careN})`]] as const).map(([k, l]) => (
-            <button key={k} className={show === k ? 'is-on' : ''} aria-pressed={show === k} onClick={() => setShow(k)}>{l}</button>
-          ))}
-        </div>
-      )}
-      <ol className="timeline cfile__timeline">
-        {items.length === 0 && <li className="muted">אין עדיין פעילות. הערות, שיחות ומשימות חזרה יופיעו כאן; תיעודי טיפול – מכרטיס של הזמנה שנסגרה.</li>}
-        {items.map((a) => (
-          <li key={a.id}>
-            <span className="timeline__at"><Ltr>{a.at ? fmtTs(a.at.toDate()) : '…'}</Ltr></span>
-            {a.kind === 'care' ? (
-              /* תיעוד טיפול: הנושא והפיצוי, כרטיס ההזמנה (לחיצה פותחת אותה), ואיך טיפלנו */
-              <span className="acare">
-                <span>
-                  <span className="akind akind--care">תיעוד טיפול</span> <b>{a.byName}</b>{a.callAt && <span className="muted"> · שיחה ב-<Ltr>{fmtDate(a.callAt)}</Ltr></span>}
-                  {a.topic && <span className="acare__tag">{a.topic}</span>}
-                  {!noComp(a) && <span className="acare__tag acare__tag--comp">פיצוי: {a.comp}{a.compAmount ? <> · <Ltr>{fmtMoney(a.compAmount)}</Ltr></> : null}</span>}
-                </span>
-                {a.order && (
-                  <button type="button" className="acare__order" onClick={(e) => panel.open(a.order!.id, e.currentTarget)}>
-                    הזמנה <Ltr>{a.order.id}</Ltr> · <Ltr>{fmtDate(a.order.date)}</Ltr> <Ltr>{a.order.time}</Ltr> · {a.order.branchName} · <Ltr>{fmtMoney(a.order.amount)}</Ltr> · {a.order.outcome}
-                  </button>
-                )}
-                <span className="acare__text">{a.text}</span>
-              </span>
-            ) : (
-              <span><span className={`akind akind--${a.kind}`}>{KIND[a.kind]}</span> <b>{a.byName}</b>{a.due && <span className="muted"> · לחזור ב-<Ltr>{a.due.split('-').reverse().join('.')}</Ltr></span>}<br />{a.text}</span>
-            )}
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
 /* הערת מחיר ידנית – למשל "מחיר לפי ממשק WellBe". מוצגת בטופס ההזמנה מעל הפריטים */
 function PriceNote({ c }: { c: Customer }) {
   const toast = useToast();

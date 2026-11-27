@@ -1,6 +1,6 @@
 /* לקוחות (אפיון 6.5, 6.6, 12). הלקוח הוא הישות המרכזית. אין מחיקה – רק "לא פעיל" או "מוזג".
    ח.פ ייחודי נאכף בשרת דרך אוסף taxIds/{ח.פ} שנוצר יחד עם הלקוח (batch). */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   collection, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where, writeBatch, type DocumentData, type Timestamp, type WriteBatch,
 } from 'firebase/firestore';
@@ -47,6 +47,8 @@ export type CareOrder = { id: number; date: string; time: string; branchName: st
 export type Activity = {
   id: string; kind: 'note' | 'call' | 'followup' | 'care'; text: string; due?: string; by: string; byName: string; at?: Timestamp;
   orderId?: string; order?: CareOrder; topic?: string; comp?: string; compId?: string; compAmount?: number; callAt?: string;
+  quoteId?: number; // הערה / שיחה שקשורה להצעת מחיר (ציר הזמן). orderId בהערה – קשורה להזמנה
+  taskId?: string; // משימת חזרה: המשימה שנוצרה יחד איתה (כדי שדחייה / בוצע יופיעו על הרשומה)
 };
 
 export const EMPTY_CUSTOMER: CustomerInput = {
@@ -78,7 +80,7 @@ export function useActivity(ids: string[]) {
       (s) => setById((m) => ({ ...m, [id]: s.docs.map((d) => ({ id: d.id, ...d.data() }) as Activity) })), () => undefined));
     return () => subs.forEach((u) => u());
   }, [key]);
-  return Object.values(byId).flat().sort((x, y) => (y.at?.seconds ?? 9e9) - (x.at?.seconds ?? 9e9));
+  return useMemo(() => Object.values(byId).flat().sort((x, y) => (y.at?.seconds ?? 9e9) - (x.at?.seconds ?? 9e9)), [byId]);
 }
 
 export type AuditRow = { id: string; action: string; before: Record<string, unknown> | null; after: Record<string, unknown> | null; byName: string; at?: Timestamp; note?: string };
@@ -135,14 +137,14 @@ export async function updateCustomer(c: Customer, raw: Partial<CustomerInput> & 
   await batch.commit();
 }
 
-export async function addActivity(customerId: string, a: Pick<Activity, 'kind' | 'text' | 'due'>, customerName = '') {
+export async function addActivity(customerId: string, a: Pick<Activity, 'kind' | 'text' | 'due' | 'orderId' | 'quoteId'>, customerName = '') {
   const u = auth.currentUser!;
   const batch = writeBatch(db);
+  // משימת חזרה עם תאריך מופיעה גם במסך החריגים ביום שלה; המזהה שלה נשמר ברשומה
+  const taskId = a.kind === 'followup' && a.due ? addTaskTo(batch, { customerId, customerName, text: a.text, due: a.due }) : undefined;
   batch.set(doc(collection(db, 'customers', customerId, 'activity')), {
-    kind: a.kind, text: a.text.trim(), ...(a.due ? { due: a.due } : {}), by: u.uid, byName: u.displayName ?? u.email ?? '', at: serverTimestamp(),
+    kind: a.kind, text: a.text.trim(), ...(a.due ? { due: a.due } : {}), ...(a.orderId ? { orderId: a.orderId } : {}), ...(a.quoteId ? { quoteId: a.quoteId } : {}), ...(taskId ? { taskId } : {}), by: u.uid, byName: u.displayName ?? u.email ?? '', at: serverTimestamp(),
   });
-  // משימת חזרה עם תאריך מופיעה גם במסך החריגים ביום שלה
-  if (a.kind === 'followup' && a.due) addTaskTo(batch, { customerId, customerName, text: a.text, due: a.due });
   await batch.commit();
 }
 
