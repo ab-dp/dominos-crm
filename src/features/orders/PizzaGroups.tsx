@@ -35,8 +35,8 @@ export function pizzaGroups(lines: Line[]): Group[] {
   return out;
 }
 
-export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, lastPrice, onTouched, revealProblems = 0, pricesUsed = false }: {
-  lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[];
+export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, lastPrice, onTouched, revealProblems = 0, pricesUsed = false, noQuick = false }: {
+  lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[]; noQuick?: boolean;
   topHints: string[]; typeHints: string[]; lastPrice: (name: string) => number | undefined; onTouched?: () => void;
   /* מונה: שמירה שנחסמה או 'הצג' – השורה הפעילה מפסיקה להיות מוגנת מסימון, כדי שהשדה החסר יאדים ויקבל את הסמן */
   revealProblems?: number;
@@ -276,7 +276,7 @@ export function PizzaGroups({ lines, setLines, catalog, topHints, typeHints, las
       })}
       <div className="pgs__foot">
         <button type="button" className="btn btn--secondary btn--sm" onClick={() => addGroup()}><Plus size={16} aria-hidden="true" /><span className="btn__label">סוג פיצה</span></button>
-        {quick.length > 0 && (
+        {!noQuick && quick.length > 0 && (
           <span className="pgs__quick">
             <span>או בחירה מהירה:</span>
             {quick.map((t) => <button type="button" key={t} className="ib-sug__chip" onClick={() => addGroup(t)}>{t}</button>)}
