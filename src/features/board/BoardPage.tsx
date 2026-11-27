@@ -497,7 +497,6 @@ function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string
           <div className="bchart__plot" role="img" aria-label={`${metric === 'sum' ? 'הכנסות' : 'הזמנות'} ${mode === 'cum' ? 'מצטברות' : 'לפי יום'}: בתקופה ${metric === 'sum' ? fmtMoney(cumCur[n - 1] ?? 0) : num(cumCur[n - 1] ?? 0)}, ב${prevName} ${metric === 'sum' ? fmtMoney(cumPrev[n - 1] ?? 0) : num(cumPrev[n - 1] ?? 0)}`}>
             {mode === 'cum' && (
               <svg className="bchart__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                <polygon className="bchart__area" points={`${xAt(0)},100 ${line(cumCur)} ${xAt(n - 1)},100`} />
                 <polyline className="bchart__prevline" points={line(cumPrev)} />
                 <polyline className="bchart__curline" points={line(cumCur)} />
               </svg>

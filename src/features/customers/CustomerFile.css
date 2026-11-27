@@ -271,9 +271,8 @@
   .cfile__actions { margin-inline-start: auto; }
 }
 /* עובדות בראש התיק – טקסט עם מפרידים, כמו בראש כרטיס ההזמנה (לא שרשרת תגיות) */
-.cfile__head .cfile__facts { gap: var(--space-1) 0; }
+.cfile__head .cfile__facts { gap: var(--space-1) var(--space-5); }
 .cfile__head .cfile__facts > .tag { height: auto; padding: 0; background: none; font-size: var(--text-table); font-weight: 500; }
-.cfile__head .cfile__facts > * + *::before { content: ""; display: inline-block; width: 1px; height: 14px; margin: 0 var(--space-3); background: var(--on-dark-line); vertical-align: middle; }
 .cfile__head .cfile__facts > .fact { margin-inline-end: 0; }
 .cfile__head .tag--brand { background: none; color: var(--on-dark-accent); }
 .cfile__head .btn--primary { border-color: rgb(255 255 255 / .55); }
