@@ -132,3 +132,4 @@
   .card__head .card__head-end { margin-inline-start: 0; flex-wrap: wrap; }
   .card__head select { max-width: 100%; }
 }
+@media (max-width: 700px) { .tabs { -webkit-mask-image: linear-gradient(to left, transparent 0, #000 24px); mask-image: linear-gradient(to left, transparent 0, #000 24px); padding-inline-end: var(--space-5); } }

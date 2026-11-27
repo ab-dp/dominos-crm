@@ -50,3 +50,9 @@
   .litem__actions { flex-wrap: wrap; }
 }
 @media (max-width: 760px) { .menu-ed .litem__toggle, .menu-ed .icon-btn--sm, .menu-ed__pick { min-height: 44px; min-width: 44px; } }
+
+/* שלב 9: שלבי הבחירה – שורות צ'קבוקס על הגיליון, בלי קופסאות */
+.menu-ed__steps { gap: 0; }
+.menu-ed__step { border: 0; border-radius: 0; padding: var(--space-2) 0; }
+.menu-ed__step + .menu-ed__step { border-top: 1px solid var(--line-soft); }
+.menu-ed__step:has(input:checked) { background: none; border-color: var(--line-soft); }

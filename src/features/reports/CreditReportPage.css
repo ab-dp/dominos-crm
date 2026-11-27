@@ -12,3 +12,6 @@
 .paytag--pending { background: var(--urgent-bg); color: var(--urgent-fg); }
 .paytag--paid { background: var(--ok-bg); color: var(--ok-fg); }
 .paytag--cancelled { background: var(--gray-100); color: var(--gray-600); }
+
+/* שלב 9: צבע רק למה שדורש פעולה */
+.paytag--paid, .paytag--cancelled { background: none; padding: 0; height: auto; font-size: var(--text-table); font-weight: 400; color: var(--gray-700); }

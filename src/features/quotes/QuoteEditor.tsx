@@ -562,8 +562,8 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
               {unpriced.length > 0 && <li><CircleAlert size={16} aria-hidden="true" /> <Ltr>{unpriced.length}</Ltr> {unpriced.length === 1 ? 'שורה' : 'שורות'} בלי מחיר ({unpriced.slice(0, 2).map((l) => l.name).join(', ')}{unpriced.length > 2 ? '…' : ''}) – בדף יופיע "—"</li>}
             </ul>
             <span className="qe-total">סה"כ לתשלום <b><Ltr>{fmtMoney(total)}</Ltr></b> <span className="muted">כולל מע"מ</span></span>
-            {!locked && <Button icon={<Save size={16} />} loading={busy === 'save'} onClick={() => save()}>{quote ? (dirty ? 'שמור שינויים' : 'נשמר') : 'שמירה'}</Button>}
-            <Button variant="primary" icon={<Download size={16} />} loading={busy === 'pdf'} onClick={locked ? async () => { setBusy('pdf'); try { await downloadSheetPdf(sheetRef.current!, fileName(quote!.id)); } catch { setErr('לא ניתן היה ליצור PDF – נסו שוב'); } setBusy(''); } : pdf}>הורדת PDF</Button>
+            {!locked && <Button variant={!quote || dirty ? 'primary' : 'secondary'} icon={<Save size={16} />} loading={busy === 'save'} onClick={() => save()}>{quote ? (dirty ? 'שמור שינויים' : 'נשמר') : 'שמירה'}</Button>}
+            <Button variant="secondary" icon={<Download size={16} />} loading={busy === 'pdf'} onClick={locked ? async () => { setBusy('pdf'); try { await downloadSheetPdf(sheetRef.current!, fileName(quote!.id)); } catch { setErr('לא ניתן היה ליצור PDF – נסו שוב'); } setBusy(''); } : pdf}>הורדת PDF</Button>
           </div>
         </div>
         {preview}

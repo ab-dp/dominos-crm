@@ -70,7 +70,7 @@
 .os-br td { padding: var(--space-3) 0 6px; border: 0; }
 .os-br div { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-3); }
 .os-br div::before, .os-br div::after { content: ''; flex: 1; height: 2px; background: var(--day-ln); }
-.os-br p { display: inline-flex; align-items: baseline; gap: var(--space-3); margin: 0; padding: 2px var(--space-4); border: 2px solid var(--day); border-radius: 999px; background: var(--white); }
+.os-br p { display: inline-flex; align-items: baseline; gap: var(--space-3); margin: 0; padding: 0 var(--space-2); background: var(--white); }
 .os-br b { font-size: var(--text-section); font-weight: 600; line-height: 1.25; color: var(--day-dk); }
 .os-br span { font-size: var(--text-label); color: var(--os-sub); }
 .os-table tr.is-wash td { background-color: var(--day-wash); }
@@ -79,7 +79,7 @@
 /* שעה וכמות פיצות – מה שהסניף מחפש בכל שורה */
 .os-when b { display: block; font-size: var(--text-section); font-weight: 600; line-height: 1.2; font-family: var(--font-mono); color: var(--day-dk); white-space: nowrap; }
 .os-pz { text-align: center; }
-.os-pz span { display: inline-block; min-width: 44px; padding: 0 var(--space-2); border-radius: 4px; background: var(--day-mid); color: var(--day-dk); font-size: var(--text-section); font-weight: 600; line-height: 1.25; font-family: var(--font-mono); }
+.os-pz span { display: inline-block; min-width: 44px; padding: 0 var(--space-2); border-radius: 0; background: none; color: var(--day-dk); font-size: var(--text-section); font-weight: 600; line-height: 1.25; font-family: var(--font-mono); }
 
 /* כל השאר: כתב רגיל ושקט */
 .os-cust > b { font-weight: 500; color: var(--ink); }

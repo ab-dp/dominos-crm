@@ -137,3 +137,8 @@
 
 /* ערוץ: עמודה צרה אחרי "סניף" (בטלפון מוסתרת, כמו שאר העמודות) */
 .otable .c-channel { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-label); }
+
+@media (max-width: 700px) {
+  .orow__m { flex-wrap: wrap; row-gap: 2px; }
+  .orow__m > span:first-child, .orow__m-name { overflow: visible; white-space: normal; text-overflow: clip; }
+}

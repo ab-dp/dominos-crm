@@ -471,3 +471,15 @@
   .reg__copy { min-width: 44px; min-height: 44px; justify-content: center; }
   .reg__copy-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
+
+/* שלב 9: הכותרת לוקחת את כל המקום הפנוי בשורה (הרווח הריק לא מתחרה בה) – השם המלא נכנס, ונחתך רק כשבאמת אין מקום */
+.prec .panel__title { flex: 1 1 auto; }
+.prec .panel__row > .panel__spacer { flex: 0 0 0; }
+/* בטלפון: הצעד הבא בסרגל התחתון – כפתור ראשי מלא; עריכה משנית */
+.pbar .prec__act, .pbar .prec__act--brand { background: var(--brand-600); border-color: transparent; color: var(--white); }
+.pbar .prec__act svg { color: var(--white); }
+/* טלפון: שם הלקוח עד שתי שורות במקום חיתוך */
+@media (max-width: 560px) {
+  .prec .panel__title { align-items: flex-start; }
+  .prec__name { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+}

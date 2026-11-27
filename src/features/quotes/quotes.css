@@ -213,7 +213,8 @@
 .qrec .qstat { height: 24px; }
 
 /* כרטיס המעקב: אזור עבודה בולט, כותרת בכחול-לילה */
-.qtrack { border-top: 3px solid var(--navy); }
+/* שלב 9: בלי פס עליון; הסטטוס מוצג פעם אחת – בראש ההצעה */
+.qe-main .qtrack__head > .qstat, .qtrack--in-editor .qtrack__head > .qstat { display: none; }
 .qtrack .qe-sec__title, .qe-sec__title { color: var(--navy); font-size: var(--text-heading); }
 
 /* רשימה: "הגיע זמן לחזור" – רקע עדין בצבע אחד ותגית מלאה בולטת; "אין עדכון" (הצעה ישנה בלי תאריך) – נשאר כתום */

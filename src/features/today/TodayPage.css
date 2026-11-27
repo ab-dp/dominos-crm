@@ -126,3 +126,4 @@
   .qrow__hold { grid-column: 2 / -1; grid-row: 3; padding: 0; }
 }
 .qrow__late { color: var(--danger-fg); font-weight: 500; }
+@media (max-width: 700px) { .qrow__meta { white-space: normal; } }

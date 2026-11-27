@@ -22,3 +22,6 @@
 .bpick__pref { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--missing-fg); font-size: var(--text-micro); font-weight: 500; }
 .bpick__none { padding: var(--space-3); color: var(--gray-600); font-size: var(--text-table); }
 .bpick__add { border-top: 1px solid var(--gray-100); border-radius: 0 0 6px 6px; margin-top: var(--space-1); color: var(--brand-600); font-weight: 500; }
+
+/* שלב 9: מידע משני בבוחר – טקסט אפור, בלי גלולה */
+.bpick__cluster { background: none !important; padding: 0 !important; height: auto; font-size: var(--text-label); font-weight: 400; color: var(--gray-600) !important; }
