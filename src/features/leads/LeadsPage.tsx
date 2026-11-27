@@ -1,6 +1,7 @@
 /* לקוחות פוטנציאליים (אפיון 19.1): שלוש תצוגות של אותם לידים –
    לוח כרטיסים בגרירה בין השלבים, טבלה עם סינונים, ו"המשימות שלי היום". כל כרטיס מראה את הצעד הבא ומתי. */
 import { useMemo, useState, type DragEvent, type ReactNode } from 'react';
+import { StickyBar } from '../../design/StickyBar';
 import { useNavigate } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { CalendarClock, ChevronDown, CircleCheckBig, Kanban, ListChecks, Plus, Search, Table2, Target, UserCheck, X, XCircle } from 'lucide-react';
@@ -223,6 +224,7 @@ function LeadTable({ leads, today, onOpen }: { leads: Lead[]; today: string; onO
 
   return (
     <>
+      <StickyBar>
       <div className="tablebar">
         <FilterBar dims={dims} values={{ lstage: stage === 'open' ? '' : stage, field, area, source }} onChange={setMany} extraActive={(s ? 1 : 0) + (late ? 1 : 0)} alsoClear={['late']} onClearAll={() => setQ('')} />
         <button className={`chip ${late ? 'is-on' : ''}`} aria-pressed={late} onClick={() => setMany({ late: late ? null : '1' })}>צעד הבא באיחור <Ltr>{lateCount}</Ltr></button>
@@ -232,6 +234,7 @@ function LeadTable({ leads, today, onOpen }: { leads: Lead[]; today: string; onO
           {q && <button onClick={() => setQ('')} aria-label="נקה חיפוש"><X size={14} /></button>}
         </label>
       </div>
+      </StickyBar>
       {rows.length === 0 ? <div className="card"><EmptyState icon={<Target size={20} />} title="אין לידים בתצוגה הזו" /></div> : (
         <div className="otable-wrap">
           <table className="otable otable--dense ltable">

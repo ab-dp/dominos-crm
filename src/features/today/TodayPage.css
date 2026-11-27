@@ -127,3 +127,15 @@
 }
 .qrow__late { color: var(--danger-fg); font-weight: 500; }
 @media (max-width: 700px) { .qrow__meta { white-space: normal; } }
+
+/* ---------- שלב 10: מסך היום רגוע יותר ---------- */
+/* "ירדו ל-Q": גוון עדין מאוד וקו מפריד – לא שורה של בלוקים ירוקים; הווי והשעה בירוק */
+.tlane--inq .tlane__list { gap: 0; }
+.qrow--inq { background: var(--ok-tint); border-radius: 0; }
+.qrow--inq + .qrow--inq { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ok-fg) 12%, transparent); }
+.tlane--inq .tlane__list > .qrow--inq:first-child { border-start-start-radius: var(--radius); border-start-end-radius: var(--radius); }
+.tlane--inq .tlane__list > .qrow--inq:last-child { border-end-start-radius: var(--radius); border-end-end-radius: var(--radius); }
+.qrow--inq:hover { background: color-mix(in srgb, var(--ok-tint) 85%, var(--ok-fg)); }
+.qrow--inq .qrow__time { color: var(--ok-fg); }
+/* "להקליד ל-Q": שורה לבנה עם קו דק ופס כחול – הפעולה הבאה בולטת */
+.qrow--todo { box-shadow: inset 0 0 0 1px var(--line); }

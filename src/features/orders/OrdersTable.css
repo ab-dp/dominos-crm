@@ -25,8 +25,8 @@
 .orow.is-flash td { animation: row-flash 1.2s var(--ease); }
 /* טאב "היום": מצב Q (DESIGN.md, The Q-Lane Rule) – פס כחול בתחילת השורה = להקליד ל-Q, רקע ירוק עדין = ירדה ל-Q */
 .orow--q-todo td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
-.orow--q-done td { background: var(--ok-bg); }
-.orow--q-done:hover td { background: color-mix(in srgb, var(--ok-bg) 92%, var(--ok-fg)); }
+.orow--q-done td { background: var(--ok-tint); }
+.orow--q-done:hover td { background: color-mix(in srgb, var(--ok-tint) 92%, var(--ok-fg)); }
 @keyframes row-flash { 0%, 30% { background: var(--brand-100); } 100% { background: transparent; } }
 
 .orow__cust { display: block; font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
@@ -62,8 +62,8 @@
 .otable thead th:last-child { background: var(--white); z-index: 3; }
 .orow:hover td:last-child { background: var(--gray-50); }
 .orow.is-selected td:last-child, .orow:focus-visible td:last-child { background: var(--brand-50); }
-.otable .orow--q-done td:last-child { background: var(--ok-bg); }
-.otable .orow--q-done:hover td:last-child { background: color-mix(in srgb, var(--ok-bg) 92%, var(--ok-fg)); }
+.otable .orow--q-done td:last-child { background: var(--ok-tint); }
+.otable .orow--q-done:hover td:last-child { background: color-mix(in srgb, var(--ok-tint) 92%, var(--ok-fg)); }
 .otable .orow:focus-visible td:last-child { background: var(--brand-50); }
 @media (max-width: 1500px) {
   .otable .mark__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -79,7 +79,7 @@
 @media (max-width: 700px) {
   /* clip ולא hidden – כדי שכותרת היום תוכל להיצמד למעלה בגלילה */
   .otable-wrap { overflow: clip; }
-  .otable--orders tr.oday { display: block; position: sticky; top: calc(var(--topbar) + env(safe-area-inset-top, 0px)); z-index: 2; }
+  .otable--orders tr.oday { display: block; position: sticky; top: calc(var(--topbar) + var(--stickybar-h, 0px) + env(safe-area-inset-top, 0px)); z-index: 2; }
   .otable--orders tr.oday th { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-2); background: var(--gray-50); border-bottom: 1px solid var(--line); text-align: start; }
   .otable--orders tr.oday + .orow { border-top: 0; }
   .oday__name { font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
@@ -101,7 +101,7 @@
   .otable--orders .orow + .orow { border-top: 1px solid var(--line); }
   /* מצב Q בטאב "היום": כל הכרטיס בגוון, והפס בתחילת הכרטיס */
   .otable--orders .orow--q-todo { box-shadow: inset -3px 0 0 var(--brand-600); }
-  .otable--orders .orow--q-done, .otable--orders .orow--q-done td, .otable--orders .orow--q-done td:last-child { background: var(--ok-bg); }
+  .otable--orders .orow--q-done, .otable--orders .orow--q-done td, .otable--orders .orow--q-done td:last-child { background: var(--ok-tint); }
   .otable--orders td { display: none; height: auto !important; padding: 0; border: 0; background: none !important; box-shadow: none !important; position: static; white-space: normal; }
   .otable--orders td.c-time { display: block; grid-area: time; font-size: var(--text-card-title); }
   .otable--orders td.c-cust { display: block; grid-area: cust; min-width: 0; }

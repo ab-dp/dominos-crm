@@ -1,7 +1,7 @@
 /* בורד הנהלה (שלב 9 – בנוי מחדש בהיררכיה): פס "תמונת מצב" בכחול-לילה עם ארבעה מספרים, ואז כרטיסים שכל אחד נפתח
    במספר-תשובה או במשפט, ומתחתיו הנתונים והקישור לרשימה. כולם רואים. יעד מוצג רק כשהוגדר (הגדרות ← יעדים).
    מכסת קריאות: בלי האזנה חדשה. תקופה שמתחילה לפני החודש הקודם נטענת פעם אחת, עם "רענן". */
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -43,7 +43,7 @@ const WEEKDAY = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי
 const short = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
 /* סכום: ₪ קטן ושקט ליד הספרות (רגע אופי, DESIGN.md v3 "Money") */
 function Money({ v, className = '' }: { v: number; className?: string }) {
-  return <Ltr><span className={`money ${className}`}><span className="money__cur">₪</span>{fmtMoney(v).replace('₪', '')}</span></Ltr>;
+  return <Ltr><span className={`money ${className}`}><span className="money__cur">₪</span>{fmtMoney(Math.round(v)).replace('₪', '')}</span></Ltr>;
 }
 /* "+18%" קצר לשורות משנה */
 function Delta({ cur, prev }: { cur: number; prev: number }) {
@@ -162,6 +162,16 @@ export function BoardPage() {
   // ערוץ אחד ונציג אחד – שורה אחת משותפת במקום שני כרטיסים כמעט ריקים
   const mergeCT = rk.channels.length < 2 && rk.team.length < 2;
   const wide = (k: SectionKey) => WIDE.includes(k);
+  // הפס הכחול יצא מהמסך (גללו למטה) – פס הכלים המוקפא מציג את ארבעת המספרים בקטן
+  const pulseRef = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const el = pulseRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([e]) => setStuck(!e.isIntersecting && e.boundingClientRect.top < 0), { rootMargin: '-120px 0px 0px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [busy]);
   const active = (Object.entries(filters) as [keyof Filters, string][]).filter(([, v]) => v);
   const FILTER_NAME: Record<keyof Filters, string> = { cluster: 'אשכול', branch: 'סניף', handler: 'נציג', method: 'אמצעי תשלום' };
 
@@ -174,7 +184,7 @@ export function BoardPage() {
         </div>
       </header>
 
-      <div className="board__bar">
+      <div className={`board__bar ${stuck ? 'is-stuck' : ''}`}>
         <div className="seg board__period" role="group" aria-label="תקופה">
           {(Object.keys(PERIOD_LABEL) as Period[]).map((p) => <button key={p} className={period === p ? 'is-on' : ''} aria-pressed={period === p} onClick={() => setPeriod(p)}>{PERIOD_LABEL[p]}</button>)}
         </div>
@@ -183,6 +193,15 @@ export function BoardPage() {
             <input type="date" className="input input--sm" value={custom.from} max={custom.to} onChange={(e) => e.target.value && setCustom({ ...custom, from: e.target.value })} aria-label="מתאריך" />
             <span aria-hidden="true">–</span>
             <input type="date" className="input input--sm" value={custom.to} min={custom.from} onChange={(e) => e.target.value && setCustom({ ...custom, to: e.target.value })} aria-label="עד תאריך" />
+          </span>
+        )}
+        {stuck && !busy && (
+          <span className="board__mini" aria-label="תמונת מצב">
+            <span>{rangeText}</span>
+            <span><small>הכנסות</small> <Money v={s.sum} /></span>
+            <span><small>הזמנות</small> <Ltr>{num(s.count)}</Ltr></span>
+            {sv.onTimePct !== null && <span><small>בזמן</small> <Ltr>{sv.onTimePct}%</Ltr></span>}
+            <span><small>בהקפה</small> <Money v={col.open.sum} /></span>
           </span>
         )}
         <span className="board__tools">
@@ -230,7 +249,7 @@ export function BoardPage() {
 
       {busy ? <BoardSkeleton /> : (
         <>
-          <Pulse s={s} sp={sp} sv={sv} svp={svp} col={col} daily={daily} prevName={prevName} goal={goals.onTimePct} go={nav} />
+          <div ref={pulseRef}><Pulse s={s} sp={sp} sv={sv} svp={svp} col={col} daily={daily} prevName={prevName} goal={goals.onTimePct} go={nav} /></div>
           {!hasGoals && <p className="board__nogoals">לא הוגדרו יעדים לחודש · <button type="button" className="link" onClick={() => nav('/settings/goals')}>להגדרת יעדים</button></p>}
           <div className="board__grid">
             {order.filter((k) => !hidden.includes(k) && (k !== 'goals' || hasGoals) && !(mergeCT && k === 'team')).map((k) => <div key={k} className={`board__slot ${wide(k) ? 'is-wide' : ''}`}>{mergeCT && k === 'channels' ? <ChannelTeamLine ch={rk.channels} team={rk.team} /> : render[k]()}</div>)}

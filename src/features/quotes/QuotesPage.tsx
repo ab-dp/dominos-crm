@@ -1,6 +1,7 @@
 /* הצעות מחיר: כל ההצעות במקום אחד. ברירת המחדל – "ממתינות למענה", ומה שלא עודכן מעבר לסף (ספי התראות) – למעלה ומסומן.
    בכל שורה: הערה אחרונה ביומן, והפעולה הבאה (אישור / אין מענה / נדחתה / הפוך להזמנה). */
 import { useMemo, useState } from 'react';
+import { StickyBar } from '../../design/StickyBar';
 import { useNavigate } from 'react-router-dom';
 import { BellRing, CalendarClock, FileText, Plus, Search, X } from 'lucide-react';
 import { SHORT_STATUS, WAITING, callDue, dayMonth, isExpired, needsFollowup, staleHours, useQuotes, type Quote } from '../../data/quotes';
@@ -82,6 +83,7 @@ export function QuotesPage() {
       </header>
       {error && <p className="cform__formerr" role="alert">{error} – ההצעות לא נטענו. רענן את הדף.</p>}
 
+      <StickyBar>
       <div className="tabs" role="tablist" aria-label="הצעות מחיר">
         {TABS.map(([k, label]) => (
           <button key={k} role="tab" aria-selected={tab === k} className={`tab ${tab === k ? 'is-on' : ''} ${k === 'waiting' && follow ? 'tab--alert' : ''}`}
@@ -98,6 +100,7 @@ export function QuotesPage() {
           {query && <button onClick={() => setQuery('')} aria-label="נקה סינון"><X size={14} /></button>}
         </label>
       </div>
+      </StickyBar>
 
       {loading ? <div className="card orders-loading" aria-busy="true" aria-label="טוען הצעות">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={20} />)}</div> : rows.length === 0 ? (
         <div className="card">

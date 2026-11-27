@@ -295,3 +295,24 @@
 .bkv > div + div { border-inline-start: 1px solid var(--line-soft); padding-inline-start: var(--space-4); }
 .bkv dd { justify-content: flex-start; }
 @media (max-width: 600px) { .bkv > div + div { border-inline-start: 0; padding-inline-start: 0; } }
+
+/* ---------- שלב 10: פס הכלים מוקפא בראש המסך ----------
+   התקופה והסינון תמיד בהישג יד; כשגוללים אל מעבר לפס הכחול – ארבעת המספרים מופיעים בקטן בתוך הפס */
+.board__bar { position: sticky; top: var(--topbar); z-index: var(--z-sticky); margin-inline: calc(-1 * var(--space-2)); padding: var(--space-2); background: var(--gray-25); transition: box-shadow var(--dur-quick) var(--ease), background var(--dur-quick) var(--ease); }
+.board__bar.is-stuck { background: var(--gray-25); box-shadow: 0 1px 0 var(--line), var(--shadow-sticky); }
+.board__mini { display: inline-flex; align-items: baseline; gap: var(--space-4); min-width: 0; font-size: var(--text-table); font-weight: 600; color: var(--gray-900); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.board__mini small { font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+.board__mini > span + span { padding-inline-start: var(--space-4); border-inline-start: 1px solid var(--line); }
+.board__mini > span:first-child { font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
+@media (max-width: 1180px) { .board__mini > span:first-child { display: none; } }
+@media (max-width: 900px) { .board__mini { display: none; } }
+@media (prefers-reduced-motion: reduce) { .board__bar { transition: none; } }
+/* בטלפון, כשהפס מוקפא – שורה אחת: התקופות נגללות לרוחב, הכפתורים כאייקון (השם נשאר לקורא מסך) */
+@media (max-width: 600px) {
+  .board__bar.is-stuck { flex-wrap: nowrap; }
+  .board__bar.is-stuck > .seg { flex: 1 1 auto; min-width: 0; }
+  .board__bar.is-stuck .report__dates { display: none; }
+  .board__bar.is-stuck .board__tools { flex: none; }
+  .board__bar.is-stuck .board__tools .btn { padding-inline: var(--space-2); }
+  .board__bar.is-stuck .board__tools .btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}

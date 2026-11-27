@@ -275,3 +275,19 @@ a.btn, a.btn:hover { text-decoration: none; }
 .link:hover { text-decoration-color: currentColor; }
 /* פעולת שורה במסך מגע: רקע עדין, כי אין ריחוף שמסמן שהיא לחיצה */
 @media (hover: none) { .btn--fix, .btn--act { background: var(--brand-50); } }
+
+/* ---------- שורת לשוניות וסינון צמודה (StickyBar) – מסכי רשימה ודוחות ----------
+   נשארת מתחת לסרגל העליון כשגוללים; כשהיא "תקועה" – קו וצל דק. בטלפון: בלי החיפוש והצ'יפים
+   (חוזרים כשגוללים למעלה), כדי שלא תאכל חצי מסך – חוץ מחיפוש שמקלידים בו */
+.stickybar__sentinel { height: 0; }
+.stickybar { position: sticky; top: var(--topbar); z-index: var(--z-sticky); display: flow-root; margin-inline: calc(-1 * var(--space-2)); padding: var(--space-2) var(--space-2) 0; background: var(--gray-25); /* כמו רקע הדף (body) */ transition: box-shadow var(--dur-quick) var(--ease); }
+.stickybar > :last-child { margin-bottom: var(--space-3); }
+.stickybar.is-stuck { box-shadow: 0 1px 0 var(--line), var(--shadow-sticky); }
+@media (max-width: 700px) {
+  .stickybar.is-stuck .tablebar__search:not(:focus-within):has(input:placeholder-shown),
+  .stickybar.is-stuck .chips,
+  .stickybar.is-stuck > .tablebar > .chip,
+  .stickybar.is-stuck .orange:not(:focus-within),
+  .stickybar.is-stuck .report__dates:not(:focus-within) { display: none; }
+  .stickybar.is-stuck .tabs { margin-bottom: var(--space-2); }
+}

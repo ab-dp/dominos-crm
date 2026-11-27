@@ -7,7 +7,7 @@ import { useToast } from '../../design/Toast';
 import '../pages.css';
 import './ThresholdsPage.css';
 
-const KEYS: (keyof Thresholds)[] = ['qFromTime', 'qLeadMinutes', 'soonDays', 'creditDeadline', 'nearMinutes', 'opsCutoff', 'quoteFollowupHours', 'lateSplitMinutes'];
+const KEYS: (keyof Thresholds)[] = ['qFromTime', 'qLeadMinutes', 'soonDays', 'creditDeadline', 'nearMinutes', 'quoteFollowupHours', 'lateSplitMinutes'];
 const isTimeKey = (k: keyof Thresholds) => THRESHOLD_META[k].unit === 'שעה';
 
 export function ThresholdsPage() {

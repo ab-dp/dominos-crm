@@ -10,7 +10,6 @@ import { Ltr, Money } from '../../lib/format';
 import { usePref } from '../../lib/prefs';
 import { orderDateTime } from '../../rules-engine/health';
 import { NextStep } from '../orders/OrderTimeline';
-import { OpsTag } from '../orders/OpsTag';
 import { HoldActions, agoText, remindText } from '../orders/Hold';
 import { qProgress, type Lane } from './qQueue';
 
@@ -110,8 +109,7 @@ function QueueRow({ o, lane, isNext, now }: { o: OrderView; lane: Lane; isNext: 
         {back && <span className="tqtag tqtag--back">הגיע הזמן לחזור</span>}
         {late && !back && <span className="tqtag tqtag--late">לא הועברה ל-Q</span>}
         {credit && !back && <span className="tqtag tqtag--credit">אשראי לחיוב</span>}
-        {lane !== 'closed' && <OpsTag o={o} />}
-        {!late && lane !== 'closed' && <HealthBadge health={o.health} issues={o.issues} compact focusable={false} />}
+        {!late && lane !== 'closed' && (lane !== 'inq' || o.health === 'critical') && <HealthBadge health={o.health} issues={o.issues} compact focusable={false} />}
       </span>
       {lane !== 'closed' && <span className="qrow__act">{o.hold ? <HoldActions o={o} inRow /> : <NextStep o={o} />}</span>}
       {/* בהמתנה: למה, מי ומתי, ומתי לחזור */}

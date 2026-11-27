@@ -15,9 +15,9 @@ import { EMPTY_CUSTOMER, newId, primaryContact, updateCustomer, useCustomers, ty
 import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
 import { DELIVERY_CAT, usePriceLists } from '../../data/priceLists';
-import { opsReminder, useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
+import { useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
 import { QuoteOrderedError, isExpired as quoteExpired, setQuoteStatus } from '../../data/quotes';
-import { METHOD_LABEL, categoryOf, needsOpsUpdate, type Order } from '../../data/types';
+import { METHOD_LABEL, categoryOf, type Order } from '../../data/types';
 import { editPatch } from './editPatch';
 import { MenuPicker, type FeeOption } from './MenuPicker';
 import { useFlag } from '../../data/flags';
@@ -415,11 +415,8 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           ? <>הזמנה <Ltr>{n}</Ltr> נשמרה, אבל הצעה <Ltr>{fq.id}</Ltr> כבר הפכה קודם להזמנה <Ltr>{x.orderId ?? ''}</Ltr> – בדקו שאין הזמנה כפולה</>
           : <>ההזמנה נשמרה, אבל סימון הצעה <Ltr>{fq.id}</Ltr> נכשל – סמנו אותה ידנית</> }));
       }
-      // הזמנה להיום/מחר שנוצרה אחרי שעת הסף – לא הייתה בסיכום לתפעול (opsChangeAt נכתב ב-createOrder)
-      const savedAt = new Date();
-      const ops = needsOpsUpdate({ status: input.status, date, opsChangeAt: savedAt.toISOString() }, savedAt, thresholds.opsCutoff);
       toast({
-        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת להשלמה</b></>}{ops && <><br />{opsReminder({ date }, savedAt)}</>}</>,
+        message: <>הזמנה <Ltr>{n}</Ltr> נשמרה{fq && <> מהצעה <Ltr>{fq.id}</Ltr></>} · {customerName} · {date === today ? 'היום' : date === tomorrow ? 'מחר' : <Ltr>{fmtDate(date)}</Ltr>} <Ltr>{time}</Ltr>{missLive.length > 0 && <> · <b>חסרים פרטים – מסומנת להשלמה</b></>}</>,
         action: { label: 'פתח תיק', run: () => panel.open(n) },
       });
       onClose();

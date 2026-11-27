@@ -1,5 +1,6 @@
 /* מאגר הלקוחות (אפיון 6.5). הסינון הראשוני הוא "קבועים", כדי שלקוחות מזדמנים לא יעמיסו על הרשימה. */
 import { useMemo, useState } from 'react';
+import { StickyBar } from '../../design/StickyBar';
 import { useNavigate } from 'react-router-dom';
 import { Download, FileCheck2, Plus, Search, Users, X } from 'lucide-react';
 import { customerGaps, primaryContact, useCustomers, type Customer, type CustomerGap } from '../../data/customers';
@@ -111,6 +112,7 @@ export function CustomersPage() {
         </div>
       </header>
 
+      <StickyBar>
       <div className="tabs" role="tablist" aria-label="סוג לקוח">
         {([['regular', 'קבועים', counts.regular], ['occasional', 'מזדמנים', counts.occasional], ['all', 'הכל', counts.regular + counts.occasional]] as [TypeFilter, string, number][]).map(([k, label, n]) => (
           <button key={k} role="tab" aria-selected={type === k} className={`tab ${type === k ? 'is-on' : ''}`} onClick={() => setType(k)}>{label}<span className="tab__count"><Ltr>{n}</Ltr></span></button>
@@ -125,6 +127,7 @@ export function CustomersPage() {
           {q && <button onClick={() => setQ('')} aria-label="נקה חיפוש"><X size={14} /></button>}
         </label>
       </div>
+      </StickyBar>
 
       {error ? <div className="card"><EmptyState icon={<Users size={20} />} title="לא ניתן לטעון לקוחות">{error}. ודא שכללי האבטחה פורסמו.</EmptyState></div>
         : loading ? <div className="card cust-skel">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={36} />)}</div>
