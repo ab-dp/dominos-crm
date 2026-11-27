@@ -124,7 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </button>
 
         <div className="topbar__actions">
-          <Button variant="primary" icon={<Plus size={16} />} onClick={newOrder}>הזמנה חדשה</Button>
+          <Button variant="brand" icon={<Plus size={16} />} onClick={newOrder}>הזמנה חדשה</Button>
 
           <div className="user">
             <span className="user__avatar" aria-hidden="true">{firstName[0] ?? '?'}</span>

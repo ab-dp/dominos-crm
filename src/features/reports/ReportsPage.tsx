@@ -2,7 +2,7 @@
    טבלה עם שורת סיכום, לחיצה על שורה מציגה את ההזמנות שמרכיבות אותה, וייצוא לאקסל שנרשם ביומן. */
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowRight, CalendarCheck, ChartColumn, Download, RefreshCw, X } from 'lucide-react';
+import { ArrowRight, CalendarCheck, ChartColumn, Download, RefreshCw, X, CalendarRange, ListOrdered, Users, Store, Radio, Wallet, UserCog } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
 import { logReportExport, useOrdersRange } from '../../data/orders';
 import { useStore } from '../../data/store';
@@ -22,6 +22,11 @@ import '../pages.css';
 import './ReportsPage.css';
 
 /* ---------- מרכז הדוחות ---------- */
+/* אייקון לכל דוח – שקט, באותו צבע, כדי שהרשימה לא תיראה כטקסט אחד ארוך */
+const REPORT_ICON: Record<string, JSX.Element> = {
+  period: <CalendarRange size={16} />, summary: <ListOrdered size={16} />, customers: <Users size={16} />, branches: <Store size={16} />,
+  channels: <Radio size={16} />, credit: <Wallet size={16} />, team: <UserCog size={16} />,
+};
 export function ReportsHub() {
   return (
     <div className="page">
@@ -38,7 +43,7 @@ export function ReportsHub() {
       <div className="rhub">
         {REPORTS.map((r) => (
           <Link key={r.id} to={r.link ?? `/reports/${r.id}`} className="rhub__card">
-            <span className="rhub__icon" aria-hidden="true"><ChartColumn size={16} /></span>
+            <span className="rhub__icon" aria-hidden="true">{REPORT_ICON[r.id] ?? <ChartColumn size={16} />}</span>
             <span className="rhub__text"><b>{r.title}</b><span>{r.desc}</span></span>
           </Link>
         ))}

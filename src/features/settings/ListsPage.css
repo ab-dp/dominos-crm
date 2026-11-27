@@ -21,3 +21,7 @@
 .ladd__err { margin: var(--space-2) var(--space-4) 0; }
 @media (pointer: coarse) { .litem__actions { opacity: 1; } }
 .litem__actions .icon-btn:disabled { opacity: 0.35; cursor: default; }
+
+/* שלב 9: השבת / הפעל – טקסט שקט, בלי מסגרת בכל שורה */
+.litem__toggle { border-color: transparent; background: none; color: var(--gray-700); }
+.litem__toggle:hover { background: var(--gray-100); color: var(--gray-900); }

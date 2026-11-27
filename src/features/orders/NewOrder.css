@@ -48,7 +48,7 @@
 .no-final .cform__field { max-width: 280px; }
 .no-final.is-manual { background: var(--missing-bg); }
 .no-final__note { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-2) 0 0; font-size: var(--text-label); }
-.no-final__tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--white); color: var(--missing-fg); }
+.no-final__tag { display: inline-flex; align-items: center; gap: var(--space-1); height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--white); color: var(--missing-fg); }
 .norder .fdrop { margin-bottom: var(--space-3); }
 
 /* פרטים חסרים לפני שמירה – מעל כפתור השמירה, תמיד גלוי */

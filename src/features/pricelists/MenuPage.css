@@ -3,7 +3,7 @@
 .menu-ed__tree, .menu-ed__cat, .menu-ed__preview { padding: var(--space-4); }
 .menu-ed__preview { position: sticky; top: calc(var(--topbar) + 12px); }
 .menu-ed__k { margin: 0 0 var(--space-2); font-size: var(--text-label); font-weight: 600; color: var(--gray-700); }
-.menu-ed__h { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); font-size: 16px; font-weight: 600; color: var(--navy); }
+.menu-ed__h { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); font-size: var(--text-heading); font-weight: 600; color: var(--navy); }
 .menu-ed__list + .menu-ed__list { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line-soft); }
 .menu-ed__list.is-compact { margin-top: 0; padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius); background: var(--zone); }
 .menu-ed__pick { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: start; cursor: pointer; }
@@ -28,7 +28,7 @@
 .mpv__cats { display: flex; flex-wrap: wrap; gap: 0 var(--space-3); border-bottom: 1px solid var(--line); margin-bottom: var(--space-3); }
 .mpv__cats button { height: 40px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; background: none; font: inherit; font-size: var(--text-table); font-weight: 500; color: var(--gray-600); cursor: pointer; }
 .mpv__cats button[aria-pressed="true"], .mpv__cats button.is-on { color: var(--gray-900); font-weight: 600; border-bottom-color: var(--brand-600); }
-.mpv__sys { height: 40px; display: inline-flex; align-items: center; font-size: var(--text-table); color: var(--gray-400, #9AA5B1); }
+.mpv__sys { height: 40px; display: inline-flex; align-items: center; font-size: var(--text-table); color: var(--gray-500); }
 .mpv__tray { display: grid; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-panel); background: var(--zone); border: 1px solid var(--zone-line); }
 .mpv__row { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: var(--space-2); align-items: center; }
 .mpv__label { font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
@@ -50,3 +50,9 @@
   .litem__actions { flex-wrap: wrap; }
 }
 @media (max-width: 760px) { .menu-ed .litem__toggle, .menu-ed .icon-btn--sm, .menu-ed__pick { min-height: 44px; min-width: 44px; } }
+
+/* שלב 9: שלבי הבחירה – שורות צ'קבוקס על הגיליון, בלי קופסאות */
+.menu-ed__steps { gap: 0; }
+.menu-ed__step { border: 0; border-radius: 0; padding: var(--space-2) 0; }
+.menu-ed__step + .menu-ed__step { border-top: 1px solid var(--line-soft); }
+.menu-ed__step:has(input:checked) { background: none; border-color: var(--line-soft); }

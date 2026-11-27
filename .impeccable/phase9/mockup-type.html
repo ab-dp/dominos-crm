@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>טיפוגרפיה ופריסה – לפני ואחרי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* הגופן של האתר – קודם מהעותק המקומי (fontsource), ואם אין – מ-Google Fonts */
+@font-face { font-family: 'Plex Local'; font-weight: 400; src: url('../../node_modules/@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-400-normal.woff2') format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: 'Plex Local'; font-weight: 500; src: url('../../node_modules/@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-500-normal.woff2') format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+@font-face { font-family: 'Plex Local'; font-weight: 600; src: url('../../node_modules/@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-600-normal.woff2') format('woff2'); unicode-range: U+0590-05FF, U+FB1D-FB4F; }
+
+:root {
+  --font: 'Plex Local', 'IBM Plex Sans Hebrew', 'Segoe UI', system-ui, sans-serif;
+  /* צבעים – זהים בשני הצדדים (הצבע הוא עניין של סוכן אחר) */
+  --navy: #0B2340; --page: #E8ECF1; --zone: #F3F5F8; --zone-line: #E2E7ED;
+  --brand-50: #E8F2F7; --brand-100: #CFE4EF; --brand-600: #006491; --brand-700: #00567D; --brand-800: #003F5C;
+  --gray-50: #F8FAFC; --gray-100: #E6EAEF; --gray-200: #D6DCE3; --gray-300: #C2CAD4; --gray-400: #8A96A5;
+  --gray-500: #677585; --gray-600: #546272; --gray-700: #3A4756; --gray-900: #0F1B2A; --white: #fff;
+  --line: #E6EAEF; --line-soft: #EEF1F4; --line-strong: #A9B3BF;
+  --danger-bg: #FCEBEE; --danger-fg: #C0102C; --danger-line: #EDB3BC;
+  --urgent-bg: #FDF0E3; --urgent-fg: #A34A05; --missing-bg: #FBF4D9; --missing-fg: #7A5D00;
+  --ok-bg: #E6F3EC; --ok-fg: #16704A; --hold-bg: #F2EEFA; --hold-fg: #5B3A9E;
+  --due: #0F6E6E; --due-bg: #DCEFF3;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); color: var(--gray-900); background: #DDE2E8; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+bdi { unicode-bidi: isolate; }
+.wrap { max-width: 1480px; margin: 0 auto; padding: 24px 16px 64px; }
+.intro { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.intro h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.015em; }
+.intro p { margin: 0; font-size: 13px; color: var(--gray-600); }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.cols > section { min-width: 0; }
+.B .tw, .A .sheet { overflow-x: auto; }
+.col__label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--gray-700); }
+.col__label span { font-weight: 400; color: var(--gray-600); }
+.frame { background: var(--page); border-radius: 8px; padding: 16px; overflow: hidden; }
+.wrap { max-width: 1560px; }
+.row-label { grid-column: 1 / -1; margin: 32px 0 0; padding-top: 16px; border-top: 1px solid #C9D0D8; font-size: 13px; font-weight: 600; color: var(--gray-700); }
+@media (max-width: 960px) { .cols { grid-template-columns: minmax(0, 1fr); } .frame { padding: 16px; } .A .sec__body, .B .card__body { grid-template-columns: 1fr; } .A .head-end { grid-row: auto; grid-column: 1 / -1; } .A .head { grid-template-columns: 1fr; } }
+
+/* ================= לפני – הערכים כפי שהם היום בקוד ================= */
+.B { --r-tag: 4px; --r: 6px; --r-panel: 8px; --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(15 27 42 / .06), 0 4px 12px -4px rgb(15 27 42 / .08); }
+.B .head { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 16px; }
+.B .title { margin: 0; font-size: 22px; font-weight: 600; line-height: 1.2; letter-spacing: -0.012em; }
+.B .sub { margin: 4px 0 0; font-size: 13px; color: var(--gray-600); }
+.B .head-end { margin-inline-start: auto; display: flex; gap: 12px; }
+.B .stats { flex-basis: 100%; display: flex; gap: 0; font-size: 13px; margin-top: -8px; }
+.B .stats div { display: flex; gap: 8px; align-items: baseline; }
+.B .stats div + div { margin-inline-start: 16px; padding-inline-start: 16px; border-inline-start: 1px solid var(--gray-200); }
+.B .stats dt { color: var(--gray-600); } .B .stats dd { margin: 0; font-weight: 600; font-size: 14px; }
+.B .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--gray-100); margin-bottom: 16px; }
+.B .tab { display: inline-flex; align-items: center; gap: 8px; height: 44px; font-size: 14px; font-weight: 500; color: var(--gray-600); }
+.B .tab.on { color: var(--gray-900); box-shadow: inset 0 -2px 0 var(--brand-600); }
+.B .count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--gray-100); font: 500 12px/20px var(--font); color: var(--gray-600); text-align: center; }
+.B .tab.on .count { background: var(--brand-50); color: var(--brand-700); }
+.B .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.B .chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--gray-200); border-radius: var(--r); background: var(--white); font-size: 13px; font-weight: 500; }
+.B .search { margin-inline-start: auto; height: 36px; min-width: 200px; display: flex; align-items: center; padding: 0 12px; border: 1px solid var(--gray-200); border-radius: var(--r); background: var(--white); font-size: 13px; color: var(--gray-500); }
+.B .tw { background: var(--white); border-radius: var(--r-panel); box-shadow: var(--shadow-card); overflow: hidden; }
+.B table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.B th { height: 36px; padding: 0 12px; text-align: start; font-size: 12px; font-weight: 500; color: var(--gray-600); border-bottom: 1px solid var(--line); white-space: nowrap; }
+.B td { height: 52px; padding: 4px 12px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+.B tr:last-child td { border-bottom: 0; }
+.B .cust b { display: block; font-weight: 600; font-size: 15px; } .B .cust small { font-size: 12px; color: var(--gray-600); }
+.B .health { font-size: 12px; font-weight: 500; color: var(--danger-fg); display: inline-flex; gap: 8px; align-items: center; }
+.B .health::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.B .health.u { color: var(--urgent-fg); }
+.B .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; border-radius: var(--r); font: inherit; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.B .btn.sm { height: 28px; padding: 0 12px; font-size: 13px; } .B .btn.md { height: 36px; padding: 0 16px; font-size: 14px; }
+.B .primary { background: var(--brand-600); color: #fff; }
+.B .secondary, .B .fix { background: #fff; color: var(--gray-900); border-color: var(--gray-200); }
+.B .ghost { background: transparent; color: var(--gray-600); }
+.B .danger { background: #fff; color: var(--danger-fg); border-color: var(--danger-line); }
+.B .more { color: var(--gray-600); letter-spacing: 1px; }
+.B .card { margin-top: 24px; background: #fff; border-radius: var(--r-panel); box-shadow: var(--shadow-card); }
+.B .card__head { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; border-bottom: 1px solid var(--gray-100); }
+.B .card__title { margin: 0; font-size: 15px; font-weight: 600; }
+.B .card__body { padding: 12px 16px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.B .field { display: grid; gap: 4px; } .B .field label { font-size: 13px; font-weight: 500; color: var(--gray-600); }
+.B .input { height: 36px; padding: 0 12px; border: 1px solid var(--gray-300); border-radius: var(--r); font: inherit; font-size: 15px; background: #fff; width: 100%; }
+.B .seg { display: inline-flex; padding: 2px; border-radius: var(--r-panel); background: var(--gray-100); }
+.B .seg span { height: 32px; padding: 0 12px; display: grid; place-items: center; border-radius: var(--r); font-size: 13px; font-weight: 500; color: var(--gray-600); }
+.B .seg .on { background: #fff; color: var(--gray-900); box-shadow: 0 0 0 1px var(--gray-200); }
+.B .set { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 24px; }
+.B .tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+/* היום יש 10 מחלקות תגית בשלושה גבהים – כאן שלוש מהן כמו שהן */
+.B .t24 { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: var(--gray-100); color: var(--gray-700); }
+.B .t22 { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+.B .t20 { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+.B .navytag { background: var(--navy); color: #fff; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center; }
+.B .stepnum { width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--brand-600); color: #fff; font-size: 13px; }
+.B .m-card { background: #fff; border-radius: 8px; box-shadow: var(--shadow-card); padding: 12px 16px; display: grid; gap: 4px; max-width: 360px; font-size: 14px; }
+.B .m-card .r1 { display: flex; gap: 12px; align-items: baseline; } .B .m-card .time { font-size: 15px; font-weight: 600; }
+.B .m-card .r3 { display: flex; justify-content: space-between; color: var(--gray-600); font-size: 13px; }
+.B .m-card .r5 { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.B .m-card .btn { height: 44px; padding: 0 12px; }
+
+/* ================= אחרי – ההצעה ================= */
+.A {
+  --text-micro: 12px; --text-label: 13px; --text-table: 14px; --text-body: 15px;
+  --text-heading: 17px; --text-lead: 20px; --text-title: 24px; --text-display: 28px;
+  --lh-tight: 1.2; --lh-snug: 1.35; --lh-body: 1.5; --track-tight: -0.015em;
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+  --elev-1: 0 0 0 1px rgb(15 27 42 / .07), 0 1px 2px rgb(15 27 42 / .05);
+  --control-sm: 28px; --control-md: 36px; --control-lg: 44px;
+  --row: 52px; --row-compact: 44px; --cell-x: 12px; --edge: 16px;
+}
+.A .head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 4px 24px; margin-bottom: 20px; }
+.A .title { margin: 0; font-size: var(--text-title); font-weight: 600; line-height: var(--lh-tight); letter-spacing: var(--track-tight); }
+.A .sub { grid-column: 1; margin: 0; font-size: var(--text-label); line-height: var(--lh-snug); color: var(--gray-600); }
+.A .head-end { grid-row: 1 / span 2; grid-column: 2; align-self: end; display: flex; gap: 8px; }
+.A .stats { grid-column: 1 / -1; display: flex; gap: 0; margin: 12px 0 0; font-size: var(--text-label); }
+.A .stats div { display: flex; gap: 8px; align-items: baseline; }
+.A .stats div + div { margin-inline-start: 16px; padding-inline-start: 16px; border-inline-start: 1px solid var(--gray-200); }
+.A .stats dt { color: var(--gray-600); } .A .stats dd { margin: 0; font-weight: 600; font-size: var(--text-table); }
+/* גיליון אחד: לשוניות, אזור סינון וטבלה – לא שלוש שכבות נפרדות על הדף */
+.A .sheet { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--elev-1); overflow: hidden; }
+.A .tabs { display: flex; gap: 24px; padding: 0 var(--edge); border-bottom: 1px solid var(--line); }
+.A .tab { display: inline-flex; align-items: center; gap: 6px; height: var(--control-lg); font-size: var(--text-table); font-weight: 500; color: var(--gray-600); }
+.A .tab.on { color: var(--gray-900); box-shadow: inset 0 -2px 0 var(--brand-600); }
+/* מונה: מספר שקט בלי גלולה */
+.A .count { font-size: var(--text-micro); font-weight: 500; color: var(--gray-500); }
+.A .tab.on .count { color: var(--brand-700); }
+.A .count.alert { color: var(--danger-fg); }
+.A .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px var(--edge); background: var(--zone); border-bottom: 1px solid var(--zone-line); }
+.A .chip { display: inline-flex; align-items: center; gap: 6px; height: var(--control-md); padding: 0 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); font-size: var(--text-label); font-weight: 500; }
+.A .chip svg { width: 16px; height: 16px; }
+.A .chip.on { border-color: var(--brand-600); background: var(--brand-50); color: var(--brand-800); }
+.A .search { margin-inline-start: auto; height: var(--control-md); min-width: 220px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); font-size: var(--text-label); color: var(--gray-500); }
+.A table { width: 100%; border-collapse: collapse; font-size: var(--text-table); line-height: var(--lh-snug); }
+.A th { height: var(--control-md); padding: 0 var(--cell-x); text-align: start; font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); border-bottom: 1px solid var(--line); white-space: nowrap; }
+.A td { height: var(--row); padding: 0 var(--cell-x); border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+.A th:first-child, .A td:first-child { padding-inline-start: var(--edge); }
+.A th:last-child, .A td:last-child { padding-inline-end: var(--edge); }
+.A tr:last-child td { border-bottom: 0; }
+.A .num { text-align: end; font-variant-numeric: tabular-nums; }
+.A .time { font-weight: 500; }
+.A .cust b { display: block; font-weight: 600; font-size: var(--text-table); } .A .cust small { display: block; font-size: var(--text-micro); color: var(--gray-600); }
+.A .health { font-size: var(--text-micro); font-weight: 500; color: var(--danger-fg); display: inline-flex; gap: 6px; align-items: center; }
+.A .health::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.A .health.u { color: var(--urgent-fg); }
+.A .rowact { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+
+.A .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid transparent; border-radius: var(--radius-md); font: inherit; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.A .btn svg { width: 16px; height: 16px; flex: none; }
+.A .btn.sm { height: var(--control-sm); padding: 0 10px; font-size: var(--text-label); }
+.A .btn.sm svg { width: 14px; height: 14px; }
+.A .btn.md { height: var(--control-md); padding: 0 14px; font-size: var(--text-table); }
+.A .btn.lg { height: var(--control-lg); padding: 0 20px; font-size: var(--text-body); }
+.A .primary { background: var(--brand-600); color: #fff; box-shadow: inset 0 -1px 0 rgb(0 0 0 / .14); }
+.A .brand { background: #fff; color: var(--brand-700); border-color: rgb(0 100 145 / .45); }
+.A .secondary { background: #fff; color: var(--gray-900); border-color: var(--gray-300); }
+.A .quiet { background: transparent; color: var(--gray-700); }
+.A .quiet:hover { background: var(--gray-100); }
+.A .act { background: transparent; color: var(--brand-700); }
+.A .act:hover { background: var(--brand-50); }
+.A .danger { background: #fff; color: var(--danger-fg); border-color: var(--danger-line); }
+.A .danger-solid { background: var(--danger-fg); color: #fff; }
+.A .danger-quiet { background: transparent; color: var(--danger-fg); }
+.A .more { width: var(--control-sm); padding: 0 !important; color: var(--gray-600); }
+.A .set { display: grid; gap: 12px; margin-top: 24px; }
+.A .set__row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.A .set__cap { width: 100%; font-size: var(--text-micro); font-weight: 500; color: var(--gray-600); }
+
+.A .card { margin-top: 24px; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--elev-1); padding: 0 24px 24px; }
+.A .sec__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.A .sec__title { margin: 0; font-size: var(--text-heading); font-weight: 600; line-height: var(--lh-snug); color: var(--navy); letter-spacing: -0.005em; }
+.A .sec__body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.A .sub-label { grid-column: 1 / -1; margin: 8px 0 -4px; font-size: var(--text-label); font-weight: 600; color: var(--gray-700); }
+.A .field { display: grid; gap: 6px; } .A .field label { font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
+.A .field label i { font-style: normal; color: var(--danger-fg); }
+.A .input { height: var(--control-md); padding: 0 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font: inherit; font-size: var(--text-body); background: #fff; width: 100%; }
+.A .input.ltr { direction: ltr; text-align: right; }
+.A .seg { display: inline-flex; padding: 2px; border-radius: var(--radius-lg); background: var(--gray-100); width: max-content; }
+.A .seg span { height: calc(var(--control-md) - 4px); padding: 0 12px; display: grid; place-items: center; border-radius: var(--radius-md); font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
+.A .seg .on { background: #fff; color: var(--gray-900); box-shadow: 0 0 0 1px var(--gray-200), 0 1px 2px rgb(15 27 42 / .06); }
+.A .value { font-size: var(--text-body); font-weight: 500; }
+.A .card__foot { display: flex; justify-content: flex-start; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+.A .tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+.A .tag { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: var(--radius-sm); font-size: var(--text-micro); font-weight: 500; line-height: 1; background: var(--gray-100); color: var(--gray-700); }
+.A .tag.lg { height: 24px; padding: 0 8px; }
+.A .tag.info { background: var(--brand-50); color: var(--brand-800); }
+.A .tag.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.A .tag.miss { background: var(--missing-bg); color: var(--missing-fg); }
+.A .tag.urg { background: var(--urgent-bg); color: var(--urgent-fg); }
+.A .tag.dan { background: var(--danger-bg); color: var(--danger-fg); }
+.A .tag.hold { background: var(--hold-bg); color: var(--hold-fg); }
+.A .tag.due { background: var(--due); color: #fff; }
+.A .stepnum { font-size: var(--text-heading); font-weight: 600; color: var(--gray-400); font-variant-numeric: tabular-nums; }
+
+.A .m-card { background: #fff; border-radius: 8px; box-shadow: var(--elev-1); padding: 12px 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; max-width: 360px; font-size: var(--text-table); align-items: baseline; }
+.A .m-card .time { grid-row: 1 / span 2; font-size: var(--text-body); font-weight: 600; }
+.A .m-card .name { font-weight: 600; } .A .m-card .sum { text-align: end; font-weight: 600; }
+.A .m-card .meta { grid-column: 2 / -1; font-size: var(--text-label); color: var(--gray-600); }
+.A .m-card .foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.A .m-card .foot .health { margin-inline-end: auto; }
+.A .m-card .btn { min-height: var(--control-lg); }
+
+/* טלפון – בסוף הקובץ כדי לגבור על הכללים שמעל */
+@media (max-width: 700px) {
+  .A .sec__body, .B .card__body { grid-template-columns: 1fr; }
+  .A .head { grid-template-columns: 1fr; } .A .head-end { grid-row: auto; grid-column: 1; order: 5; margin-top: 12px; }
+  .A .card { padding: 0 16px 16px; }
+  .A .tabs, .B .tabs { overflow-x: auto; scrollbar-width: none; gap: 16px; }
+  .A .tab, .B .tab { flex: none; white-space: nowrap; }
+  .A .toolbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .A .chip { flex: none; min-height: var(--control-lg); }
+  .A .search, .B .search { min-width: 100%; }
+  .A .toolbar .search { min-width: 220px; flex: none; }
+  .A .btn.md { min-height: var(--control-lg); }
+}
+.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+</svg>
+<div class="wrap">
+  <div class="intro">
+    <h1>טיפוגרפיה, פריסה ופרטים</h1>
+    <p>אותם צבעים בשני הצדדים. משתנים רק גודל, משקל, מרווח, פינה, צל והיררכיית כפתורים.</p>
+  </div>
+
+  <div class="cols">
+    <!-- ===== לפני ===== -->
+    <section>
+      <p class="col__label">לפני <span>· הערכים מהקוד היום</span></p>
+      <div class="frame B">
+        <div class="head">
+          <div><h2 class="title">הזמנות</h2><p class="sub">יום שישי · <bdi dir="ltr">27.11.2026</bdi></p></div>
+          <div class="head-end"><button class="btn md primary">+ הזמנה חדשה</button></div>
+          <dl class="stats"><div><dt>הזמנות בתצוגה</dt><dd>7</dd></div><div><dt>סך הכל</dt><dd>₪—</dd></div><div><dt>דורשות טיפול</dt><dd style="color:var(--danger-fg)">6</dd></div></dl>
+        </div>
+        <div class="tabs">
+          <span class="tab on">היום <span class="count">7</span></span>
+          <span class="tab">מחר <span class="count">5</span></span>
+          <span class="tab">עתידיות <span class="count">23</span></span>
+          <span class="tab">פתוחות שעבר מועדן <span class="count" style="background:var(--danger-bg);color:var(--danger-fg)">1</span></span>
+        </div>
+        <div class="toolbar">
+          <span class="chip">סינון</span><span class="chip">לא הועברו ל-Q</span><span class="chip">אשראי לחייב</span>
+          <span class="search">סינון בטבלה: לקוח, מס' הזמנה…</span>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>תקינות</th><th>שעה</th><th>לקוח</th><th>סניף</th><th>סכום</th><th>שלב</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><span class="health">חריגה</span></td><td><bdi>19:15</bdi></td><td class="cust"><b>קבוצת רימון הייטק</b><small>לא הועברה ל-Q</small></td><td>רמת גן – ביאליק</td><td>₪—</td><td>פתוחה</td><td><button class="btn sm fix">הקלד ל-Q</button> <span class="more">···</span></td></tr>
+              <tr><td><span class="health">חריגה</span></td><td><bdi>19:30</bdi></td><td class="cust"><b>סטודיו קו ישר</b><small>אשראי לא חויב</small></td><td>תל אביב – אבן גבירול</td><td>₪—</td><td>פתוחה</td><td><button class="btn sm fix">הקלד ל-Q</button> <span class="more">···</span></td></tr>
+              <tr><td><span class="health u">דחוף</span></td><td><bdi>20:30</bdi></td><td class="cust"><b>אלפא מערכות בע"מ</b><small>פער מול Q</small></td><td>תל אביב – אבן גבירול</td><td>₪—</td><td>הוקלד ל-Q</td><td><button class="btn sm fix">בדוק פער</button> <span class="more">···</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><span class="stepnum">1</span><h3 class="card__title">לקוח ואספקה</h3></div>
+          <div class="card__body">
+            <div class="field"><label>שם הלקוח</label><input class="input" value="קבוצת רימון הייטק"></div>
+            <div class="field"><label>איש קשר</label><input class="input" value="יואב שגיא"></div>
+            <div class="field"><label>טלפון</label><input class="input" dir="ltr" style="text-align:right" value="054-0000000"></div>
+            <div class="field"><label>סוג</label><div class="seg"><span class="on">משלוח</span><span>איסוף עצמי</span></div></div>
+          </div>
+        </div>
+
+        <div class="set">
+          <button class="btn md primary">שמירה</button>
+          <button class="btn md secondary">ביטול</button>
+          <button class="btn md ghost">היסטוריה</button>
+          <button class="btn md danger">מחק מחירון</button>
+          <button class="btn sm fix">סמן סופקה</button>
+          <button class="btn sm ghost" style="color:var(--danger-fg)">מחק</button>
+        </div>
+        <div class="tags">
+          <span class="t24">הקפה</span>
+          <span class="t22" style="background:var(--missing-bg);color:var(--missing-fg)">אין מענה</span>
+          <span class="t22" style="background:var(--hold-bg);color:var(--hold-fg)">בהמתנה</span>
+          <span class="t20" style="background:var(--danger-bg);color:var(--danger-fg)">לא הועברה ל-Q</span>
+          <span class="t20" style="background:var(--urgent-bg);color:var(--urgent-fg)">לעדכן בתפעול</span>
+          <span class="navytag">הגיע הזמן לחזור</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== אחרי ===== -->
+    <section>
+      <p class="col__label">אחרי <span>· ההצעה</span></p>
+      <div class="frame A">
+        <div class="head">
+          <h2 class="title">הזמנות</h2>
+          <div class="head-end"><button class="btn md primary"><svg class="icon"><use href="#i-plus"/></svg>הזמנה חדשה</button></div>
+          <p class="sub">יום שישי · <bdi dir="ltr">27.11.2026</bdi></p>
+          <dl class="stats"><div><dt>הזמנות בתצוגה</dt><dd>7</dd></div><div><dt>סך הכל</dt><dd>₪—</dd></div><div><dt>דורשות טיפול</dt><dd style="color:var(--danger-fg)">6</dd></div></dl>
+        </div>
+        <div class="sheet">
+          <div class="tabs">
+            <span class="tab on">היום <span class="count">7</span></span>
+            <span class="tab">מחר <span class="count">5</span></span>
+            <span class="tab">עתידיות <span class="count">23</span></span>
+            <span class="tab">פתוחות שעבר מועדן <span class="count alert">1</span></span>
+          </div>
+          <div class="toolbar">
+            <span class="chip"><svg class="icon"><use href="#i-filter"/></svg>סינון</span>
+            <span class="chip on">לא הועברו ל-Q <svg class="icon" style="width:14px;height:14px"><use href="#i-x"/></svg></span>
+            <span class="chip">אשראי לחייב</span>
+            <span class="search"><svg class="icon"><use href="#i-search"/></svg>סינון בטבלה: לקוח, מס' הזמנה…</span>
+          </div>
+          <table>
+            <thead><tr><th>תקינות</th><th>שעה</th><th>לקוח</th><th>סניף</th><th class="num">סכום</th><th>שלב</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><span class="health">חריגה</span></td><td class="time"><bdi>19:15</bdi></td><td class="cust"><b>קבוצת רימון הייטק</b><small>לא הועברה ל-Q</small></td><td>רמת גן – ביאליק</td><td class="num">₪—</td><td>פתוחה</td><td><div class="rowact"><button class="btn sm act">הקלד ל-Q</button><button class="btn sm quiet more" aria-label="עוד"><svg class="icon"><use href="#i-dots"/></svg></button></div></td></tr>
+              <tr><td><span class="health">חריגה</span></td><td class="time"><bdi>19:30</bdi></td><td class="cust"><b>סטודיו קו ישר</b><small>אשראי לא חויב</small></td><td>תל אביב – אבן גבירול</td><td class="num">₪—</td><td>פתוחה</td><td><div class="rowact"><button class="btn sm act">הקלד ל-Q</button><button class="btn sm quiet more" aria-label="עוד"><svg class="icon"><use href="#i-dots"/></svg></button></div></td></tr>
+              <tr><td><span class="health u">דחוף</span></td><td class="time"><bdi>20:30</bdi></td><td class="cust"><b>אלפא מערכות בע"מ</b><small>פער מול Q</small></td><td>תל אביב – אבן גבירול</td><td class="num">₪—</td><td>הוקלד ל-Q</td><td><div class="rowact"><button class="btn sm act">בדוק פער</button><button class="btn sm quiet more" aria-label="עוד"><svg class="icon"><use href="#i-dots"/></svg></button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="sec__head"><h3 class="sec__title">לקוח ואספקה</h3><button class="btn sm quiet"><svg class="icon"><use href="#i-pencil"/></svg>עריכה</button></div>
+          <div class="sec__body">
+            <div class="field"><label>שם הלקוח <i>*</i></label><input class="input" value="קבוצת רימון הייטק"></div>
+            <div class="field"><label>איש קשר</label><input class="input" value="יואב שגיא"></div>
+            <div class="field"><label>טלפון</label><input class="input ltr" dir="ltr" value="054-0000000"></div>
+            <div class="field"><label>סוג</label><div class="seg"><span class="on">משלוח</span><span>איסוף עצמי</span></div></div>
+          </div>
+          <div class="card__foot"><button class="btn md primary">שמירה</button><button class="btn md quiet">ביטול</button></div>
+        </div>
+
+        <div class="set">
+          <div class="set__row"><span class="set__cap">פעולה</span>
+            <button class="btn md primary">שמירה</button>
+            <button class="btn md brand">אשר והפוך להזמנה</button>
+            <button class="btn md secondary">הצעת מחיר</button>
+            <button class="btn md quiet">היסטוריה</button>
+            <button class="btn sm act">סמן סופקה</button>
+          </div>
+          <div class="set__row"><span class="set__cap">מסוכן</span>
+            <button class="btn md danger">ביטול הזמנה</button>
+            <button class="btn md danger-solid">מחק מחירון</button>
+            <button class="btn sm danger-quiet"><svg class="icon"><use href="#i-trash"/></svg>מחק</button>
+          </div>
+        </div>
+        <div class="tags">
+          <span class="tag">הקפה</span>
+          <span class="tag miss">אין מענה</span>
+          <span class="tag hold">בהמתנה</span>
+          <span class="tag dan">לא הועברה ל-Q</span>
+          <span class="tag urg">לעדכן בתפעול</span>
+          <span class="tag due">הגיע הזמן לחזור</span>
+          <span class="tag lg info">בראש רשומה · 24</span>
+        </div>
+      </div>
+    </section>
+
+    <p class="row-label">390 – הזמנה ברשימה בטלפון</p>
+    <section>
+      <div class="frame B">
+        <div class="m-card">
+          <div class="r1"><span class="time">19:15</span><b>קבוצת רימון הייטק</b><span class="health" style="margin-inline-start:auto">חריגה</span></div>
+          <div style="color:var(--gray-600);font-size:13px">לא הועברה ל-Q</div>
+          <div class="r3"><span>רמת גן – ביאליק</span><span style="color:var(--gray-900);font-weight:500">₪—</span></div>
+          <div style="font-size:14px">פתוחה</div>
+          <div class="r5"><span class="more">···</span><button class="btn fix">הקלד ל-Q</button></div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="frame A">
+        <div class="m-card">
+          <span class="time"><bdi>19:15</bdi></span><span class="name">קבוצת רימון הייטק</span><span class="sum">₪—</span>
+          <span class="meta">רמת גן – ביאליק · פתוחה · לא הועברה ל-Q</span>
+          <div class="foot"><span class="health">חריגה</span><button class="btn sm act">הקלד ל-Q</button><button class="btn sm quiet more" aria-label="עוד" style="min-width:44px"><svg class="icon"><use href="#i-dots"/></svg></button></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

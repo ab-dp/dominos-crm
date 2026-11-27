@@ -9,7 +9,7 @@ import './components.css';
 
 /* ---------- Button ---------- */
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'fix';
+  variant?: 'primary' | 'brand' | 'secondary' | 'ghost' | 'danger' | 'danger-solid' | 'danger-quiet' | 'fix' | 'act';
   size?: 'sm' | 'md' | 'lg';
   icon?: ReactNode;
   loading?: boolean;

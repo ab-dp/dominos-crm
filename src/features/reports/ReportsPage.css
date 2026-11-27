@@ -131,3 +131,7 @@
   .rtable--stack td:empty { display: none; }
   .rtable--stack tfoot tr { border-bottom: 0; background: var(--gray-25); padding-inline: var(--space-3); border-radius: var(--radius); margin-top: var(--space-2); }
 }
+/* טבלת דוח רחבה (שלב 9): כותרות עמודה רשאיות לרדת שורה, וריפוד מעט צר יותר – כך שהדוח המפורט נכנס ב-1440 בלי חיתוך */
+.rtable th { white-space: normal; line-height: 1.25; padding-block: var(--space-1); vertical-align: bottom; }
+.rtable th, .rtable td { padding-inline: 10px; }
+.rtable th:first-child, .rtable td:first-child { padding-inline-start: var(--edge); }

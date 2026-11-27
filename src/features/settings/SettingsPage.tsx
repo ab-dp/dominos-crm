@@ -15,8 +15,9 @@ export function SettingsPage() {
   if (!isAdmin) return <Navigate to="/today" replace />;
   return (
     <>
+      {/* כותרת המסך למעלה, הלשוניות מתחתיה (ההיררכיה הייתה הפוכה) */}
+      <p className="settings__title" aria-hidden="true">הגדרות</p>
       <nav className="subnav" aria-label="הגדרות">
-        <span className="subnav__label" aria-hidden="true">הגדרות</span>
         <NavLink to="/settings/users" className={({ isActive }) => (isActive ? 'is-on' : '')}>משתמשים</NavLink>
         <NavLink to="/settings/lists" className={({ isActive }) => (isActive ? 'is-on' : '')}>רשימות</NavLink>
         <NavLink to="/settings/thresholds" className={({ isActive }) => (isActive ? 'is-on' : '')}>ספי התראות</NavLink>
@@ -25,6 +26,7 @@ export function SettingsPage() {
         <NavLink to="/settings/flags" className={({ isActive }) => (isActive ? 'is-on' : '')}>תצוגה מוקדמת</NavLink>
         <NavLink to="/settings/errors" className={({ isActive }) => (isActive ? 'is-on' : '')}>תקלות</NavLink>
       </nav>
+      <div className="settings">
       <Routes>
         <Route index element={<Navigate to="users" replace />} />
         <Route path="users" element={<UsersPage />} />
@@ -35,6 +37,7 @@ export function SettingsPage() {
         <Route path="flags" element={<FlagsPage />} />
         <Route path="errors" element={<ErrorsPage />} />
       </Routes>
+      </div>
     </>
   );
 }

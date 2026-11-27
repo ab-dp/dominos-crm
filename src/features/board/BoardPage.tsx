@@ -1,11 +1,11 @@
-/* בורד הנהלה: כל חלק נפתח במשפט שעונה על השאלה (כמה מכרנו, האם עמדנו בזמנים, כמה מחכה לגבייה),
-   ומתחתיו הנתונים שתומכים בו והקישור לרשימה עצמה. כולם רואים. יעד מוצג רק כשהוגדר (הגדרות ← יעדים).
+/* בורד הנהלה (שלב 9 – בנוי מחדש בהיררכיה): פס "תמונת מצב" בכחול-לילה עם ארבעה מספרים, ואז כרטיסים שכל אחד נפתח
+   במספר-תשובה או במשפט, ומתחתיו הנתונים והקישור לרשימה. כולם רואים. יעד מוצג רק כשהוגדר (הגדרות ← יעדים).
    מכסת קריאות: בלי האזנה חדשה. תקופה שמתחילה לפני החודש הקודם נטענת פעם אחת, עם "רענן". */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { ChevronDown, ChevronUp, Filter, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, Clock, Filter, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
 import { db } from '../../lib/firebase';
 import { useStore, type OrderView } from '../../data/store';
 import { fromDoc } from '../../data/orders';
@@ -24,13 +24,14 @@ import '../pages.css';
 import '../reports/ReportsPage.css';
 import './Board.css';
 
-type SectionKey = 'upcoming' | 'sales' | 'service' | 'collections' | 'customers' | 'branches' | 'channels' | 'team' | 'quotes';
+type SectionKey = 'goals' | 'upcoming' | 'sales' | 'service' | 'collections' | 'customers' | 'branches' | 'channels' | 'team' | 'quotes';
 const SECTIONS: Record<SectionKey, string> = {
-  upcoming: 'הזמנות קרובות', sales: 'מכירות', service: 'עמידה בזמנים', collections: 'גבייה ובקרת קופה',
+  goals: 'יעדים וקצב', upcoming: 'הזמנות קרובות', sales: 'מכירות', service: 'עמידה בזמנים', collections: 'גבייה ובקרת קופה',
   customers: 'לקוחות', branches: 'סניפים ואשכולות', channels: 'לפי ערוץ', team: 'צוות', quotes: 'הצעות מחיר',
 };
-const DEFAULT_ORDER: SectionKey[] = ['upcoming', 'sales', 'service', 'collections', 'customers', 'branches', 'channels', 'team', 'quotes'];
-const WIDE: SectionKey[] = ['upcoming', 'sales', 'channels', 'team', 'quotes'];
+/* הסדר: יעדים | עמידה בזמנים · הזמנות קרובות · מכירות · לקוחות | סניפים · גבייה | הצעות · ערוצים | צוות */
+const DEFAULT_ORDER: SectionKey[] = ['goals', 'service', 'upcoming', 'sales', 'customers', 'branches', 'collections', 'quotes', 'channels', 'team'];
+const WIDE: SectionKey[] = ['upcoming', 'sales'];
 type Layout = { order: SectionKey[]; hidden: SectionKey[] };
 
 /* ---------- ניסוחים ---------- */
@@ -40,10 +41,32 @@ const orders$ = (v: number) => count(v, 'הזמנה אחת', 'הזמנות');
 const pizzas$ = (v: number) => count(v, 'פיצה אחת', 'פיצות');
 const WEEKDAY = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const short = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
+/* סכום: ₪ קטן ושקט ליד הספרות (רגע אופי, DESIGN.md v3 "Money") */
+function Money({ v, className = '' }: { v: number; className?: string }) {
+  return <Ltr><span className={`money ${className}`}><span className="money__cur">₪</span>{fmtMoney(v).replace('₪', '')}</span></Ltr>;
+}
 /* "+18%" קצר לשורות משנה */
-function Delta({ d }: { d: number | null }) {
+function Delta({ cur, prev }: { cur: number; prev: number }) {
+  const d = delta(cur, prev);
   if (d === null || d === 0) return <span className="bdelta">{d === 0 ? 'ללא שינוי' : '—'}</span>;
-  return <span className={`bdelta ${d > 0 ? 'is-up' : 'is-down'}`}><Ltr>{d > 0 ? `+${d}%` : `−${Math.abs(d)}%`}</Ltr></span>;
+  if (d > RATIO_FROM) return <span className="bdelta is-up"><span className="sr-only">עלייה </span>פי <Ltr>{(cur / prev).toFixed(1)}</Ltr></span>;
+  return <span className={`bdelta ${d > 0 ? 'is-up' : 'is-down'}`}><span className="sr-only">{d > 0 ? 'עלייה' : 'ירידה'} </span><Ltr>{d > 0 ? `+${d}%` : `−${Math.abs(d)}%`}</Ltr></span>;
+}
+/* שינוי מול התקופה הקודמת. עד 200% – אחוז; מעל זה "פי X · מול <הערך הקודם>" (אחוז ענק על בסיס קטן מטעה) */
+const RATIO_FROM = 200;
+function Change({ cur, prev, prevText }: { cur: number; prev: number; prevText: ReactNode }) {
+  const d = delta(cur, prev);
+  if (d === null) return null;
+  if (d === 0) return <span className="bchg">ללא שינוי · מול {prevText}</span>;
+  const up = d > 0;
+  const big = up && d > RATIO_FROM;
+  return (
+    <span className={`bchg ${up ? 'is-up' : 'is-down'}`}>
+      <span aria-hidden="true">{up ? '▲' : '▼'} </span><span className="sr-only">{up ? 'עלייה' : 'ירידה'} </span>
+      {big ? <>פי <Ltr>{(cur / prev).toFixed(1)}</Ltr></> : <Ltr>{Math.abs(d)}%</Ltr>}
+      <span className="bchg__vs"> · מול {prevText}</span>
+    </span>
+  );
 }
 
 /* הזמנות של טווח ישן – קריאה אחת לפי דרישה */
@@ -62,7 +85,7 @@ function useRemote(enabled: boolean, r: Range) {
   return { ...state, reload: () => setTick((t) => t + 1) };
 }
 
-/* חלק בבורד: כותרת, משפט מסכם, ותוכן */
+/* חלק בבורד: כותרת, מספר-תשובה / משפט, ותוכן */
 function Section({ id, title, meta, tool, lead, children }: { id: string; title: string; meta?: ReactNode; tool?: ReactNode; lead?: ReactNode; children?: ReactNode }) {
   return (
     <section className="bsec" aria-labelledby={`b-${id}`}>
@@ -76,6 +99,10 @@ function Section({ id, title, meta, tool, lead, children }: { id: string; title:
     </section>
   );
 }
+/* מספר-תשובה בראש כרטיס: מספר גדול ומשפט קצר לידו */
+function Answer({ value, children }: { value: ReactNode; children?: ReactNode }) {
+  return <p className="bans"><b className="bans__v">{value}</b>{children && <span className="bans__t">{children}</span>}</p>;
+}
 
 export function BoardPage() {
   const { orders, now, quotes, loading, quoteFollowups, channels } = useStore();
@@ -84,7 +111,8 @@ export function BoardPage() {
   const [period, setPeriod] = usePref<Period>('board:period', 'month');
   const [custom, setCustom] = useState<Range>(() => ({ from: toISODate(addDays(now, -13)), to: toISODate(now) }));
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  const [layout, setLayout] = usePref<Layout>('board:layout2', { order: DEFAULT_ORDER, hidden: [] });
+  // מפתח חדש (שלב 9): הסדר והחלקים השתנו – כולם מתחילים מהסדר החדש
+  const [layout, setLayout] = usePref<Layout>('board:layout3', { order: DEFAULT_ORDER, hidden: [] });
   const order = [...layout.order.filter((k) => k in SECTIONS), ...DEFAULT_ORDER.filter((k) => !layout.order.includes(k))];
   const hidden = layout.hidden.filter((k) => k in SECTIONS);
 
@@ -112,14 +140,15 @@ export function BoardPage() {
   const rk = useMemo(() => rankings(scoped, cur), [scoped, cur.from, cur.to, channels]); // eslint-disable-line react-hooks/exhaustive-deps
   const qs = useMemo(() => quotesSummary(quotes, cur, now, quoteFollowups.length), [quotes, cur.from, cur.to, now, quoteFollowups.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const busy = loading || (usingRemote && remote.loading);
-  /* התקופה נבחרת פעם אחת למעלה – לא חוזרת בכל כרטיס */
+  /* התקופה כתובה פעם אחת – בשורת המשנה */
   const rangeText = <Ltr>{cur.from === cur.to ? short(cur.from) : `${short(cur.from)}–${short(cur.to)}`}</Ltr>;
   const nowText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   const render: Record<SectionKey, () => JSX.Element> = {
+    goals: () => <GoalsSection s={s} sv={sv} goals={goals} period={period} cur={cur} now={now} go={nav} />,
     upcoming: () => <Upcoming h={h} now={now} go={nav} />,
-    sales: () => <SalesSection s={s} sp={sp} prevName={prevName} daily={daily} goals={goals} period={period} cur={cur} now={now} />,
-    service: () => <ServiceSection sv={sv} goal={goals.onTimePct} go={nav} />,
+    sales: () => <SalesSection s={s} sp={sp} prevName={prevName} daily={daily} />,
+    service: () => <ServiceSection sv={sv} go={nav} />,
     collections: () => <CollectionsSection c={col} go={nav} />,
     customers: () => <CustomersSection rows={rk.customers} customers={s.customers} />,
     branches: () => <BranchesSection clusters={rk.clusters} branches={rk.branches} />,
@@ -128,6 +157,11 @@ export function BoardPage() {
     quotes: () => <QuotesSection q={qs} go={nav} />,
   };
 
+  // בלי יעדים מוגדרים – בלי כרטיס יעדים (ההגדרה בהגדרות ← יעדים)
+  const hasGoals = !!(goals.orders || goals.revenue || goals.onTimePct);
+  // ערוץ אחד ונציג אחד – שורה אחת משותפת במקום שני כרטיסים כמעט ריקים
+  const mergeCT = rk.channels.length < 2 && rk.team.length < 2;
+  const wide = (k: SectionKey) => WIDE.includes(k);
   const active = (Object.entries(filters) as [keyof Filters, string][]).filter(([, v]) => v);
   const FILTER_NAME: Record<keyof Filters, string> = { cluster: 'אשכול', branch: 'סניף', handler: 'נציג', method: 'אמצעי תשלום' };
 
@@ -136,10 +170,7 @@ export function BoardPage() {
       <header className="page__head board__head">
         <div>
           <h1 className="page__title">בורד</h1>
-          <p className="page__sub">נכון ל-<Ltr>{nowText}</Ltr> · סכומים לפי תאריך אספקה וסכום Q, בלי ביטולים.</p>
-        </div>
-        <div className="page__head-end">
-          <LayoutMenu order={order} hidden={hidden} onChange={(o, hd) => setLayout({ order: o, hidden: hd })} />
+          <p className="page__sub">{PERIOD_LABEL[period]} · {rangeText} · מול {prevName} · נכון ל-<Ltr>{nowText}</Ltr></p>
         </div>
       </header>
 
@@ -154,35 +185,37 @@ export function BoardPage() {
             <input type="date" className="input input--sm" value={custom.to} min={custom.from} onChange={(e) => e.target.value && setCustom({ ...custom, to: e.target.value })} aria-label="עד תאריך" />
           </span>
         )}
-        <span className="board__vs">{rangeText} · לעומת {prevName}</span>
-        <Popover.Root>
-          <Popover.Trigger asChild>
-            <Button variant="secondary" size="sm" icon={<Filter size={16} />}>סינון{active.length > 0 && <span className="board__fcount"><Ltr>{active.length}</Ltr></span>}</Button>
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content className="pop bfilter" align="end" sideOffset={6} dir="rtl">
-              <p className="pop__title">סינון הבורד</p>
-              <label className="field"><span className="field__label">אשכול</span>
-                <select className="input" value={filters.cluster} onChange={(e) => setFilters({ ...filters, cluster: e.target.value, branch: '' })}>
-                  <option value="">כל האשכולות</option>{options.clusters.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select></label>
-              <label className="field"><span className="field__label">סניף</span>
-                <select className="input" value={filters.branch} onChange={(e) => setFilters({ ...filters, branch: e.target.value })}>
-                  <option value="">כל הסניפים</option>{options.branches.filter((b) => !filters.cluster || orders.concat(source).some((o) => o.branchName === b && o.cluster === filters.cluster)).map((b) => <option key={b} value={b}>{b}</option>)}
-                </select></label>
-              <label className="field"><span className="field__label">נציג</span>
-                <select className="input" value={filters.handler} onChange={(e) => setFilters({ ...filters, handler: e.target.value })}>
-                  <option value="">כל הנציגים</option>{options.handlers.map((x) => <option key={x} value={x}>{x}</option>)}
-                </select></label>
-              <label className="field"><span className="field__label">אמצעי תשלום</span>
-                <select className="input" value={filters.method} onChange={(e) => setFilters({ ...filters, method: e.target.value })}>
-                  <option value="">כל אמצעי התשלום</option>{options.methods.map((x) => <option key={x} value={x}>{METHOD_LABEL[x] ?? x}</option>)}
-                </select></label>
-              {active.length > 0 && <button type="button" className="link bfilter__clear" onClick={() => setFilters(NO_FILTERS)}>נקה את כל הסינון</button>}
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
-        {usingRemote && <Button variant="ghost" size="sm" icon={<RefreshCw size={16} />} loading={remote.loading} onClick={remote.reload}>רענן</Button>}
+        <span className="board__tools">
+          {usingRemote && <Button variant="ghost" size="sm" icon={<RefreshCw size={16} />} loading={remote.loading} onClick={remote.reload}>רענן</Button>}
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <Button variant="secondary" size="sm" icon={<Filter size={16} />}>סינון{active.length > 0 && <span className="board__fcount"><Ltr>{active.length}</Ltr></span>}</Button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content className="pop bfilter" align="end" sideOffset={6} dir="rtl">
+                <p className="pop__title">סינון הבורד</p>
+                <label className="field"><span className="field__label">אשכול</span>
+                  <select className="input" value={filters.cluster} onChange={(e) => setFilters({ ...filters, cluster: e.target.value, branch: '' })}>
+                    <option value="">כל האשכולות</option>{options.clusters.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select></label>
+                <label className="field"><span className="field__label">סניף</span>
+                  <select className="input" value={filters.branch} onChange={(e) => setFilters({ ...filters, branch: e.target.value })}>
+                    <option value="">כל הסניפים</option>{options.branches.filter((b) => !filters.cluster || orders.concat(source).some((o) => o.branchName === b && o.cluster === filters.cluster)).map((b) => <option key={b} value={b}>{b}</option>)}
+                  </select></label>
+                <label className="field"><span className="field__label">נציג</span>
+                  <select className="input" value={filters.handler} onChange={(e) => setFilters({ ...filters, handler: e.target.value })}>
+                    <option value="">כל הנציגים</option>{options.handlers.map((x) => <option key={x} value={x}>{x}</option>)}
+                  </select></label>
+                <label className="field"><span className="field__label">אמצעי תשלום</span>
+                  <select className="input" value={filters.method} onChange={(e) => setFilters({ ...filters, method: e.target.value })}>
+                    <option value="">כל אמצעי התשלום</option>{options.methods.map((x) => <option key={x} value={x}>{METHOD_LABEL[x] ?? x}</option>)}
+                  </select></label>
+                {active.length > 0 && <button type="button" className="link bfilter__clear" onClick={() => setFilters(NO_FILTERS)}>נקה את כל הסינון</button>}
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+          <LayoutMenu order={order} hidden={hidden} onChange={(o, hd) => setLayout({ order: o, hidden: hd })} />
+        </span>
       </div>
       {active.length > 0 && (
         <div className="board__chips" aria-label="סינון פעיל">
@@ -195,39 +228,48 @@ export function BoardPage() {
       )}
       {remote.error && usingRemote && <p className="cform__formerr" role="alert">{remote.error}</p>}
 
-      {busy ? (
-        <div className="bsec board__loading" aria-busy="true" aria-label="טוען את הבורד">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={22} />)}</div>
-      ) : (
+      {busy ? <BoardSkeleton /> : (
         <>
-        <Pulse s={s} sp={sp} sv={sv} svp={svp} col={col} daily={daily} prevName={prevName} goal={goals.onTimePct} go={nav} />
-        <div className="board__grid">
-          {order.filter((k) => !hidden.includes(k)).map((k) => <div key={k} className={`board__slot ${WIDE.includes(k) ? 'is-wide' : ''}`}>{render[k]()}</div>)}
-        </div>
+          <Pulse s={s} sp={sp} sv={sv} svp={svp} col={col} daily={daily} prevName={prevName} goal={goals.onTimePct} go={nav} />
+          {!hasGoals && <p className="board__nogoals">לא הוגדרו יעדים לחודש · <button type="button" className="link" onClick={() => nav('/settings/goals')}>להגדרת יעדים</button></p>}
+          <div className="board__grid">
+            {order.filter((k) => !hidden.includes(k) && (k !== 'goals' || hasGoals) && !(mergeCT && k === 'team')).map((k) => <div key={k} className={`board__slot ${wide(k) ? 'is-wide' : ''}`}>{mergeCT && k === 'channels' ? <ChannelTeamLine ch={rk.channels} team={rk.team} /> : render[k]()}</div>)}
+          </div>
         </>
       )}
     </div>
   );
 }
 
-/* ---------- תמונת מצב: ארבעה מספרים בראש הבורד, כל אחד עם שינוי מול התקופה הקודמת ומגמה יומית ----------
-   המספרים זהים לאלה שבכרטיסים מתחת (אותן פונקציות), והלחיצה מובילה לרשימה. */
-function Spark({ values }: { values: number[] }) {
-  if (values.length < 2 || values.every((v) => !v)) return null;
-  const max = Math.max(...values, 1);
-  const w = 100, h = 28;
-  const pts = values.map((v, i) => `${(i / (values.length - 1)) * w},${h - 2 - (v / max) * (h - 4)}`);
-  /* ציר הזמן מימין לשמאל, כמו הגרף: היום הראשון בימין */
+/* שלד טעינה בצורת הבורד – מופיע רק אחרי 300ms, כדי לא להבהב בטעינה מהירה */
+function BoardSkeleton() {
+  const [show, setShow] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setShow(true), 300); return () => clearTimeout(t); }, []);
+  if (!show) return <div className="board__wait" aria-busy="true" aria-label="טוען את הבורד" />;
   return (
-    <svg className="bpulse__spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}>
-      <polygon className="bpulse__area" points={`0,${h} ${pts.join(' ')} ${w},${h}`} />
-      <polyline className="bpulse__line" points={pts.join(' ')} />
-    </svg>
+    <div aria-busy="true" aria-label="טוען את הבורד">
+      <div className="bpulse bpulse--skel">{[0, 1, 2, 3].map((i) => <span key={i} className="bpulse__cell"><span className="bskel bskel--dark" style={{ width: '40%' }} /><span className="bskel bskel--dark bskel--big" /></span>)}</div>
+      <div className="board__grid">{[0, 1].map((i) => <div key={i} className="bsec"><Skeleton h={18} w="30%" /><div style={{ height: 16 }} /><Skeleton h={32} w="45%" /><div style={{ height: 16 }} /><Skeleton h={12} /></div>)}</div>
+    </div>
   );
 }
-function Trend({ d, unit = '%' }: { d: number | null; unit?: string }) {
-  if (d === null) return null; // אין תקופה קודמת להשוות – לא מציגים כלום
-  if (d === 0) return <span className="bpulse__trend">ללא שינוי</span>;
-  return <span className={`bpulse__trend ${d > 0 ? 'is-up' : 'is-down'}`}><span aria-hidden="true">{d > 0 ? '▲' : '▼'} </span><span className="sr-only">{d > 0 ? 'עלייה של' : 'ירידה של'} </span><Ltr>{Math.abs(d)}{unit === '%' ? '%' : ''}</Ltr>{unit === '%' ? null : unit}</span>;
+
+/* ---------- תמונת מצב: פס כחול-לילה עם ארבעה מספרים ----------
+   המספרים זהים לאלה שבכרטיסים (אותן פונקציות), והלחיצה מובילה לרשימה. הגרף הזעיר – מצטבר מול התקופה הקודמת (מקווקו). */
+function Spark({ cur, prev }: { cur: number[]; prev: number[] }) {
+  if (cur.length < 2 || cur.every((v) => !v)) return null;
+  const cum = (a: number[]) => a.reduce<number[]>((o, v) => [...o, (o[o.length - 1] ?? 0) + v], []);
+  const c = cum(cur), p = cum(prev);
+  const max = Math.max(...c, ...p, 1);
+  const w = 100, h = 28;
+  const line = (a: number[]) => a.map((v, i) => `${(i / (a.length - 1)) * w},${h - 2 - (v / max) * (h - 4)}`).join(' ');
+  /* ציר הזמן מימין לשמאל, כמו בגרף: היום הראשון בימין */
+  return (
+    <svg className="bpulse__spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}>
+      {p.some(Boolean) && <polyline className="bpulse__prev" points={line(p)} />}
+      <polyline className="bpulse__line" points={line(c)} />
+    </svg>
+  );
 }
 function Pulse({ s, sp, sv, svp, col, daily, prevName, goal, go }: {
   s: ReturnType<typeof sales>; sp: ReturnType<typeof sales>; sv: ReturnType<typeof service>; svp: ReturnType<typeof service>;
@@ -240,24 +282,24 @@ function Pulse({ s, sp, sv, svp, col, daily, prevName, goal, go }: {
   const old = col.aging[2];
   return (
     <section className="bpulse" aria-label="תמונת מצב">
-      <button type="button" className="bpulse__tile" onClick={() => go('/reports')}>
+      <button type="button" className="bpulse__cell" onClick={() => go('/reports')}>
         <span className="bpulse__label">הכנסות</span>
-        <span className="bpulse__value"><Ltr>{fmtMoney(s.sum)}</Ltr></span>
-        <span className="bpulse__foot"><Trend d={delta(s.sum, sp.sum)} />{sp.sum > 0 && <span className="bpulse__vs bpulse__vs--cmp">מול {prevName}</span>}</span>
-        <Spark values={past.map((p) => p.sum)} />
+        <span className="bpulse__value"><Money v={s.sum} /></span>
+        <span className="bpulse__foot"><Change cur={s.sum} prev={sp.sum} prevText={sp.sum > 0 ? <Money v={sp.sum} /> : prevName} /></span>
+        <Spark cur={past.map((p) => p.sum)} prev={past.map((p) => p.prevSum)} />
       </button>
-      <button type="button" className="bpulse__tile" onClick={() => go('/orders')}>
+      <button type="button" className="bpulse__cell" onClick={() => go('/orders')}>
         <span className="bpulse__label">הזמנות</span>
         <span className="bpulse__value"><Ltr>{num(s.count)}</Ltr></span>
-        <span className="bpulse__foot"><Trend d={delta(s.count, sp.count)} />{sp.count > 0 && <span className="bpulse__vs bpulse__vs--cmp">מול {prevName}</span>}</span>
-        <Spark values={past.map((p) => p.count)} />
+        <span className="bpulse__foot"><Change cur={s.count} prev={sp.count} prevText={<Ltr>{num(sp.count)}</Ltr>} /></span>
+        <Spark cur={past.map((p) => p.count)} prev={past.map((p) => p.prevCount)} />
       </button>
-      <button type="button" className="bpulse__tile" onClick={() => go('/reports')}>
-        <span className="bpulse__label">סופקו בזמן</span>
+      <button type="button" className="bpulse__cell" onClick={() => go('/reports')}>
+        <span className="bpulse__label">סופקו בזמן{goal ? <> · יעד <Ltr>{goal}%</Ltr></> : null}</span>
         <span className="bpulse__value">{sv.onTimePct === null ? <span className="bpulse__none">—</span> : <Ltr>{sv.onTimePct}%</Ltr>}</span>
         <span className="bpulse__foot">
-          <Trend d={onTimeD} unit=" נק'" />
-          <span className="bpulse__vs">{goal ? <>יעד <Ltr>{goal}%</Ltr></> : sv.late ? <>באיחור <Ltr>{num(sv.late)}</Ltr></> : 'בלי איחורים'}</span>
+          {onTimeD !== null && onTimeD !== 0 && <span className={`bchg ${onTimeD > 0 ? 'is-up' : 'is-down'}`}><span aria-hidden="true">{onTimeD > 0 ? '▲' : '▼'} </span><span className="sr-only">{onTimeD > 0 ? 'עלייה של' : 'ירידה של'} </span><Ltr>{Math.abs(onTimeD)}</Ltr> נק' <span className="bchg__vs">· מול {prevName}</span></span>}
+          {sv.delivered > 0 && <span className="bpulse__vs">{sv.late ? <>באיחור <Ltr>{num(sv.late)}</Ltr> מתוך <Ltr>{num(sv.delivered)}</Ltr></> : 'בלי איחורים'}</span>}
         </span>
         {sv.onTimePct !== null && (
           <span className="bpulse__bar" aria-hidden="true">
@@ -266,16 +308,16 @@ function Pulse({ s, sp, sv, svp, col, daily, prevName, goal, go }: {
           </span>
         )}
       </button>
-      <button type="button" className="bpulse__tile" onClick={() => go('/reports/credit')}>
+      <button type="button" className="bpulse__cell" onClick={() => go('/reports/credit')}>
         <span className="bpulse__label">בהקפה לגבייה · עכשיו</span>
-        <span className="bpulse__value"><Ltr>{fmtMoney(col.open.sum)}</Ltr></span>
+        <span className="bpulse__value"><Money v={col.open.sum} /></span>
         <span className="bpulse__foot">
-          <span className="bpulse__vs">{col.open.count === 1 ? 'הזמנה אחת' : <><Ltr>{num(col.open.count)}</Ltr> הזמנות</>}</span>
-          {old.count > 0 && <span className="bpulse__trend is-warn"><Ltr>{fmtMoney(old.sum)}</Ltr> מעל 60 יום</span>}
+          <span className="bpulse__vs">{col.open.count === 0 ? 'אין הקפות פתוחות' : col.open.count === 1 ? 'הזמנה אחת' : <><Ltr>{num(col.open.count)}</Ltr> הזמנות</>}</span>
+          {old.count > 0 ? <span className="bpulse__warn"><Money v={old.sum} /> מעל 60 יום</span> : col.open.count > 0 && <span className="bpulse__vs">{col.aging[1].count ? 'הכל עד 60 יום' : 'הכל עד 30 יום'}</span>}
         </span>
         {col.open.sum > 0 && (
           <span className="bpulse__bar bpulse__bar--stack" aria-hidden="true">
-            {col.aging.map((a, i) => (a.sum > 0 ? <span key={a.label} className={['is-a1', 'is-a2', 'is-a3'][i]} style={{ flexGrow: a.sum }} /> : null))}
+            {col.aging.map((a, i) => (a.sum > 0 ? <span key={a.label} className={['is-n1', 'is-n2', 'is-n3'][i]} style={{ flexGrow: a.sum }} /> : null))}
           </span>
         )}
       </button>
@@ -283,7 +325,75 @@ function Pulse({ s, sp, sv, svp, col, daily, prevName, goal, go }: {
   );
 }
 
-/* ---------- הזמנות קרובות: 7 ימים ---------- */
+/* ---------- יעדים וקצב: כרטיס משלו. לכל יעד – ערך מתוך יעד, פס עם "צפוי להיום" וסימון "בקצב / בפיגור" ---------- */
+function GoalsSection({ s, sv, goals, period, cur, now, go }: {
+  s: ReturnType<typeof sales>; sv: ReturnType<typeof service>; goals: Goals; period: Period; cur: Range; now: Date; go: (to: string) => void;
+}) {
+  const monthly = period === 'month' || period === 'prevMonth';
+  const current = period === 'month';
+  const any = !!(goals.orders || goals.revenue || goals.onTimePct);
+  if (!any) {
+    return (
+      <Section id="goals" title="יעדים וקצב">
+        <p className="bsec__empty">לא הוגדרו יעדים. <button type="button" className="link" onClick={() => go('/settings/goals')}>להגדרת יעדים</button></p>
+      </Section>
+    );
+  }
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const frac = current ? Math.min(1, now.getDate() / days) : 1; // כמה מהחודש עבר – "צפוי להיום"
+  const rows = monthly ? ([['orders', 'הזמנות', s.count, false], ['revenue', 'הכנסות', s.sum, true]] as const).filter(([k]) => goals[k]) : [];
+  const first = rows[0];
+  const pace = first ? goalPace(first[2], goals[first[0]]!, cur, now, current) : null;
+  const fmt = (money: boolean, v: number) => (money ? <Money v={v} /> : <Ltr>{num(v)}</Ltr>);
+  return (
+    <Section id="goals" title="יעדים וקצב" meta={current ? <>עברו <Ltr>{now.getDate()}</Ltr> מתוך <Ltr>{days}</Ltr> ימים</> : undefined}>
+      {first && pace && (
+        <p className="bgoals__lead">
+          {current && pace.projected !== null
+            ? <>בקצב הנוכחי – {fmt(first[3], pace.projected)} {first[3] ? 'הכנסות' : 'הזמנות'} עד סוף החודש{pace.projected >= goals[first[0]]! ? <> · <span className="is-ok">מעל היעד</span></> : <> · חסרות {fmt(first[3], goals[first[0]]! - pace.projected)}</>}</>
+            : <><Ltr>{pace.pct}%</Ltr> מיעד ה{first[1]}</>}
+        </p>
+      )}
+      {!monthly && (goals.orders || goals.revenue) && <p className="bsec__empty">יעדי ההזמנות וההכנסות חודשיים – מוצגים בתצוגת חודש.</p>}
+      <div className="bgoals">
+        {rows.map(([k, label, value, money]) => {
+          const goal = goals[k]!;
+          const expected = goal * frac;
+          const ok = current ? value >= expected * 0.98 : value >= goal;
+          return (
+            <div key={k} className="bgoal">
+              <div className="bgoal__row">
+                <span className="bgoal__label">{label}</span>
+                <span className="bgoal__val">{fmt(money, value)} <span className="bgoal__of">מתוך {fmt(money, goal)}</span></span>
+                <span className={`bgoal__tag ${ok ? 'is-ok' : 'is-behind'}`}>{current ? (ok ? 'בקצב' : 'בפיגור') : ok ? 'הושג' : 'לא הושג'}</span>
+              </div>
+              <span className="bgoal__track" aria-hidden="true">
+                <span className="bgoal__fill" style={{ width: `${Math.min(100, (value / goal) * 100)}%` }} />
+                {current && <i className="bgoal__mark" style={{ insetInlineStart: `${frac * 100}%` }} />}
+              </span>
+              {current && <span className="bgoal__note">צפוי להיום {fmt(money, Math.round(expected))}</span>}
+            </div>
+          );
+        })}
+        {goals.onTimePct && (
+          <div className="bgoal">
+            <div className="bgoal__row">
+              <span className="bgoal__label">סופקו בזמן</span>
+              <span className="bgoal__val">{sv.onTimePct === null ? '—' : <Ltr>{sv.onTimePct}%</Ltr>} <span className="bgoal__of">יעד <Ltr>{goals.onTimePct}%</Ltr></span></span>
+              {sv.onTimePct !== null && <span className={`bgoal__tag ${sv.onTimePct >= goals.onTimePct ? 'is-ok' : 'is-behind'}`}>{sv.onTimePct >= goals.onTimePct ? 'עומד ביעד' : 'מתחת ליעד'}</span>}
+            </div>
+            <span className="bgoal__track" aria-hidden="true">
+              <span className="bgoal__fill" style={{ width: `${sv.onTimePct ?? 0}%` }} />
+              <i className="bgoal__mark bgoal__mark--goal" style={{ insetInlineStart: `${goals.onTimePct}%` }} />
+            </span>
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+/* ---------- הזמנות קרובות: 7 ימים בשורה אחת; ימים ריקים מצטמצמים. בטלפון – גלילה לרוחב, היום ראשון ---------- */
 function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go: (to: string) => void }) {
   const today = toISODate(now);
   const tomorrow = toISODate(addDays(now, 1));
@@ -291,93 +401,77 @@ function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go
   const linkFor = (iso: string) => (iso === today ? '/orders?tab=today' : iso === tomorrow ? '/orders?tab=tomorrow' : '/orders?tab=future');
   return (
     <Section id="up" title="הזמנות קרובות" meta="7 הימים הקרובים"
-      lead={h.week.count === 0 ? <p>אין הזמנות פתוחות בשבוע הקרוב.</p> : (
-        <>
-          <p>בשבוע הקרוב {orders$(h.week.count)} בסך <Ltr>{fmtMoney(h.week.sum)}</Ltr>{h.week.pizzas > 0 && <>, {pizzas$(h.week.pizzas)}</>}.</p>
-        </>
+      lead={h.week.count === 0 ? <p className="bsec__empty">אין הזמנות פתוחות בשבוע הקרוב.</p> : (
+        <Answer value={<Ltr>{num(h.week.count)}</Ltr>}>{h.week.count === 1 ? 'הזמנה' : 'הזמנות'} בשבוע הקרוב · <Money v={h.week.sum} />{h.week.pizzas > 0 && <> · {pizzas$(h.week.pizzas)}</>}</Answer>
       )}>
-      <div className="bdays" role="list">
+      <div className="bdays" role="group" aria-label="הזמנות לפי יום">
         {h.days.map((d) => (
-          <button key={d.date} type="button" role="listitem" className={`bday ${d.weekend ? 'is-weekend' : ''} ${d.count ? '' : 'is-empty'}`} onClick={() => go(linkFor(d.date))}
+          <button key={d.date} type="button" className={`bday ${d.weekend ? 'is-weekend' : ''} ${d.count ? '' : 'is-empty'} ${d.date === today ? 'is-today' : ''}`} onClick={() => go(linkFor(d.date))}
             aria-label={`${dayName(d.date)} ${short(d.date)}: ${d.count} הזמנות`}>
-            <span className="bday__name">{dayName(d.date)}{d.weekend && <small>סופ"ש</small>}</span>
-            <span className="bday__date"><Ltr>{short(d.date)}</Ltr></span>
+            <span className="bday__name">{dayName(d.date)}</span>
+            <span className="bday__date"><Ltr>{short(d.date)}</Ltr>{d.weekend && <> · סופ"ש</>}</span>
             <span className="bday__count"><Ltr>{d.count ? num(d.count) : '—'}</Ltr></span>
             {d.count > 0 && <>
-              <span className="bday__sum"><Ltr>{fmtMoney(d.sum)}</Ltr></span>
-              <span className="bday__piz">{d.pizzas ? pizzas$(d.pizzas) : ' '}</span>
+              <span className="bday__sum"><Money v={d.sum} /></span>
+              {d.pizzas > 0 && <span className="bday__piz">{pizzas$(d.pizzas)}</span>}
             </>}
           </button>
         ))}
-        <button type="button" role="listitem" className="bday bday--later" onClick={() => go('/orders?tab=future')}>
+        <button type="button" className={`bday bday--later ${h.later.count ? '' : 'is-empty'}`} onClick={() => go('/orders?tab=future')}>
           <span className="bday__name">אחר כך</span>
           <span className="bday__date">מעבר לשבוע</span>
           <span className="bday__count"><Ltr>{h.later.count ? num(h.later.count) : '—'}</Ltr></span>
-          {h.later.count > 0 && <span className="bday__sum"><Ltr>{fmtMoney(h.later.sum)}</Ltr></span>}
+          {h.later.count > 0 && <span className="bday__sum"><Money v={h.later.sum} /></span>}
         </button>
       </div>
     </Section>
   );
 }
 
-/* ---------- מכירות: המשפט, שלוש שורות משנה, יעדים, וגרף מול התקופה הקודמת ---------- */
-function SalesSection({ s, sp, prevName, daily, goals, period, cur, now }: {
-  s: ReturnType<typeof sales>; sp: ReturnType<typeof sales>; prevName: string; daily: DayPoint[]; goals: Goals; period: Period; cur: Range; now: Date;
-}) {
-  const monthly = period === 'month' || period === 'prevMonth';
+/* ---------- מכירות: שלושה מדדים בצד, וגרף מול התקופה הקודמת (מצטבר כברירת מחדל, או יומי) ---------- */
+function SalesSection({ s, sp, prevName, daily }: { s: ReturnType<typeof sales>; sp: ReturnType<typeof sales>; prevName: string; daily: DayPoint[] }) {
   const cmp = sp.count > 0; // יש תקופה קודמת להשוות אליה
-  const goalRows = monthly ? ([['revenue', 'הכנסות', s.sum], ['orders', 'הזמנות', s.count]] as const).filter(([k]) => goals[k]) : [];
   return (
     <Section id="sales" title="מכירות">
       <div className="bsales">
-        <div className="bsales__sum">
-          <dl className="bkv bkv--first">
-            <div><dt>ממוצע להזמנה</dt><dd><Ltr>{fmtMoney(s.avg)}</Ltr>{cmp && <Delta d={delta(s.avg, sp.avg)} />}</dd></div>
-            {(s.pizzas > 0 || sp.pizzas > 0) && <div><dt>פיצות</dt><dd><Ltr>{num(s.pizzas)}</Ltr>{cmp && <Delta d={delta(s.pizzas, sp.pizzas)} />}</dd></div>}
-            <div><dt>לקוחות שהזמינו</dt><dd><Ltr>{num(s.customers)}</Ltr>{cmp && <Delta d={delta(s.customers, sp.customers)} />}</dd></div>
-          </dl>
-          {goalRows.length > 0 && (
-            <div className="bgoals">
-              <p className="bgoals__title">יעדי החודש</p>
-              {goalRows.map(([k, label, value]) => {
-                const goal = goals[k]!;
-                const pace = goalPace(value, goal, cur, now, period === 'month');
-                const money = k === 'revenue';
-                return (
-                  <div key={k} className="bgoal">
-                    <div className="bgoal__row"><span>{label}</span><b><Ltr>{pace.pct}%</Ltr></b></div>
-                    <span className="bgoal__track" aria-hidden="true"><span className="bgoal__fill" style={{ width: `${Math.min(100, pace.pct)}%` }} /></span>
-                    <span className="bgoal__note">
-                      <Ltr>{money ? fmtMoney(value) : num(value)}</Ltr> מתוך <Ltr>{money ? fmtMoney(goal) : num(goal)}</Ltr>
-                      {pace.projected !== null && <> · בקצב הזה: <Ltr>{money ? fmtMoney(pace.projected) : num(Math.round(pace.projected))}</Ltr></>}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <dl className="bkv">
+          <div><dt>ממוצע להזמנה</dt><dd><Money v={s.avg} />{cmp && <Delta cur={s.avg} prev={sp.avg} />}</dd></div>
+          {(s.pizzas > 0 || sp.pizzas > 0) && <div><dt>פיצות</dt><dd><Ltr>{num(s.pizzas)}</Ltr>{cmp && <Delta cur={s.pizzas} prev={sp.pizzas} />}</dd></div>}
+          <div><dt>לקוחות שהזמינו</dt><dd><Ltr>{num(s.customers)}</Ltr>{cmp && <Delta cur={s.customers} prev={sp.customers} />}</dd></div>
+        </dl>
         <DailyChart points={daily} prevName={prevName} />
       </div>
     </Section>
   );
 }
 
-/* גרף: עמודה לכל יום, ולצידה בגוון אפור – היום המקביל בתקופה הקודמת. הכנסות או הזמנות */
+/* הגרף: מצטבר – קו התקופה מול קו מקווקו של התקופה הקודמת (האם אנחנו לפני או אחרי); יומי – עמודה לכל יום ולצידה היום המקביל */
 function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string }) {
   const [metric, setMetric] = usePref<'sum' | 'count'>('board:metric', 'sum');
+  const [mode, setMode] = usePref<'cum' | 'day'>('board:chart', 'cum');
   const [hover, setHover] = useState<number | null>(null);
-  const val = (p: DayPoint) => (metric === 'sum' ? p.sum : p.count);
-  const pv = (p: DayPoint) => (metric === 'sum' ? p.prevSum : p.prevCount);
-  const max = Math.max(1, ...points.map((p) => Math.max(val(p), pv(p))));
+  const raw = (p: DayPoint) => (metric === 'sum' ? p.sum : p.count);
+  const rawPrev = (p: DayPoint) => (metric === 'sum' ? p.prevSum : p.prevCount);
+  const acc = (f: (p: DayPoint) => number) => points.reduce<number[]>((o, p) => [...o, (o[o.length - 1] ?? 0) + f(p)], []);
+  const cumCur = useMemo(() => acc(raw), [points, metric]); // eslint-disable-line react-hooks/exhaustive-deps
+  const cumPrev = useMemo(() => acc(rawPrev), [points, metric]); // eslint-disable-line react-hooks/exhaustive-deps
+  const val = (i: number) => (mode === 'cum' ? cumCur[i] : raw(points[i]));
+  const pv = (i: number) => (mode === 'cum' ? cumPrev[i] : rawPrev(points[i]));
+  const max = Math.max(1, ...points.map((_, i) => Math.max(val(i), pv(i))));
   const mag = 10 ** Math.floor(Math.log10(max));
   const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((x) => max / x <= 4) ?? mag * 10;
   const top = Math.ceil(max / step) * step;
   const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step);
   const tick = (v: number) => (metric === 'sum' ? (v >= 10000 ? `₪${num(v / 1000)}K` : `₪${num(v)}`) : num(v));
   const every = points.length <= 10 ? 1 : points.length <= 21 ? 3 : 7;
-  const h = hover !== null ? points[hover] : null;
-  const empty = points.every((p) => !val(p) && !pv(p));
+  const hp = hover !== null ? points[hover] : null;
+  const empty = points.every((p) => !raw(p) && !rawPrev(p));
+  const n = points.length;
+  // קו מצטבר: הנקודה של כל יום במרכז העמודה שלו. RTL – היום הראשון בימין
+  const xAt = (i: number) => 100 - ((i + 0.5) / n) * 100;
+  const yAt = (v: number) => 100 - (v / top) * 100;
+  const line = (a: number[]) => a.map((v, i) => `${xAt(i)},${yAt(v)}`).join(' ');
+  const fmtV = (v: number) => (metric === 'sum' ? <Money v={v} /> : orders$(v));
   return (
     <div className="bdaily">
       <div className="bdaily__head">
@@ -385,30 +479,45 @@ function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string
           <button className={metric === 'sum' ? 'is-on' : ''} aria-pressed={metric === 'sum'} onClick={() => setMetric('sum')}>הכנסות</button>
           <button className={metric === 'count' ? 'is-on' : ''} aria-pressed={metric === 'count'} onClick={() => setMetric('count')}>הזמנות</button>
         </div>
+        <div className="seg seg--sm" role="group" aria-label="סוג הגרף">
+          <button className={mode === 'cum' ? 'is-on' : ''} aria-pressed={mode === 'cum'} onClick={() => setMode('cum')}>מצטבר</button>
+          <button className={mode === 'day' ? 'is-on' : ''} aria-pressed={mode === 'day'} onClick={() => setMode('day')}>יומי</button>
+        </div>
         <ul className="blegend">
-          <li><i className="is-cur" />התקופה</li><li><i className="is-prev" />{prevName}</li>
+          <li><i className="is-cur" />התקופה</li><li><i className={mode === 'cum' ? 'is-prev-line' : 'is-prev'} />{prevName}</li>
         </ul>
       </div>
-      {empty ? <p className="bsec__empty bdaily__empty">אין הזמנות בתקופה הזו.</p> : (
+      {empty ? (
+        <div className="bchart bchart--empty"><span className="bchart__zero" /><p className="bsec__empty">אין הזמנות בתקופה הזו.</p></div>
+      ) : (
         <div className="bchart" onMouseLeave={() => setHover(null)}>
           <div className="bchart__grid" aria-hidden="true">
             {ticks.map((v) => <span key={v} style={{ bottom: `${(v / top) * 100}%` }}><bdi dir="ltr">{tick(v)}</bdi></span>)}
           </div>
-          <div className="bchart__plot" role="img" aria-label={`${metric === 'sum' ? 'הכנסות' : 'הזמנות'} לפי יום, מול ${prevName}`}>
+          <div className="bchart__plot" role="img" aria-label={`${metric === 'sum' ? 'הכנסות' : 'הזמנות'} ${mode === 'cum' ? 'מצטברות' : 'לפי יום'}: בתקופה ${metric === 'sum' ? fmtMoney(cumCur[n - 1] ?? 0) : num(cumCur[n - 1] ?? 0)}, ב${prevName} ${metric === 'sum' ? fmtMoney(cumPrev[n - 1] ?? 0) : num(cumPrev[n - 1] ?? 0)}`}>
+            {mode === 'cum' && (
+              <svg className="bchart__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polyline className="bchart__prevline" points={line(cumPrev)} />
+                <polyline className="bchart__curline" points={line(cumCur)} />
+              </svg>
+            )}
             {points.map((p, i) => (
               <div key={p.date} className={`bchart__col ${hover === i ? 'is-hover' : ''}`} onMouseEnter={() => setHover(i)}>
-                <span className="bchart__pair">
-                  <span className="bchart__bar is-cur" style={{ height: `${(val(p) / top) * 100}%` }} />
-                  <span className="bchart__bar is-prev" style={{ height: `${(pv(p) / top) * 100}%` }} />
-                </span>
+                {mode === 'day' && (
+                  <span className="bchart__pair">
+                    <span className="bchart__bar is-cur" style={{ height: `${(val(i) / top) * 100}%` }} />
+                    <span className="bchart__bar is-prev" style={{ height: `${(pv(i) / top) * 100}%` }} />
+                  </span>
+                )}
+                {mode === 'cum' && hover === i && <span className="bchart__dot" style={{ bottom: `${(val(i) / top) * 100}%` }} />}
                 {i % every === 0 && <span className="bchart__x"><Ltr>{short(p.date)}</Ltr></span>}
               </div>
             ))}
-            {h && hover !== null && (
-              <div className="bchart__tip" style={{ insetInlineStart: `${((hover + 0.5) / points.length) * 100}%` }}>
-                <b><Ltr>{fmtDate(h.date)}</Ltr></b>
-                <span>{metric === 'sum' ? <Ltr>{fmtMoney(h.sum)}</Ltr> : orders$(h.count)}</span>
-                <span className="bchart__tip-prev">{prevName}: {metric === 'sum' ? <Ltr>{fmtMoney(h.prevSum)}</Ltr> : orders$(h.prevCount)}</span>
+            {hp && hover !== null && (
+              <div className="bchart__tip" style={{ insetInlineStart: `${((hover + 0.5) / n) * 100}%` }}>
+                <b><Ltr>{fmtDate(hp.date)}</Ltr></b>
+                <span>{mode === 'cum' ? 'עד היום הזה: ' : ''}{fmtV(val(hover))}</span>
+                <span className="bchart__tip-prev">{prevName}: {fmtV(pv(hover))}</span>
               </div>
             )}
           </div>
@@ -427,33 +536,39 @@ function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string
   );
 }
 
-/* ---------- עמידה בזמנים ---------- */
-function ServiceSection({ sv, goal, go }: { sv: ReturnType<typeof service>; goal?: number; go: (to: string) => void }) {
-  /* בזמן + באיחור = כל מה שסופק (כמו בדוחות). האחוזים – מתוך מה שסופק, כמו המספר הראשי. חלקית היא "מתוכן", בלי פס משלה */
-  /* כל איחור הוא איחור ("באיחור" = הסכום); בפס ובשורות – הפיצול עד X דק' / מעל X דק' (ובלי דקות, אם נרשם כך) */
+/* ---------- עמידה בזמנים: המספר הראשי – כמה איחורים; פס של מה שקיים ושורות מיושרות ---------- */
+function ServiceSection({ sv, go }: { sv: ReturnType<typeof service>; go: (to: string) => void }) {
+  /* בזמן + באיחור = כל מה שסופק (כמו בדוחות). האחוזים – מתוך מה שסופק. חלקית ובוטלו – שורות משנה, בלי פס */
   const segs = [
-    { k: 'is-ready', label: 'בזמן', v: sv.onTime, of: sv.delivered },
-    { k: 'is-late-minor', label: lateLabel('minor'), v: sv.lateMinor, of: sv.delivered },
-    { k: 'is-late-major', label: lateLabel('major'), v: sv.lateMajor, of: sv.delivered },
-    ...(sv.lateUnknown ? [{ k: 'is-late-unknown', label: lateLabel('unknown'), v: sv.lateUnknown, of: sv.delivered }] : []),
-    { k: 'is-ops', label: 'מתוכן חלקית', v: sv.partial, of: 0 }, { k: 'is-cancel', label: 'בוטלו', v: sv.cancelled, of: 0 },
+    { k: 'is-ready', label: 'בזמן', v: sv.onTime },
+    { k: 'is-late-minor', label: lateLabel('minor'), v: sv.lateMinor },
+    { k: 'is-late-major', label: lateLabel('major'), v: sv.lateMajor },
+    ...(sv.lateUnknown ? [{ k: 'is-late-unknown', label: lateLabel('unknown'), v: sv.lateUnknown }] : []),
   ];
+  const pct = (v: number) => (sv.delivered ? Math.round((v / sv.delivered) * 100) : 0);
   return (
     <Section id="svc" title="עמידה בזמנים"
-      lead={sv.delivered === 0 ? <p>עוד לא סופקו הזמנות בתקופה הזו.</p> : (
-        <>
-          <p className="bsec__stmt"><b><Ltr>{sv.onTimePct}%</Ltr></b> מההזמנות סופקו בזמן</p>
-          <p className="muted">{sv.late > 0 && <>באיחור <Ltr>{num(sv.late)}</Ltr> (<Ltr>{Math.round((sv.late / sv.delivered) * 100)}%</Ltr>) · </>}מתוך {orders$(sv.delivered)} שסופקו (מלא או חלקי){goal ? <> · היעד: <span className={(sv.onTimePct ?? 0) >= goal ? 'is-ok' : 'is-warn'}><Ltr>{goal}%</Ltr></span></> : null}</p>
-        </>
-      )}>
-      {sv.closed > 0 && (
+      lead={sv.delivered === 0 ? <p className="bsec__empty">עוד לא סופקו הזמנות בתקופה הזו.</p>
+        : sv.late === 0 ? <Answer value={<Ltr>{sv.onTimePct}%</Ltr>}>בזמן · כל {orders$(sv.delivered)} שסופקו, בלי איחורים</Answer>
+          : <Answer value={<Ltr>{num(sv.late)}</Ltr>}>{sv.late === 1 ? 'איחור' : 'איחורים'} מתוך <Ltr>{num(sv.delivered)}</Ltr> שסופקו · <Ltr>{pct(sv.late)}%</Ltr></Answer>}>
+      {sv.delivered > 0 && (
         <>
           <div className="bstack" role="img" aria-label={segs.map((x) => `${x.label} ${x.v}`).join(', ')}>
-            {segs.filter((x) => x.v > 0 && x.k !== 'is-ops').map((x) => <span key={x.k} className={x.k} style={{ flexGrow: x.v }} />)}
+            {segs.filter((x) => x.v > 0).map((x) => <span key={x.k} className={x.k} style={{ flexGrow: x.v }} />)}
           </div>
-          <ul className="bstats">
-            {segs.map((x) => <li key={x.k}><i className={x.k === 'is-ops' ? undefined : x.k} aria-hidden="true" />{x.label}<b><Ltr>{num(x.v)}</Ltr></b><span>{x.of ? <Ltr>{Math.round((x.v / x.of) * 100)}%</Ltr> : null}</span></li>)}
-          </ul>
+          <table className="btab">
+            <tbody>
+              {segs.map((x) => (
+                <tr key={x.k} className={x.v ? '' : 'is-zero'}>
+                  <th scope="row"><i className={x.k} aria-hidden="true" />{x.label}</th>
+                  <td><Ltr>{num(x.v)}</Ltr></td>
+                  <td className="btab__pct"><Ltr>{pct(x.v)}%</Ltr></td>
+                </tr>
+              ))}
+              <tr className={`is-sub ${sv.partial ? '' : 'is-zero'}`}><th scope="row">מתוכן חלקית</th><td><Ltr>{num(sv.partial)}</Ltr></td><td /></tr>
+              <tr className={`is-sub ${sv.cancelled ? '' : 'is-zero'}`}><th scope="row">בוטלו (לא נספרות)</th><td><Ltr>{num(sv.cancelled)}</Ltr></td><td /></tr>
+            </tbody>
+          </table>
         </>
       )}
       {sv.lateBranches.length > 0 && (
@@ -464,58 +579,74 @@ function ServiceSection({ sv, goal, go }: { sv: ReturnType<typeof service>; goal
           </ul>
         </div>
       )}
-      {sv.overdue > 0 && <button type="button" className="link bsec__alert" onClick={() => go('/orders?tab=overdue')}>{sv.overdue === 1 ? 'הזמנה אחת שעבר מועדה עוד לא נסגרה' : <><Ltr>{sv.overdue}</Ltr> הזמנות שעבר מועדן עוד לא נסגרו</>}</button>}
+      {sv.overdue > 0 && (
+        <button type="button" className="balert" onClick={() => go('/orders?tab=overdue')}>
+          <Clock size={16} aria-hidden="true" />
+          <span>{sv.overdue === 1 ? 'הזמנה אחת שעבר מועדה עוד לא נסגרה' : <><Ltr>{sv.overdue}</Ltr> הזמנות שעבר מועדן עוד לא נסגרו</>}</span>
+          <ChevronLeft size={16} aria-hidden="true" className="balert__go" />
+        </button>
+      )}
     </Section>
   );
 }
 
-/* ---------- גבייה ובקרת קופה ---------- */
+/* ---------- גבייה ובקרת קופה: המספר הראשי – מה שמעל 60 יום (או כמה בהקפה, כשהכל חדש) ---------- */
 function CollectionsSection({ c, go }: { c: ReturnType<typeof collections>; go: (to: string) => void }) {
   const tones = ['is-a1', 'is-a2', 'is-a3'];
+  const old = c.aging[2];
   return (
     <Section id="col" title="גבייה ובקרת קופה" meta="מצב נוכחי"
-      lead={c.open.count === 0 ? <p>אין הקפות שממתינות לגבייה.</p> : (
-        <>
-          <p className="bsec__stmt"><b><Ltr>{fmtMoney(c.open.sum)}</Ltr></b> בהקפה ממתינים לגבייה</p>
-          <p className="muted">מ{c.open.count === 1 ? 'הזמנה אחת' : <>-<Ltr>{num(c.open.count)}</Ltr> הזמנות</>}, לפי ותק:</p>
-        </>
-      )}>
+      lead={c.open.count === 0 ? <p className="bsec__empty">אין הקפות שממתינות לגבייה.</p>
+        : old.count > 0 ? <Answer value={<Money v={old.sum} />}><span className="is-warn">מעל 60 יום</span> · מתוך <Money v={c.open.sum} /> בהקפה ({orders$(c.open.count)})</Answer>
+          : <Answer value={<Money v={c.open.sum} />}>בהקפה ממתינים לגבייה · {c.aging[1].count ? 'הכל עד 60 יום' : 'הכל עד 30 יום'}</Answer>}>
       {c.open.count > 0 && (
         <>
           <div className="bstack" role="img" aria-label={c.aging.map((a) => `${a.label} ${fmtMoney(a.sum)}`).join(', ')}>
             {c.aging.map((a, i) => (a.sum > 0 ? <span key={a.label} className={tones[i]} style={{ flexGrow: a.sum }} /> : null))}
           </div>
-          <ul className="bstats">
-            {c.aging.map((a, i) => <li key={a.label}><i className={tones[i]} aria-hidden="true" />{a.label}<b><Ltr>{fmtMoney(a.sum)}</Ltr></b><span>{orders$(a.count)}</span></li>)}
-          </ul>
+          <table className="btab">
+            <tbody>
+              {c.aging.map((a, i) => (
+                <tr key={a.label} className={a.count ? '' : 'is-zero'}>
+                  <th scope="row"><i className={tones[i]} aria-hidden="true" /><span className={i === 2 && a.count ? 'is-warn' : undefined}>{a.label}</span></th>
+                  <td><Money v={a.sum} /></td>
+                  <td className="btab__pct">{orders$(a.count)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
       <ul className="bchecks">
         <li><button type="button" onClick={() => go('/exceptions?rule=2')} className={c.gaps.count ? 'is-warn' : ''}>
           <span>פערים בין ההזמנה לקופה (Q)</span>
-          <b>{c.gaps.count ? <>{orders$(c.gaps.count)} · <Ltr>{fmtMoney(c.gaps.sum)}</Ltr></> : 'אין'}</b>
+          <b>{c.gaps.count ? <>{orders$(c.gaps.count)} · <Money v={c.gaps.sum} /></> : 'אין'}</b>
         </button></li>
         <li><button type="button" onClick={() => go('/exceptions?rule=7')} className={c.failed.count ? 'is-alert' : ''}>
           <span>חיובי אשראי שנכשלו</span>
-          <b>{c.failed.count ? <>{orders$(c.failed.count)} · <Ltr>{fmtMoney(c.failed.sum)}</Ltr></> : 'אין'}</b>
+          <b>{c.failed.count ? <>{orders$(c.failed.count)} · <Money v={c.failed.sum} /></> : 'אין'}</b>
         </button></li>
-        <li><button type="button" onClick={() => go('/reports/credit')}><span>דוח הקפות מלא</span><b className="muted">לדוח</b></button></li>
+        <li><button type="button" onClick={() => go('/reports/credit')}><span>דוח הקפות מלא</span><b className="muted">לדוח ‹</b></button></li>
       </ul>
     </Section>
   );
 }
 
-/* ---------- לקוחות / סניפים / צוות ---------- */
-function Share({ rows, limit, extra }: { rows: Ranked[]; limit: number; extra?: (r: Ranked) => ReactNode }) {
+/* ---------- דירוג: מקום · שם (והזמנות) · פס · סכום · חלק ---------- */
+function Rank({ rows, limit, extra }: { rows: Ranked[]; limit: number; extra?: (r: Ranked) => ReactNode }) {
   const max = Math.max(1, ...rows.map((r) => r.sum));
   return (
-    <ol className="bshare">
-      {rows.slice(0, limit).map((r) => (
-        <li key={r.name}>
-          <span className="bshare__name" title={r.name}>{r.name}</span>
-          <span className="bshare__val"><Ltr>{fmtMoney(r.sum)}</Ltr></span>
-          <span className="bshare__track" aria-hidden="true"><span style={{ width: `${(r.sum / max) * 100}%` }} /></span>
-          <span className="bshare__meta"><Ltr>{r.share}%</Ltr> מההכנסות · {orders$(r.count)}{extra?.(r)}</span>
+    <ol className="brank">
+      {rows.slice(0, limit).map((r, i) => (
+        <li key={r.name} className={i === 0 ? 'is-first' : ''}>
+          <span className="brank__pos"><Ltr>{i + 1}</Ltr></span>
+          <span className="brank__who">
+            <span className="brank__name" title={r.name}>{r.name}</span>
+            <span className="brank__meta">{orders$(r.count)}{extra?.(r)}</span>
+          </span>
+          <span className="brank__track" aria-hidden="true"><span style={{ width: `${(r.sum / max) * 100}%` }} /></span>
+          <span className="brank__sum"><Money v={r.sum} /></span>
+          <span className="brank__pct"><Ltr>{r.share}%</Ltr></span>
         </li>
       ))}
     </ol>
@@ -524,14 +655,9 @@ function Share({ rows, limit, extra }: { rows: Ranked[]; limit: number; extra?: 
 function CustomersSection({ rows, customers }: { rows: Ranked[]; customers: number }) {
   const top = rows[0];
   return (
-    <Section id="cust" title="לקוחות"
-      lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : (
-        <>
-          <p><b>{top.name}</b> הוא הלקוח הגדול בתקופה, עם <Ltr>{top.share}%</Ltr> מההכנסות.</p>
-          <p className="muted">{count(customers, 'לקוח אחד הזמין', 'לקוחות הזמינו')} בתקופה.</p>
-        </>
-      )}>
-      {top && <Share rows={rows} limit={6} />}
+    <Section id="cust" title="לקוחות" meta={top ? count(customers, 'לקוח אחד הזמין', 'לקוחות הזמינו') : undefined}
+      lead={!top ? <p className="bsec__empty">אין הזמנות בתקופה הזו.</p> : <p><b>{top.name}</b> הוא הלקוח הגדול בתקופה, עם <Ltr>{top.share}%</Ltr> מההכנסות.</p>}>
+      {top && <Rank rows={rows} limit={6} />}
     </Section>
   );
 }
@@ -542,33 +668,34 @@ function BranchesSection({ clusters, branches }: { clusters: Ranked[]; branches:
   return (
     <Section id="br" title="סניפים ואשכולות"
       tool={<div className="seg seg--sm" role="group" aria-label="פילוח"><button className={by === 'clusters' ? 'is-on' : ''} aria-pressed={by === 'clusters'} onClick={() => setBy('clusters')}>אשכולות</button><button className={by === 'branches' ? 'is-on' : ''} aria-pressed={by === 'branches'} onClick={() => setBy('branches')}>סניפים</button></div>}
-      lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : <p>{by === 'clusters' ? 'אשכול' : 'סניף'} <b>{top.name}</b> מוביל, עם <Ltr>{top.share}%</Ltr> מההכנסות.</p>}>
-      {top && <Share rows={rows} limit={6} extra={(r) => (r.onTimePct === null ? null : <> · <Ltr>{r.onTimePct}%</Ltr> בזמן</>)} />}
+      lead={!top ? <p className="bsec__empty">אין הזמנות בתקופה הזו.</p> : <p>{by === 'clusters' ? 'אשכול' : 'סניף'} <b>{top.name}</b> מוביל, עם <Ltr>{top.share}%</Ltr> מההכנסות.</p>}>
+      {top && <Rank rows={rows} limit={6} extra={(r) => (r.onTimePct === null ? null : <> · <Ltr>{r.onTimePct}%</Ltr> בזמן</>)} />}
     </Section>
   );
 }
-/* לפי ערוץ: הזמנות · פיצות · הכנסות · חלק · ממוצע להזמנה · % בזמן. "לא מסווג" = הזמנות ישנות עם טקסט ערוץ חופשי */
+/* לפי ערוץ: פחות משני ערוצים – משפט; שניים ומעלה – טבלה. "לא מסווג" = הזמנות ישנות עם טקסט ערוץ חופשי */
 function ChannelsSection({ rows }: { rows: ChannelRanked[] }) {
   const top = rows[0];
-  // הערוץ המוביל – רק מבין המסווגים ("לא מסווג" הוא הזמנות ישנות, לא ערוץ); אין מסווגים – בלי משפט
   const lead = rows.find((r) => r.name !== UNCLASSIFIED && r.name !== '—');
   return (
     <Section id="ch" title="לפי ערוץ"
-      lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : lead ? <p>הערוץ המוביל בתקופה: <b>{lead.name}</b>, עם <Ltr>{lead.share}%</Ltr> מההכנסות.</p> : undefined}>
-      {top && (
+      lead={!top ? <p className="bsec__empty">אין הזמנות בתקופה הזו.</p>
+        : rows.length < 2 ? <p>כל ההזמנות בתקופה מערוץ אחד: <b>{top.name}</b> – {orders$(top.count)}, <Money v={top.sum} />.</p>
+          : lead ? <p>הערוץ המוביל בתקופה: <b>{lead.name}</b>, עם <Ltr>{lead.share}%</Ltr> מההכנסות.</p> : undefined}>
+      {rows.length >= 2 && (
         <div className="report__scroll">
           <table className="rtable rtable--stack bteam">
-            <thead><tr><th>ערוץ</th><th className="num">הזמנות</th><th className="num">פיצות</th><th className="num">הכנסות</th><th className="num">חלק מההכנסות</th><th className="num">ממוצע להזמנה</th><th className="num">סופקו בזמן</th></tr></thead>
+            <thead><tr><th>ערוץ</th><th className="num">הזמנות</th><th className="num">פיצות</th><th className="num">הכנסות</th><th className="num">חלק</th><th className="num">ממוצע</th><th className="num">בזמן</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.name}>
                   <td data-label="ערוץ">{r.name === UNCLASSIFIED ? <span title="הזמנות ישנות עם טקסט ערוץ חופשי">{UNCLASSIFIED}</span> : r.name}</td>
                   <td className="num" data-label="הזמנות"><Ltr>{num(r.count)}</Ltr></td>
                   <td className="num" data-label="פיצות"><Ltr>{num(r.pizzas)}</Ltr></td>
-                  <td className="num" data-label="הכנסות"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
-                  <td className="num" data-label="חלק מההכנסות"><Ltr>{r.share}%</Ltr></td>
-                  <td className="num" data-label="ממוצע להזמנה"><Ltr>{fmtMoney(r.avg)}</Ltr></td>
-                  <td className="num" data-label="סופקו בזמן">{r.onTimePct === null ? <span className="muted">—</span> : <Ltr>{r.onTimePct}%</Ltr>}</td>
+                  <td className="num" data-label="הכנסות"><Money v={r.sum} /></td>
+                  <td className="num" data-label="חלק"><Ltr>{r.share}%</Ltr></td>
+                  <td className="num" data-label="ממוצע"><Money v={r.avg} /></td>
+                  <td className="num" data-label="בזמן">{r.onTimePct === null ? <span className="muted">—</span> : <Ltr>{r.onTimePct}%</Ltr>}</td>
                 </tr>
               ))}
             </tbody>
@@ -578,24 +705,38 @@ function ChannelsSection({ rows }: { rows: ChannelRanked[] }) {
     </Section>
   );
 }
+/* ערוץ אחד ונציג אחד: שני משפטים בכרטיס אחד */
+function ChannelTeamLine({ ch, team }: { ch: ChannelRanked[]; team: Ranked[] }) {
+  const c = ch[0], t = team[0];
+  return (
+    <Section id="ct" title="ערוץ וצוות">
+      <div className="bct">
+        <p><span className="bct__k">ערוץ</span>{c ? <><b>{c.name}</b> – כל ההזמנות בתקופה</> : <span className="muted">אין הזמנות</span>}</p>
+        <p><span className="bct__k">צוות</span>{t ? <><b>{t.name}</b> – {orders$(t.count)}, <Money v={t.sum} />{t.onTimePct !== null && <>, <Ltr>{t.onTimePct}%</Ltr> בזמן</>}</> : <span className="muted">אין הזמנות</span>}</p>
+      </div>
+    </Section>
+  );
+}
 function TeamSection({ rows }: { rows: Ranked[] }) {
   const top = rows[0];
   return (
     <Section id="team" title="צוות"
-      lead={!top ? <p>אין הזמנות בתקופה הזו.</p> : <p>הכי הרבה הכנסות בתקופה: <b>{top.name}</b> – {orders$(top.count)}, <Ltr>{fmtMoney(top.sum)}</Ltr>.</p>}>
-      {top && (
+      lead={!top ? <p className="bsec__empty">אין הזמנות בתקופה הזו.</p>
+        : rows.length < 2 ? <p>כל ההזמנות בתקופה של <b>{top.name}</b> – {orders$(top.count)}, <Money v={top.sum} />{top.onTimePct !== null && <>, <Ltr>{top.onTimePct}%</Ltr> בזמן</>}.</p>
+          : <p>הכי הרבה הכנסות בתקופה: <b>{top.name}</b> – {orders$(top.count)}, <Money v={top.sum} />.</p>}>
+      {rows.length >= 2 && (
         <div className="report__scroll">
           <table className="rtable rtable--stack bteam">
-            <thead><tr><th>נציג</th><th className="num">הזמנות</th><th className="num">הכנסות</th><th className="num">חלק מההכנסות</th><th className="num">סופקו בזמן</th><th className="num">עם פרטים חסרים</th></tr></thead>
+            <thead><tr><th>נציג</th><th className="num">הזמנות</th><th className="num">הכנסות</th><th className="num">חלק</th><th className="num">בזמן</th><th className="num">פרטים חסרים</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.name}>
                   <td data-label="נציג">{r.name}</td>
                   <td className="num" data-label="הזמנות"><Ltr>{num(r.count)}</Ltr></td>
-                  <td className="num" data-label="הכנסות"><Ltr>{fmtMoney(r.sum)}</Ltr></td>
-                  <td className="num" data-label="חלק מההכנסות"><Ltr>{r.share}%</Ltr></td>
-                  <td className="num" data-label="סופקו בזמן">{r.onTimePct === null ? <span className="muted">—</span> : <Ltr>{r.onTimePct}%</Ltr>}</td>
-                  <td className="num" data-label="עם פרטים חסרים">{r.missing ? <span className="is-warn"><Ltr>{num(r.missing)}</Ltr></span> : <span className="muted">0</span>}</td>
+                  <td className="num" data-label="הכנסות"><Money v={r.sum} /></td>
+                  <td className="num" data-label="חלק"><Ltr>{r.share}%</Ltr></td>
+                  <td className="num" data-label="בזמן">{r.onTimePct === null ? <span className="muted">—</span> : <Ltr>{r.onTimePct}%</Ltr>}</td>
+                  <td className="num" data-label="פרטים חסרים">{r.missing ? <span className="is-warn"><Ltr>{num(r.missing)}</Ltr></span> : <span className="muted">0</span>}</td>
                 </tr>
               ))}
             </tbody>
@@ -606,20 +747,17 @@ function TeamSection({ rows }: { rows: Ranked[] }) {
   );
 }
 
-/* ---------- הצעות מחיר ---------- */
+/* ---------- הצעות מחיר: "לחזור ללקוח" בצבע של חזרה (טורקיז), אפסים באפור ---------- */
 function QuotesSection({ q, go }: { q: ReturnType<typeof quotesSummary>; go: (to: string) => void }) {
   return (
     <Section id="qs" title="הצעות מחיר"
-      lead={(
-        <>
-          <p>{q.open === 0 ? 'אין הצעות פתוחות.' : <>{count(q.open, 'הצעה אחת פתוחה', 'הצעות פתוחות')} בשווי <Ltr>{fmtMoney(q.openSum)}</Ltr>.</>}</p>
-          <p className="muted">{q.sent === 0 ? 'לא נשלחו הצעות בתקופה הזו.' : <><Ltr>{q.conversion}%</Ltr> מההצעות שנשלחו בתקופה הפכו להזמנה (<Ltr>{q.ordered}</Ltr> מתוך <Ltr>{q.sent}</Ltr>).</>}</p>
-        </>
+      lead={q.open === 0 ? <p className="bsec__empty">אין הצעות פתוחות.</p> : (
+        <Answer value={<Money v={q.openSum} />}>{count(q.open, 'בהצעה אחת פתוחה', 'הצעות פתוחות')}{q.sent > 0 && <> · <Ltr>{q.conversion}%</Ltr> מההצעות שנשלחו בתקופה הפכו להזמנה</>}</Answer>
       )}>
       <ul className="bchecks bchecks--row">
-        <li><button type="button" onClick={() => go('/quotes?tab=approved')}><span>אושרו וממתינות להזמנה</span><b><Ltr>{num(q.approved)}</Ltr></b></button></li>
-        <li><button type="button" onClick={() => go('/quotes?tab=waiting')} className={q.followups ? 'is-alert' : ''}><span>לחזור ללקוח</span><b><Ltr>{num(q.followups)}</Ltr></b></button></li>
-        <li><button type="button" onClick={() => go('/quotes?tab=waiting')}><span>תוקפן נגמר בשלושה ימים</span><b><Ltr>{num(q.expiring)}</Ltr></b></button></li>
+        <li><button type="button" onClick={() => go('/quotes?tab=approved')} className={q.approved ? '' : 'is-zero'}><span>אושרו וממתינות להזמנה</span><b><Ltr>{num(q.approved)}</Ltr></b></button></li>
+        <li><button type="button" onClick={() => go('/quotes?tab=waiting')} className={q.followups ? 'is-due' : 'is-zero'}><span>לחזור ללקוח</span><b><Ltr>{num(q.followups)}</Ltr></b></button></li>
+        <li><button type="button" onClick={() => go('/quotes?tab=waiting')} className={q.expiring ? '' : 'is-zero'}><span>תוקפן נגמר בשלושה ימים</span><b><Ltr>{num(q.expiring)}</Ltr></b></button></li>
       </ul>
     </Section>
   );

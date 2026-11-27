@@ -115,7 +115,7 @@ export function HoldButton({ o, size = 'sm' }: { o: OrderView; size?: 'sm' | 'md
 }
 
 /* פעולות על הזמנה שבהמתנה: ניסיון נוסף ושחרור */
-export function HoldActions({ o, size = 'sm' }: { o: OrderView; size?: 'sm' | 'md' }) {
+export function HoldActions({ o, size = 'sm', inRow = false }: { o: OrderView; size?: 'sm' | 'md'; inRow?: boolean }) {
   const { update } = useStore();
   const [open, setOpen] = useState(false);
   if (!o.hold) return null;
@@ -123,7 +123,7 @@ export function HoldActions({ o, size = 'sm' }: { o: OrderView; size?: 'sm' | 'm
   return (
     <span className="hold-acts">
       <Pop open={open} setOpen={setOpen} title={`ניסיון ${(o.hold.attempts ?? 1) + 1}`}
-        trigger={<Button size={size} variant="secondary" onClick={(e) => e.stopPropagation()}>ניסיתי שוב</Button>}>
+        trigger={<Button size={size} variant={inRow ? 'fix' : 'secondary'} onClick={(e) => e.stopPropagation()}>ניסיתי שוב</Button>}>
         <HoldForm o={o} retry done={() => setOpen(false)} />
       </Pop>
       <Button size={size} variant="ghost" onClick={(e) => { e.stopPropagation(); release(); }}>שחרר</Button>

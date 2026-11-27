@@ -74,7 +74,6 @@ function Login({ onRegister }: { onRegister: () => void }) {
   /* ניסוח בלשון רבים – פנייה מקצועית וניטרלית מגדרית */
   return (
     <div className="alogin">
-      <p className="alogin__eyebrow">מוקד הזמנות עסקיות</p>
       <h1 className="auth__title">התחברות</h1>
       <p className="auth__lead">ברוכים הבאים. הזינו את פרטי החשבון כדי להמשיך.</p>
 

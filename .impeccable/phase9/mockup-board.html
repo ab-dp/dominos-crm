@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>בורד – לפני ואחרי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2340;--navy-deep:#081A31;--navy-2:#143462;--navy-text:#C3D1E0;--navy-muted:#8DA2BA;
+  --rec-text:#E3EBF3;--rec-muted:#A3B6CB;--rec-line:rgb(255 255 255 / .12);
+  --page:#E8ECF1;--zone:#F3F5F8;--zone-line:#E2E7ED;
+  --due:#0F6E6E;--due-bg:#DCEFF3;
+  --brand-50:#E8F2F7;--brand-100:#CFE4EF;--brand-300:#8DC0DA;--brand-600:#006491;--brand-800:#003F5C;--brand-sky:#4FB0DC;
+  --gray-25:#F5F7F9;--gray-50:#F8FAFC;--gray-100:#E6EAEF;--gray-200:#D6DCE3;--gray-300:#C2CAD4;--gray-400:#8A96A5;--gray-500:#677585;--gray-600:#546272;--gray-700:#3A4756;--gray-900:#0F1B2A;--white:#fff;
+  --danger-fg:#C0102C;--urgent-bg:#FDF0E3;--urgent-fg:#A34A05;--urgent-edge:#E08A3C;--ok-bg:#E6F3EC;--ok-fg:#16704A;
+  --line:var(--gray-100);--line-soft:#EEF1F4;
+  --font:'IBM Plex Sans Hebrew','Segoe UI',system-ui,sans-serif;
+  --shadow-card:0 0 0 1px var(--line),0 1px 2px rgb(15 27 42 / .06),0 4px 12px -4px rgb(15 27 42 / .08);
+  --r:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);background:#DDE2E8;color:var(--gray-900);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.num,.n{font-variant-numeric:tabular-nums}
+bdi{unicode-bidi:isolate;direction:ltr}
+
+/* ---------- מסגרת ההדמיה ---------- */
+.doc{max-width:1640px;margin:0 auto;padding:32px 24px 64px}
+.doc>h1{font-size:26px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+.doc>p{margin:0 0 28px;color:var(--gray-600);font-size:14px}
+.state{margin:0 0 48px}
+.state__h{display:flex;align-items:baseline;gap:12px;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--gray-300)}
+.state__h h2{margin:0;font-size:20px;font-weight:600}
+.state__h span{font-size:13px;color:var(--gray-600)}
+.frames{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.frame{background:var(--page);border-radius:10px;box-shadow:0 0 0 1px rgb(15 27 42 / .1),0 10px 30px -12px rgb(15 27 42 / .25);overflow:hidden}
+.frame__cap{padding:8px 14px;font-size:12px;color:var(--gray-600);background:var(--white);border-bottom:1px solid var(--line)}
+.frame--desk{width:1100px;max-width:100%}
+.frame--desk .scr{padding:24px}
+.frame--phone{width:390px;max-width:100%}
+.frame--phone .scr{padding:16px}
+.frames-scroll{overflow-x:auto}
+
+/* =================================================================
+   לפני – שחזור של הבורד הנוכחי (מבנה וסגנון כמו בצילום 27.11)
+   ================================================================= */
+.b .head h3{margin:0;font-size:22px;font-weight:600}
+.b .head p{margin:2px 0 14px;font-size:13px;color:var(--gray-600)}
+.b .pulse{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.b .tile{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-card);padding:16px 24px;display:grid;gap:4px}
+.b .lbl{font-size:13px;font-weight:500;color:var(--gray-600)}
+.b .val{font-size:28px;font-weight:600;line-height:1.15;letter-spacing:-.02em}
+.b .foot{font-size:12px;color:var(--gray-600)}
+.b .up{color:var(--ok-fg);font-weight:500}
+.b .spark{height:28px;margin-top:8px}
+.b .bar{height:6px;border-radius:4px;background:var(--gray-100);margin-top:30px;display:flex;gap:2px;position:relative}
+.b .bar span{height:100%;border-radius:4px}
+.b .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.b .sec{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-card);padding:16px 24px 24px}
+.b .sec h4{margin:0;font-size:16px;font-weight:600}
+.b .lead{margin:12px 0 16px;font-size:15px}
+.b .stmt b{font-size:28px;font-weight:500}
+.b .muted{font-size:13px;color:var(--gray-600)}
+.b .gt{display:grid;gap:4px;margin-top:12px}
+.b .gt .row{display:flex;justify-content:space-between;font-size:13px}
+.b .gt .tr{height:6px;border-radius:4px;background:var(--brand-50);overflow:hidden}
+.b .gt .tr i{display:block;height:100%;background:var(--brand-600)}
+.b .stack{display:flex;gap:2px;height:12px}
+.b .stack span{border-radius:4px}
+.b .stats{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
+.b .stats li{display:grid;grid-template-columns:10px 1fr auto auto;gap:8px;align-items:center;font-size:13px;color:var(--gray-700)}
+.b .stats i{width:10px;height:10px;border-radius:4px}
+.b .stats span{min-width:36px;text-align:end;font-size:12px;color:var(--gray-600)}
+.b .where{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;font-size:13px}
+.b .where p{margin:0 0 12px;display:flex;justify-content:space-between}
+.b .alert{color:var(--danger-fg);text-decoration:underline;font-size:13px}
+.b .rk{display:grid;gap:4px;margin-bottom:14px}
+.b .rk .top{display:flex;justify-content:space-between;font-size:14px}
+.b .rk .top b{font-weight:600}
+.b .rk .tr{height:6px;border-radius:4px;background:var(--gray-50);display:flex}
+.b .rk .tr i{height:100%;border-radius:4px;background:var(--brand-800)}
+.b .rk small{font-size:12px;color:var(--gray-600)}
+.phone .b .pulse{grid-template-columns:1fr 1fr;gap:12px}
+.phone .b .tile{padding:12px 14px}
+.phone .b .grid{grid-template-columns:1fr}
+.phone .b .stats{grid-template-columns:1fr}
+.phone .b .sec{padding:16px}
+
+/* =================================================================
+   אחרי – ההצעה
+   ================================================================= */
+.a .head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.a .head h3{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.a .head p{margin:2px 0 0;font-size:13px;color:var(--gray-600)}
+.a .seg{display:inline-flex;background:var(--gray-100);border-radius:6px;padding:2px;margin-inline-start:auto}
+.a .seg b,.a .seg span{white-space:nowrap;font-size:13px;padding:5px 12px;border-radius:5px;font-weight:500;color:var(--gray-600)}
+.a .seg b{background:var(--white);color:var(--gray-900);box-shadow:0 0 0 1px var(--gray-200)}
+
+/* תמונת מצב: פס כחול-לילה אחד, ארבעה תאים עם קווי הפרדה – כמו ראש רשומה */
+.a .band{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--navy);border-radius:var(--r);color:var(--rec-text);margin-bottom:16px;overflow:hidden}
+.a .band__cell{padding:18px 24px 16px;display:grid;gap:2px;align-content:start;min-width:0}
+.a .band__cell+.band__cell{border-inline-start:1px solid var(--rec-line)}
+.a .band__lbl{font-size:13px;font-weight:500;color:var(--rec-muted);display:flex;justify-content:space-between;gap:8px}
+.a .band__lbl em{font-style:normal;font-weight:400;color:var(--navy-muted);font-size:12px}
+.a .band__val{font-size:36px;font-weight:600;line-height:1.1;letter-spacing:-.025em;color:var(--white);font-variant-numeric:tabular-nums;margin-top:4px}
+.a .cur{font-size:.62em;font-weight:500;color:var(--rec-muted);margin-inline-end:2px;letter-spacing:0}
+.a .band__d{font-size:12px;color:var(--rec-muted);display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;min-height:18px}
+.a .band__d .up{color:#8FD9B0;font-weight:500}
+.a .band__d .warn{color:#F2B27A;font-weight:500}
+.a .band svg{display:block;width:100%;height:34px;margin-top:10px;overflow:visible}
+.a .bullet{position:relative;height:8px;margin-top:22px;margin-bottom:4px;border-radius:2px;background:rgb(255 255 255 / .12)}
+.a .bullet i{position:absolute;inset-block:0;inset-inline-start:0;border-radius:2px;background:#8FD9B0}
+.a .bullet u{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--white);text-decoration:none}
+.a .bullet-k{display:flex;justify-content:space-between;font-size:12px;color:var(--navy-muted);margin-top:6px}
+.a .aging{display:flex;height:8px;margin-top:22px;gap:2px;margin-bottom:4px}
+.a .aging span{border-radius:2px}
+
+.a .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.a .sec{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-card);padding:20px 24px 22px;min-width:0}
+.a .sec__h{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.a .sec__h h4{margin:0;font-size:16px;font-weight:600}
+.a .sec__h span{font-size:12px;color:var(--gray-600)}
+.a .sec__h a{margin-inline-start:auto;font-size:13px;color:var(--brand-600);text-decoration:none}
+.a .ans{margin:6px 0 18px;font-size:15px;color:var(--gray-700)}
+.a .ans b{font-weight:600;color:var(--gray-900)}
+
+/* יעדים וקצב: שורה למדד – ערך / יעד, פס עם סימון "צפוי להיום" וסימון יעד */
+.a .goal{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:14px 0;border-top:1px solid var(--line-soft)}
+.a .goal:first-of-type{border-top:0;padding-top:4px}
+.a .goal__name{font-size:14px;font-weight:500}
+.a .goal__fig{font-size:14px;color:var(--gray-600);font-variant-numeric:tabular-nums}
+.a .goal__fig b{font-size:20px;font-weight:600;color:var(--gray-900)}
+.a .gtrack{grid-column:1/-1;position:relative;height:10px;background:var(--gray-100);border-radius:2px;margin:6px 0 4px}
+.a .gtrack i{position:absolute;inset-block:0;inset-inline-start:0;background:var(--brand-600);border-radius:2px}
+.a .gtrack s{position:absolute;top:-4px;bottom:-4px;width:0;border-inline-start:2px dashed var(--gray-500);text-decoration:none}
+.a .gtrack u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--gray-900);text-decoration:none;inset-inline-end:0}
+.a .gtrack.is-ph{background:repeating-linear-gradient(-45deg,var(--gray-100) 0 6px,var(--gray-50) 6px 12px)}
+.a .goal__note{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:baseline;font-size:13px;color:var(--gray-600)}
+.a .tag{font-size:12px;font-weight:500;padding:1px 8px;border-radius:4px}
+.a .tag.behind{background:var(--urgent-bg);color:var(--urgent-fg)}
+.a .tag.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.a .key{display:flex;gap:16px;margin-top:6px;font-size:12px;color:var(--gray-600)}
+.a .key span{display:inline-flex;gap:6px;align-items:center}
+.a .key i{display:inline-block;width:12px;height:0;border-top:2px dashed var(--gray-500)}
+.a .key i.g{border-top:0;width:2px;height:12px;background:var(--gray-900)}
+
+/* דירוג: מספר דירוג · שם · פס בשורה · ערך · חלק */
+.a .rank{list-style:none;margin:0;padding:0}
+.a .rank li{display:grid;grid-template-columns:20px minmax(0,1.3fr) minmax(0,1fr) 76px 40px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line-soft);font-size:14px}
+.a .rank li:first-child{border-top:0}
+.a .rank .no{color:var(--gray-400);font-size:12px;font-variant-numeric:tabular-nums}
+.a .rank .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a .rank .nm small{display:block;font-size:12px;color:var(--gray-600)}
+.a .rank .tr{height:8px;background:var(--gray-50);border-radius:2px;position:relative}
+.a .rank .tr i{position:absolute;inset-block:0;inset-inline-start:0;background:var(--brand-300);border-radius:2px}
+.a .rank li:first-child .tr i{background:var(--brand-600)}
+.a .rank .v{text-align:end;font-weight:500;font-variant-numeric:tabular-nums}
+.a .rank .p{text-align:end;font-size:12px;color:var(--gray-600);font-variant-numeric:tabular-nums}
+.a .rank-h{display:grid;grid-template-columns:20px minmax(0,1.3fr) minmax(0,1fr) 76px 40px;gap:12px;font-size:12px;color:var(--gray-500);padding-bottom:6px;border-bottom:1px solid var(--line)}
+.a .rank-h :nth-child(4),.a .rank-h :nth-child(5){text-align:end}
+
+/* איחורים */
+.a .late__top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+.a .late__top b{font-size:32px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.a .late__top span{color:var(--gray-600);font-size:14px}
+.a .hbar{display:flex;height:14px;gap:2px}
+.a .hbar span{border-radius:2px}
+.a .lt{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+.a .lt td{padding:7px 0;border-top:1px solid var(--line-soft)}
+.a .lt tr:first-child td{border-top:0}
+.a .lt td.c{width:44px;text-align:end;font-weight:500;font-variant-numeric:tabular-nums}
+.a .lt td.p{width:52px;text-align:end;color:var(--gray-600);font-size:12px;font-variant-numeric:tabular-nums}
+.a .lt td.zero{color:var(--gray-400);font-weight:400}
+.a .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:8px;vertical-align:-1px}
+.a .lt tr.sub td{color:var(--gray-600);font-size:13px}
+.a .where{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.a .where h5{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--gray-700)}
+.a .where p{margin:0;display:flex;justify-content:space-between;font-size:14px}
+.a .where p span{color:var(--gray-600);font-size:13px}
+.a .flag{display:flex;align-items:center;gap:8px;margin-top:14px;padding:9px 12px;border-radius:6px;background:var(--urgent-bg);color:var(--urgent-fg);font-size:13px;font-weight:500;text-decoration:none}
+.a .flag svg{flex:none}
+.a .flag em{margin-inline-start:auto;font-style:normal}
+
+/* 390 */
+.phone .a .head{gap:10px}
+.phone .a .seg{margin-inline-start:0;width:100%;overflow-x:auto}
+.phone .a .band{grid-template-columns:1fr 1fr}
+.phone .a .band__cell{padding:14px 14px 12px}
+.phone .a .band__cell:nth-child(3){border-inline-start:0}
+.phone .a .band__cell:nth-child(n+3){border-top:1px solid var(--rec-line)}
+.phone .a .band__val{font-size:28px}
+.phone .a .band__lbl em{display:none}
+.phone .a .grid{grid-template-columns:1fr}
+.phone .a .sec{padding:16px}
+.phone .a .rank li,.phone .a .rank-h{grid-template-columns:18px minmax(0,1fr) 70px 34px}
+.phone .a .rank .tr{grid-column:2/-1;grid-row:2;margin-top:-2px}
+.phone .a .rank-h :nth-child(3){display:none}
+
+.notes{background:var(--white);border-radius:10px;padding:18px 22px;box-shadow:var(--shadow-card);font-size:14px;max-width:1100px}
+.notes h3{margin:0 0 8px;font-size:16px}
+.notes ol{margin:0;padding-inline-start:20px;display:grid;gap:4px}
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>בורד – לפני ואחרי</h1>
+  <p>הדמיה סטטית לשלב 9 (אופי ויוקרה). המספרים מצילום הבורד ב-27.11 (החודש, מול אותם ימים בחודש שעבר). היעדים מסומנים "לדוגמה" – אין יעדים שמורים בצילום; יעד הכנסות מוצג ₪— לפי הכלל "אין מחירי דוגמה".</p>
+
+  <!-- ========================= לפני ========================= -->
+  <section class="state">
+    <div class="state__h"><h2>לפני</h2><span>המבנה הנוכחי: ארבעה כרטיסים צפים, אחוזי שינוי מטעים, גרפים בצבעים קרובים</span></div>
+    <div class="frames">
+      <div class="frame frame--desk"><div class="frame__cap">דסקטופ · 1440</div><div class="scr b" id="before-desk"></div></div>
+      <div class="frame frame--phone phone"><div class="frame__cap">טלפון · 390</div><div class="scr b" id="before-phone"></div></div>
+    </div>
+  </section>
+
+  <!-- ========================= אחרי ========================= -->
+  <section class="state">
+    <div class="state__h"><h2>אחרי</h2><span>פס תמונת מצב בכחול-לילה, מספר אחד בולט לכל שאלה, דירוג כטבלה מיושרת, איחורים כחלוקה אחת עם טבלה</span></div>
+    <div class="frames">
+      <div class="frame frame--desk"><div class="frame__cap">דסקטופ · 1440</div><div class="scr a" id="after-desk"></div></div>
+      <div class="frame frame--phone phone"><div class="frame__cap">טלפון · 390</div><div class="scr a" id="after-phone"></div></div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <h3>מה השתנה בהדמיה</h3>
+    <ol>
+      <li>ארבעת האריחים הפכו לפס אחד בכחול-לילה (אותה שפה כמו ראש רשומה בכרטיס ההזמנה) – מספר 36px, ₪ קטן ושקט, שינוי כ"פי 15.8" במקום "1484%".</li>
+      <li>גרף זעיר מצטבר (התקופה מול התקופה הקודמת בקו מקווקו) במקום קוצים יומיים עם מילוי.</li>
+      <li>"סופקו בזמן" – פס bullet עם קו יעד; "בהקפה" – חלוקת ותק בגווני כחול, כתום רק מעל 60 יום.</li>
+      <li>יעדים וקצב – כרטיס משלו: ערך / יעד, סימון "צפוי להיום", צפי לסוף החודש ותג "בפיגור" אחד.</li>
+      <li>דירוג – טבלה: מקום · שם · פס בשורה · סכום · חלק. רק הראשון בכחול כהה.</li>
+      <li>איחורים – מספר אחד, פס חלוקה בשלושה מצבים, טבלה מיושרת (אפסים באפור), ו"עבר מועד ולא נסגרה" כשורת התראה ולא קישור אדום.</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+/* נתונים מהצילום: הכנסות ליום (1–27.11), הזמנות ליום, תקופה קודמת */
+const N = 27;
+const rev = Array(N).fill(0); rev[14]=296; rev[21]=1240; rev[23]=1240; rev[24]=1240; rev[25]=1240; rev[26]=7412;
+const ord = Array(N).fill(0); ord[14]=1; ord[21]=1; ord[23]=1; ord[24]=1; ord[25]=1; ord[26]=7;
+const prevRev = Array(N).fill(0); prevRev[17]=800;
+const prevOrd = Array(N).fill(0); prevOrd[17]=1;
+const cum = a => a.reduce((o,v,i)=>(o.push((o[i-1]||0)+v),o),[]);
+
+/* זמן מימין לשמאל (RTL), כמו בגרף היומי הקיים */
+function line(vals, max, w, h, cls){
+  const pts = vals.map((v,i)=>`${(w - i/(vals.length-1)*w).toFixed(1)},${(h - v/max*h).toFixed(1)}`).join(' ');
+  return `<polyline points="${pts}" fill="none" ${cls} vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>`;
+}
+function cumSpark(cur, prev){
+  const c = cum(cur), p = cum(prev), max = Math.max(c[c.length-1], p[p.length-1]) || 1, w=200, h=34;
+  const end = c[c.length-1];
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+    ${line(p,max,w,h,'stroke="#8DA2BA" stroke-width="1.25" stroke-dasharray="3 3"')}
+    ${line(c,max,w,h,'stroke="#4FB0DC" stroke-width="2"')}
+    <circle cx="0" cy="${h - end/max*h}" r="3" fill="#fff"/></svg>`;
+}
+/* "לפני": קוצים יומיים עם מילוי, כמו היום */
+function oldSpark(vals){
+  const max = Math.max(...vals)||1, w=200, h=28;
+  const pts = vals.map((v,i)=>`${(w - i/(vals.length-1)*w).toFixed(1)},${(h - v/max*h*.9).toFixed(1)}`);
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="100%"><polygon points="0,${h} ${pts.join(' ')} ${w},${h}" fill="#E8F2F7"/><polyline points="${pts.join(' ')}" fill="none" stroke="#006491" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const L = s => `<bdi>${s}</bdi>`;
+const M = (v) => `<bdi><span class="cur">₪</span>${v}</bdi>`;
+
+const customers = [
+  ['קבוצת רימון הייטק','3,720',29,3],['אלפא מערכות בע"מ','3,380',27,3],['מרכז רפואי שקד','2,356',19,2],['סטודיו קו ישר','1,612',13,2],['בית ספר נווה עוז','1,600',13,2]
+];
+
+/* ---------------- לפני ---------------- */
+function before(){
+  return `
+  <div class="head"><h3>בורד</h3><p>נכון ל-17:54 · סכומים לפי תאריך אספקה וסכום Q, בלי ביטולים.</p></div>
+  <div class="pulse">
+    <div class="tile"><span class="lbl">הכנסות</span><span class="val">${L('₪12,668')}</span><span class="foot"><span class="up">▲ 1484%</span> מול אותם ימים בחודש שעבר</span>${oldSpark(rev)}</div>
+    <div class="tile"><span class="lbl">הזמנות</span><span class="val">${L('12')}</span><span class="foot"><span class="up">▲ 1100%</span> מול אותם ימים בחודש שעבר</span>${oldSpark(ord)}</div>
+    <div class="tile"><span class="lbl">סופקו בזמן</span><span class="val">${L('75%')}</span><span class="foot">▼ 25 נק' · באיחור 1</span><div class="bar"><span style="width:75%;background:var(--ok-fg)"></span></div></div>
+    <div class="tile"><span class="lbl">בהקפה לגבייה · עכשיו</span><span class="val">${L('₪7,040')}</span><span class="foot">6 הזמנות</span><div class="bar" style="background:none"><span style="flex:1;background:var(--brand-300)"></span></div></div>
+  </div>
+  <div class="grid">
+    <div class="sec">
+      <h4>מכירות</h4>
+      <div class="lead muted">ממוצע להזמנה ${L('₪1,056')} · ${L('+32%')}</div>
+      <div class="gt"><p class="muted" style="margin:0;font-weight:600;color:var(--gray-700)">יעדי החודש</p>
+        <div class="row"><span>הזמנות</span><b>${L('40%')}</b></div><div class="tr"><i style="width:40%"></i></div><span class="muted" style="font-size:12px">${L('12')} מתוך ${L('30')}</span>
+      </div>
+    </div>
+    <div class="sec">
+      <h4>עמידה בזמנים</h4>
+      <p class="lead stmt"><b>${L('75%')}</b> מההזמנות סופקו בזמן</p>
+      <p class="muted" style="margin:-10px 0 14px">באיחור 1 (25%) · מתוך 4 הזמנות שסופקו (מלא או חלקי)</p>
+      <div class="stack"><span style="flex:1;background:var(--gray-300)"></span><span style="flex:1;background:var(--urgent-fg)"></span><span style="flex:3;background:var(--ok-fg)"></span></div>
+      <ul class="stats">
+        <li><i style="background:var(--ok-fg)"></i>בזמן<b>3</b><span>75%</span></li>
+        <li><i style="background:var(--urgent-edge)"></i>איחור עד 15 דק'<b>0</b><span>0%</span></li>
+        <li><i style="background:var(--urgent-fg)"></i>איחור מעל 15 דק'<b>1</b><span>25%</span></li>
+        <li><i></i>מתוכן חלקית<b>1</b><span></span></li>
+        <li><i style="background:var(--gray-300)"></i>בוטלו<b>1</b><span></span></li>
+      </ul>
+      <div class="where"><p style="font-weight:600;color:var(--gray-700)">איפה היו איחורים</p><p><span>רמת גן – ביאליק</span><span class="muted">איחור אחד (מעל 15 דק') מתוך 1</span></p><a class="alert">הזמנה אחת שעבר מועדה עוד לא נסגרה</a></div>
+    </div>
+    <div class="sec">
+      <h4>לקוחות</h4>
+      <p class="lead">קבוצת רימון הייטק הוא הלקוח הגדול בתקופה, עם 29% מההכנסות.</p>
+      ${customers.map(c=>`<div class="rk"><div class="top"><span>${c[0]}</span><b>${L('₪'+c[1])}</b></div><div class="tr" style="justify-content:flex-start"><i style="width:${c[2]/29*100}%"></i></div><small>${c[2]}% מההכנסות · ${c[3]} הזמנות</small></div>`).join('')}
+    </div>
+    <div class="sec">
+      <h4>הצעות מחיר</h4>
+      <p class="lead">3 הצעות פתוחות בשווי ${L('₪2,547')}.</p>
+      <div style="display:flex;gap:24px;font-size:13px;color:var(--gray-600)"><div>אושרו וממתינות להזמנה<br><b style="font-size:20px;color:var(--gray-900)">1</b></div><div>לחזור ללקוח<br><b style="font-size:20px;color:var(--danger-fg)">2</b></div><div>תוקף נגמר בשלושה ימים<br><b style="font-size:20px;color:var(--gray-900)">0</b></div></div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- אחרי ---------------- */
+function after(phone){
+  return `
+  <div class="head">
+    <div><h3>בורד</h3><p>החודש · ${L('01.11–27.11')} · מול אותם ימים בחודש שעבר · נכון ל-${L('17:54')}</p></div>
+    <div class="seg"><span>השבוע</span><b>החודש</b><span>החודש הקודם</span><span>30 ימים</span><span>תאריכים</span></div>
+  </div>
+
+  <section class="band" aria-label="תמונת מצב">
+    <div class="band__cell">
+      <span class="band__lbl">הכנסות<em>מצטבר</em></span>
+      <span class="band__val">${M('12,668')}</span>
+      <span class="band__d"><span class="up">▲ פי 15.8</span>מול ${L('₪800')}</span>
+      ${cumSpark(rev, prevRev)}
+    </div>
+    <div class="band__cell">
+      <span class="band__lbl">הזמנות<em>מצטבר</em></span>
+      <span class="band__val">${L('12')}</span>
+      <span class="band__d"><span class="up">▲ פי 12</span>מול הזמנה אחת</span>
+      ${cumSpark(ord, prevOrd)}
+    </div>
+    <div class="band__cell">
+      <span class="band__lbl">סופקו בזמן<em>יעד ${L('90%')}</em></span>
+      <span class="band__val">${L('75%')}</span>
+      <span class="band__d"><span class="warn">▼ 25 נק'</span>3 מתוך 4</span>
+      <div class="bullet"><i style="width:75%"></i><u style="inset-inline-start:90%"></u></div>
+    </div>
+    <div class="band__cell">
+      <span class="band__lbl">בהקפה לגבייה<em>עכשיו</em></span>
+      <span class="band__val">${M('7,040')}</span>
+      <span class="band__d">6 הזמנות · הכל עד 30 יום</span>
+      <div class="aging"><span style="flex:1;background:var(--brand-sky)"></span></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="sec">
+      <div class="sec__h"><h4>יעדים וקצב</h4><span>יום 27 מתוך 30</span></div>
+      <p class="ans">בקצב הנוכחי החודש ייסגר ב-<b>13 הזמנות</b> – חסרות 17 ליעד.</p>
+      <div class="goal">
+        <span class="goal__name">הזמנות</span>
+        <span class="goal__fig"><b>${L('12')}</b> מתוך ${L('30')}</span>
+        <div class="gtrack"><i style="width:40%"></i><s style="inset-inline-start:90%"></s><u></u></div>
+        <span class="goal__note"><span class="tag behind">בפיגור</span>צפוי להיום ${L('27')} · צפי לסוף החודש ${L('13')}</span>
+      </div>
+      <div class="goal">
+        <span class="goal__name">סופקו בזמן</span>
+        <span class="goal__fig"><b>${L('75%')}</b> יעד ${L('90%')}</span>
+        <div class="gtrack"><i style="width:75%"></i><u style="inset-inline-end:auto;inset-inline-start:90%"></u></div>
+        <span class="goal__note"><span class="tag behind">מתחת ליעד</span>1 באיחור מתוך 4</span>
+      </div>
+      <div class="goal">
+        <span class="goal__name">הכנסות</span>
+        <span class="goal__fig"><b>${M('12,668')}</b> יעד ₪—</span>
+        <div class="gtrack is-ph"></div>
+        <span class="goal__note">לא נקבע יעד הכנסות לחודש</span>
+      </div>
+      <div class="key"><span><i></i>צפוי להיום</span><span><i class="g"></i>יעד</span></div>
+    </section>
+
+    <section class="sec">
+      <div class="sec__h"><h4>עמידה בזמנים</h4><a href="#">לרשימה</a></div>
+      <div class="late__top"><b>${L('1')}</b><span>איחור מתוך 4 שסופקו · ${L('25%')}</span></div>
+      <div class="hbar" role="img" aria-label="בזמן 3, איחור מעל 15 דקות 1">
+        <span style="flex:3;background:var(--ok-fg)"></span><span style="flex:1;background:var(--urgent-fg)"></span>
+      </div>
+      <table class="lt">
+        <tr><td><i class="sw" style="background:var(--ok-fg)"></i>בזמן</td><td class="c">3</td><td class="p">75%</td></tr>
+        <tr><td><i class="sw" style="background:var(--urgent-edge)"></i>איחור עד 15 דק'</td><td class="c zero">0</td><td class="p">—</td></tr>
+        <tr><td><i class="sw" style="background:var(--urgent-fg)"></i>איחור מעל 15 דק'</td><td class="c">1</td><td class="p">25%</td></tr>
+        <tr class="sub"><td><i class="sw" style="background:transparent"></i>מתוכן סופקו חלקית</td><td class="c">1</td><td class="p"></td></tr>
+        <tr class="sub"><td><i class="sw" style="background:var(--gray-300)"></i>בוטלו (לא נספרות)</td><td class="c">1</td><td class="p"></td></tr>
+      </table>
+      <div class="where"><h5>איפה</h5><p>רמת גן – ביאליק <span>1 מעל 15 דק' · מתוך 1</span></p></div>
+      <a class="flag" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>הזמנה אחת עבר מועדה ולא נסגרה<em>‹</em></a>
+    </section>
+
+    <section class="sec" style="${phone?'':'grid-column:1/-1'}">
+      <div class="sec__h"><h4>לקוחות</h4><span>5 לקוחות הזמינו בתקופה</span><a href="#">כל הלקוחות</a></div>
+      <p class="ans"><b>קבוצת רימון הייטק</b> מובילה עם 29% מההכנסות; חמשת הראשונים – כל ההכנסות.</p>
+      <div class="rank-h"><span>#</span><span>לקוח</span><span></span><span>הכנסות</span><span>חלק</span></div>
+      <ol class="rank">
+        ${customers.map((c,i)=>`<li><span class="no">${i+1}</span><span class="nm">${c[0]}<small>${c[3]} הזמנות</small></span><span class="tr"><i style="width:${c[2]/29*100}%"></i></span><span class="v">${M(c[1])}</span><span class="p">${c[2]}%</span></li>`).join('')}
+      </ol>
+    </section>
+  </div>`;
+}
+
+document.getElementById('before-desk').innerHTML = before();
+document.getElementById('before-phone').innerHTML = before();
+document.getElementById('after-desk').innerHTML = after(false);
+document.getElementById('after-phone').innerHTML = after(true);
+</script>
+</body>
+</html>

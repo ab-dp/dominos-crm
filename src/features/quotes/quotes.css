@@ -1,5 +1,5 @@
 /* ---------- סטטוס הצעה ---------- */
-.qstat { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; background: var(--gray-100); color: var(--gray-600); }
+.qstat { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; line-height: 1; border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; background: var(--gray-100); color: var(--gray-600); }
 .qstat--sent, .qstat--handling, .qstat--noanswer { background: var(--missing-bg); color: var(--missing-fg); }
 .qstat--approved { background: var(--ok-bg); color: var(--ok-fg); }
 .qstat--ordered { background: var(--brand-50); color: var(--brand-800); }
@@ -29,7 +29,7 @@
 .qe-locked { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-3); border-radius: var(--radius); background: var(--gray-100); color: var(--gray-900); font-size: var(--text-table); }
 .qe-sec { padding: var(--space-4) var(--space-4); }
 .qe-sec__title { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin: 0 0 var(--space-3); font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
-.qe-num { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--brand-600); color: var(--white); font-size: var(--text-label); font-family: var(--font-mono); }
+.qe-num { display: inline-block; min-width: 14px; color: var(--gray-500); font-size: var(--text-heading); font-weight: 600; font-variant-numeric: tabular-nums; }
 .qe-opt { font-size: var(--text-label); font-weight: 400; color: var(--gray-600); }
 .qe-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .qe-plsel { width: auto; min-width: 220px; }
@@ -98,7 +98,7 @@
 .qtrack__owner b { color: var(--gray-900); font-weight: 600; }
 .qtrack__acts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--gray-100); }
 .qtrack__acts:empty { display: none; }
-.qtag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
+.qtag { display: inline-flex; align-items: center; gap: var(--space-1); height: 20px; padding: 0 6px; line-height: 1; border-radius: var(--radius-tag); background: var(--gray-100); color: var(--gray-700); font-size: var(--text-micro); font-weight: 500; white-space: nowrap; }
 .qtag--due { background: var(--due); color: var(--white); }
 .qtrack__text { display: flex; align-items: baseline; gap: var(--space-1); }
 .qtrack__ic { display: inline-flex; flex: none; color: var(--gray-600); transform: translateY(2px); }
@@ -188,8 +188,8 @@
 /* ===================== שלב 5ב: עומק – ראש רשומה, ו"הגיע זמן לחזור" בצבע אחד ===================== */
 .qrec { margin: 0 0 var(--space-4); padding: var(--space-4) var(--space-5); border-radius: var(--radius-panel); background: var(--navy); color: var(--rec-text); display: grid; gap: var(--space-3); box-shadow: var(--shadow-card); }
 .qrec__row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-.qrec__title { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -.012em; line-height: 1.25; color: var(--white); }
-.qrec__id { color: var(--rec-muted); font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.qrec__title { margin: 0; font-size: var(--text-title); font-weight: 600; letter-spacing: var(--track-tight); line-height: var(--lh-tight); color: var(--white); }
+.qrec__id { color: var(--rec-muted); font-size: var(--text-heading); font-weight: 500; font-variant-numeric: tabular-nums; }
 .qrec__spacer { flex: 1; }
 .qrec__acts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .qrec__acts .btn--secondary { background: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .18); color: var(--white); }
@@ -208,13 +208,14 @@
 .qrec__facts dd.qrec__due { justify-self: start; padding: 0 var(--space-2); border-radius: var(--radius-tag); background: var(--due-bg); color: var(--due); font-weight: 600; }
 .qrec__sum { margin-inline-start: auto; display: inline-flex; align-items: baseline; gap: var(--space-2); }
 .qrec__sum small { font-size: var(--text-label); color: var(--rec-muted); }
-.qrec__sum b { font-size: 28px; font-weight: 600; color: var(--white); font-variant-numeric: tabular-nums; }
+.qrec__sum b { font-size: var(--text-display); letter-spacing: var(--track-tight); font-weight: 600; color: var(--white); font-variant-numeric: tabular-nums; }
 .qrec__sub { margin: 0; font-size: var(--text-label); color: var(--rec-muted); }
 .qrec .qstat { height: 24px; }
 
 /* כרטיס המעקב: אזור עבודה בולט, כותרת בכחול-לילה */
-.qtrack { border-top: 3px solid var(--navy); }
-.qtrack .qe-sec__title, .qe-sec__title { color: var(--navy); font-size: 16px; }
+/* שלב 9: בלי פס עליון; הסטטוס מוצג פעם אחת – בראש ההצעה */
+.qe-main .qtrack__head > .qstat, .qtrack--in-editor .qtrack__head > .qstat { display: none; }
+.qtrack .qe-sec__title, .qe-sec__title { color: var(--navy); font-size: var(--text-heading); }
 
 /* רשימה: "הגיע זמן לחזור" – רקע עדין בצבע אחד ותגית מלאה בולטת; "אין עדכון" (הצעה ישנה בלי תאריך) – נשאר כתום */
 .qlrow.is-due td { background: var(--due-bg); }

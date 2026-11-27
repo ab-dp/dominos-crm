@@ -184,7 +184,8 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
   const showOther = lines.some((l) => categoryOf(l) === OTHER);
   const tabs = [...CATEGORIES, ...(showOther ? [OTHER] : [])];
   const catLines = lines.filter((l) => categoryOf(l) === tab);
-  const pizza = tab === PIZZA || tab === OTHER;
+  // "אחר" עם הבוחר (מוצר כללי בטקסט חופשי) – בלי עמודות תוספות/חלוקה, אלא אם יש שורה ישנה עם תוספות או חלוקה
+  const pizza = tab === PIZZA || (tab === OTHER && (!outerTab || catLines.some((l) => l.toppings?.length || l.parts?.some((p) => p.trim()))));
   // שורה חדשה בפיצות ממשיכה את סוג הפיצה של השורה האחרונה
   const prevName = tab === PIZZA ? [...catLines].reverse().find((l) => l.name.trim())?.name.trim() ?? '' : '';
   const draft: Line = { key: draftKey, group: tab, name: '', qty: 0, unitPrice: 0 };
@@ -288,7 +289,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
               onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus((f) => (f?.key === l.key ? null : f)); }}>
               <div className={`ib-r ${isDraft ? 'is-draft' : ''}`} role="row">
                 <span className="ib-r__name">
-                  {tab === OTHER && l.group && l.group !== 'כללי' && <span className="ib-r__old">{l.group}</span>}
+                  {tab === OTHER && l.group && l.group !== 'כללי' && l.group !== OTHER && <span className="ib-r__old">{l.group}</span>}
                   <input className={`input input--sm ${bad && !l.name.trim() ? 'is-invalid' : ''}`} list={tab === OTHER ? undefined : `ib-names-${CATEGORIES.indexOf(tab)}`} value={l.name}
                     placeholder={isDraft && prevName ? prevName : pizza ? 'למשל: משפחתית' : 'מוצר'}
                     onChange={(e) => change(l.key, { name: e.target.value, autoName: undefined })} aria-label={`${tab === PIZZA ? 'סוג פיצה' : 'מוצר'} – ${label}`} aria-invalid={bad && !l.name.trim() ? true : undefined} {...on(l.key, 'name')} />
@@ -349,7 +350,6 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
       </div>
       )}
       <p className="ib-foot">
-        <span className="ib-hint">{tab === PIZZA ? 'Enter – לתוספת הבאה באותו סוג · Enter בשורה ריקה – סוג פיצה חדש · כמה תוספות – עם פסיק' : `Enter – לשורה הבאה${pizza ? ' · כמה תוספות – עם פסיק' : ''}`}</span>
         {tab !== PIZZA && count(tab) > 0 && <b>סה״כ {tab}: <Ltr>{count(tab)}</Ltr></b>}
       </p>
       {CATEGORIES.map((c, i) => <datalist key={c} id={`ib-names-${i}`}>{[...new Set([...catalog.filter((x) => x.category === c).map((x) => x.name), ...hints.names(c)])].map((h) => <option key={h} value={h} />)}</datalist>)}

@@ -44,7 +44,7 @@
 .brow--edit td { background: var(--brand-50) !important; }
 .brow-msg td { background: var(--brand-50); height: auto !important; padding-bottom: var(--space-3) !important; white-space: normal; }
 .br-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); height: 46px; }
-.cluster-tag { display: inline-flex; align-items: center; gap: var(--space-1); height: 24px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-label); font-weight: 500; line-height: 1; white-space: nowrap; background: var(--gray-100); }
+.cluster-tag { display: inline-flex; align-items: center; gap: var(--space-1); height: 20px; padding: 0 6px; border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; background: var(--gray-100); }
 
 /* ---------- "האם התכוונת לזה?" ---------- */
 .dupe {
@@ -71,3 +71,10 @@
   .br-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .dupe { animation: none; } }
+
+/* שלב 9: אשכול – טקסט רגיל; המתג ניטרלי, והמילה מופיעה רק כש"לא פעיל" (לא "תקין" ירוק בכל שורה) */
+.cluster-tag { height: auto; padding: 0; background: none !important; font-size: var(--text-table); font-weight: 400; color: var(--gray-700) !important; }
+.switch.is-on { color: var(--gray-700); }
+.switch.is-on .switch__track { background: var(--gray-700); }
+.switch.is-on .switch__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.switch:not(.is-on) .switch__label { color: var(--urgent-fg); font-weight: 500; }

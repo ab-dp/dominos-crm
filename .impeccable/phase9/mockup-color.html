@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>פלטת צבע – לפני ואחרי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== "לפני": הערכים האמיתיים מ-src/design/tokens.css ===== */
+.before {
+  --navy:#0B2340; --navy-deep:#081A31; --navy-2:#143462; --navy-3:#1B3D6B;
+  --navy-text:#C3D1E0; --navy-muted:#8DA2BA; --rec-text:#E3EBF3; --rec-muted:#A3B6CB; --rec-line:rgb(255 255 255/.12);
+  --page:#E8ECF1; --zone:#F3F5F8; --zone-line:#E2E7ED;
+  --due:#0F6E6E; --due-bg:#DCEFF3; --due-count-bg:#2A9D9D; --due-count-fg:#FFFFFF;
+  --brand-50:#E8F2F7; --brand-100:#CFE4EF; --brand-300:#8DC0DA; --brand-500:#8DC0DA; --brand-600:#006491; --brand-700:#00567D; --brand-800:#003F5C;
+  --accent-dark:#4FB0DC; --brand-red:#E31837;
+  --g25:#F5F7F9; --g50:#F8FAFC; --g75:#EEF1F4; --g100:#E6EAEF; --g200:#D6DCE3; --g300:#C2CAD4; --g400:#8A96A5; --g500:#677585; --g600:#546272; --g700:#3A4756; --g900:#0F1B2A;
+  --danger-bg:#FCEBEE; --danger-fg:#C0102C; --urgent-bg:#FDF0E3; --urgent-fg:#A34A05; --urgent-edge:#E08A3C;
+  --missing-bg:#FBF4D9; --missing-fg:#7A5D00; --ok-bg:#E6F3EC; --ok-fg:#16704A; --hold-bg:#F2EEFA; --hold-fg:#5B3A9E;
+  --late-minor:#E08A3C; --late-major:#A34A05; --single-bar:#8DC0DA;
+  --on-dark-danger:#FFB4AB; --on-dark-warn:#F5C08A; --on-dark-accent:#7CC2E6; --on-dark-accent-text:#CDEAF8;
+  --rail-bg:linear-gradient(180deg,#0D2847 0%,#0B2340 38%,#081A31 100%);
+  --rail-active:linear-gradient(180deg,rgb(255 255 255/.12),rgb(255 255 255/.08));
+}
+/* ===== "אחרי": הפלטה המוצעת ===== */
+.after {
+  --navy:#0B2340; --navy-deep:#081A31; --navy-2:#143462; --navy-3:#1B3D6B;
+  --navy-text:#C3D1E0; --navy-muted:#A3B6CB; --rec-text:#E3EBF3; --rec-muted:#A3B6CB; --rec-line:rgb(255 255 255/.12);
+  --page:#E4E9EE; --zone:#F1F4F7; --zone-line:#E4E9EE;
+  --due:#0F6E6E; --due-bg:#DCEFF3; --due-count-bg:#6FC7C2; --due-count-fg:#0B2340;
+  --brand-50:#E8F2F7; --brand-100:#CFE4EF; --brand-300:#8DC0DA; --brand-500:#3D8AB6; --brand-600:#006491; --brand-700:#00567D; --brand-800:#003F5C;
+  --accent-dark:#7CC2E6; --brand-red:#E31837;
+  --g25:#F7F9FA; --g50:#F7F9FA; --g75:#ECEFF3; --g100:#E4E9EE; --g200:#D5DBE2; --g300:#C1C9D2; --g400:#8A96A5; --g500:#626E7C; --g600:#546272; --g700:#3A4756; --g900:#0F1B2A;
+  --danger-bg:#FCEBEE; --danger-fg:#C0102C; --urgent-bg:#FDF0E3; --urgent-fg:#A34A05; --urgent-edge:#E08A3C;
+  --missing-bg:#FBF4D9; --missing-fg:#7A5D00; --ok-bg:#E6F3EC; --ok-fg:#16704A; --hold-bg:#F2EEFA; --hold-fg:#5B3A9E;
+  --late-minor:#C76A1A; --late-major:#8A3A00; --single-bar:#006491;
+  --on-dark-danger:#FFB4AB; --on-dark-warn:#F5C08A; --on-dark-accent:#7CC2E6; --on-dark-accent-text:#E3EBF3;
+  --rail-bg:#0B2340;
+  --rail-active:#143462;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: 'IBM Plex Sans Hebrew', 'Segoe UI', system-ui, sans-serif; background: #FFFFFF; color: #0F1B2A; font-size: 15px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1440px; margin: 0 auto; padding: 32px 24px 64px; }
+h1 { margin: 0 0 4px; font-size: 24px; font-weight: 600; letter-spacing: -0.012em; }
+.sub { margin: 0 0 32px; font-size: 13px; color: #546272; }
+h2.sec { margin: 40px 0 12px; font-size: 16px; font-weight: 600; color: #0B2340; padding-bottom: 10px; border-bottom: 1px solid #D5DBE2; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.col { min-width: 0; padding: 20px; border-radius: 8px; background: var(--page); }
+.col__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+.col__head b { font-size: 13px; font-weight: 600; color: var(--g700); }
+.col__head span { font-size: 12px; color: var(--g600); }
+bdi { unicode-bidi: isolate; }
+
+/* לוח פלטה */
+.sw-group { margin-bottom: 14px; }
+.sw-group h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--g600); }
+.sw-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.sw { width: 44px; height: 36px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgb(15 27 42/.08); position: relative; }
+.sw small { position: absolute; inset: auto 0 -16px; font-size: 9px; color: var(--g600); text-align: center; direction: ltr; white-space: nowrap; overflow: hidden; }
+.sw-row { padding-bottom: 16px; }
+.sw--grad { background: var(--rail-bg); }
+.count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.rail-demo { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; background: var(--rail-bg); color: var(--navy-text); font-size: 14px; }
+.rail-demo .item { display: flex; align-items: center; justify-content: space-between; flex: 1; padding: 8px 10px; border-radius: 6px; }
+.rail-demo .item.is-active { background: var(--rail-active); color: #fff; }
+.rail-demo .ico { width: 10px; height: 10px; border-radius: 2px; background: var(--accent-dark); margin-inline-end: 8px; display: inline-block; }
+.rail-demo .muted { color: var(--navy-muted); font-size: 12px; }
+
+/* שורת טבלה */
+.sheet { background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgb(15 27 42/.06), 0 1px 2px rgb(15 27 42/.05); overflow: hidden; }
+.filters { display: flex; gap: 8px; padding: 10px 12px; background: var(--zone); border-bottom: 1px solid var(--zone-line); }
+.chip { height: 28px; display: inline-flex; align-items: center; padding: 0 10px; border: 1px solid var(--g200); border-radius: 6px; background: #fff; font-size: 13px; font-weight: 500; color: var(--g700); }
+.search { flex: 1; height: 28px; display: flex; align-items: center; padding: 0 10px; border: 1px solid var(--g300); border-radius: 6px; background: #fff; font-size: 13px; color: var(--g500); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { height: 36px; padding: 0 12px; background: var(--g50); border-bottom: 1px solid var(--g100); font-size: 12px; font-weight: 500; color: var(--g600); text-align: right; }
+td { height: 56px; padding: 0 12px; border-bottom: 1px solid var(--g75); vertical-align: middle; }
+tr.lane-type td:first-child { box-shadow: inset -3px 0 0 var(--brand-600); }
+tr.lane-late td:first-child { box-shadow: inset -3px 0 0 var(--danger-fg); }
+tr.lane-done td { background: var(--ok-bg); }
+tr.lane-hold td { background: var(--hold-bg); }
+tr.is-hover td { background: var(--g25); }
+.cust b { display: block; font-weight: 600; }
+.cust span { font-size: 12px; color: var(--g600); }
+.time { font-weight: 600; }
+.tag { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.t-danger { background: var(--danger-bg); color: var(--danger-fg); }
+.t-urgent { background: var(--urgent-bg); color: var(--urgent-fg); }
+.t-missing { background: var(--missing-bg); color: var(--missing-fg); }
+.t-ok { background: var(--ok-bg); color: var(--ok-fg); }
+.t-hold { background: var(--hold-bg); color: var(--hold-fg); }
+.t-due { background: var(--due); color: #fff; }
+.health { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+.health::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.h-danger { color: var(--danger-fg); } .h-urgent { color: var(--urgent-fg); } .h-missing { color: var(--missing-fg); }
+.act { color: var(--brand-600); font-weight: 500; font-size: 13px; }
+
+/* ראש רשומה */
+.rec { padding: 20px 24px; border-radius: 8px; background: var(--navy); color: var(--rec-text); }
+.rec__top { display: flex; align-items: center; gap: 12px; }
+.rec__top h3 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.012em; color: #fff; }
+.rec__top .id { font-size: 16px; font-weight: 500; color: var(--rec-muted); }
+.rec__acts { margin-inline-start: auto; display: flex; gap: 6px; }
+.rbtn { height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 6px; border: 1px solid rgb(255 255 255/.18); background: rgb(255 255 255/.06); color: var(--rec-text); font-size: 13px; font-weight: 500; }
+.rbtn--cancel { border-color: transparent; background: transparent; color: var(--on-dark-danger); }
+.rbtn--brand { border-color: var(--on-dark-accent); background: transparent; color: var(--on-dark-accent-text); }
+.rbtn--primary { border-color: rgb(255 255 255/.28); background: var(--brand-600); color: #fff; }
+.facts { display: flex; margin-top: 14px; }
+.facts > div { padding-inline: 16px; border-inline-start: 1px solid var(--rec-line); }
+.facts > div:first-child { padding-inline-start: 0; border: 0; }
+.facts dt { font-size: 12px; font-weight: 500; color: var(--rec-muted); }
+.facts dd { margin: 0; font-size: 14px; font-weight: 500; color: #fff; }
+.facts dd.miss { color: var(--on-dark-warn); }
+.track { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rec-line); font-size: 13px; }
+.track i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.track .done { background: #2E9E62; } .track .now { background: #fff; box-shadow: 0 0 0 3px rgb(255 255 255/.25); } .track .next { border: 1.5px solid var(--rec-muted); }
+.track .ln { width: 28px; height: 1px; background: var(--rec-line); }
+.track .amt { margin-inline-start: auto; font-size: 26px; font-weight: 600; color: #fff; }
+.track .amt small { font-size: 12px; font-weight: 500; color: var(--rec-muted); margin-inline-end: 6px; }
+.dtag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; background: var(--urgent-bg); color: var(--urgent-fg); font-size: 12px; font-weight: 500; }
+
+/* כרטיס מדד מהבורד */
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tile { padding: 16px 20px; border-radius: 8px; background: #fff; box-shadow: 0 0 0 1px var(--g100), 0 1px 2px rgb(15 27 42/.06); }
+.tile__label { font-size: 13px; font-weight: 500; color: var(--g600); }
+.tile__num { font-size: 28px; font-weight: 600; line-height: 1.2; margin: 2px 0; }
+.tile__trend { font-size: 12px; color: var(--g600); }
+.tile__trend b { font-weight: 500; color: var(--ok-fg); }
+.bars { display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-top: 12px; padding-bottom: 1px; border-bottom: 1px solid var(--g75); }
+.bars span { flex: 1; border-radius: 3px 3px 0 0; }
+.bars .cur { background: var(--brand-600); }
+.bars .prev { background: var(--g300); }
+.legend { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--g700); }
+.legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px; }
+.stack { display: flex; gap: 2px; height: 8px; margin-top: 14px; }
+.stack span { border-radius: 2px; }
+.single { height: 6px; margin-top: 14px; border-radius: 4px; background: var(--g100); }
+.single span { display: block; height: 100%; width: 72%; border-radius: 4px; background: var(--single-bar); }
+.age { display: flex; gap: 2px; height: 8px; margin-top: 12px; }
+.age span { border-radius: 2px; }
+.notes { margin-top: 14px; font-size: 12px; color: var(--g600); }
+.notes li { margin-bottom: 2px; }
+
+.diff { margin: 8px 0 0; padding: 0 18px 0 0; font-size: 13px; color: #3A4756; }
+.diff li { margin-bottom: 4px; }
+
+@media (max-width: 900px) {
+  .cols, .kpis { grid-template-columns: 1fr; }
+  .facts { flex-wrap: wrap; row-gap: 8px; }
+  .rec__top { flex-wrap: wrap; }
+  .tbl-scroll { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>פלטת צבע – לפני ואחרי</h1>
+  <p class="sub">שלב 9, סוכן צבע וגוון. ימין: הערכים מ-tokens.css היום. שמאל: ההצעה. אותה זהות, פחות ערכים, ניגודיות AA.</p>
+
+  <!-- ============ 1. לוח הפלטה ============ -->
+  <h2 class="sec">1. לוח הפלטה</h2>
+  <div class="cols">
+    <section class="col before">
+      <div class="col__head"><b>לפני</b><span>17 כחולים · 13 אפורים · 2 גרדיאנטים</span></div>
+      <div class="sw-group"><h3>כחול-לילה (כולל גרדיאנט התפריט וכפילויות)</h3>
+        <div class="sw-row">
+          <div class="sw sw--grad"><small>gradient</small></div>
+          <div class="sw" style="background:#0D2847"><small>#0D2847</small></div>
+          <div class="sw" style="background:#0B2340"><small>#0B2340</small></div>
+          <div class="sw" style="background:#081A31"><small>#081A31</small></div>
+          <div class="sw" style="background:#081A30"><small>#081A30</small></div>
+          <div class="sw" style="background:#12305A"><small>#12305A</small></div>
+          <div class="sw" style="background:#143462"><small>#143462</small></div>
+          <div class="sw" style="background:#1B3D6B"><small>#1B3D6B</small></div>
+          <div class="sw" style="background:#1B4F7E"><small>#1B4F7E</small></div>
+        </div></div>
+      <div class="sw-group"><h3>תכלת על כהה (שלושה לאותו תפקיד)</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#4FB0DC"><small>#4FB0DC</small></div>
+          <div class="sw" style="background:#7CC2E6"><small>#7CC2E6</small></div>
+          <div class="sw" style="background:#CDEAF8"><small>#CDEAF8</small></div>
+        </div></div>
+      <div class="sw-group"><h3>כחול מותג</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#003F5C"><small>#003F5C</small></div>
+          <div class="sw" style="background:#00567D"><small>#00567D</small></div>
+          <div class="sw" style="background:#006491"><small>#006491</small></div>
+          <div class="sw" style="background:#8DC0DA"><small>#8DC0DA</small></div>
+          <div class="sw" style="background:#CFE4EF"><small>#CFE4EF</small></div>
+          <div class="sw" style="background:#E8F2F7"><small>#E8F2F7</small></div>
+        </div></div>
+      <div class="sw-group"><h3>אפורים בהירים (7 כמעט זהים)</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#F8FAFC"><small>#F8FAFC</small></div>
+          <div class="sw" style="background:#F5F7F9"><small>#F5F7F9</small></div>
+          <div class="sw" style="background:#F3F5F8"><small>#F3F5F8</small></div>
+          <div class="sw" style="background:#EEF1F4"><small>#EEF1F4</small></div>
+          <div class="sw" style="background:#E8ECF1"><small>#E8ECF1</small></div>
+          <div class="sw" style="background:#E6EAEF"><small>#E6EAEF</small></div>
+          <div class="sw" style="background:#E2E7ED"><small>#E2E7ED</small></div>
+        </div></div>
+      <div class="sw-group"><h3>אפורים כהים (gray-800 לא מוגדר)</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#D6DCE3"><small>#D6DCE3</small></div>
+          <div class="sw" style="background:#C2CAD4"><small>#C2CAD4</small></div>
+          <div class="sw" style="background:#A9B3BF"><small>#A9B3BF</small></div>
+          <div class="sw" style="background:#8A96A5"><small>#8A96A5</small></div>
+          <div class="sw" style="background:#677585"><small>#677585</small></div>
+          <div class="sw" style="background:#546272"><small>#546272</small></div>
+          <div class="sw" style="background:#3A4756"><small>#3A4756</small></div>
+          <div class="sw" style="background:repeating-linear-gradient(45deg,#fff 0 4px,#E6EAEF 4px 8px)"><small>800 ?</small></div>
+          <div class="sw" style="background:#0F1B2A"><small>#0F1B2A</small></div>
+        </div></div>
+      <div class="sw-group"><h3>מצבים: fg · edge / mark</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#C0102C"><small>danger</small></div>
+          <div class="sw" style="background:#A34A05"><small>urgent</small></div>
+          <div class="sw" style="background:#E08A3C"><small>edge 2.67</small></div>
+          <div class="sw" style="background:#7A5D00"><small>missing</small></div>
+          <div class="sw" style="background:#16704A"><small>ok</small></div>
+          <div class="sw" style="background:#0F6E6E"><small>due</small></div>
+          <div class="sw" style="background:#2A9D9D"><small>#2A9D9D</small></div>
+          <div class="sw" style="background:#5B3A9E"><small>hold</small></div>
+        </div></div>
+      <div class="rail-demo">
+        <div class="item is-active"><span><i class="ico"></i>הצעות מחיר</span><span class="count" style="background:var(--due-count-bg);color:var(--due-count-fg)">2</span></div>
+        <div class="item"><span>הגדרות <span class="muted">· שקט</span></span><span class="count" style="background:rgb(255 255 255/.12);color:#fff">1</span></div>
+      </div>
+      <ul class="diff"><li>מונה "חזרה": לבן על #2A9D9D = 3.28, נכשל ב-AA.</li></ul>
+    </section>
+
+    <section class="col after">
+      <div class="col__head"><b>אחרי</b><span>11 כחולים · 13 אפורים · 0 גרדיאנטים</span></div>
+      <div class="sw-group"><h3>כחול-לילה: navy-950 · 900 · 800 · 700, שטוח</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#081A31"><small>950</small></div>
+          <div class="sw" style="background:#0B2340"><small>900</small></div>
+          <div class="sw" style="background:#143462"><small>800</small></div>
+          <div class="sw" style="background:#1B3D6B"><small>700</small></div>
+        </div></div>
+      <div class="sw-group"><h3>על רקע כהה: on-dark-1 · 2 · 3 · accent · danger · warn · due</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#E3EBF3"><small>1</small></div>
+          <div class="sw" style="background:#C3D1E0"><small>2</small></div>
+          <div class="sw" style="background:#A3B6CB"><small>3</small></div>
+          <div class="sw" style="background:#7CC2E6"><small>accent</small></div>
+          <div class="sw" style="background:#FFB4AB"><small>danger</small></div>
+          <div class="sw" style="background:#F5C08A"><small>warn</small></div>
+          <div class="sw" style="background:#6FC7C2"><small>due</small></div>
+        </div></div>
+      <div class="sw-group"><h3>כחול מותג: 800 · 700 · 600 · 500 (חדש) · 300 · 100 · 50</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#003F5C"><small>800</small></div>
+          <div class="sw" style="background:#00567D"><small>700</small></div>
+          <div class="sw" style="background:#006491"><small>600</small></div>
+          <div class="sw" style="background:#3D8AB6"><small>500 new</small></div>
+          <div class="sw" style="background:#8DC0DA"><small>300</small></div>
+          <div class="sw" style="background:#CFE4EF"><small>100</small></div>
+          <div class="sw" style="background:#E8F2F7"><small>50</small></div>
+        </div></div>
+      <div class="sw-group"><h3>אפורים בהירים: 25 · 50 (zone) · 75 · 100 (page/line)</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#F7F9FA"><small>#F7F9FA</small></div>
+          <div class="sw" style="background:#F1F4F7"><small>#F1F4F7</small></div>
+          <div class="sw" style="background:#ECEFF3"><small>#ECEFF3</small></div>
+          <div class="sw" style="background:#E4E9EE"><small>#E4E9EE</small></div>
+        </div></div>
+      <div class="sw-group"><h3>אפורים כהים: 200 עד 900, כולל 800</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#D5DBE2"><small>200</small></div>
+          <div class="sw" style="background:#C1C9D2"><small>300</small></div>
+          <div class="sw" style="background:#A9B3BF"><small>350</small></div>
+          <div class="sw" style="background:#8A96A5"><small>400</small></div>
+          <div class="sw" style="background:#626E7C"><small>500</small></div>
+          <div class="sw" style="background:#546272"><small>600</small></div>
+          <div class="sw" style="background:#3A4756"><small>700</small></div>
+          <div class="sw" style="background:#253140"><small>800</small></div>
+          <div class="sw" style="background:#0F1B2A"><small>900</small></div>
+        </div></div>
+      <div class="sw-group"><h3>מצבים: fg · mark (לגרף, ≥3:1)</h3>
+        <div class="sw-row">
+          <div class="sw" style="background:#C0102C"><small>danger</small></div>
+          <div class="sw" style="background:#A34A05"><small>urgent</small></div>
+          <div class="sw" style="background:#C76A1A"><small>mark 3.8</small></div>
+          <div class="sw" style="background:#8A3A00"><small>strong</small></div>
+          <div class="sw" style="background:#7A5D00"><small>missing</small></div>
+          <div class="sw" style="background:#16704A"><small>ok</small></div>
+          <div class="sw" style="background:#0F6E6E"><small>due</small></div>
+          <div class="sw" style="background:#5B3A9E"><small>hold</small></div>
+        </div></div>
+      <div class="rail-demo">
+        <div class="item is-active"><span><i class="ico"></i>הצעות מחיר</span><span class="count" style="background:var(--due-count-bg);color:var(--due-count-fg)">2</span></div>
+        <div class="item"><span>הגדרות <span class="muted">· שקט</span></span><span class="count" style="background:rgb(255 255 255/.12);color:#fff">1</span></div>
+      </div>
+      <ul class="diff"><li>מונה "חזרה": navy על #6FC7C2 = 8.0. תפריט שטוח, פריט נבחר navy-800.</li></ul>
+    </section>
+  </div>
+
+  <!-- ============ 2. שורות טבלת הזמנות ============ -->
+  <h2 class="sec">2. טבלת הזמנות: Q-Lane, תגיות שלב וחומרה</h2>
+  <div class="cols">
+    <section class="col before">
+      <div class="col__head"><b>לפני</b><span>page #E8ECF1 · zone #F3F5F8 · placeholder 4.31</span></div>
+      <div class="sheet">
+        <div class="filters"><span class="chip">סינון</span><span class="search">סינון בטבלה: לקוח, מס' הזמנה, Q</span></div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>שעה</th><th>לקוח</th><th>שלב</th><th>תקינות</th><th>פעולה</th></tr></thead>
+          <tbody>
+            <tr class="lane-late"><td class="time"><bdi>19:15</bdi></td><td class="cust"><b>קבוצת רימון הייטק</b><span>לא הועברה ל-Q</span></td><td><span class="tag" style="background:var(--g100);color:var(--g700)">פתוחה</span></td><td><span class="health h-danger">חריגה</span></td><td class="act">הקלד ל-Q</td></tr>
+            <tr class="lane-hold"><td class="time"><bdi>19:30</bdi></td><td class="cust"><b>סטודיו קו ישר</b><span>אשראי לא חויב</span></td><td><span class="tag t-hold">בהמתנה</span></td><td><span class="health h-urgent">דחוף</span></td><td class="act">ניסיתי שוב</td></tr>
+            <tr class="lane-type is-hover"><td class="time"><bdi>22:00</bdi></td><td class="cust"><b>בית ספר נווה עוז</b><span>חסר: תעודת רכש</span></td><td><span class="tag" style="background:var(--g100);color:var(--g700)">פתוחה</span></td><td><span class="health h-missing">חסר</span></td><td class="act">הקלד ל-Q</td></tr>
+            <tr class="lane-done"><td class="time"><bdi>16:30</bdi></td><td class="cust"><b>מרכז רפואי שקד</b><span>Q <bdi>cs701</bdi></span></td><td><span class="tag t-ok">הוקלד ל-Q</span></td><td></td><td class="act">סמן סופקה</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+    <section class="col after">
+      <div class="col__head"><b>אחרי</b><span>page #E4E9EE · zone #F1F4F7 · placeholder 4.7</span></div>
+      <div class="sheet">
+        <div class="filters"><span class="chip">סינון</span><span class="search">סינון בטבלה: לקוח, מס' הזמנה, Q</span></div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>שעה</th><th>לקוח</th><th>שלב</th><th>תקינות</th><th>פעולה</th></tr></thead>
+          <tbody>
+            <tr class="lane-late"><td class="time"><bdi>19:15</bdi></td><td class="cust"><b>קבוצת רימון הייטק</b><span>לא הועברה ל-Q</span></td><td><span class="tag" style="background:var(--g100);color:var(--g700)">פתוחה</span></td><td><span class="health h-danger">חריגה</span></td><td class="act">הקלד ל-Q</td></tr>
+            <tr class="lane-hold"><td class="time"><bdi>19:30</bdi></td><td class="cust"><b>סטודיו קו ישר</b><span>אשראי לא חויב</span></td><td><span class="tag t-hold">בהמתנה</span></td><td><span class="health h-urgent">דחוף</span></td><td class="act">ניסיתי שוב</td></tr>
+            <tr class="lane-type is-hover"><td class="time"><bdi>22:00</bdi></td><td class="cust"><b>בית ספר נווה עוז</b><span>חסר: תעודת רכש</span></td><td><span class="tag" style="background:var(--g100);color:var(--g700)">פתוחה</span></td><td><span class="health h-missing">חסר</span></td><td class="act">הקלד ל-Q</td></tr>
+            <tr class="lane-done"><td class="time"><bdi>16:30</bdi></td><td class="cust"><b>מרכז רפואי שקד</b><span>Q <bdi>cs701</bdi></span></td><td><span class="tag t-ok">הוקלד ל-Q</span></td><td></td><td class="act">סמן סופקה</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ 3. ראש רשומה ============ -->
+  <h2 class="sec">3. ראש רשומה בכחול-לילה</h2>
+  <div class="cols">
+    <section class="col before">
+      <div class="col__head"><b>לפני</b><span>4 ערכים קשיחים ב-OrderPanel.css</span></div>
+      <div class="rec">
+        <div class="rec__top"><h3>קבוצת רימון הייטק</h3><span class="id">#<bdi>1002</bdi></span>
+          <div class="rec__acts"><span class="rbtn">עריכה</span><span class="rbtn rbtn--cancel">ביטול הזמנה</span><span class="rbtn rbtn--brand">לרישום Q</span></div></div>
+        <dl class="facts">
+          <div><dt>מועד</dt><dd>שישי <bdi>27.11, 19:15</bdi></dd></div>
+          <div><dt>סניף · אספקה</dt><dd>רמת גן · משלוח</dd></div>
+          <div><dt>איש קשר</dt><dd>יואב שגיא</dd></div>
+          <div><dt>תעודת רכש</dt><dd class="miss">חסר</dd></div>
+        </dl>
+        <div class="track"><i class="done"></i>פתוחה<span class="ln"></span><i class="now"></i>הוקלד ל-Q<span class="ln"></span><i class="next"></i>סופקה
+          <span class="dtag">לעדכן בתפעול</span><span class="amt"><small>סכום לחיוב</small>₪—</span></div>
+      </div>
+    </section>
+    <section class="col after">
+      <div class="col__head"><b>אחרי</b><span>on-dark-danger · on-dark-warn · on-dark-accent</span></div>
+      <div class="rec">
+        <div class="rec__top"><h3>קבוצת רימון הייטק</h3><span class="id">#<bdi>1002</bdi></span>
+          <div class="rec__acts"><span class="rbtn">עריכה</span><span class="rbtn rbtn--cancel">ביטול הזמנה</span><span class="rbtn rbtn--brand">לרישום Q</span></div></div>
+        <dl class="facts">
+          <div><dt>מועד</dt><dd>שישי <bdi>27.11, 19:15</bdi></dd></div>
+          <div><dt>סניף · אספקה</dt><dd>רמת גן · משלוח</dd></div>
+          <div><dt>איש קשר</dt><dd>יואב שגיא</dd></div>
+          <div><dt>תעודת רכש</dt><dd class="miss">חסר</dd></div>
+        </dl>
+        <div class="track"><i class="done"></i>פתוחה<span class="ln"></span><i class="now"></i>הוקלד ל-Q<span class="ln"></span><i class="next"></i>סופקה
+          <span class="dtag">לעדכן בתפעול</span><span class="amt"><small>סכום לחיוב</small>₪—</span></div>
+      </div>
+      <ul class="diff"><li>כמעט אותו מראה בכוונה: הערכים עוברים לטוקנים בשם, ו-#CDEAF8 מתאחד עם on-dark-1.</li></ul>
+    </section>
+  </div>
+
+  <!-- ============ 4. בורד ============ -->
+  <h2 class="sec">4. כרטיסי מדד מהבורד וגרף קטן</h2>
+  <div class="cols">
+    <section class="col before">
+      <div class="col__head"><b>לפני</b><span>פס יחיד 1.97 · איחור קצר 2.67</span></div>
+      <div class="kpis">
+        <div class="tile">
+          <div class="tile__label">הכנסות</div>
+          <div class="tile__num">₪—</div>
+          <div class="tile__trend"><b>▲ <bdi>12%</bdi></b> מול אותם ימים בחודש שעבר</div>
+          <div class="bars"><span class="prev" style="height:40%"></span><span class="cur" style="height:55%"></span><span class="prev" style="height:52%"></span><span class="cur" style="height:70%"></span><span class="prev" style="height:35%"></span><span class="cur" style="height:48%"></span><span class="prev" style="height:60%"></span><span class="cur" style="height:92%"></span></div>
+          <div class="legend"><span><i style="background:var(--brand-600)"></i>התקופה</span><span><i style="background:var(--g300)"></i>אותם ימים בחודש שעבר</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile__label">סופקו בזמן</div>
+          <div class="tile__num"><bdi>75%</bdi></div>
+          <div class="stack"><span style="flex:6;background:var(--ok-fg)"></span><span style="flex:1;background:var(--late-minor)"></span><span style="flex:1;background:var(--late-major)"></span><span style="flex:1;background:var(--g300)"></span></div>
+          <div class="legend"><span><i style="background:var(--ok-fg)"></i>בזמן</span><span><i style="background:var(--late-minor)"></i>עד 15 דק'</span><span><i style="background:var(--late-major)"></i>מעל 15</span></div>
+          <div class="tile__label" style="margin-top:14px">בהקפה לגבייה</div>
+          <div class="single"><span></span></div>
+          <div class="age"><span style="flex:5;background:var(--brand-300)"></span><span style="flex:2;background:var(--brand-600)"></span><span style="flex:1;background:var(--urgent-fg)"></span></div>
+          <div class="legend"><span><i style="background:var(--brand-300)"></i>עד 30</span><span><i style="background:var(--brand-600)"></i>31–60</span><span><i style="background:var(--urgent-fg)"></i>מעל 60</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="col after">
+      <div class="col__head"><b>אחרי</b><span>validator: עבר הכל</span></div>
+      <div class="kpis">
+        <div class="tile">
+          <div class="tile__label">הכנסות</div>
+          <div class="tile__num">₪—</div>
+          <div class="tile__trend"><b>▲ <bdi>12%</bdi></b> מול אותם ימים בחודש שעבר</div>
+          <div class="bars"><span class="prev" style="height:40%"></span><span class="cur" style="height:55%"></span><span class="prev" style="height:52%"></span><span class="cur" style="height:70%"></span><span class="prev" style="height:35%"></span><span class="cur" style="height:48%"></span><span class="prev" style="height:60%"></span><span class="cur" style="height:92%"></span></div>
+          <div class="legend"><span><i style="background:var(--brand-600)"></i>התקופה</span><span><i style="background:var(--g300)"></i>אותם ימים בחודש שעבר</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile__label">סופקו בזמן</div>
+          <div class="tile__num"><bdi>75%</bdi></div>
+          <div class="stack"><span style="flex:6;background:var(--ok-fg)"></span><span style="flex:1;background:var(--late-minor)"></span><span style="flex:1;background:var(--late-major)"></span><span style="flex:1;background:var(--g300)"></span></div>
+          <div class="legend"><span><i style="background:var(--ok-fg)"></i>בזמן</span><span><i style="background:var(--late-minor)"></i>עד 15 דק'</span><span><i style="background:var(--late-major)"></i>מעל 15</span></div>
+          <div class="tile__label" style="margin-top:14px">בהקפה לגבייה</div>
+          <div class="single"><span></span></div>
+          <div class="age"><span style="flex:5;background:var(--brand-300)"></span><span style="flex:2;background:var(--brand-500)"></span><span style="flex:1;background:var(--brand-700)"></span></div>
+          <div class="legend"><span><i style="background:var(--brand-300)"></i>עד 30</span><span><i style="background:var(--brand-500)"></i>31–60</span><span><i style="background:var(--brand-700)"></i><span style="color:var(--urgent-fg)">מעל 60</span></span></div>
+        </div>
+      </div>
+      <ul class="diff"><li>ותק = רצף בגוון אחד. "מעל 60" מסומן במילה בכתום, לא בצבע הפס.</li><li>איחור קצר #C76A1A (3.8) ואיחור ארוך #8A3A00 נבדלים גם בעיוורון צבעים (ΔE 8.5).</li></ul>
+    </section>
+  </div>
+</div>
+</body>
+</html>

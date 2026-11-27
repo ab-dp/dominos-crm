@@ -102,16 +102,18 @@ function QueueRow({ o, lane, isNext, now }: { o: OrderView; lane: Lane; isNext: 
           {o.branchName || <Missing>ללא סניף</Missing>} · <Money value={o.amount} />
           {lane === 'inq' && o.qNumber && <> · Q <Ltr>{o.qNumber}</Ltr></>}
           {lane === 'closed' && <> · {closeLabel(o)}</>}
+          {back && late && <> · <span className="qrow__late">לא הועברה ל-Q</span></>}
+          {back && credit && <> · אשראי לחיוב</>}
         </span>
       </button>
       <span className="qrow__tags">
-        {back && <span className="qtag qtag--back">הגיע הזמן לחזור</span>}
-        {late && <span className="qtag qtag--late">לא הועברה ל-Q</span>}
-        {credit && <span className="qtag qtag--credit">אשראי לחיוב</span>}
+        {back && <span className="tqtag tqtag--back">הגיע הזמן לחזור</span>}
+        {late && !back && <span className="tqtag tqtag--late">לא הועברה ל-Q</span>}
+        {credit && !back && <span className="tqtag tqtag--credit">אשראי לחיוב</span>}
         {lane !== 'closed' && <OpsTag o={o} />}
         {!late && lane !== 'closed' && <HealthBadge health={o.health} issues={o.issues} compact focusable={false} />}
       </span>
-      {lane !== 'closed' && <span className="qrow__act">{o.hold ? <HoldActions o={o} /> : <NextStep o={o} />}</span>}
+      {lane !== 'closed' && <span className="qrow__act">{o.hold ? <HoldActions o={o} inRow /> : <NextStep o={o} />}</span>}
       {/* בהמתנה: למה, מי ומתי, ומתי לחזור */}
       {o.hold && (lane === 'hold' || back) && (
         <span className="qrow__hold">

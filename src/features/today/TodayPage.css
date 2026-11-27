@@ -4,7 +4,8 @@
 /* ---------- שני הטורים ---------- */
 .today__grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-5); align-items: start; }
 .today__grid > * { min-width: 0; }
-.pill { min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; background: var(--gray-100); color: var(--gray-700); }
+/* מונה: מספר שקט בלי גלולה (שלב 9) */
+.pill { font: 500 var(--text-micro) var(--font-mono); font-variant-numeric: tabular-nums; color: var(--gray-500); }
 .calm { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-5) var(--space-4); color: var(--ok-fg); font-weight: 500; }
 .calm--quiet { color: var(--gray-600); }
 .calm--error { align-items: flex-start; color: var(--danger-fg); line-height: 1.5; }
@@ -63,10 +64,10 @@
 .tlane__toggle:hover { color: var(--brand-700); }
 .tlane__chev { transition: transform var(--dur-instant) var(--ease); }
 .tlane__toggle[aria-expanded="false"] .tlane__chev { transform: rotate(90deg); }
-.tlane__n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--gray-100); color: var(--gray-700); font: 500 var(--text-micro)/20px var(--font-mono); text-align: center; }
+.tlane__n { font: 600 var(--text-label) var(--font-mono); font-variant-numeric: tabular-nums; color: inherit; text-align: center; }
 .tlane--todo .tlane__head { color: var(--brand-700); }
-.tlane--todo .tlane__n { background: var(--brand-600); color: var(--white); }
-.tlane--inq .tlane__n { background: var(--ok-bg); color: var(--ok-fg); }
+
+.tlane--inq .tlane__n { color: var(--ok-fg); }
 .tlane__empty { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-2) var(--space-1); color: var(--ok-fg); font-size: var(--text-table); font-weight: 500; }
 .tlane__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 
@@ -95,14 +96,14 @@
 .qrow__meta { font-size: var(--text-label); color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .qrow--inq .qrow__meta { color: var(--gray-700); }
 .qrow__meta bdi { font-family: var(--font-mono); }
-.qrow__next { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: var(--space-2); padding: 1px var(--space-2); border-radius: var(--radius-panel); background: var(--brand-50); color: var(--brand-700); font-size: var(--text-micro); font-weight: 500; vertical-align: 1px; white-space: nowrap; }
+.qrow__next { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: var(--space-2); font-size: var(--text-micro); font-weight: 500; color: var(--brand-700); }
 .qrow__tags { display: inline-flex; align-items: center; gap: var(--space-2); flex: none; }
-.qtag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; }
-.qtag--late { background: var(--danger-bg); color: var(--danger-fg); }
-.qtag--credit { background: var(--gray-100); color: var(--gray-700); }
-.qtag--back { background: var(--brand-600); color: var(--white); }
+.tqtag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; }
+.tqtag--late { background: var(--danger-bg); color: var(--danger-fg); }
+.tqtag--credit { background: var(--gray-100); color: var(--gray-700); }
+.tqtag--back { background: var(--hold-fg); color: var(--white); } /* חוזרת מ"בהמתנה" – בצבע של בהמתנה */
 .tlane--hold .tlane__head { color: var(--hold-fg); }
-.tlane--hold .tlane__n { background: var(--hold-bg); color: var(--hold-fg); }
+
 .qrow__act { display: inline-flex; flex: none; }
 
 @media (max-width: 1200px) {
@@ -124,3 +125,5 @@
   .qrow__act { grid-column: 3; grid-row: 2; }
   .qrow__hold { grid-column: 2 / -1; grid-row: 3; padding: 0; }
 }
+.qrow__late { color: var(--danger-fg); font-weight: 500; }
+@media (max-width: 700px) { .qrow__meta { white-space: normal; } }

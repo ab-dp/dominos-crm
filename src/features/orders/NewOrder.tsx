@@ -560,7 +560,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
           : (
             <span className="ib-sum__override">
               <input className="input input--sm input--ltr" inputMode="decimal" autoFocus value={override} onChange={(e) => { setOverride(e.target.value); clearErr('final'); }} aria-label="סכום לחיוב (לפי הסגירה מול הלקוח)" {...inv('final')} />
-              {isManual && <span className="no-final__tag">שונה ידנית · מחושב <Ltr>{fmtMoney(total)}</Ltr></span>}
+              {isManual && <span className="no-final__tag">שונה ידנית · מחושב{' '}<Ltr>{fmtMoney(total)}</Ltr></span>}
               <button type="button" className="link" onClick={() => setOverride(null)}>חזור לחישוב</button>
             </span>
           ))}

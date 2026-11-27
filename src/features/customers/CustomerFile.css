@@ -69,7 +69,7 @@
 .composer__row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .composer__send { margin-inline-start: auto; }
 .cfile__timeline { padding: 0 var(--space-4) var(--space-2); margin: 0; }
-.akind { padding: 1px var(--space-2); border-radius: var(--radius); font-size: var(--text-micro); font-weight: 500; background: var(--gray-100); }
+.akind { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; vertical-align: middle; background: var(--gray-100); }
 .akind--call { background: var(--ok-bg); color: var(--ok-fg); }
 .akind--followup { background: var(--urgent-bg); color: var(--urgent-fg); }
 .hist__change { display: block; font-size: var(--text-label); margin-top: 2px; }
@@ -190,7 +190,7 @@
 .tl__ref { display: inline-block; padding: 0 var(--space-1); border: 0; border-radius: var(--radius-tag); background: none; font: inherit; font-weight: 500; color: var(--brand-700); text-decoration: none; cursor: pointer; }
 .tl__ref:hover { background: var(--brand-50); }
 .tl__ref:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 1px; }
-.tl__tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 600; }
+.tl__tag { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; }
 .tl__tag--late { background: var(--danger-bg); color: var(--danger-fg); }
 .tl__tag--comp { background: var(--ok-bg); color: var(--ok-fg); font-weight: 500; }
 .tl__task { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-1); padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--zone); border: 1px solid var(--zone-line); font-size: var(--text-label); font-weight: 500; }
@@ -233,3 +233,77 @@
   .tl-filter button { min-height: 44px; white-space: nowrap; }
   .tl__task .btn, .tl-open__task .icon-btn { min-height: 44px; min-width: 44px; }
 }
+
+/* ---------- שלב 9: ראש תיק הלקוח בכחול-לילה – אותו "ראש רשומה" כמו בהזמנה ובהצעה (DESIGN.md "Record Header") ---------- */
+.cfile__head { background: var(--navy-900); color: var(--on-dark-1); box-shadow: none; }
+.cfile__head .page__title { color: var(--white); }
+.cfile__avatar { background: var(--navy-800); box-shadow: inset 0 0 0 1px var(--on-dark-line); }
+.cfile__sub { color: var(--on-dark-3); }
+.cfile__sub a { color: var(--on-dark-accent); }
+.cfile__head .ctype { background: rgb(255 255 255 / .1); color: var(--on-dark-1); }
+.cfile__head .tag-inactive { background: color-mix(in srgb, var(--on-dark-warn) 18%, transparent); color: var(--on-dark-warn); }
+.cfile__head .fact { color: var(--on-dark-1); }
+.cfile__head .fact svg { color: var(--on-dark-3); }
+.cfile__head .fact .muted { color: var(--on-dark-3); }
+.cfile__head .fact__link { color: var(--on-dark-accent); }
+.cfile__head .fact__link svg { color: inherit; }
+.cfile__head .fact__link:hover { background: var(--navy-800); }
+.cfile__head .tag { height: 24px; background: rgb(255 255 255 / .08); color: var(--on-dark-1); }
+.cfile__head .tag svg { color: var(--on-dark-3); }
+.cfile__head .tag--brand { background: color-mix(in srgb, var(--on-dark-accent) 18%, transparent); }
+.cfile__head .cfile__note { background: var(--navy-800); box-shadow: none; color: var(--on-dark-1); }
+.cfile__head .cfile__note b { color: var(--on-dark-3); }
+.cfile__head .cfile__metrics { border-top-color: var(--on-dark-line); }
+.cfile__head .cfile__metric dt { color: var(--on-dark-3); }
+.cfile__head .cfile__metric dd { color: var(--white); }
+/* כפתורים על כחול-לילה: משני שקוף עם קו לבן עדין; הראשי – כחול דומינוס עם קו לבן (כמו בכרטיס ההזמנה) */
+.cfile__head .btn--secondary { background: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .18); color: var(--white); }
+.cfile__head .btn--secondary svg { color: var(--on-dark-3); }
+.cfile__head .btn--secondary:hover:not(:disabled) { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); }
+.cfile__head .btn--primary { border-color: rgb(255 255 255 / .32); }
+.cfile__head .btn:focus-visible, .cfile__head .icon-btn:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; box-shadow: none; }
+.cfile__head .icon-btn { color: var(--on-dark-2); }
+.cfile__head .icon-btn:hover { background: var(--navy-800); color: var(--white); }
+.cfile__mob { display: none; }
+@media (max-width: 560px) {
+  .cfile__desk { display: none; }
+  .cfile__mob { display: flex; }
+  .cfile__actions { margin-inline-start: auto; }
+}
+/* עובדות בראש התיק – טקסט עם מפרידים, כמו בראש כרטיס ההזמנה (לא שרשרת תגיות) */
+.cfile__head .cfile__facts { gap: var(--space-1) var(--space-5); }
+.cfile__head .cfile__facts > .tag { height: auto; padding: 0; background: none; font-size: var(--text-table); font-weight: 500; }
+.cfile__head .cfile__facts > .fact { margin-inline-end: 0; }
+.cfile__head .tag--brand { background: none; color: var(--on-dark-accent); }
+.cfile__head .btn--primary { border-color: rgb(255 255 255 / .55); }
+.cfile__head .ctype { background: none; padding: 0; color: var(--on-dark-3); }
+@media (max-width: 560px) {
+  .cfile__plsel { width: auto; flex: 1 1 180px; }
+  .cfile__placts { width: 100%; }
+  /* ראש התיק בטלפון: מדדים בשלוש עמודות קומפקטיות */
+  .cfile__head { gap: var(--space-3); padding: var(--space-4); }
+  .cfile__head .cfile__metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2) var(--space-3); padding-top: var(--space-2); }
+  .cfile__head .cfile__metric dd { font-size: var(--text-label); }
+}
+/* סקירה (שלב 9): המדדים ברצועה שקטה אחת עם קווי הפרדה – לא חמישה אריחים צפים (אריח מספר רק בבורד) */
+.ov__kpis { gap: 0; background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--elev-1); overflow: hidden; }
+.ov__kpis .kpi.card { border-radius: 0; box-shadow: none; padding: var(--space-4) var(--space-5); }
+.ov__kpis .kpi + .kpi { border-inline-start: 1px solid var(--line-soft); }
+.ov__kpis .kpi__value { font-size: var(--text-lead); font-weight: 600; letter-spacing: 0; }
+.ov__kpis .kpi__value.is-live { color: var(--gray-900); }
+.ov__cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .ov__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .ov__kpis .kpi + .kpi { border-inline-start: 0; }
+  .ov__kpis .kpi { border-top: 1px solid var(--line-soft); }
+  .ov__cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* שלב 9: ארבעת הפרטים בסקירה – רצועה אחת עם קווי הפרדה, לא ארבעה כרטיסים חצי ריקים */
+.ov__cards { gap: 0; background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--elev-1); overflow: hidden; }
+.ov__cards > .ov__card.card { border-radius: 0; box-shadow: none; }
+.ov__cards > .ov__card + .ov__card { border-inline-start: 1px solid var(--line-soft); }
+@media (max-width: 1100px) { .ov__cards > .ov__card:nth-child(3) { border-inline-start: 0; } .ov__cards > .ov__card:nth-child(n+3) { border-top: 1px solid var(--line-soft); } }
+@media (max-width: 700px) { .ov__cards > .ov__card + .ov__card { border-inline-start: 0; border-top: 1px solid var(--line-soft); } }
+/* גרף 12 החודשים: עמודות דקות */
+.ov__chart .cols__bar { width: min(100%, 16px); border-radius: 2px 2px 0 0; }

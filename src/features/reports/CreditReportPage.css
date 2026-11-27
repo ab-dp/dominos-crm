@@ -8,7 +8,10 @@
 .creport__note { max-width: 260px; overflow: hidden; text-overflow: ellipsis; color: var(--gray-600); font-size: var(--text-label); }
 .orow.is-found td { background: var(--ok-bg); }
 .gap-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; margin-inline-start: var(--space-2); background: var(--urgent-bg); color: var(--urgent-fg); }
-.paytag { display: inline-flex; align-items: center; gap: var(--space-1); height: 24px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-label); font-weight: 500; line-height: 1; white-space: nowrap; }
+.paytag { display: inline-flex; align-items: center; gap: var(--space-1); height: 20px; padding: 0 6px; border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; }
 .paytag--pending { background: var(--urgent-bg); color: var(--urgent-fg); }
 .paytag--paid { background: var(--ok-bg); color: var(--ok-fg); }
 .paytag--cancelled { background: var(--gray-100); color: var(--gray-600); }
+
+/* שלב 9: צבע רק למה שדורש פעולה */
+.paytag--paid, .paytag--cancelled { background: none; padding: 0; height: auto; font-size: var(--text-table); font-weight: 400; color: var(--gray-700); }
