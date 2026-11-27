@@ -15,7 +15,7 @@ const taskEntity = (t: Pick<Task, 'leadId' | 'quoteId'>) => (t.leadId ? 'lead' :
 const taskEntityId = (t: Pick<Task, 'leadId' | 'quoteId' | 'customerId'>) => t.leadId || (t.quoteId ? String(t.quoteId) : t.customerId);
 /* לאן מוביל קישור המשימה */
 export const taskHref = (t: Pick<Task, 'leadId' | 'quoteId' | 'customerId'>) =>
-  t.leadId ? `/leads/${t.leadId}` : t.quoteId ? `/quotes/${t.quoteId}` : `/customers/${t.customerId}?tab=activity`;
+  t.leadId ? `/leads/${t.leadId}` : t.quoteId ? `/quotes/${t.quoteId}` : `/customers/${t.customerId}`;
 
 /* כל המשימות הפתוחות – מספרן קטן, ולכן נטענות במלואן */
 export function useOpenTasks() {
