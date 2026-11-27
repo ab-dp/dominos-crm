@@ -1,6 +1,7 @@
 /* דוחות (אפיון 10): מרכז דוחות, ודף דוח אחיד – מסננים בשורה אחת, מדדים, גרף עם "הצג כטבלה",
    טבלה עם שורת סיכום, לחיצה על שורה מציגה את ההזמנות שמרכיבות אותה, וייצוא לאקסל שנרשם ביומן. */
 import { useMemo, useState } from 'react';
+import { StickyBar } from '../../design/StickyBar';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CalendarCheck, ChartColumn, Download, RefreshCw, X, CalendarRange, ListOrdered, Users, Store, Radio, Wallet, UserCog } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
@@ -136,6 +137,7 @@ function Report({ def }: { def: ReportDef }) {
       </header>
 
       {/* מסננים בשורה אחת */}
+      <StickyBar>
       <div className="tablebar report__filters">
         <div className="seg" role="group" aria-label="טווח">
           {PRESETS.map((p) => [p, PRESET_LABEL[p]] as const).map(([p, l]) => <button key={p} className={preset === p ? 'is-on' : ''} aria-pressed={preset === p} onClick={() => set(p === 'custom' ? { range: p, from, to } : { range: p, from: null, to: null })}>{l}</button>)}
@@ -151,6 +153,7 @@ function Report({ def }: { def: ReportDef }) {
           <input className="input input--sm report__cust" value={cust} onChange={(e) => setCust(e.target.value)} placeholder="לקוח" aria-label="סינון לפי לקוח" />
         </FilterBar>
       </div>
+      </StickyBar>
 
       {error && <p className="cform__formerr" role="alert">{error} – הדוח לא נטען.</p>}
       {loading ? (

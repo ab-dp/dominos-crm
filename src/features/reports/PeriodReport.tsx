@@ -1,6 +1,7 @@
 /* סיכום תקופה – דוח להנהלה: בוחרים תקופה, ושתי לשוניות – כל ההזמנות (שורה לכל הזמנה) וסיכום בטבלאות.
    הייצוא לאקסל בונה קובץ מעוצב משתי הלשוניות (periodExcel), ונרשם ביומן. */
 import { useMemo, useState } from 'react';
+import { StickyBar } from '../../design/StickyBar';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChartColumn, Download, RefreshCw } from 'lucide-react';
 import { usePanel } from '../../app/PanelContext';
@@ -108,6 +109,7 @@ export function PeriodReport() {
         </div>
       </header>
 
+      <StickyBar>
       <div className="tablebar report__filters">
         <div className="seg" role="group" aria-label="תקופה">
           {PERIOD_PRESETS.map((p) => [p, PRESET_LABEL[p]] as const).map(([p, l]) => <button key={p} className={preset === p ? 'is-on' : ''} aria-pressed={preset === p} onClick={() => set(p === 'custom' ? { range: p, from, to } : { range: p, from: null, to: null })}>{l}</button>)}
@@ -127,6 +129,7 @@ export function PeriodReport() {
         </button>
         <button role="tab" id="pt-summary" aria-controls="pp-summary" aria-selected={tab === 'summary'} className={`tab ${tab === 'summary' ? 'is-on' : ''}`} onClick={() => set({ tab: 'summary' })}>סיכום</button>
       </nav>
+      </StickyBar>
 
       {error && <p className="cform__formerr" role="alert">{error} – הדוח לא נטען.</p>}
       {loading ? (

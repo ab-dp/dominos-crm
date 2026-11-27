@@ -1,6 +1,7 @@
 /* משימות וחריגים (אפיון 9): כל מה שדורש טיפול, במקום אחד. שורה לכל הזמנה עם כל הבעיות שלה והכפתור שפותר את העיקרית,
    מקובץ לפי החומרה; ובצד – משימות המעקב מתיקי הלקוחות. מבוסס על אותו מנוע של מסך "היום". */
 import { useMemo, useState, type FormEvent } from 'react';
+import { StickyBar } from '../../design/StickyBar';
 import * as Popover from '@radix-ui/react-popover';
 import { ordersWithSeverity, topSeverity } from '../../data/metrics';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -79,6 +80,7 @@ export function ExceptionsPage() {
         </dl>
       </header>
 
+      <StickyBar>
       <div className="tablebar">
         <div className="seg" role="group" aria-label="של מי">
           <button className={!mine ? 'is-on' : ''} aria-pressed={!mine} onClick={() => setMine(false)}>כולם</button>
@@ -97,6 +99,7 @@ export function ExceptionsPage() {
           })}
         </div>
       </div>
+      </StickyBar>
 
       <div className="exc__grid">
         <section className="card" aria-labelledby="h-exc">

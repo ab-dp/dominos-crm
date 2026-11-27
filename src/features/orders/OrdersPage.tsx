@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { StickyBar } from '../../design/StickyBar';
 import { revenue } from '../../data/metrics';
 import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, Rows3, Rows4, Search, X } from 'lucide-react';
@@ -134,6 +135,7 @@ export function OrdersPage() {
       </header>
       {error && <p className="cform__formerr" role="alert">{error} – ההזמנות לא נטענו. רענן את הדף.</p>}
 
+      <StickyBar>
       <div className="tabs" role="tablist" aria-label="תצוגת הזמנות">
         {TABS.map(([k, label]) => {
           const n = countOf(k);
@@ -197,6 +199,7 @@ export function OrdersPage() {
           <button className={density === 'comfy' ? 'is-on' : ''} aria-pressed={density === 'comfy'} onClick={() => setDensity('comfy')} title="מרווח"><Rows3 size={16} aria-hidden="true" /><span className="sr-only">מרווח</span></button>
         </div>
       </div>
+      </StickyBar>
 
       {busy ? (
         <div className="card orders-loading" aria-busy="true" aria-label="טוען הזמנות">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} h={20} />)}</div>

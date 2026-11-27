@@ -79,7 +79,7 @@
 @media (max-width: 700px) {
   /* clip ולא hidden – כדי שכותרת היום תוכל להיצמד למעלה בגלילה */
   .otable-wrap { overflow: clip; }
-  .otable--orders tr.oday { display: block; position: sticky; top: calc(var(--topbar) + env(safe-area-inset-top, 0px)); z-index: 2; }
+  .otable--orders tr.oday { display: block; position: sticky; top: calc(var(--topbar) + var(--stickybar-h, 0px) + env(safe-area-inset-top, 0px)); z-index: 2; }
   .otable--orders tr.oday th { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-2); background: var(--gray-50); border-bottom: 1px solid var(--line); text-align: start; }
   .otable--orders tr.oday + .orow { border-top: 0; }
   .oday__name { font-size: var(--text-table); font-weight: 600; color: var(--gray-900); }
