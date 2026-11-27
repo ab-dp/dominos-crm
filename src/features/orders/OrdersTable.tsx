@@ -10,7 +10,6 @@ import { useToast } from '../../design/Toast';
 import { Ltr, Money, fmtDate, fmtMoney, toISODate, weekday } from '../../lib/format';
 import type { XSheet } from '../../lib/xlsx';
 import { STAGE_LABEL, closeLabel, methodText, stageOf, type Order } from '../../data/types';
-import { OpsTag } from './OpsTag';
 import { channelLabel } from '../../data/channels';
 import { FixButton } from './OrderActions';
 import { NextStep, StageTrack, nextStepLabel } from './OrderTimeline';
@@ -224,7 +223,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, 
       <td className="num strong c-time">{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</td>
       {showDate && <td className="num num--start"><Ltr>{fmtDate(o.date)}</Ltr></td>}
       <td className="c-cust">
-        <span className="orow__cust">{o.customerName}{(o.changedAfterQ || o.changedAfterApproval) && <span className="changed-tag changed-tag--sm" title={o.changedAfterQ ? 'שונתה אחרי הקלדה ל-Q' : 'שונתה לאחר אישור'}>שונתה</span>}{!!o.careCount && <span className="care-tag" title="יש תיעוד טיפול בתיק הלקוח">תועד</span>}{o.hold && <span className="hold-tag" title={[o.hold.reason, o.hold.note].filter(Boolean).join(' · ')}>בהמתנה</span>}</span>
+        <span className="orow__cust">{o.customerName}{!!o.careCount && <span className="care-tag" title="יש תיעוד טיפול בתיק הלקוח">תועד</span>}{o.hold && <span className="hold-tag" title={[o.hold.reason, o.hold.note].filter(Boolean).join(' · ')}>בהמתנה</span>}</span>
         {/* הסיבות גלויות בשורה, לא רק בריחוף: שתיים ראשונות, ומספר הנוספות */}
         {top && o.health !== 'ok' && (
           <span className={`orow__why orow__why--${o.health}`} title={o.issues.map((i) => i.label).join(' · ')}>
@@ -233,12 +232,12 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, 
         )}
         {/* בטלפון העמודות מוסתרות – סניף וסכום בשורה אחת מתחת לשם */}
         <span className="orow__m">
-          <span className="orow__m-br"><span className="orow__m-name">{o.branchName || <Missing>ללא סניף</Missing>}</span><OpsTag o={o} /></span>
+          <span className="orow__m-br"><span className="orow__m-name">{o.branchName || <Missing>ללא סניף</Missing>}</span></span>
           <span className="orow__m-sum">{o.amount > 0 ? <Money value={o.amount} /> : <Missing>חסר סכום</Missing>}</span>
         </span>
       </td>
       <td>
-        <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}<OpsTag o={o} /></span>
+        <span className="orow__branch">{o.branchName || <Missing>ללא סניף</Missing>}</span>
         {o.branchPhone && <span className="orow__sub"><PhoneIcon size={14} aria-hidden="true" /> <Ltr>{o.branchPhone.replace(/(\d{3})(\d+)/, '$1-$2')}</Ltr></span>}
       </td>
       <td className="c-channel">{channelLabel(o) ? (o.channelId ? channelLabel(o) : <span className="muted" title={o.channel}>{channelLabel(o)}</span>) : <Missing>חסר</Missing>}</td>

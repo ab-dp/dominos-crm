@@ -71,6 +71,7 @@
   --urgent-strong: #8A3A00; /* סימון חזק בגרף (איחור מעל X דק') */
   --missing-bg: #FBF4D9; --missing-fg: #7A5D00; --missing-edge: #D8B53A;
   --ok-bg: #E6F3EC;      --ok-fg: #16704A;      --ok-mark: #2E9E62;
+  --ok-tint: #F3F9F5;    /* שורה שירדה ל-Q (Q-Lane) – גוון עדין מאוד, לא בלוק ירוק */
   /* "בהמתנה" – סגול שקט, נפרד מכתום "דחוף" (DESIGN.md, The Q-Lane Rule) */
   --hold-bg: #F2EEFA;    --hold-fg: #5B3A9E;    --hold-edge: #8C6BD0;
   /* "הגיע זמן לחזור" בהצעות מחיר – טורקיז עמוק, רק לזה, תמיד עם מילה */

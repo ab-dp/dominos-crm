@@ -16,7 +16,6 @@ import { usePanel } from '../../app/PanelContext';
 import { useStore, type OrderView } from '../../data/store';
 import { Button, HealthBadge, Missing, Tip } from '../../design/components';
 import { Ltr, Money, fmtDate, fmtMoney, fmtPhone, toISODate, weekday } from '../../lib/format';
-import { OpsTag } from './OpsTag';
 import { METHOD_LABEL, PAYMENT_LABEL, STATUS_LABEL } from '../../data/types';
 
 import { useOrderDoc, useOrderHistory, useOrderViewers, type OrderAuditRow } from '../../data/orders';
@@ -187,7 +186,6 @@ function PanelBody({ o, full, setFull }: { o: OrderView; full: boolean; setFull:
           </dl>
           <div className="prec__track">
             <OrderTimeline o={o} part="track" />
-            <OpsTag o={o} />
             <span className="prec__step">{next()}</span>
             <span className="prec__sum"><small>סכום לחיוב</small><b>{o.amount > 0 ? <Money value={o.amount} /> : '—'}</b></span>
           </div>
