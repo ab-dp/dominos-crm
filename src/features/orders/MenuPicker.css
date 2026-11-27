@@ -17,7 +17,7 @@
 .mpk__part { flex: 1 1 140px; min-width: 120px; }
 .mpk__qty { width: 64px; }
 .mpk__price { width: 96px; }
-.mpk__price.is-manual { border-color: var(--urgent-edge, #E8A867); background: var(--urgent-bg); }
+.mpk__price.is-manual { border-color: var(--urgent-edge); background: var(--urgent-bg); }
 .mpk__x { color: var(--gray-600); }
 .mpk__sum { min-width: 72px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .mpk__err { margin: 0; font-size: var(--text-label); font-weight: 500; color: var(--danger-fg); }

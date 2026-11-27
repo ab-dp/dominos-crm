@@ -11,7 +11,8 @@
 }
 .otable td { height: 52px; padding: var(--space-1) var(--space-3); border-bottom: 1px solid var(--line-soft); vertical-align: middle; white-space: nowrap; }
 .otable tbody tr:last-child td { border-bottom: 0; }
-.otable .num { font-variant-numeric: tabular-nums; }
+.otable .num { font-variant-numeric: tabular-nums; text-align: end; }
+.otable .num--start { text-align: start; } /* תאריך – בהתחלה, כמו שעה */
 .otable .strong { font-weight: 500; font-size: var(--text-body); color: var(--gray-900); }
 .col-check { width: 36px; padding-inline-end: 0 !important; }
 .col-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }

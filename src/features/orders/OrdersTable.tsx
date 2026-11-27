@@ -222,7 +222,7 @@ const OrderRow = memo(function OrderRow({ o, showDate, flash, selected, toggle, 
       </td>
       <td className="c-health"><HealthBadge health={o.health} issues={o.issues} /></td>
       <td className="num strong c-time">{o.time ? <Ltr>{o.time}</Ltr> : <Missing>שעה?</Missing>}</td>
-      {showDate && <td className="num"><Ltr>{fmtDate(o.date)}</Ltr></td>}
+      {showDate && <td className="num num--start"><Ltr>{fmtDate(o.date)}</Ltr></td>}
       <td className="c-cust">
         <span className="orow__cust">{o.customerName}{(o.changedAfterQ || o.changedAfterApproval) && <span className="changed-tag changed-tag--sm" title={o.changedAfterQ ? 'שונתה אחרי הקלדה ל-Q' : 'שונתה לאחר אישור'}>שונתה</span>}{!!o.careCount && <span className="care-tag" title="יש תיעוד טיפול בתיק הלקוח">תועד</span>}{o.hold && <span className="hold-tag" title={[o.hold.reason, o.hold.note].filter(Boolean).join(' · ')}>בהמתנה</span>}</span>
         {/* הסיבות גלויות בשורה, לא רק בריחוף: שתיים ראשונות, ומספר הנוספות */}

@@ -1,0 +1,304 @@
+# מלאי צבעים (נוצר אוטומטית)
+
+## HEX לפי מספר קבצים
+- #FFFFFF (3): design\tokens.css, features\ops\opsPdf.ts, features\quotes\QuoteSheet.tsx
+- #006491 (2): design\tokens.css, features\ops\ops.css
+- #00567D (2): design\tokens.css, features\ops\ops.css
+- #C2CAD4 (2): design\tokens.css, features\ops\ops.css
+- #0D2847 (1): app\AppShell.css
+- #2A9D9D (1): app\AppShell.css
+- #1B4F7E (1): auth\AuthScreens.css
+- #081A30 (1): auth\AuthScreens.css
+- #EA4335 (1): auth\AuthScreens.tsx
+- #4285F4 (1): auth\AuthScreens.tsx
+- #FBBC05 (1): auth\AuthScreens.tsx
+- #34A853 (1): auth\AuthScreens.tsx
+- #FFF (1): components\DominoTile.tsx
+- #FF0000 (1): components\DominoTile.tsx
+- #0090E2 (1): components\DominoTile.tsx
+- #0B2340 (1): design\tokens.css
+- #081A31 (1): design\tokens.css
+- #143462 (1): design\tokens.css
+- #1B3D6B (1): design\tokens.css
+- #C3D1E0 (1): design\tokens.css
+- #8DA2BA (1): design\tokens.css
+- #E3EBF3 (1): design\tokens.css
+- #A3B6CB (1): design\tokens.css
+- #E8ECF1 (1): design\tokens.css
+- #F3F5F8 (1): design\tokens.css
+- #E2E7ED (1): design\tokens.css
+- #FFF5E1 (1): design\tokens.css
+- #EBCF96 (1): design\tokens.css
+- #6B4A07 (1): design\tokens.css
+- #0F6E6E (1): design\tokens.css
+- #DCEFF3 (1): design\tokens.css
+- #9BCFD8 (1): design\tokens.css
+- #E8F2F7 (1): design\tokens.css
+- #CFE4EF (1): design\tokens.css
+- #8DC0DA (1): design\tokens.css
+- #003F5C (1): design\tokens.css
+- #4FB0DC (1): design\tokens.css
+- #E31837 (1): design\tokens.css
+- #F5F7F9 (1): design\tokens.css
+- #F8FAFC (1): design\tokens.css
+- #E6EAEF (1): design\tokens.css
+- #D6DCE3 (1): design\tokens.css
+- #8A96A5 (1): design\tokens.css
+- #677585 (1): design\tokens.css
+- #3A4756 (1): design\tokens.css
+- #546272 (1): design\tokens.css
+- #0F1B2A (1): design\tokens.css
+- #FCEBEE (1): design\tokens.css
+- #C0102C (1): design\tokens.css
+- #FDF0E3 (1): design\tokens.css
+- #A34A05 (1): design\tokens.css
+- #FBF4D9 (1): design\tokens.css
+- #7A5D00 (1): design\tokens.css
+- #E6F3EC (1): design\tokens.css
+- #16704A (1): design\tokens.css
+- #E08A3C (1): design\tokens.css
+- #D8B53A (1): design\tokens.css
+- #EDB3BC (1): design\tokens.css
+- #2E9E62 (1): design\tokens.css
+- #F2EEFA (1): design\tokens.css
+- #5B3A9E (1): design\tokens.css
+- #8C6BD0 (1): design\tokens.css
+- #A9B3BF (1): design\tokens.css
+- #EEF1F4 (1): design\tokens.css
+- #A7CDE0 (1): features\ops\ops.css
+- #D3E7F1 (1): features\ops\ops.css
+- #E2EEF5 (1): features\ops\ops.css
+- #EFF6FA (1): features\ops\ops.css
+- #2F7D72 (1): features\ops\ops.css
+- #1F5A52 (1): features\ops\ops.css
+- #A9D3CC (1): features\ops\ops.css
+- #D2EAE5 (1): features\ops\ops.css
+- #E1F0EC (1): features\ops\ops.css
+- #EFF7F5 (1): features\ops\ops.css
+- #3A6EA5 (1): features\ops\ops.css
+- #284F7A (1): features\ops\ops.css
+- #B3C9E2 (1): features\ops\ops.css
+- #D7E3F1 (1): features\ops\ops.css
+- #E3ECF6 (1): features\ops\ops.css
+- #F0F5FA (1): features\ops\ops.css
+- #5B7A3A (1): features\ops\ops.css
+- #405826 (1): features\ops\ops.css
+- #C3D2AE (1): features\ops\ops.css
+- #DFE8D2 (1): features\ops\ops.css
+- #E9EFE1 (1): features\ops\ops.css
+- #F3F6EE (1): features\ops\ops.css
+- #7A6650 (1): features\ops\ops.css
+- #574735 (1): features\ops\ops.css
+- #D3C7B8 (1): features\ops\ops.css
+- #E9E1D7 (1): features\ops\ops.css
+- #EFE9E2 (1): features\ops\ops.css
+- #F7F3EF (1): features\ops\ops.css
+- #4B5B6E (1): features\ops\ops.css
+- #334050 (1): features\ops\ops.css
+- #DCE1E8 (1): features\ops\ops.css
+- #E7EBF0 (1): features\ops\ops.css
+- #F2F4F7 (1): features\ops\ops.css
+- #6A4C7C (1): features\ops\ops.css
+- #4C3459 (1): features\ops\ops.css
+- #CDBFD6 (1): features\ops\ops.css
+- #E5DCEB (1): features\ops\ops.css
+- #ECE4F1 (1): features\ops\ops.css
+- #F5F1F8 (1): features\ops\ops.css
+- #E8A867 (1): features\orders\MenuPicker.css
+- #F5C08A (1): features\orders\OrderPanel.css
+- #FFB4AB (1): features\orders\OrderPanel.css
+- #7CC2E6 (1): features\orders\OrderPanel.css
+- #CDEAF8 (1): features\orders\OrderPanel.css
+- #000 (1): features\pages.css
+- #9AA5B1 (1): features\pricelists\MenuPage.css
+- #0078AE (1): features\styleguide\StyleGuidePage.tsx
+- #00668F (1): features\styleguide\StyleGuidePage.tsx
+- #004F70 (1): features\styleguide\StyleGuidePage.tsx
+- #EAF4FA (1): features\styleguide\StyleGuidePage.tsx
+- #14181F (1): features\styleguide\StyleGuidePage.tsx
+- #5B6472 (1): features\styleguide\StyleGuidePage.tsx
+- #C9CED6 (1): features\styleguide\StyleGuidePage.tsx
+- #F7F8FA (1): features\styleguide\StyleGuidePage.tsx
+
+## rgba/rgb
+- rgb(255255255/.12) (3)
+- rgb(152742/0.12) (2)
+- rgba(15,27,42,0.24) (2)
+- rgba(255,255,255,0.2) (2)
+- rgb(152742/0.06) (2)
+- rgba(15,27,42,0.22) (2)
+- rgb(255255255/.06) (2)
+- rgb(255255255/.18) (2)
+- rgb(255255255/.28) (2)
+- rgb(255255255/0.06) (1)
+- rgba(255,255,255,0.08) (1)
+- rgb(255255255/0.12) (1)
+- rgb(255255255/0.08) (1)
+- rgb(255255255/0.07) (1)
+- rgb(000/0.22) (1)
+- rgb(000/0.35) (1)
+- rgba(11,35,64,0.12) (1)
+- rgba(255,255,255,0.16) (1)
+- rgba(8,24,44,0.55) (1)
+- rgba(11,35,64,0.7) (1)
+- rgba(11,35,64,0.84) (1)
+- rgba(8,24,44,0.96) (1)
+- rgba(79,176,220,0.16) (1)
+- rgba(15,27,42,0.08) (1)
+- rgb(152742/0.04) (1)
+- rgb(255255255/0.14) (1)
+- rgb(06392/0.24) (1)
+- rgb(0100145/0.45) (1)
+- rgb(06392/0.26) (1)
+- rgb(0100145/0.5) (1)
+- rgb(1921644/0.28) (1)
+- rgba(255,255,255,0.12) (1)
+- rgba(255,255,255,0.18) (1)
+- rgba(255,255,255,0.7) (1)
+- rgb(152742/0.08) (1)
+- rgba(15,27,42,0.06) (1)
+- rgba(15,27,42,0.16) (1)
+- rgb(0100145/0.16) (1)
+- rgb(152742/0.22) (1)
+- rgb(113564/0.32) (1)
+- rgba(15,27,42,0.03) (1)
+- rgba(255,255,255,0.06) (1)
+- rgba(0,100,145,0.12) (1)
+- rgba(11,35,64,0.22) (1)
+- rgba(0,100,145,0.3) (1)
+- rgba(22,112,74,0.08) (1)
+- rgb(255255255/.1) (1)
+- rgb(255255255/.35) (1)
+- rgb(255255255/.2) (1)
+- rgb(255255255/.3) (1)
+- rgb(255255255/.25) (1)
+- rgb(255255255/.8) (1)
+- rgb(255140130/.12) (1)
+- rgb(255180171/.4) (1)
+- rgb(124194230/.14) (1)
+- rgb(255255255/.32) (1)
+- rgba(255,255,255,0.1) (1)
+- rgb(255255255/.22) (1)
+- rgb(255255255/.08) (1)
+
+## טוקנים בשימוש (var)
+- --space-2: 526
+- --space-3: 496
+- --space-4: 285
+- --gray-600: 238
+- --text-label: 230
+- --space-1: 208
+- --white: 149
+- --text-table: 148
+- --text-micro: 137
+- --gray-100: 126
+- --radius: 122
+- --gray-900: 106
+- --ease: 105
+- --brand-600: 91
+- --space-5: 67
+- --brand-50: 64
+- --font-mono: 61
+- --dur-instant: 59
+- --danger-fg: 58
+- --radius-tag: 54
+- --gray-700: 52
+- --radius-panel: 50
+- --brand-700: 50
+- --ok-fg: 47
+- --urgent-fg: 46
+- --gray-300: 41
+- --line: 38
+- --gray-50: 38
+- --brand-800: 38
+- --dur-quick: 36
+- --gray-200: 31
+- --control-sm: 26
+- --urgent-bg: 24
+- --line-soft: 23
+- --control-md: 21
+- --navy: 21
+- --gray-25: 21
+- --text-card-title: 20
+- --danger-bg: 20
+- --ok-bg: 20
+- --brand-100: 18
+- --missing-fg: 18
+- --text-body: 15
+- --space-6: 13
+- --control-lg: 13
+- --text-section: 13
+- --rec-muted: 13
+- --shadow-card: 12
+- --urgent-edge: 11
+- --dur-standard: 10
+- --missing-bg: 10
+- --gray-400: 9
+- --missing-edge: 9
+- --topbar: 8
+- --font: 8
+- --text-screen-title: 7
+- --zone: 7
+- --hold-fg: 7
+- --os-sub: 7
+- --rec-line: 7
+- --qs-blue: 7
+- --navy-text: 6
+- --radius-pill: 6
+- --shadow-panel: 6
+- --ease-out: 6
+- --shadow-float: 6
+- --gray-500: 6
+- --row-hover: 6
+- --ink: 6
+- --brand-sky: 5
+- --brand-red: 5
+- --text-kpi: 5
+- --zone-line: 5
+- --dot: 5
+- --hold-bg: 5
+- --surface-hover: 4
+- --icon-lg: 4
+- --navy-muted: 4
+- --line-strong: 4
+- --ok-mark: 4
+- --due: 4
+- --rec-text: 4
+- --qs-faint: 4
+- --focus-halo: 3
+- --day-dk: 3
+- --page: 3
+- --qs-sub: 3
+- --due-bg: 3
+- --side-w: 2
+- --gutter: 2
+- --brand-300: 2
+- --focus-ring: 2
+- --invalid-halo: 2
+- --os-text: 2
+- --navy-2: 2
+- --day: 2
+- --qs-line: 2
+- --rail: 1
+- --navy-deep: 1
+- --scrim: 1
+- --login-photo: 1
+- --danger-line: 1
+- --radix-popover-content-transform-origin: 1
+- --radix-dropdown-menu-content-transform-origin: 1
+- --radix-popover-content-available-height: 1
+- --radix-dropdown-menu-content-available-height: 1
+- --weight-body: 1
+- --weight-strong: 1
+- --c: 1
+- --radix-popover-trigger-width: 1
+- --os-line: 1
+- --day-ln: 1
+- --day-wash: 1
+- --day-mid: 1
+- --gray-800: 1
+- --note-bg: 1
+- --note-line: 1
+- --note-fg: 1
+- --due-line: 1
+- --hold-edge: 1

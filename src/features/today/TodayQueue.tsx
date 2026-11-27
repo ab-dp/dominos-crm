@@ -105,9 +105,9 @@ function QueueRow({ o, lane, isNext, now }: { o: OrderView; lane: Lane; isNext: 
         </span>
       </button>
       <span className="qrow__tags">
-        {back && <span className="qtag qtag--back">הגיע הזמן לחזור</span>}
-        {late && <span className="qtag qtag--late">לא הועברה ל-Q</span>}
-        {credit && <span className="qtag qtag--credit">אשראי לחיוב</span>}
+        {back && <span className="tqtag tqtag--back">הגיע הזמן לחזור</span>}
+        {late && <span className="tqtag tqtag--late">לא הועברה ל-Q</span>}
+        {credit && <span className="tqtag tqtag--credit">אשראי לחיוב</span>}
         {lane !== 'closed' && <OpsTag o={o} />}
         {!late && lane !== 'closed' && <HealthBadge health={o.health} issues={o.issues} compact focusable={false} />}
       </span>

@@ -16,8 +16,6 @@
 .panel__title bdi { font-family: var(--font-mono); font-weight: 500; }
 .panel__meta { color: var(--gray-600); font-size: var(--text-table); gap: var(--space-2); }
 .panel__marks { display: inline-flex; gap: 2px; flex-wrap: wrap; }
-.link { border: 0; background: none; padding: 0; font: inherit; color: var(--brand-700); font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; text-decoration-color: rgba(0,100,145,0.3); }
-.link:hover { text-decoration-color: currentColor; }
 /* שאר הבעיות: רשימה בתוך התיק, מופרדת בקווים – בלי מסגרת נוספת */
 .missing { display: grid; gap: 0; border-top: 1px solid var(--line-soft); }
 .missing__item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; font-size: var(--text-table); font-weight: 500; background: var(--white); border-bottom: 1px solid var(--line-soft); }
@@ -285,8 +283,8 @@
 
 /* ראש רשומה בכחול-לילה */
 .prec { background: var(--navy); color: var(--rec-text); padding: var(--space-4) var(--space-5) var(--space-3); display: grid; gap: var(--space-3); }
-.prec .panel__title { color: var(--white); font-size: 24px; line-height: 1.25; letter-spacing: -.012em; }
-.prec__id { color: var(--rec-muted); font-size: 18px; font-weight: 500; margin-inline-start: var(--space-1); font-variant-numeric: tabular-nums; }
+.prec .panel__title { color: var(--white); font-size: var(--text-title); line-height: var(--lh-tight); letter-spacing: var(--track-tight); }
+.prec__id { color: var(--rec-muted); font-size: var(--text-heading); font-weight: 500; margin-inline-start: var(--space-1); font-variant-numeric: tabular-nums; }
 .prec .panel__title .prec__id bdi { font-family: inherit; }
 .prec .icon-btn { color: var(--rec-muted); }
 .prec .icon-btn:hover { background: rgb(255 255 255 / .1); color: var(--white); }
@@ -297,11 +295,11 @@
 .prec__facts > div:first-child { padding-inline-start: 0; border: 0; }
 .prec__facts dt { font-size: var(--text-micro); font-weight: 500; color: var(--rec-muted); }
 .prec__facts dd { margin: 0; font-size: var(--text-table); font-weight: 500; color: var(--white); white-space: nowrap; }
-.prec__miss { color: #F5C08A; }
+.prec__miss { color: var(--on-dark-warn); }
 .prec__track { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding-top: var(--space-3); border-top: 1px solid var(--rec-line); }
 .prec__sum { margin-inline-start: auto; display: inline-flex; align-items: baseline; gap: var(--space-2); }
 .prec__sum small { font-size: var(--text-label); color: var(--rec-muted); }
-.prec__sum b { font-size: 28px; font-weight: 600; color: var(--white); font-variant-numeric: tabular-nums; }
+.prec__sum b { font-size: var(--text-display); font-weight: 600; letter-spacing: var(--track-tight); color: var(--white); font-variant-numeric: tabular-nums; }
 
 /* ציר השלבים על רקע כהה: קו דק עם נקודות */
 .timeline-wrap--rec .otl { gap: 0; }
@@ -325,13 +323,13 @@
 .psheet { background: var(--white); border-radius: var(--radius-panel); box-shadow: var(--shadow-card); padding: var(--space-2) var(--space-5) var(--space-3); }
 .psheet .reg { margin: var(--space-3) 0 var(--space-2); padding: 0; border: 1px solid var(--brand-100); overflow: hidden; }
 .psheet .reg__head { background: var(--brand-50); border-bottom-color: var(--brand-100); padding: var(--space-3) var(--space-4); margin: 0; }
-.psheet .reg__title { font-size: 16px; color: var(--navy); }
+.psheet .reg__title { font-size: var(--text-heading); color: var(--navy); }
 .psheet .reg > :not(.reg__head) { margin-inline: var(--space-4); }
 .psheet .reg > :last-child { margin-bottom: var(--space-3); }
 .psheet .panel__flow { padding: var(--space-3) 0; }
 .psheet .sec { padding: var(--space-4) 0; border-bottom: 1px solid var(--line); }
 .psheet .sec__head { padding-bottom: var(--space-2); border-bottom: 1px solid var(--line-soft); }
-.psheet .sec__title { font-size: 16px; font-weight: 600; color: var(--navy); }
+.psheet .sec__title { font-size: var(--text-heading); font-weight: 600; color: var(--navy); }
 .psec__sub { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
 
 /* היסטוריה מקופלת */
@@ -360,7 +358,7 @@
   .prec .panel__title { font-size: var(--text-card-title); }
   .prec__opt { display: none !important; }
   .prec__facts > div { padding-inline: var(--space-3); }
-  .prec__sum b { font-size: 24px; }
+  .prec__sum b { font-size: var(--text-title); }
   .psheet { padding-inline: var(--space-4) !important; }
   .psheet .reg > :not(.reg__head) { margin-inline: var(--space-3); }
   .psheet .reg__grid { grid-template-columns: 1fr; }
@@ -403,16 +401,16 @@
 .prec__acts { display: inline-flex; align-items: center; gap: var(--space-2); }
 .prec__divider { width: 1px; height: 20px; margin-inline: var(--space-1); background: var(--rec-line); }
 /* ביטול – "מסוכן שקט" שמתאים לכחול-לילה: טקסט אדום-בהיר בלי מילוי; קו ומילוי עדינים בריחוף. תמיד פותח אישור */
-.prec .prec__cancel { background: transparent; border-color: transparent; color: #FFB4AB; }
-.prec .prec__cancel svg { color: #FFB4AB; }
-.prec .prec__cancel:hover { background: rgb(255 140 130 / .12); border-color: rgb(255 180 171 / .4); }
+.prec .prec__cancel { background: transparent; border-color: transparent; color: var(--on-dark-danger); }
+.prec .prec__cancel svg { color: var(--on-dark-danger); }
+.prec .prec__cancel:hover { background: color-mix(in srgb, var(--on-dark-danger) 12%, transparent); border-color: color-mix(in srgb, var(--on-dark-danger) 40%, transparent); }
 /* פעולה משנית על הכחול (החזר מביטול, תעד טיפול) – כמו "עריכה" */
 .prec .prec__act, .pbar .prec__act { background: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .18); color: var(--white); }
 .prec .prec__act svg { color: var(--rec-muted); }
 .prec .prec__act:hover { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); }
 /* "לרישום Q" – מתאר כחול-בהיר (לא מלא): הכפתור הראשי הוא "רישום Q" בבלוק הקופה */
-.prec .prec__act--brand { background: transparent; border-color: #7CC2E6; color: #CDEAF8; }
-.prec .prec__act--brand:hover { background: rgb(124 194 230 / .14); }
+.prec .prec__act--brand { background: transparent; border-color: var(--on-dark-accent); color: var(--on-dark-1); }
+.prec .prec__act--brand:hover { background: color-mix(in srgb, var(--on-dark-accent) 14%, transparent); }
 /* "סמן סופקה" – הראשי: כחול דומינוס עם קו לבן עדין (הכחול לבדו לא נבדל מהכחול-לילה) */
 .prec .prec__next .btn--primary { border-color: rgb(255 255 255 / .32); }
 .prec .btn:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }

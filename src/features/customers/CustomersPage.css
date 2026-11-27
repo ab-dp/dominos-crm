@@ -6,7 +6,7 @@
 .cust-table .c-gaps { width: 1%; min-width: 168px; }
 .is-inactive-row td { color: var(--gray-600); }
 .cust-inactive { margin-inline-start: var(--space-2); }
-.ctype { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; }
+.ctype { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; line-height: 1; border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; }
 /* קבוע הוא ברירת המחדל – טקסט שקט; מזדמן מקבל תג, כי הוא החריג */
 .ctype--regular { padding: 0; color: var(--gray-600); }
 .ctype--occasional { background: var(--gray-100); color: var(--gray-700); }

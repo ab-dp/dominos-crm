@@ -132,9 +132,9 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
           </div>
           <div className="cfile__actions">
             <Button variant="primary" icon={<Plus size={16} />} onClick={() => openNewOrder({ mode: 'full', customerId: c.id })} disabled={c.status !== 'active'}>הזמנה</Button>
-            <Button icon={<PhoneIcon size={16} />} onClick={() => compose('call')}>תיעוד שיחה</Button>
-            <Button icon={<FileText size={16} />} onClick={() => nav(`/quotes/new?customer=${c.id}`)} disabled={c.status !== 'active'}>הצעת מחיר</Button>
-            <Button icon={<Pencil size={16} />} onClick={() => setEditing(true)}>עריכה</Button>
+            <Button className="cfile__desk" icon={<PhoneIcon size={16} />} onClick={() => compose('call')}>תיעוד שיחה</Button>
+            <Button className="cfile__desk" icon={<FileText size={16} />} onClick={() => nav(`/quotes/new?customer=${c.id}`)} disabled={c.status !== 'active'}>הצעת מחיר</Button>
+            <Button className="cfile__desk" icon={<Pencil size={16} />} onClick={() => setEditing(true)}>עריכה</Button>
             <Dropdown.Root dir="rtl">
               <Dropdown.Trigger asChild><button className="icon-btn" aria-label="פעולות נוספות"><MoreHorizontal size={20} /></button></Dropdown.Trigger>
               <Dropdown.Portal>
@@ -144,6 +144,9 @@ function FileBody({ c, all }: { c: Customer; all: Customer[] }) {
                       <Star size={16} aria-hidden="true" /> הפוך ללקוח קבוע
                     </Dropdown.Item>
                   )}
+                  <Dropdown.Item className="menu__item cfile__mob" onSelect={() => compose('call')}><PhoneIcon size={16} aria-hidden="true" /> תיעוד שיחה</Dropdown.Item>
+                  <Dropdown.Item className="menu__item cfile__mob" disabled={c.status !== 'active'} onSelect={() => nav(`/quotes/new?customer=${c.id}`)}><FileText size={16} aria-hidden="true" /> הצעת מחיר</Dropdown.Item>
+                  <Dropdown.Item className="menu__item cfile__mob" onSelect={() => setEditing(true)}><Pencil size={16} aria-hidden="true" /> עריכה</Dropdown.Item>
                   <Dropdown.Item className="menu__item" onSelect={() => compose('note')}><MessageSquarePlus size={16} aria-hidden="true" /> הערה</Dropdown.Item>
                   <Dropdown.Item className="menu__item" onSelect={() => setMerging(true)}><GitMerge size={16} aria-hidden="true" /> מיזוג עם לקוח אחר</Dropdown.Item>
                   <Dropdown.Separator className="menu__sep" />

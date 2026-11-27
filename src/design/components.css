@@ -21,20 +21,31 @@
 .btn.is-loading { opacity: 1; }
 .btn--sm { height: var(--control-sm); padding: 0 var(--space-3); font-size: var(--text-label); }
 .btn--md { height: var(--control-md); padding: 0 var(--space-4); font-size: var(--text-table); }
-.btn--lg { height: 44px; padding: 0 var(--space-5); }
-.btn--primary { background: var(--brand-600); color: var(--white); }
+.btn--lg { height: var(--control-lg); padding: 0 var(--space-5); font-size: var(--text-body); }
+.btn--primary { background: var(--brand-600); color: var(--white); box-shadow: inset 0 -1px 0 rgb(0 0 0 / .14); }
 .btn--primary:hover:not(:disabled) { background: var(--brand-700); }
 .btn--primary:active:not(:disabled) { background: var(--brand-800); }
-.btn--secondary { background: var(--white); color: var(--gray-900); border-color: var(--gray-200); }
-.btn--secondary:hover:not(:disabled) { border-color: var(--gray-300); background: var(--gray-50); }
-.btn--ghost { background: transparent; color: var(--gray-600); }
+/* מותג: פעולה חשובה משנית במתאר כחול ("הזמנה חדשה" בסרגל העליון) – כחול מלא רק לפעולה הראשית במסך */
+.btn--brand { background: var(--white); color: var(--brand-700); border-color: rgb(0 100 145 / .45); }
+.btn--brand:hover:not(:disabled) { background: var(--brand-50); border-color: var(--brand-600); }
+.btn--secondary { background: var(--white); color: var(--gray-900); border-color: var(--gray-300); }
+.btn--secondary:hover:not(:disabled) { border-color: var(--gray-350); background: var(--gray-25); }
+/* שקט: ביטול, היסטוריה, עריכה */
+.btn--ghost { background: transparent; color: var(--gray-700); }
 .btn--ghost:hover:not(:disabled) { color: var(--gray-900); background: var(--gray-100); }
 .btn--danger { background: var(--white); color: var(--danger-fg); border-color: var(--danger-line); }
 .btn--danger:hover:not(:disabled) { background: var(--danger-bg); }
+/* אישור סופי בחלון בלבד */
+.btn--danger-solid { background: var(--danger-fg); color: var(--white); }
+.btn--danger-solid:hover:not(:disabled) { background: #9E0D24; }
+/* בתוך ⋯ או סרגל כלים */
+.btn--danger-quiet { background: transparent; color: var(--danger-fg); }
+.btn--danger-quiet:hover:not(:disabled) { background: var(--danger-bg); }
 /* כפתור הפתרון בתוך שורה עם בעיה */
 /* פעולה בשורה – שקטה: בלי מסגרת כחולה. הצבע שמור לכפתור הראשי של המסך */
-.btn--fix { background: var(--white); color: var(--gray-900); border-color: var(--gray-200); font-weight: 500; }
-.btn--fix:hover:not(:disabled) { background: var(--gray-50); border-color: var(--gray-300); }
+/* פעולת שורה ("הצעד הבא" בטבלה): טקסט כחול בלי מסגרת – הכפתור הממוסגר בכל שורה הכביד */
+.btn--fix, .btn--act { background: transparent; color: var(--brand-700); border-color: transparent; font-weight: 500; padding-inline: var(--space-2); }
+.btn--fix:hover:not(:disabled), .btn--act:hover:not(:disabled) { background: var(--brand-50); color: var(--brand-800); }
 .btn__spin { animation: spin 0.9s linear infinite; }
 .btn__kbd { margin-inline-start: 2px; }
 .btn--primary .btn__kbd { background: rgba(15, 27, 42, 0.24); color: var(--white); border-color: transparent; }
@@ -256,3 +267,9 @@
 /* "לעדכן בתפעול" – תזכורת בלבד, בגוון דחוף (כתום). נעלמת לבד כשהמועד עובר */
 .ops-tag { display: inline-flex; align-items: center; height: 20px; margin-inline-start: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-tag); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--urgent-bg); color: var(--urgent-fg); }
 a.btn, a.btn:hover { text-decoration: none; }
+
+/* ---------- תגית (DESIGN.md v3 "Tag"): גובה 20, טקסט 12/500, פינה 4. בראש רשומה – 24 ---------- */
+.badge { display: inline-flex; align-items: center; gap: var(--space-1); height: 20px; padding: 0 6px; border-radius: var(--radius-sm); font-size: var(--text-micro); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; background: var(--gray-100); color: var(--gray-700); }
+/* קישור בתוך טקסט – משותף לכל המסכים (היה רק בכרטיס ההזמנה, שנטען עצל) */
+.link { border: 0; background: none; padding: 0; font: inherit; color: var(--brand-700); font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; text-decoration-color: rgb(0 100 145 / .3); }
+.link:hover { text-decoration-color: currentColor; }
