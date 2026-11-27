@@ -223,3 +223,32 @@ describe('בוחר מדורג – מקרי קצה', () => {
     expect(priceFor(c, cat, family, 'mix').unit).toBe(60);
   });
 });
+import { quoteName, fixedCategory } from '../src/features/orders/MenuPicker';
+describe('בוחר בהצעות ובמחירונים (7ד)', () => {
+  it('שם השורה בהצעה כולל את סוג התוספת', () => {
+    expect(quoteName('משפחתית', 'ללא')).toBe('משפחתית ללא');
+    expect(quoteName('שתייה גדולה')).toBe('שתייה גדולה');
+    expect(quoteName('משפחתית', '  ')).toBe('משפחתית');
+  });
+  it('קטגוריה לפי מזהה גם כשהשם בתפריט שונה', () => {
+    expect(fixedCategory({ id: 'pizza', name: 'פיצות משפחתיות' })).toBe('פיצות');
+    expect(fixedCategory({ id: 'zz', name: 'משקאות' })).toBe('משקאות');
+    expect(fixedCategory({ id: 'zz', name: 'מבצעים' })).toBe('אחר');
+  });
+});
+describe('בוחר – וריאציות במחירון (7ד)', () => {
+  const cat = structuredClone(DEFAULT_MENU.categories[0]);
+  const cc = { id: 'cc', name: "צ'יזי קראסט", active: true, variations: [{ id: 'v1', name: 'דקה', active: true }, { id: 'v2', name: 'עבה', active: true }] };
+  cat.items.push(cc);
+  const ci = (o: Partial<CatalogItem>): CatalogItem => ({ id: 'x', category: 'פיצות', name: '', active: true, custom: false, ...o });
+  const rows = [ci({ id: 'a', name: "צ'יזי קראסט דקה", menuId: 'cc', unit: 70 }), ci({ id: 'b', name: "צ'יזי קראסט עבה", menuId: 'cc', unit: 80 })];
+  it('כל וריאציה מקבלת את השורה שלה', () => {
+    expect(priceFor(rows, cat, cc, 'with', 'v2')).toMatchObject({ unit: 80, line: { id: 'b' } });
+    expect(priceFor(rows, cat, cc, 'with', 'v1')).toMatchObject({ unit: 70, line: { id: 'a' } });
+  });
+  it('שורה כללית לסוג – כשאין שורה לווריאציה', () => {
+    const r2 = [ci({ id: 'g', name: "צ'יזי קראסט", menuId: 'cc', unit: 75 }), rows[1]];
+    expect(priceFor(r2, cat, cc, 'with', 'v1').unit).toBe(75);
+    expect(priceFor(r2, cat, cc, 'with', 'v2').unit).toBe(80);
+  });
+});

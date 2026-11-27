@@ -21,7 +21,9 @@ import { Ltr, fmtMoney, fmtPhone, toISODate, parseMoney as money } from '../../l
 import { isSimilar, CARD_RE } from '../../lib/names';
 import { saveError } from '../../lib/saveError';
 import { Shell } from '../leads/LeadDialogs';
-import { buildCatalog, catalogFor, normName, type CatalogItem } from '../orders/ItemsBuilder';
+import { buildCatalog, catalogFor, normName, type CatalogItem, type Line } from '../orders/ItemsBuilder';
+import { MenuPicker, fixedCategory, priceFor } from '../orders/MenuPicker';
+import { useMenu } from '../../data/menu';
 import { QuoteSheet, downloadSheetPdf, type SheetData } from './QuoteSheet';
 import { ConvertButton, QuoteTrack } from './QuoteTrack';
 import '../pages.css';
@@ -77,6 +79,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
   const { items: customers } = useCustomers();
   const { items: priceLists, loading: plLoading } = usePriceLists();
   const { items: allQuotes } = useQuotes('all');
+  const { menu } = useMenu();
   const terms = useQuoteTerms();
   const today = toISODate(now);
 
@@ -130,7 +133,16 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
   }, [dirty, quote]);
 
   /* ---------- מחירים ---------- */
-  const match = (cat: CatalogItem[], l: Pick<QuoteLine, 'category' | 'name'>) => cat.find((i) => i.category === l.category && normName(i.name) === normName(l.name) && l.name.trim());
+  /* שורה מהבוחר – לפי הסוג וסוג התוספת בתפריט; אחרת לפי השם */
+  const match = (cat: CatalogItem[], l: Pick<QuoteLine, 'category' | 'name' | 'menuId' | 'toppingKind'>): CatalogItem | undefined => {
+    if (l.menuId) {
+      const mc = menu.categories.find((c) => fixedCategory(c) === l.category && c.items.some((i) => i.id === l.menuId));
+      const it = mc?.items.find((i) => i.id === l.menuId);
+      const v = it?.variations.find((x) => x.name.trim() && l.name.includes(x.name.trim()));
+      if (mc && it) { const r = priceFor(cat, mc, it, l.toppingKind ?? '', v?.id); return r.line ? { ...r.line, unit: r.unit } : undefined; }
+    }
+    return cat.find((i) => i.category === l.category && normName(i.name) === normName(l.name) && l.name.trim());
+  };
   // החלפת מחירון / משלוח-איסוף: שורות שהמחיר שלהן מהמחירון מתעדכנות; מחיר ששונה ידנית נשאר
   const reprice = (patch: Partial<Form>) => {
     const next = { ...f, ...patch };
@@ -147,12 +159,13 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
     set({ ...patch, lines });
     if (n) toast({ message: <>מחירים עודכנו ב-<Ltr>{n}</Ltr> שורות{pl ? <> לפי "{pl.name}"</> : null}</> });
   };
+  const noHistory = useFlag('picker'); // הבוחר המדורג פעיל – בלי הצעות שנלמדות מהצעות קודמות
   const lastPrice = useMemo(() => {
     const m = new Map<string, number>();
+    if (noHistory) return m;
     [...allQuotes].sort((a, b) => a.id - b.id).forEach((q) => q.id !== quote?.id && q.lines.forEach((l) => { if (l.unitPrice > 0) m.set(`${l.category}|${normName(l.name)}`, l.unitPrice); }));
     return m;
-  }, [allQuotes, quote?.id]);
-  const noHistory = useFlag('picker'); // הבוחר המדורג פעיל – בלי הצעות שנלמדות מהצעות קודמות
+  }, [allQuotes, quote?.id, noHistory]);
   const nameHints = (cat: string) => [...new Set([...catalog.filter((i) => i.category === cat).map((i) => i.name), ...(noHistory ? [] : allQuotes.flatMap((q) => q.lines.filter((l) => l.category === cat).map((l) => l.name.trim())))])].filter(Boolean).slice(0, 80);
 
   /* ---------- שורות ---------- */
@@ -163,7 +176,8 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
   const change = (key: string, patch: Partial<QLine>) => {
     setF((x) => {
       const exists = x.lines.some((l) => l.key === key);
-      let lines = exists ? x.lines.map((l) => (l.key === key ? { ...l, ...patch } : l)) : [...x.lines, { ...draft, ...patch, key }];
+      const p = 'name' in patch ? { ...patch, menuId: undefined, toppingKind: undefined } : patch;
+      let lines = exists ? x.lines.map((l) => (l.key === key ? { ...l, ...p } : l)) : [...x.lines, { ...draft, ...p, key }];
       // שם שתואם מוצר במחירון – המחיר נכנס לבד (אם לא שונה ידנית)
       if ('name' in patch) {
         lines = lines.map((l) => {
@@ -197,6 +211,16 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
     (next?.querySelector('input[data-col="name"]') as HTMLInputElement | null)?.focus();
   };
   const count = (c: string) => f.lines.filter((l) => l.category === c && !blankLine(l)).reduce((t, l) => t + l.qty, 0);
+  /* הבוחר: שורה זהה (אותו סוג, סוג תוספת ומחיר) – הכמות מצטרפת אליה; אחרת שורה חדשה */
+  const addPicked = (l: Line) => { if (l.group && CATEGORIES.includes(l.group)) setTab(l.group); setF((x) => {
+    const cat = l.group ?? CATEGORIES[0];
+    const same = x.lines.find((o) => o.category === cat && o.menuId === l.menuId && (o.toppingKind ?? '') === (l.toppingKind ?? '') && normName(o.name) === normName(l.name) && o.unitPrice === l.unitPrice);
+    if (same) return { ...x, lines: x.lines.map((o) => (o === same ? { ...o, qty: o.qty + l.qty } : o)) };
+    return { ...x, lines: [...x.lines, { key: l.key, category: cat, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.itemId ? { itemId: l.itemId } : {}), ...(l.manualPrice ? { manual: true } : {}), ...(l.menuId ? { menuId: l.menuId } : {}), ...(l.toppingKind ? { toppingKind: l.toppingKind } : {}) }] };
+  }); };
+  // שורת לשוניות אחת: כשהבוחר פעיל – שלו (מסונכרנת עם הטבלה ומסמנת שגיאות). הלשוניות של הטבלה רק כשהבוחר כבוי, או כשיש שורה בקטגוריה שהבוחר לא מציג
+  const pickerCats = new Set(menu.categories.filter((c) => c.active).map(fixedCategory).filter((c) => CATEGORIES.includes(c)));
+  const showTabs = !noHistory || f.lines.some((l) => !blankLine(l) && !pickerCats.has(l.category));
 
   /* ---------- משלוח: מדרגה מוצעת לפי מספר הפריטים (בלי שתייה) ---------- */
   const dCount = deliveryCount(f.lines);
@@ -369,14 +393,15 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
             {/* 2. פריטים */}
             <section className="card qe-sec" aria-labelledby="qe-h-items">
               <h2 id="qe-h-items" className="qe-sec__title"><span className="qe-num">2</span> פריטים</h2>
-              <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
+              {noHistory && <MenuPicker mode="quote" only={CATEGORIES} catalog={catalog} active={tab} bad={(c) => f.lines.some((l) => l.category === c && !!lineErr(l))} onCategory={(c) => { if (CATEGORIES.includes(c)) { setTab(c); setFocus(null); } }} counts={count} onAdd={addPicked} />}
+              {showTabs && <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
                 {CATEGORIES.map((c) => (
                   <button type="button" role="tab" key={c} aria-selected={tab === c} className={`ib-tab ${tab === c ? 'is-on' : ''} ${f.lines.some((l) => l.category === c && lineErr(l)) ? 'is-bad' : ''}`} onClick={() => { setTab(c); setFocus(null); }}>
                     {c}{count(c) > 0 && <span className="ib-tab__n"><Ltr>{count(c)}</Ltr></span>}
                   </button>
                 ))}
-              </div>
-              {catalog.some((i) => i.category === tab) && (
+              </div>}
+              {!noHistory && catalog.some((i) => i.category === tab) && (
                 <div className="qe-chips" role="group" aria-label={`הוספה מהמחירון – ${tab}`}>
                   <span className="qe-chips__label">מהמחירון:</span>
                   {catalog.filter((i) => i.category === tab).map((it) => (
@@ -410,7 +435,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
                       onBlur={(ev) => { if (!ev.currentTarget.contains(ev.relatedTarget as Node | null)) { setFocus((x) => (x?.key === l.key ? null : x)); if (l.pText !== undefined) change(l.key, { pText: undefined }); } }}>
                       <div className={`qe-r ${isDraft ? 'is-draft' : ''}`}>
                         <input className={`input input--sm ${e && !l.name.trim() ? 'is-invalid' : ''}`} list={`qe-names-${CATEGORIES.indexOf(tab)}`} value={l.name}
-                          placeholder={isDraft ? (tab === 'פיצות' ? 'למשל: פיצה משפחתית עם תוספת' : tab === 'ליד הפיצה' ? 'למשל: סל תוספות' : tab === 'משקאות' ? 'למשל: שתייה גדולה' : 'שם המוצר') : ''}
+                          placeholder={isDraft ? (noHistory ? 'שם המוצר' : tab === 'פיצות' ? 'למשל: פיצה משפחתית עם תוספת' : tab === 'ליד הפיצה' ? 'למשל: סל תוספות' : tab === 'משקאות' ? 'למשל: שתייה גדולה' : 'שם המוצר') : ''}
                           onChange={(ev) => change(l.key, { name: ev.target.value })} aria-label={`מוצר – ${label}`} {...on('name')} />
                         <span className="qe-price">
                           <input className={`input input--sm input--ltr ${changed ? 'is-changed' : ''}`} inputMode="decimal" value={l.pText ?? (l.unitPrice ? String(l.unitPrice) : '')} placeholder="₪"
@@ -447,7 +472,6 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
                 </button>
               </div>
               <p className="ib-foot">
-                <span className="ib-hint">Enter – לשורה הבאה · כותבים קבוצת מוצר ומחיר סופי ליחידה, בלי פירוט תוספות</span>
                 {count(tab) > 0 && <b>סה״כ {tab}: <Ltr>{count(tab)}</Ltr></b>}
               </p>
               {CATEGORIES.map((c, i) => <datalist key={c} id={`qe-names-${i}`}>{nameHints(c).map((h) => <option key={h} value={h} />)}</datalist>)}

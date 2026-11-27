@@ -5,6 +5,9 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type Keyboar
 import { Link, useSearchParams } from 'react-router-dom';
 import { BookOpen, Check, ChevronDown, Copy, Link2, Pencil, Plus, Search, Tags, Trash2, Users, X } from 'lucide-react';
 import { useMenu, type MenuOption } from '../../data/menu';
+import { useFlag } from '../../data/flags';
+import { MenuPicker, fixedCategory } from '../orders/MenuPicker';
+import type { Line } from '../orders/ItemsBuilder';
 import { useAuth } from '../../auth/AuthContext';
 import { Shell } from '../leads/LeadDialogs';
 import {
@@ -150,6 +153,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
   const kindBad = (r: Row, k: string, f: 'price' | 'pickup') => { const v = r.kp[k]?.[f] ?? ''; return !!v.trim() && num(v) === undefined; };
   const tableRef = useRef<HTMLDivElement>(null);
   const server = useMemo(() => pl.items.map(toRow), [pl.items]);
+  const picker = useFlag('picker'); // הבוחר המדורג (שלב 7ד): הוספת שורה מהתפריט
 
   // שינוי מהשרת (משתמש אחר, או אחרי שמירה) – נטען כל עוד לא עורכים שורה
   useEffect(() => {
@@ -238,6 +242,26 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
     await updatePriceList(pl, { name: name.trim() }); setRenaming(false); setNameErr(''); toast({ message: 'שם המחירון עודכן' });
   };
   const count = (c: string) => rows.filter((r) => r.category === c && r.name.trim()).length;
+  /* שורה מהבוחר: כבר קיימת (אותו קישור לתפריט או אותו שם) – עוברים אליה (ומקשרים אם לא קושרה); אחרת שורה חדשה מקושרת.
+     הסמן עובר למחיר; השורה נשמרת כשיוצאים ממנה, כמו כל שורה */
+  const addFromMenu = (l: Line): false | void => {
+    // אותו שם – אותה שורה (ומקשרים). סוג בלי וריאציה – גם שורה שכבר מקושרת אליו, או שהשם שלה מתאים לו ("משפחתיות – רגילה")
+    const items = menu.categories.find((c) => fixedCategory(c) === tab)?.items.filter((i) => i.active) ?? [];
+    const plainItem = items.some((i) => i.id === l.menuId && i.name.trim() === l.name.trim());
+    const named = catRows.find((r) => sameName(r.name, l.name));
+    const ex = named ?? (plainItem ? catRows.find((r) => !namesKind(r.name) && (r.menuId === l.menuId || (!r.menuId && suggestMenuLink(r.name, items) === l.menuId))) : undefined);
+    let id = ex?.id;
+    if (ex) {
+      if (named && !ex.menuId && l.menuId) setRows((rs) => rs.map((r) => (r.id === ex.id ? { ...r, menuId: l.menuId } : r)));
+      toast({ message: <>"{ex.name}" כבר במחירון</> });
+    } else {
+      id = newId();
+      setRows((rs) => [...rs, { id: id!, category: tab, name: l.name, price: '', pickup: '', upTo: '', active: true, kp: {}, ...(l.menuId ? { menuId: l.menuId } : {}) }]);
+    }
+    setState('idle');
+    requestAnimationFrame(() => tableRef.current?.querySelector<HTMLInputElement>(`[data-id="${id}"] input[data-col="price"]`)?.focus());
+    if (ex) return false;
+  };
   const unpriced = catRows.filter((r) => r.name.trim() && !num(r.price)).length;
 
   return (
@@ -290,6 +314,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
           ))}
         </div>
 
+        {picker && !isDelivery && <MenuPicker mode="list" category={tab} catalog={[]} onAdd={addFromMenu} />}
         <div className={`ib-table plt ${isDelivery ? 'plt--dlv' : ''}`} role="group" aria-label={`מחירון ${pl.name} – ${tab}`} ref={tableRef}>
           <div className="plt-r plt-r--head" aria-hidden="true">
             <span>{isDelivery ? 'מדרגת משלוח' : 'מוצר'}</span>
@@ -302,14 +327,14 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
             const p = focusRow === r.id ? '' : problem(r);
             const label = r.name.trim() || (isDraft ? 'שורה חדשה' : 'שורה');
             return (
-              <div key={r.id} className="plt-g" data-row={isDraft ? undefined : true} data-draft={isDraft || undefined}
+              <div key={r.id} className="plt-g" data-id={r.id} data-row={isDraft ? undefined : true} data-draft={isDraft || undefined}
                 onFocus={() => setFocusRow(r.id)}
                 onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leaveRow(r.id); }}>
                 <div className={`plt-r ${isDraft ? 'is-draft' : ''}`}>
                   <input className={`input input--sm ${p && !r.name.trim() ? 'is-invalid' : ''}`} data-col="name" value={r.name} onKeyDown={onKey} onPaste={(e) => onPaste(e, r.id)}
-                    placeholder={isDraft ? (isDelivery ? 'למשל: משלוח עד 8 פריטים' : tab === 'פיצות' ? 'למשל: פיצה משפחתית עם תוספת' : tab === 'משקאות' ? 'למשל: שתייה גדולה' : 'שם המוצר') : ''}
+                    placeholder={isDraft ? (isDelivery ? 'למשל: משלוח עד 8 פריטים' : picker ? 'שם המוצר' : tab === 'פיצות' ? 'למשל: פיצה משפחתית עם תוספת' : tab === 'משקאות' ? 'למשל: שתייה גדולה' : 'שם המוצר') : ''}
                     onChange={(e) => change(r.id, { name: e.target.value })} aria-label={`${isDelivery ? 'מדרגת משלוח' : 'מוצר'} – ${label}`} />
-                  <input className={`input input--sm input--ltr ${r.price.trim() && num(r.price) === undefined ? 'is-invalid' : ''}`} inputMode="decimal" value={r.price} onKeyDown={onKey} placeholder="—"
+                  <input className={`input input--sm input--ltr ${r.price.trim() && num(r.price) === undefined ? 'is-invalid' : ''}`} data-col="price" inputMode="decimal" value={r.price} onKeyDown={onKey} placeholder="—"
                     onChange={(e) => change(r.id, { price: e.target.value })} aria-label={`${isDelivery ? 'דמי משלוח' : 'מחיר משלוח'} – ${label}`} />
                   {isDelivery
                     ? <input className="input input--sm input--ltr" inputMode="numeric" value={r.upTo} onKeyDown={onKey} placeholder="—" onChange={(e) => change(r.id, { upTo: e.target.value.replace(/\D/g, '') })} aria-label={`עד כמה פריטים – ${label}`} />
@@ -381,9 +406,9 @@ function LinkDialog({ pl, onClose }: { pl: PriceList; onClose: () => void }) {
 }
 function LinkForm({ pl, menu, onClose }: { pl: PriceList; menu: ReturnType<typeof useMenu>['menu']; onClose: () => void }) {
   const toast = useToast();
-  const cats = PL_TABS.filter((c) => c !== DELIVERY_CAT).map((c) => ({ name: c, menuCat: menu.categories.find((m) => m.name === c) })).filter((x) => pl.items.some((i) => i.category === x.name));
+  const cats = PL_TABS.filter((c) => c !== DELIVERY_CAT).map((c) => ({ name: c, menuCat: menu.categories.find((m) => fixedCategory(m) === c) })).filter((x) => pl.items.some((i) => i.category === x.name));
   const [pick, setPick] = useState<Record<string, string>>(() => Object.fromEntries(pl.items.filter((i) => i.category !== DELIVERY_CAT).map((i) => {
-    const mc = menu.categories.find((m) => m.name === i.category);
+    const mc = menu.categories.find((m) => fixedCategory(m) === i.category);
     return [i.id, i.menuId ?? suggestMenuLink(i.name, mc?.items.filter((x) => x.active) ?? [])];
   })));
   const [busy, setBusy] = useState(false);
