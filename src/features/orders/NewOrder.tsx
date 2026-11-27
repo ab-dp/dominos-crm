@@ -105,7 +105,7 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   });
   const [poFile, setPoFile] = useState<File | null>(null);
   const [lines, setLines] = useState<Line[]>(() => (eo ? eo.items.map((it) => ({ ...it, key: newId() }))
-    : (fq?.lines ?? []).map((l) => ({ key: newId(), group: l.category, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.unitPrice ? { manualPrice: true } : {}) }))));
+    : (fq?.lines ?? []).map((l) => ({ key: newId(), group: l.category, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.unitPrice ? { manualPrice: true } : {}), ...(l.menuId ? { menuId: l.menuId } : {}), ...(l.toppingKind ? { toppingKind: l.toppingKind } : {}) }))));
   // הזמנה בתאריך שעבר – לתיעוד בלבד: נשמרת ישר כסגורה, לפי התוצאה
   const [outcome, setOutcome] = useState<'' | 'delivered' | 'late' | 'partial' | 'cancelled'>('');
   const [lateMin, setLateMin] = useState('');

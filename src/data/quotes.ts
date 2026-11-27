@@ -34,7 +34,8 @@ export function addBusinessDays(fromIso: string, n = 1): string {
 export const callDue = (q: Pick<Quote, 'status' | 'callAt'> & { validUntil?: string }, today: string) => WAITING.includes(q.status) && !!q.callAt && q.callAt <= today && !isExpired({ status: q.status, validUntil: q.validUntil ?? '' }, today);
 export const REJECT_REASONS = ['מחיר', 'הזמינו ממקום אחר', 'האירוע בוטל', 'אחר'];
 
-export type QuoteLine = { category: string; name: string; qty: number; unitPrice: number; itemId?: string; manual?: boolean };
+/* menuId / toppingKind – שורה מהבוחר המדורג (שלב 7ד, רשות): המחיר מתעדכן לפי הסוג ולא לפי השם */
+export type QuoteLine = { category: string; name: string; qty: number; unitPrice: number; itemId?: string; manual?: boolean; menuId?: string; toppingKind?: string };
 export type QuoteCustomer = { name: string; contact: string; phone: string; email: string; taxId: string };
 export type QuoteFee = { name: string; price: number; itemId?: string };
 
