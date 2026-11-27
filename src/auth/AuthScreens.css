@@ -15,7 +15,7 @@
 .auth__brand-title { margin: var(--space-6) 0 0; font-size: 40px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; animation: rise 700ms var(--ease-out) 500ms both; }
 .auth__brand-sub { margin: 0; font-size: var(--text-card-title); color: var(--navy-text); animation: rise 700ms var(--ease-out) 600ms both; }
 /* קו דק מתחת לתת-הכותרת – נגיעה עריכתית שקטה */
-.auth__brand-sub::after { content: ""; display: block; width: 40px; height: 1px; margin: var(--space-4) auto 0; background: var(--brand-sky); opacity: 0.7; }
+
 
 .auth__panel { display: grid; grid-template-rows: 1fr auto; justify-items: center; padding: 40px var(--space-5) var(--space-5); }
 .auth__panel-mid { display: flex; flex-direction: column; justify-content: center; width: 100%; max-width: 380px; }

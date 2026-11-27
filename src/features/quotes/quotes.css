@@ -29,7 +29,7 @@
 .qe-locked { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-3); border-radius: var(--radius); background: var(--gray-100); color: var(--gray-900); font-size: var(--text-table); }
 .qe-sec { padding: var(--space-4) var(--space-4); }
 .qe-sec__title { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin: 0 0 var(--space-3); font-size: var(--text-card-title); font-weight: 600; color: var(--gray-900); }
-.qe-num { display: inline-block; min-width: 14px; color: var(--gray-400); font-size: var(--text-heading); font-weight: 600; font-variant-numeric: tabular-nums; }
+.qe-num { display: inline-block; min-width: 14px; color: var(--gray-500); font-size: var(--text-heading); font-weight: 600; font-variant-numeric: tabular-nums; }
 .qe-opt { font-size: var(--text-label); font-weight: 400; color: var(--gray-600); }
 .qe-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .qe-plsel { width: auto; min-width: 220px; }

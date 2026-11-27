@@ -46,9 +46,11 @@ function Money({ v, className = '' }: { v: number; className?: string }) {
   return <Ltr><span className={`money ${className}`}><span className="money__cur">₪</span>{fmtMoney(v).replace('₪', '')}</span></Ltr>;
 }
 /* "+18%" קצר לשורות משנה */
-function Delta({ d }: { d: number | null }) {
+function Delta({ cur, prev }: { cur: number; prev: number }) {
+  const d = delta(cur, prev);
   if (d === null || d === 0) return <span className="bdelta">{d === 0 ? 'ללא שינוי' : '—'}</span>;
-  return <span className={`bdelta ${d > 0 ? 'is-up' : 'is-down'}`}><Ltr>{d > 0 ? `+${d}%` : `−${Math.abs(d)}%`}</Ltr></span>;
+  if (d > RATIO_FROM) return <span className="bdelta is-up"><span className="sr-only">עלייה </span>פי <Ltr>{(cur / prev).toFixed(1)}</Ltr></span>;
+  return <span className={`bdelta ${d > 0 ? 'is-up' : 'is-down'}`}><span className="sr-only">{d > 0 ? 'עלייה' : 'ירידה'} </span><Ltr>{d > 0 ? `+${d}%` : `−${Math.abs(d)}%`}</Ltr></span>;
 }
 /* שינוי מול התקופה הקודמת. עד 200% – אחוז; מעל זה "פי X · מול <הערך הקודם>" (אחוז ענק על בסיס קטן מטעה) */
 const RATIO_FROM = 200;
@@ -157,6 +159,9 @@ export function BoardPage() {
 
   // בלי יעדים מוגדרים – בלי כרטיס יעדים (ההגדרה בהגדרות ← יעדים)
   const hasGoals = !!(goals.orders || goals.revenue || goals.onTimePct);
+  // ערוץ אחד ונציג אחד – שורה אחת משותפת במקום שני כרטיסים כמעט ריקים
+  const mergeCT = rk.channels.length < 2 && rk.team.length < 2;
+  const wide = (k: SectionKey) => WIDE.includes(k);
   const active = (Object.entries(filters) as [keyof Filters, string][]).filter(([, v]) => v);
   const FILTER_NAME: Record<keyof Filters, string> = { cluster: 'אשכול', branch: 'סניף', handler: 'נציג', method: 'אמצעי תשלום' };
 
@@ -226,8 +231,9 @@ export function BoardPage() {
       {busy ? <BoardSkeleton /> : (
         <>
           <Pulse s={s} sp={sp} sv={sv} svp={svp} col={col} daily={daily} prevName={prevName} goal={goals.onTimePct} go={nav} />
+          {!hasGoals && <p className="board__nogoals">לא הוגדרו יעדים לחודש · <button type="button" className="link" onClick={() => nav('/settings/goals')}>להגדרת יעדים</button></p>}
           <div className="board__grid">
-            {order.filter((k) => !hidden.includes(k) && (k !== 'goals' || hasGoals)).map((k) => <div key={k} className={`board__slot ${WIDE.includes(k) ? 'is-wide' : ''}`}>{render[k]()}</div>)}
+            {order.filter((k) => !hidden.includes(k) && (k !== 'goals' || hasGoals) && !(mergeCT && k === 'team')).map((k) => <div key={k} className={`board__slot ${wide(k) ? 'is-wide' : ''}`}>{mergeCT && k === 'channels' ? <ChannelTeamLine ch={rk.channels} team={rk.team} /> : render[k]()}</div>)}
           </div>
         </>
       )}
@@ -292,7 +298,7 @@ function Pulse({ s, sp, sv, svp, col, daily, prevName, goal, go }: {
         <span className="bpulse__label">סופקו בזמן{goal ? <> · יעד <Ltr>{goal}%</Ltr></> : null}</span>
         <span className="bpulse__value">{sv.onTimePct === null ? <span className="bpulse__none">—</span> : <Ltr>{sv.onTimePct}%</Ltr>}</span>
         <span className="bpulse__foot">
-          {onTimeD !== null && onTimeD !== 0 && <span className={`bchg ${onTimeD > 0 ? 'is-up' : 'is-down'}`}><span aria-hidden="true">{onTimeD > 0 ? '▲' : '▼'} </span><Ltr>{Math.abs(onTimeD)}</Ltr> נק' <span className="bchg__vs">· מול {prevName}</span></span>}
+          {onTimeD !== null && onTimeD !== 0 && <span className={`bchg ${onTimeD > 0 ? 'is-up' : 'is-down'}`}><span aria-hidden="true">{onTimeD > 0 ? '▲' : '▼'} </span><span className="sr-only">{onTimeD > 0 ? 'עלייה של' : 'ירידה של'} </span><Ltr>{Math.abs(onTimeD)}</Ltr> נק' <span className="bchg__vs">· מול {prevName}</span></span>}
           {sv.delivered > 0 && <span className="bpulse__vs">{sv.late ? <>באיחור <Ltr>{num(sv.late)}</Ltr> מתוך <Ltr>{num(sv.delivered)}</Ltr></> : 'בלי איחורים'}</span>}
         </span>
         {sv.onTimePct !== null && (
@@ -398,9 +404,9 @@ function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go
       lead={h.week.count === 0 ? <p className="bsec__empty">אין הזמנות פתוחות בשבוע הקרוב.</p> : (
         <Answer value={<Ltr>{num(h.week.count)}</Ltr>}>{h.week.count === 1 ? 'הזמנה' : 'הזמנות'} בשבוע הקרוב · <Money v={h.week.sum} />{h.week.pizzas > 0 && <> · {pizzas$(h.week.pizzas)}</>}</Answer>
       )}>
-      <div className="bdays" role="list">
+      <div className="bdays" role="group" aria-label="הזמנות לפי יום">
         {h.days.map((d) => (
-          <button key={d.date} type="button" role="listitem" className={`bday ${d.weekend ? 'is-weekend' : ''} ${d.count ? '' : 'is-empty'} ${d.date === today ? 'is-today' : ''}`} onClick={() => go(linkFor(d.date))}
+          <button key={d.date} type="button" className={`bday ${d.weekend ? 'is-weekend' : ''} ${d.count ? '' : 'is-empty'} ${d.date === today ? 'is-today' : ''}`} onClick={() => go(linkFor(d.date))}
             aria-label={`${dayName(d.date)} ${short(d.date)}: ${d.count} הזמנות`}>
             <span className="bday__name">{dayName(d.date)}</span>
             <span className="bday__date"><Ltr>{short(d.date)}</Ltr>{d.weekend && <> · סופ"ש</>}</span>
@@ -411,7 +417,7 @@ function Upcoming({ h, now, go }: { h: ReturnType<typeof horizon>; now: Date; go
             </>}
           </button>
         ))}
-        <button type="button" role="listitem" className={`bday bday--later ${h.later.count ? '' : 'is-empty'}`} onClick={() => go('/orders?tab=future')}>
+        <button type="button" className={`bday bday--later ${h.later.count ? '' : 'is-empty'}`} onClick={() => go('/orders?tab=future')}>
           <span className="bday__name">אחר כך</span>
           <span className="bday__date">מעבר לשבוע</span>
           <span className="bday__count"><Ltr>{h.later.count ? num(h.later.count) : '—'}</Ltr></span>
@@ -429,9 +435,9 @@ function SalesSection({ s, sp, prevName, daily }: { s: ReturnType<typeof sales>;
     <Section id="sales" title="מכירות">
       <div className="bsales">
         <dl className="bkv">
-          <div><dt>ממוצע להזמנה</dt><dd><Money v={s.avg} />{cmp && <Delta d={delta(s.avg, sp.avg)} />}</dd></div>
-          {(s.pizzas > 0 || sp.pizzas > 0) && <div><dt>פיצות</dt><dd><Ltr>{num(s.pizzas)}</Ltr>{cmp && <Delta d={delta(s.pizzas, sp.pizzas)} />}</dd></div>}
-          <div><dt>לקוחות שהזמינו</dt><dd><Ltr>{num(s.customers)}</Ltr>{cmp && <Delta d={delta(s.customers, sp.customers)} />}</dd></div>
+          <div><dt>ממוצע להזמנה</dt><dd><Money v={s.avg} />{cmp && <Delta cur={s.avg} prev={sp.avg} />}</dd></div>
+          {(s.pizzas > 0 || sp.pizzas > 0) && <div><dt>פיצות</dt><dd><Ltr>{num(s.pizzas)}</Ltr>{cmp && <Delta cur={s.pizzas} prev={sp.pizzas} />}</dd></div>}
+          <div><dt>לקוחות שהזמינו</dt><dd><Ltr>{num(s.customers)}</Ltr>{cmp && <Delta cur={s.customers} prev={sp.customers} />}</dd></div>
         </dl>
         <DailyChart points={daily} prevName={prevName} />
       </div>
@@ -488,9 +494,10 @@ function DailyChart({ points, prevName }: { points: DayPoint[]; prevName: string
           <div className="bchart__grid" aria-hidden="true">
             {ticks.map((v) => <span key={v} style={{ bottom: `${(v / top) * 100}%` }}><bdi dir="ltr">{tick(v)}</bdi></span>)}
           </div>
-          <div className="bchart__plot" role="img" aria-label={`${metric === 'sum' ? 'הכנסות' : 'הזמנות'} ${mode === 'cum' ? 'מצטברות' : 'לפי יום'}, מול ${prevName}`}>
+          <div className="bchart__plot" role="img" aria-label={`${metric === 'sum' ? 'הכנסות' : 'הזמנות'} ${mode === 'cum' ? 'מצטברות' : 'לפי יום'}: בתקופה ${metric === 'sum' ? fmtMoney(cumCur[n - 1] ?? 0) : num(cumCur[n - 1] ?? 0)}, ב${prevName} ${metric === 'sum' ? fmtMoney(cumPrev[n - 1] ?? 0) : num(cumPrev[n - 1] ?? 0)}`}>
             {mode === 'cum' && (
               <svg className="bchart__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polygon className="bchart__area" points={`${xAt(0)},100 ${line(cumCur)} ${xAt(n - 1)},100`} />
                 <polyline className="bchart__prevline" points={line(cumPrev)} />
                 <polyline className="bchart__curline" points={line(cumCur)} />
               </svg>
@@ -696,6 +703,18 @@ function ChannelsSection({ rows }: { rows: ChannelRanked[] }) {
           </table>
         </div>
       )}
+    </Section>
+  );
+}
+/* ערוץ אחד ונציג אחד: שני משפטים בכרטיס אחד */
+function ChannelTeamLine({ ch, team }: { ch: ChannelRanked[]; team: Ranked[] }) {
+  const c = ch[0], t = team[0];
+  return (
+    <Section id="ct" title="ערוץ וצוות">
+      <div className="bct">
+        <p><span className="bct__k">ערוץ</span>{c ? <><b>{c.name}</b> – כל ההזמנות בתקופה</> : <span className="muted">אין הזמנות</span>}</p>
+        <p><span className="bct__k">צוות</span>{t ? <><b>{t.name}</b> – {orders$(t.count)}, <Money v={t.sum} />{t.onTimePct !== null && <>, <Ltr>{t.onTimePct}%</Ltr> בזמן</>}</> : <span className="muted">אין הזמנות</span>}</p>
+      </div>
     </Section>
   );
 }

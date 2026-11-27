@@ -125,3 +125,4 @@
   .qrow__act { grid-column: 3; grid-row: 2; }
   .qrow__hold { grid-column: 2 / -1; grid-row: 3; padding: 0; }
 }
+.qrow__late { color: var(--danger-fg); font-weight: 500; }

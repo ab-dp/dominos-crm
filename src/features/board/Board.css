@@ -43,17 +43,17 @@
 .bpulse .bchg.is-down { color: var(--on-dark-down); }
 .bpulse .bchg__vs { color: var(--on-dark-3); font-weight: 400; }
 .bpulse__spark { display: block; width: 100%; height: 28px; margin-top: var(--space-2); }
-.bpulse__line { fill: none; stroke: var(--on-dark-accent); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
-.bpulse__prev { fill: none; stroke: var(--on-dark-3); stroke-width: 1.25; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; opacity: .7; }
+.bpulse__line { fill: none; stroke: var(--on-dark-1); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.bpulse__prev { fill: none; stroke: var(--on-dark-accent); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
 /* פס דק בתחתית התא: אחוז בזמן (עם סימון יעד), או ותק ההקפה – בגובה הגרף הזעיר */
-.bpulse__bar { position: relative; display: flex; gap: 2px; height: 6px; margin-top: calc(var(--space-2) + 22px); border-radius: 2px; background: rgb(255 255 255 / .12); }
+.bpulse__bar { position: relative; display: flex; gap: 2px; height: 4px; margin-top: calc(var(--space-2) + 22px); border-radius: 2px; background: rgb(255 255 255 / .12); }
 .bpulse__bar--stack { background: none; }
 .bpulse__bar > span { display: block; height: 100%; min-width: 3px; border-radius: 2px; }
 .bpulse__bar > .is-ok { background: var(--on-dark-up); }
-.bpulse__bar > .is-n1 { background: var(--on-dark-3); }
-.bpulse__bar > .is-n2 { background: var(--on-dark-accent); }
+.bpulse__bar > .is-n1 { background: var(--on-dark-accent); }
+.bpulse__bar > .is-n2 { background: var(--on-dark-2); }
 .bpulse__bar > .is-n3 { background: var(--on-dark-warn); }
-.bpulse__goal { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-inline-start: -1px; border-radius: 1px; background: var(--white); }
+.bpulse__goal { position: absolute; top: -4px; bottom: -4px; width: 1px; border-radius: 1px; background: var(--white); }
 /* שלד בצורת הפס */
 .bpulse--skel .bpulse__cell { cursor: default; gap: var(--space-3); }
 .bskel { display: block; height: 12px; border-radius: var(--radius-sm); background: var(--gray-100); }
@@ -92,12 +92,12 @@
 .board .is-a2 { background: var(--brand-500); }
 .board .is-a3 { background: var(--brand-700); }
 .board .is-cur { background: var(--brand-600); }
-.board .is-prev { background: var(--gray-300); }
-.board .is-prev-line { background: none; border-top: 2px dashed var(--gray-400); height: 0 !important; border-radius: 0 !important; }
+.board .is-prev { background: var(--gray-400); }
+.board .is-prev-line { background: none; border-top: 2px dashed var(--gray-500); height: 0 !important; border-radius: 0 !important; }
 
 .blegend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--text-micro); color: var(--gray-700); }
 .blegend li { display: inline-flex; align-items: center; gap: var(--space-2); }
-.blegend i { width: 12px; height: 8px; border-radius: 2px; flex: none; }
+.blegend i { width: 12px; height: 4px; border-radius: 1px; flex: none; }
 
 /* ---------- הזמנות קרובות: שורה אחת, ימים ריקים מצטמצמים ---------- */
 .bdays { display: flex; margin: 0 calc(-1 * var(--space-2)); }
@@ -110,7 +110,7 @@
 .bday__name { font-size: var(--text-label); font-weight: 600; }
 .bday__date { font-size: var(--text-micro); color: var(--gray-600); white-space: nowrap; }
 .bday__count { margin-top: var(--space-2); font-size: var(--text-lead); font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.bday.is-empty .bday__count { color: var(--gray-400); font-weight: 500; }
+.bday.is-empty .bday__count { color: var(--gray-500); font-weight: 500; }
 .bday__sum { font-size: var(--text-label); color: var(--gray-700); }
 .bday__piz { font-size: var(--text-micro); color: var(--gray-600); }
 
@@ -125,10 +125,10 @@
 .bgoal__tag { margin-inline-start: auto; display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--radius-sm); font-size: var(--text-micro); font-weight: 500; line-height: 1; }
 .bgoal__tag.is-ok { background: var(--ok-bg); color: var(--ok-fg); }
 .bgoal__tag.is-behind { background: var(--urgent-bg); color: var(--urgent-fg); }
-.bgoal__track { position: relative; display: block; height: 8px; border-radius: 2px; background: var(--gray-100); }
+.bgoal__track { position: relative; display: block; height: 4px; border-radius: 2px; background: var(--gray-100); }
 .bgoal__fill { display: block; height: 100%; border-radius: 2px; background: var(--brand-600); }
-.bgoal__mark { position: absolute; top: -4px; bottom: -4px; width: 0; border-inline-start: 2px dashed var(--gray-700); }
-.bgoal__mark--goal { border-inline-start-style: solid; border-color: var(--gray-900); }
+.bgoal__mark { position: absolute; top: -5px; bottom: -5px; width: 0; border-inline-start: 1px dashed var(--gray-700); }
+.bgoal__mark--goal { border-inline-start: 1.5px solid var(--gray-900); }
 .bgoal__note { font-size: var(--text-micro); color: var(--gray-600); }
 
 /* ---------- מכירות ---------- */
@@ -144,7 +144,7 @@
 .bdaily { min-width: 0; }
 .bdaily__head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
 .bdaily__head .blegend { margin-inline-start: auto; }
-.bchart { position: relative; height: 220px; margin: 0 0 var(--space-6); }
+.bchart { position: relative; height: 200px; margin: 0 0 var(--space-6); }
 .bchart--empty { display: grid; place-items: center; }
 .bchart__zero { position: absolute; inset-inline: 0; bottom: 0; border-top: 1px solid var(--gray-300); }
 .bchart__grid { position: absolute; inset: 0; pointer-events: none; }
@@ -153,14 +153,15 @@
 .bchart__grid span bdi { position: absolute; left: 0; top: -9px; padding-right: var(--space-2); background: var(--white); font-variant-numeric: tabular-nums; }
 .bchart__plot { position: absolute; top: 0; bottom: 0; right: 0; left: 52px; display: flex; align-items: flex-end; }
 .bchart__lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.bchart__curline { fill: none; stroke: var(--brand-600); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
-.bchart__prevline { fill: none; stroke: var(--gray-400); stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.bchart__curline { fill: none; stroke: var(--brand-600); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.bchart__area { fill: var(--brand-600); opacity: .07; }
+.bchart__prevline { fill: none; stroke: var(--gray-500); stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
 .bchart__col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
-.bchart__dot { position: absolute; width: 10px; height: 10px; margin-bottom: -5px; border-radius: 50%; background: var(--white); box-shadow: 0 0 0 2.5px var(--brand-600); pointer-events: none; }
+.bchart__dot { position: absolute; width: 10px; height: 10px; margin-bottom: -5px; border-radius: 50%; background: var(--white); box-shadow: 0 0 0 1.5px var(--brand-600); pointer-events: none; }
 .bchart__pair { display: flex; align-items: flex-end; gap: 2px; width: min(76%, 34px); height: 100%; }
 .bchart__bar { flex: 1; min-height: 0; border-radius: 2px 2px 0 0; transition: background var(--dur-instant) var(--ease); }
 .bchart__col.is-hover .bchart__bar.is-cur { background: var(--brand-800); }
-.bchart__col.is-hover .bchart__bar.is-prev { background: var(--gray-400); }
+.bchart__col.is-hover .bchart__bar.is-prev { background: var(--gray-500); }
 .bchart__x { position: absolute; top: calc(100% + 6px); font-size: var(--text-micro); color: var(--gray-600); white-space: nowrap; }
 .bchart__tip { position: absolute; top: 0; transform: translate(50%, -8px); z-index: var(--z-tip); display: grid; gap: 1px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--gray-900); color: var(--white); font-size: var(--text-micro); white-space: nowrap; pointer-events: none; text-align: center; box-shadow: var(--elev-2); }
 .bchart__tip b { font-weight: 500; }
@@ -170,11 +171,11 @@
 .bchart__table .report__scroll { margin-top: var(--space-2); }
 
 /* ---------- פס מפולח + טבלה מיושרת (עמידה בזמנים, גבייה) ---------- */
-.bstack { display: flex; gap: 2px; height: 10px; }
+.bstack { display: flex; gap: 2px; height: 6px; }
 .bstack span { min-width: 4px; border-radius: 2px; }
 .btab { width: 100%; margin-top: var(--space-3); border-collapse: collapse; font-size: var(--text-table); }
 .btab th { padding: var(--space-2) 0; font-weight: 400; color: var(--gray-800); text-align: start; }
-.btab th i { display: inline-block; width: 10px; height: 10px; margin-inline-end: var(--space-2); border-radius: 2px; vertical-align: -1px; }
+.btab th i { display: inline-block; width: 8px; height: 8px; margin-inline-end: var(--space-2); border-radius: 2px; vertical-align: -1px; }
 .btab td { padding: var(--space-2) 0 var(--space-2) var(--space-4); text-align: end; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .btab .btab__pct { width: 1%; padding-inline-start: var(--space-4); font-weight: 400; color: var(--gray-600); }
 .btab tr + tr th, .btab tr + tr td { border-top: 1px solid var(--line-soft); }
@@ -219,7 +220,7 @@
 .brank__who { display: grid; min-width: 0; }
 .brank__name { font-size: var(--text-table); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .brank__meta { font-size: var(--text-micro); color: var(--gray-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.brank__track { display: block; height: 8px; border-radius: 2px; background: var(--gray-25); }
+.brank__track { display: block; height: 4px; border-radius: 2px; background: var(--gray-25); }
 .brank__track span { display: block; height: 100%; border-radius: 2px; background: var(--brand-500); }
 .brank li.is-first .brank__track span { background: var(--brand-600); }
 .brank li.is-first .brank__pos { color: var(--brand-700); }
@@ -262,10 +263,10 @@
   .board__bar > .seg { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
   .board__bar > .seg button { flex: none; white-space: nowrap; padding: 0 var(--space-2); }
   .board__tools { margin-inline-start: 0; }
-  /* הזמנות קרובות: גלילה לרוחב עם עצירה, היום ראשון */
-  .bdays { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 calc(-1 * var(--space-4)); padding: 0 var(--space-3); }
-  .bday { flex: 0 0 34%; scroll-snap-align: start; }
-  .bday.is-empty { flex-basis: 24%; }
+  /* הזמנות קרובות: ארבעה ימים בשורה, שתי שורות – בלי חיתוך ובלי גלילה */
+  .bdays { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: var(--space-1); }
+  .bday { padding: var(--space-2); }
+  .bday:nth-child(4n+1)::before { display: none; }
   .bkv { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .bkv > div { display: flex; padding: var(--space-2) 0; border-top: 1px solid var(--line-soft); }
   .bkv > div:first-child { border-top: 0; }
@@ -280,3 +281,11 @@
   .brank__pos { grid-area: pos; } .brank__who { grid-area: who; } .brank__sum { grid-area: sum; } .brank__pct { grid-area: pct; } .brank__track { grid-area: bar; }
 }
 @media (prefers-reduced-motion: reduce) { .bchart__bar, .bday, .bpulse__cell { transition: none; } }
+
+/* בלי יעדים – שורה דקה עם קישור, מתחת לפס */
+.board__nogoals { margin: calc(-1 * var(--space-2)) 0 var(--space-4); font-size: var(--text-label); color: var(--gray-600); }
+/* ערוץ וצוות בשורה אחת */
+.bct { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+.bct p { margin: 0; font-size: var(--text-table); line-height: var(--lh-body); color: var(--gray-900); }
+.bct b { font-weight: 600; }
+.bct__k { display: inline-block; min-width: 48px; font-size: var(--text-label); font-weight: 500; color: var(--gray-600); }
