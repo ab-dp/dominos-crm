@@ -14,12 +14,12 @@ import { useBranches, useClusters } from '../../data/branches';
 import { EMPTY_CUSTOMER, newId, primaryContact, updateCustomer, useCustomers, type Customer } from '../../data/customers';
 import { useLists } from '../../data/lists';
 import { createOrder, findDuplicate, type NewOrderInput } from '../../data/orders';
-import { usePriceLists } from '../../data/priceLists';
+import { DELIVERY_CAT, usePriceLists } from '../../data/priceLists';
 import { opsReminder, useStore, type NewOrderMode, type NewOrderRequest } from '../../data/store';
 import { QuoteOrderedError, isExpired as quoteExpired, setQuoteStatus } from '../../data/quotes';
 import { METHOD_LABEL, categoryOf, needsOpsUpdate, type Order } from '../../data/types';
 import { editPatch } from './editPatch';
-import { MenuPicker } from './MenuPicker';
+import { MenuPicker, type FeeOption } from './MenuPicker';
 import { useFlag } from '../../data/flags';
 import { Button, RadioSeg } from '../../design/components';
 import { useToast } from '../../design/Toast';
@@ -140,6 +140,9 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
   const [plSel, setPlSel] = useState<string | null>(fq ? fq.priceListId ?? '' : null); // מחירון שנבחר בהזמנה; ברירת מחדל – של הלקוח
   const plId = plSel ?? c?.priceListId ?? '';
   const priceList = priceLists.find((p) => p.id === plId);
+  // סוגי המשלוח מהמחירון (לשונית "משלוח") – לבוחר. ההזמנה שומרת רק את הסכום; הסוג שנבחר זכור עד שמקלידים סכום אחר
+  const feeTiers: FeeOption[] = (priceList?.items ?? []).filter((i) => i.active && i.category === DELIVERY_CAT).map((i) => ({ id: i.id, name: i.name, price: i.price }));
+  const [feeTier, setFeeTier] = useState<string | undefined>();
   const branchObj = branches.find((b) => b.id === branch?.branchId);
   const clearErr = (...k: string[]) => setErrors((e) => { const n = { ...e }; k.forEach((x) => delete n[x]); return n; });
 
@@ -527,7 +530,13 @@ function NewOrderForm({ initial, onClose }: { initial: NewOrderRequest; onClose:
       {/* מקור המחיר: מחירון (של הלקוח, כללי, או בלי); משלוח/איסוף נקבע בחלק "אספקה" */}
       {legacyContents}
       <PriceSource lists={priceLists} customer={c} value={plId} onChange={setPlSel} delivery={delivery} />
-      {picker && <MenuPicker catalog={catalog} onCategory={setPickCat} counts={(n) => real.filter((l) => categoryOf(l) === n).reduce((t, l) => t + l.qty, 0)}
+      {picker && <MenuPicker catalog={catalog} onCategory={setPickCat} counts={(n) => real.filter((l) => categoryOf(l) === n).reduce((t, l) => t + l.qty, 0)} other
+        fee={delivery === 'delivery' ? {
+          options: feeTiers, amount: fee,
+          chosen: feeTier && feeTiers.some((t) => t.id === feeTier && String(t.price ?? '') === fee) ? feeTier : feeTiers.find((t) => t.price && String(t.price) === fee)?.id,
+          onPick: (o) => { setFeeTier(o?.id); setFee(o?.price ? String(o.price) : ''); markDirty(); },
+          onAmount: (t) => { setFeeTier(undefined); setFee(t); markDirty(); },
+        } : undefined}
         onAdd={(l) => { setLines((ls) => [...ls, l]); clearErr('amount', 'contents'); markDirty(); }} />}
       <ItemsBuilder lines={lines} setLines={setLines} catalog={catalog} onTouched={() => clearErr('amount', 'contents')} revealProblems={reveal} noHints={picker} tab={picker ? pickCat : undefined} />
       {errors.contents && real.length === 0 && <p className="no-items-empty is-err">חסרים פריטים</p>}

@@ -14,7 +14,7 @@ import {
 } from '../../data/quotes';
 import { useStore } from '../../data/store';
 import { useFlag } from '../../data/flags';
-import { CATEGORIES } from '../../data/types';
+import { CATEGORIES, OTHER } from '../../data/types';
 import { Button, EmptyState, Skeleton } from '../../design/components';
 import { useToast } from '../../design/Toast';
 import { Ltr, fmtMoney, fmtPhone, toISODate, parseMoney as money } from '../../lib/format';
@@ -90,7 +90,7 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
   });
   const [f, setF] = useState<Form>(() => restored ?? initialForm(quote ?? (seed ? { ...seed, id: undefined, priceListId: seed.priceListId } : undefined)));
   const [savedJson, setSavedJson] = useState(() => sig(initialForm(quote)));
-  const [tab, setTab] = useState(() => (f.lines[0]?.category && CATEGORIES.includes(f.lines[0].category) ? f.lines[0].category : CATEGORIES[0]));
+  const [tab, setTab] = useState(() => (f.lines[0]?.category && (CATEGORIES.includes(f.lines[0].category) || f.lines[0].category === OTHER) ? f.lines[0].category : CATEGORIES[0]));
   const [draftKey, setDraftKey] = useState(newId);
   const [focus, setFocus] = useState<{ key: string; field: string } | null>(null);
   const [view, setView] = useState<'edit' | 'preview'>('edit');
@@ -212,14 +212,14 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
   };
   const count = (c: string) => f.lines.filter((l) => l.category === c && !blankLine(l)).reduce((t, l) => t + l.qty, 0);
   /* הבוחר: שורה זהה (אותו סוג, סוג תוספת ומחיר) – הכמות מצטרפת אליה; אחרת שורה חדשה */
-  const addPicked = (l: Line) => { if (l.group && CATEGORIES.includes(l.group)) setTab(l.group); setF((x) => {
+  const addPicked = (l: Line) => { if (l.group && (CATEGORIES.includes(l.group) || l.group === OTHER)) setTab(l.group); setF((x) => {
     const cat = l.group ?? CATEGORIES[0];
     const same = x.lines.find((o) => o.category === cat && o.menuId === l.menuId && (o.toppingKind ?? '') === (l.toppingKind ?? '') && normName(o.name) === normName(l.name) && o.unitPrice === l.unitPrice);
     if (same) return { ...x, lines: x.lines.map((o) => (o === same ? { ...o, qty: o.qty + l.qty } : o)) };
     return { ...x, lines: [...x.lines, { key: l.key, category: cat, name: l.name, qty: l.qty, unitPrice: l.unitPrice, ...(l.itemId ? { itemId: l.itemId } : {}), ...(l.manualPrice ? { manual: true } : {}), ...(l.menuId ? { menuId: l.menuId } : {}), ...(l.toppingKind ? { toppingKind: l.toppingKind } : {}) }] };
   }); };
   // שורת לשוניות אחת: כשהבוחר פעיל – שלו (מסונכרנת עם הטבלה ומסמנת שגיאות). הלשוניות של הטבלה רק כשהבוחר כבוי, או כשיש שורה בקטגוריה שהבוחר לא מציג
-  const pickerCats = new Set(menu.categories.filter((c) => c.active).map(fixedCategory).filter((c) => CATEGORIES.includes(c)));
+  const pickerCats = new Set([...menu.categories.filter((c) => c.active).map(fixedCategory).filter((c) => CATEGORIES.includes(c)), OTHER]);
   const showTabs = !noHistory || f.lines.some((l) => !blankLine(l) && !pickerCats.has(l.category));
 
   /* ---------- משלוח: מדרגה מוצעת לפי מספר הפריטים (בלי שתייה) ---------- */
@@ -393,7 +393,12 @@ function QuoteEditor({ quote, seed, customerParam }: { quote?: Quote; seed?: Quo
             {/* 2. פריטים */}
             <section className="card qe-sec" aria-labelledby="qe-h-items">
               <h2 id="qe-h-items" className="qe-sec__title"><span className="qe-num">2</span> פריטים</h2>
-              {noHistory && <MenuPicker mode="quote" only={CATEGORIES} catalog={catalog} active={tab} bad={(c) => f.lines.some((l) => l.category === c && !!lineErr(l))} onCategory={(c) => { if (CATEGORIES.includes(c)) { setTab(c); setFocus(null); } }} counts={count} onAdd={addPicked} />}
+              {noHistory && <MenuPicker mode="quote" only={CATEGORIES} catalog={catalog} active={tab} bad={(c) => f.lines.some((l) => l.category === c && !!lineErr(l))} onCategory={(c) => { if (CATEGORIES.includes(c) || c === OTHER) { setTab(c); setFocus(null); } }} counts={count} onAdd={addPicked} other
+                fee={f.delivery === 'delivery' ? {
+                  options: tiers.map((t) => ({ id: t.id, name: t.name, price: t.price })), chosen: f.fee.itemId, amount: f.fee.price,
+                  onPick: (o) => { const t = o && tiers.find((x) => x.id === o.id); if (t) pickTier(t); else set({ fee: { name: 'משלוח', price: '' }, feeTouched: true }); },
+                  onAmount: (v) => set({ fee: { ...f.fee, price: v, itemId: undefined }, feeTouched: true }),
+                } : undefined} />}
               {showTabs && <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
                 {CATEGORIES.map((c) => (
                   <button type="button" role="tab" key={c} aria-selected={tab === c} className={`ib-tab ${tab === c ? 'is-on' : ''} ${f.lines.some((l) => l.category === c && lineErr(l)) ? 'is-bad' : ''}`} onClick={() => { setTab(c); setFocus(null); }}>
