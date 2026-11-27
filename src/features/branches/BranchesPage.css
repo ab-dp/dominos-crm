@@ -75,6 +75,6 @@
 /* שלב 9: אשכול – טקסט רגיל; המתג ניטרלי, והמילה מופיעה רק כש"לא פעיל" (לא "תקין" ירוק בכל שורה) */
 .cluster-tag { height: auto; padding: 0; background: none !important; font-size: var(--text-table); font-weight: 400; color: var(--gray-700) !important; }
 .switch.is-on { color: var(--gray-700); }
-.switch.is-on .switch__track { background: var(--brand-600); }
+.switch.is-on .switch__track { background: var(--gray-700); }
 .switch.is-on .switch__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .switch:not(.is-on) .switch__label { color: var(--urgent-fg); font-weight: 500; }
