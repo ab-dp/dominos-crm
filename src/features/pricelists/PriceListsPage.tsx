@@ -3,11 +3,12 @@
    לקוחות משויכים מכאן או מתיק הלקוח; מחירון של לקוח נבחר לבד בהצעת מחיר ובהזמנה. שינוי מחירון לא משנה הזמנות והצעות קיימות. */
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { BookOpen, Check, Copy, Pencil, Plus, Search, Tags, Trash2, Users, X } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, Copy, Link2, Pencil, Plus, Search, Tags, Trash2, Users, X } from 'lucide-react';
+import { useMenu, type MenuOption } from '../../data/menu';
 import { useAuth } from '../../auth/AuthContext';
 import { Shell } from '../leads/LeadDialogs';
 import {
-  DELIVERY_CAT, PL_TABS, assignPriceList, createPriceList, deletePriceList, updatePriceList, usePriceLists, type PriceItem, type PriceList,
+  DELIVERY_CAT, PL_TABS, assignPriceList, createPriceList, deletePriceList, suggestMenuLink, updatePriceList, usePriceLists, type PriceItem, type PriceList,
 } from '../../data/priceLists';
 import { newId, useCustomers, type Customer } from '../../data/customers';
 import { Button, EmptyState, Skeleton } from '../../design/components';
@@ -106,14 +107,24 @@ export function PriceListsPage() {
 }
 
 /* ---------- עורך המחירון ---------- */
-type Row = { id: string; category: string; name: string; price: string; pickup: string; upTo: string; active: boolean };
-const toRow = (i: PriceItem): Row => ({ id: i.id, category: i.category, name: i.name, price: txt(i.price), pickup: txt(i.pickupPrice), upTo: txt(i.upTo), active: i.active });
-const toItem = (r: Row): PriceItem => ({
-  id: r.id, category: r.category, name: r.name.trim(), active: r.active, price: num(r.price),
-  ...(r.category === DELIVERY_CAT ? { upTo: num(r.upTo) } : { pickupPrice: num(r.pickup) }),
+/* kp – מחיר לפי סוג תוספת (פיצות): מזהה סוג בתפריט → משלוח / איסוף, כטקסט לעריכה */
+type KP = Record<string, { price: string; pickup: string }>;
+type Row = { id: string; category: string; name: string; price: string; pickup: string; upTo: string; active: boolean; menuId?: string; kp: KP };
+const toRow = (i: PriceItem): Row => ({
+  id: i.id, category: i.category, name: i.name, price: txt(i.price), pickup: txt(i.pickupPrice), upTo: txt(i.upTo), active: i.active, menuId: i.menuId,
+  kp: Object.fromEntries(Object.entries(i.kindPrices ?? {}).map(([k, p]) => [k, { price: txt(p.price), pickup: txt(p.pickupPrice) }])),
 });
+const toItem = (r: Row): PriceItem => {
+  const kinds = Object.fromEntries(Object.entries(r.kp).map(([k, p]) => [k, { price: num(p.price), pickupPrice: num(p.pickup) }]).filter(([, p]) => (p as { price?: number }).price !== undefined || (p as { pickupPrice?: number }).pickupPrice !== undefined));
+  return {
+    id: r.id, category: r.category, name: r.name.trim(), active: r.active, price: num(r.price),
+    ...(r.category === DELIVERY_CAT ? { upTo: num(r.upTo) } : { pickupPrice: num(r.pickup) }),
+    ...(r.menuId ? { menuId: r.menuId } : {}),
+    ...(Object.keys(kinds).length ? { kindPrices: kinds } : {}),
+  };
+};
 const same = (a: Row, b?: Row) => !!b && JSON.stringify(toItem(a)) === JSON.stringify(toItem(b));
-const blank = (r: Row) => !r.name.trim() && !r.price.trim() && !r.pickup.trim() && !r.upTo.trim();
+const blank = (r: Row) => !r.name.trim() && !r.price.trim() && !r.pickup.trim() && !r.upTo.trim() && !Object.values(r.kp).some((p) => p.price.trim() || p.pickup.trim());
 
 function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; all: PriceList[]; customers: Customer[]; assigned: Customer[]; onDuplicate: () => void }) {
   const toast = useToast();
@@ -128,6 +139,15 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
   const [picking, setPicking] = useState(false);
   const [note, setNote] = useState(pl.note ?? '');
   const [minP, setMinP] = useState(pl.minPizzas ? String(pl.minPizzas) : '');
+  const [openKinds, setOpenKinds] = useState<string | null>(null);
+  const [linking, setLinking] = useState(false);
+  const { menu } = useMenu();
+  // סוגי התוספת מהתפריט – חוץ מ"עם תוספת", שהוא מחיר השורה עצמו
+  const pizzaCat = menu.categories.find((c) => c.id === 'pizza' || c.name === 'פיצות');
+  const kinds: MenuOption[] = pizzaCat?.steps.toppingKind ? pizzaCat.toppingKinds.filter((k) => k.active && k.id !== 'with') : [];
+  // שורה שהשם שלה כבר כולל סוג תוספת (מחירון ישן: שורה לכל סוג) – בלי מחירים לפי סוג בתוכה
+  const namesKind = (n: string) => (pizzaCat?.toppingKinds ?? []).some((k) => k.name.trim() && n.includes(k.name.trim()));
+  const kindBad = (r: Row, k: string, f: 'price' | 'pickup') => { const v = r.kp[k]?.[f] ?? ''; return !!v.trim() && num(v) === undefined; };
   const tableRef = useRef<HTMLDivElement>(null);
   const server = useMemo(() => pl.items.map(toRow), [pl.items]);
 
@@ -149,7 +169,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
   };
 
   const catRows = rows.filter((r) => r.category === tab);
-  const draft: Row = { id: draftKey, category: tab, name: '', price: '', pickup: '', upTo: '', active: true };
+  const draft: Row = { id: draftKey, category: tab, name: '', price: '', pickup: '', upTo: '', active: true, kp: {} };
   const shown = [...catRows, draft];
   const isDelivery = tab === DELIVERY_CAT;
   const dupOf = (r: Row) => r.name.trim() ? catRows.find((x) => x.id !== r.id && sameName(x.name, r.name)) : undefined;
@@ -158,6 +178,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
     if (!r.name.trim()) return isDelivery ? 'חסר שם למדרגה' : 'חסר שם מוצר';
     if (r.price.trim() && num(r.price) === undefined) return 'מחיר לא תקין';
     if (r.pickup.trim() && num(r.pickup) === undefined) return 'מחיר איסוף לא תקין';
+    if (Object.values(r.kp).some((p) => (p.price.trim() && num(p.price) === undefined) || (p.pickup.trim() && num(p.pickup) === undefined))) return 'מחיר לא תקין בסוג תוספת';
     const d = dupOf(r);
     if (d) return `כבר יש בקטגוריה "${d.name}" – שם כפול`;
     return '';
@@ -238,6 +259,7 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
         )}
         <span className="card__head-end pl-head-actions">
           <span className={`pl-state pl-state--${state}`} aria-live="polite">{state === 'saving' ? 'שומר…' : state === 'saved' ? <><Check size={14} aria-hidden="true" /> נשמר</> : state === 'error' ? 'השמירה נכשלה – בדקו חיבור ונסו שוב' : ''}</span>
+          <Button size="sm" icon={<Link2 size={16} />} onClick={() => setLinking(true)}>קישור לתפריט</Button>
           <Button size="sm" icon={<Copy size={16} />} onClick={onDuplicate}>שכפל</Button>
           <Button size="sm" variant="ghost" onClick={async () => { await updatePriceList(pl, { active: !pl.active }); toast({ message: pl.active ? 'המחירון סומן כלא פעיל – לא יוצע בהצעות ובהזמנות חדשות' : 'המחירון הופעל' }); }}>{pl.active ? 'סמן כלא פעיל' : 'הפעל'}</Button>
           <DeletePriceList pl={pl} assigned={assigned} />
@@ -270,9 +292,9 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
 
         <div className={`ib-table plt ${isDelivery ? 'plt--dlv' : ''}`} role="group" aria-label={`מחירון ${pl.name} – ${tab}`} ref={tableRef}>
           <div className="plt-r plt-r--head" aria-hidden="true">
-            <span>{isDelivery ? 'מדרגת משלוח' : 'מוצר'} <small>כמו שיופיע בהצעה</small></span>
-            <span>{isDelivery ? 'דמי משלוח' : 'מחיר משלוח'} <small>₪ כולל מע"מ</small></span>
-            <span>{isDelivery ? 'עד כמה פריטים' : 'מחיר איסוף'} <small>{isDelivery ? 'להצעה אוטומטית' : 'ריק = כמו משלוח'}</small></span>
+            <span>{isDelivery ? 'מדרגת משלוח' : 'מוצר'}</span>
+            <span>{isDelivery ? 'דמי משלוח' : tab === 'פיצות' && kinds.length ? 'עם תוספת – משלוח' : 'מחיר משלוח'}</span>
+            <span>{isDelivery ? 'עד כמה פריטים' : tab === 'פיצות' && kinds.length ? 'עם תוספת – איסוף' : 'מחיר איסוף'}</span>
             <span />
           </div>
           {shown.map((r) => {
@@ -295,6 +317,25 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
                         onChange={(e) => change(r.id, { pickup: e.target.value })} aria-label={`מחיר איסוף – ${label}`} />}
                   {isDraft ? <span /> : <button type="button" className="icon-btn icon-btn--sm" aria-label={`הסר – ${label}`} onClick={() => remove(r)}><Trash2 size={16} /></button>}
                 </div>
+                {/* פיצה: מחיר לפי סוג תוספת. ריק = כמו "עם תוספת" (המחיר שבשורה) */}
+                {tab === 'פיצות' && kinds.length > 0 && !isDraft && r.name.trim() && !namesKind(r.name) && (
+                  <div className="plk">
+                    <button type="button" className="plk__toggle" aria-expanded={openKinds === r.id || kinds.some((k) => kindBad(r, k.id, 'price') || kindBad(r, k.id, 'pickup'))} aria-controls={`plk-${r.id}`} onClick={() => setOpenKinds(openKinds === r.id ? null : r.id)}>
+                      <ChevronDown size={14} aria-hidden="true" className="plk__chev" /> סוגי תוספת
+                      {kinds.some((k) => r.kp[k.id]?.price.trim() || r.kp[k.id]?.pickup.trim()) && <span className="plk__n">{kinds.filter((k) => r.kp[k.id]?.price.trim() || r.kp[k.id]?.pickup.trim()).map((k) => k.name).join(' · ')}</span>}
+                    </button>
+                    {(openKinds === r.id || kinds.some((k) => kindBad(r, k.id, 'price') || kindBad(r, k.id, 'pickup'))) && <div id={`plk-${r.id}`}>{kinds.map((k) => (
+                      <div key={k.id} className="plt-r plk__row">
+                        <span className="plk__name">{k.name}</span>
+                        <input className={`input input--sm input--ltr ${kindBad(r, k.id, 'price') ? 'is-invalid' : ''}`} aria-invalid={kindBad(r, k.id, 'price') || undefined} inputMode="decimal" value={r.kp[k.id]?.price ?? ''} placeholder={num(r.price) ? fmtMoney(num(r.price)!) : '—'}
+                          onChange={(e) => change(r.id, { kp: { ...r.kp, [k.id]: { price: e.target.value, pickup: r.kp[k.id]?.pickup ?? '' } } })} aria-label={`${k.name} – משלוח – ${label}`} />
+                        <input className={`input input--sm input--ltr ${kindBad(r, k.id, 'pickup') ? 'is-invalid' : ''}`} aria-invalid={kindBad(r, k.id, 'pickup') || undefined} inputMode="decimal" value={r.kp[k.id]?.pickup ?? ''} placeholder={num(r.kp[k.id]?.price ?? '') ? fmtMoney(num(r.kp[k.id]!.price)!) : num(r.pickup) ? fmtMoney(num(r.pickup)!) : num(r.price) ? fmtMoney(num(r.price)!) : '—'}
+                          onChange={(e) => change(r.id, { kp: { ...r.kp, [k.id]: { price: r.kp[k.id]?.price ?? '', pickup: e.target.value } } })} aria-label={`${k.name} – איסוף – ${label}`} />
+                        <span />
+                      </div>
+                    ))}</div>}
+                  </div>
+                )}
                 {p && <p className="ib-err plt-err" role="alert">{p}</p>}
               </div>
             );
@@ -304,7 +345,6 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
           </button>
         </div>
         <p className="ib-foot">
-          <span className="ib-hint">Enter – לשורה הבאה · כל שורה נשמרת כשיוצאים ממנה · אפשר להדביק כמה שורות מאקסל (שם, מחיר{isDelivery ? ', עד כמה פריטים' : ', מחיר איסוף'})</span>
           {unpriced > 0 && <span className="muted"><Ltr>{unpriced}</Ltr> בלי מחיר – ימולאו בהצעה</span>}
         </p>
       </div>
@@ -328,7 +368,58 @@ function Editor({ pl, all, customers, assigned, onDuplicate }: { pl: PriceList; 
         )}
       </div>
       {picking && <AssignDialog pl={pl} customers={customers} all={all} onClose={() => setPicking(false)} />}
+      {linking && <LinkDialog pl={pl} onClose={() => setLinking(false)} />}
     </section>
+  );
+}
+
+/* ---------- קישור לתפריט: הצעה לפי שם, והמשתמש מאשר. שורה לא מקושרת ממשיכה לעבוד לפי שם; המזהים לא משתנים ---------- */
+function LinkDialog({ pl, onClose }: { pl: PriceList; onClose: () => void }) {
+  const { menu, loading } = useMenu();
+  if (loading) return <Shell title={`קישור לתפריט · ${pl.name}`} onClose={onClose} wide><Skeleton h={120} /></Shell>;
+  return <LinkForm pl={pl} menu={menu} onClose={onClose} />;
+}
+function LinkForm({ pl, menu, onClose }: { pl: PriceList; menu: ReturnType<typeof useMenu>['menu']; onClose: () => void }) {
+  const toast = useToast();
+  const cats = PL_TABS.filter((c) => c !== DELIVERY_CAT).map((c) => ({ name: c, menuCat: menu.categories.find((m) => m.name === c) })).filter((x) => pl.items.some((i) => i.category === x.name));
+  const [pick, setPick] = useState<Record<string, string>>(() => Object.fromEntries(pl.items.filter((i) => i.category !== DELIVERY_CAT).map((i) => {
+    const mc = menu.categories.find((m) => m.name === i.category);
+    return [i.id, i.menuId ?? suggestMenuLink(i.name, mc?.items.filter((x) => x.active) ?? [])];
+  })));
+  const [busy, setBusy] = useState(false);
+  const changed = pl.items.filter((i) => (pick[i.id] ?? '') !== (i.menuId ?? ''));
+  const save = async () => {
+    setBusy(true);
+    try {
+      await updatePriceList(pl, { items: pl.items.map((i) => ({ ...i, menuId: pick[i.id] || undefined })) }, { after: { change: `קישור לתפריט: ${changed.length} שורות` } });
+      toast({ message: <>נשמרו <Ltr>{changed.length}</Ltr> קישורים לתפריט</> });
+      onClose();
+    } catch { toast({ tone: 'error', message: 'השמירה נכשלה – בדקו חיבור' }); setBusy(false); }
+  };
+  return (
+    <Shell title={`קישור לתפריט · ${pl.name}`} onClose={onClose} wide>
+      <div className="plink">
+        {cats.map(({ name, menuCat }) => (
+          <section key={name} className="plink__cat" aria-label={name}>
+            <h3 className="plink__h">{name}</h3>
+            {!menuCat ? <p className="muted">אין קטגוריה כזו בתפריט</p> : pl.items.filter((i) => i.category === name).map((i) => (
+              <label key={i.id} className={`plink__row ${(pick[i.id] ?? '') !== (i.menuId ?? '') ? 'is-changed' : ''}`}>
+                <span className="plink__name">{i.name}</span>
+                <select className="input input--sm" value={pick[i.id] ?? ''} onChange={(e) => setPick({ ...pick, [i.id]: e.target.value })} aria-label={`סוג בתפריט ל${i.name}`}>
+                  <option value="">לא מקושר</option>
+                  {menuCat.items.filter((x) => x.active || x.id === pick[i.id]).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+              </label>
+            ))}
+          </section>
+        ))}
+        {cats.length === 0 && <p className="muted">אין שורות במחירון</p>}
+      </div>
+      <div className="udialog__actions">
+        <Button variant="primary" loading={busy} disabled={!changed.length} onClick={save}>{changed.length ? `שמור ${changed.length} קישורים` : 'אין שינויים'}</Button>
+        <Button variant="ghost" onClick={onClose}>ביטול</Button>
+      </div>
+    </Shell>
   );
 }
 

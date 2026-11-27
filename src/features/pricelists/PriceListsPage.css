@@ -58,3 +58,19 @@
   .plt-r--head small { display: none; }
   .plt-g { padding: var(--space-2) 0; }
 }
+
+/* שלב 7ב: מחיר לפי סוג תוספת מתחת לשורת הפיצה, וקישור לתפריט */
+.plk { margin-top: 2px; }
+.plk__toggle { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 28px; padding: 0 var(--space-1); border: 0; background: none; font: inherit; font-size: var(--text-label); color: var(--brand-700); cursor: pointer; }
+.plk__chev { transition: transform var(--dur-quick) var(--ease); }
+.plk__toggle[aria-expanded="true"] .plk__chev { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .plk__chev { transition: none; } }
+.plk__n { color: var(--gray-600); }
+.plk__row { margin-top: var(--space-1); padding: var(--space-1) 0; border-radius: var(--radius); background: var(--zone); }
+.plk__name { padding-inline-start: var(--space-3); font-size: var(--text-label); font-weight: 500; color: var(--gray-700); }
+.plink { display: grid; gap: var(--space-4); max-height: 60vh; overflow-y: auto; }
+.plink__h { margin: 0 0 var(--space-2); font-size: var(--text-table); font-weight: 600; color: var(--navy); }
+.plink__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, 220px); gap: var(--space-3); align-items: center; padding: var(--space-1) var(--space-2); border-radius: var(--radius); }
+.plink__row.is-changed { background: var(--brand-50); }
+.plink__name { font-size: var(--text-table); }
+@media (max-width: 700px) { .plink__row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); } }

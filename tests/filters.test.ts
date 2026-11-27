@@ -148,3 +148,36 @@ describe('תפריט', () => {
     expect(menuProblem(d)).toMatch('פעמיים');
   });
 });
+
+/* שלב 7ב: מחיר לפי סוג תוספת, וקישור לתפריט לפי שם */
+import { priceOf, suggestMenuLink } from '../src/data/priceLists';
+describe('מחירון – סוגי תוספת', () => {
+  const pizza = { price: 60, pickupPrice: 50, kindPrices: { without: { price: 48 }, meat: { price: 70, pickupPrice: 62 } } };
+  it('בלי סוג / עם תוספת – מחיר השורה', () => {
+    expect(priceOf(pizza, 'delivery')).toBe(60);
+    expect(priceOf(pizza, 'pickup', 'with')).toBe(50);
+  });
+  it('סוג עם מחיר; איסוף בלי מחיר – כמו המשלוח של הסוג', () => {
+    expect(priceOf(pizza, 'delivery', 'without')).toBe(48);
+    expect(priceOf(pizza, 'pickup', 'without')).toBe(48);
+    expect(priceOf(pizza, 'pickup', 'meat')).toBe(62);
+  });
+  it('סוג בלי מחיר – כמו "עם תוספת"', () => {
+    expect(priceOf(pizza, 'delivery', 'mix')).toBe(60);
+    expect(priceOf(pizza, 'pickup', 'mix')).toBe(50);
+  });
+  it('הצעת קישור: הסוג הארוך ביותר שמופיע בשם', () => {
+    const opts = [{ id: 'family', name: 'משפחתית' }, { id: 'thick', name: 'משפחתית עבה' }, { id: 'personal', name: 'אישית' }];
+    expect(suggestMenuLink('פיצה משפחתית עבה עם תוספת', opts)).toBe('thick');
+    expect(suggestMenuLink('פיצה משפחתית ללא', opts)).toBe('family');
+    expect(suggestMenuLink('שתייה גדולה', opts)).toBe('');
+  });
+});
+describe('קישור לתפריט – יחיד ורבים', () => {
+  const opts = [{ id: 'family', name: 'משפחתית' }, { id: 'thick', name: 'משפחתית עבה' }, { id: 'personal', name: 'אישית' }];
+  it('משפחתיות / אישיות', () => {
+    expect(suggestMenuLink('משפחתיות – רגילה', opts)).toBe('family');
+    expect(suggestMenuLink('אישיות – רגילה', opts)).toBe('personal');
+    expect(suggestMenuLink('משפחתיות – עבה', opts)).toBe('thick');
+  });
+});

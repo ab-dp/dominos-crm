@@ -139,3 +139,4 @@
 .ov__care { justify-self: start; }
 .ov__care-open { font-size: var(--text-label); color: var(--gray-600); }
 .monthly__major { font-size: var(--text-micro); font-weight: 500; color: var(--urgent-fg); }
+.cfile__plkind td:first-child { padding-inline-start: var(--space-5); font-size: var(--text-label); color: var(--gray-600); }
