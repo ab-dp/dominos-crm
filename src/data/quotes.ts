@@ -73,7 +73,9 @@ export const EMPTY_QUOTE_CUSTOMER: QuoteCustomer = { name: '', contact: '', phon
 export const linesTotal = (lines: QuoteLine[]) => roundMoney(lines.reduce((t, l) => t + l.qty * l.unitPrice, 0));
 export const addDays = (iso: string, n: number) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return toISODate(d); };
 /* שורות לפי סדר הקטגוריות (כך גם בדף ההצעה) */
-export const sortLines = (lines: QuoteLine[]) => [...lines].sort((a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category));
+/* לפי סדר הקטגוריות; "אחר" (וכל קטגוריה שלא ברשימה) בסוף */
+const catRank = (c: string) => { const i = CATEGORIES.indexOf(c); return i < 0 ? CATEGORIES.length : i; };
+export const sortLines = (lines: QuoteLine[]) => [...lines].sort((a, b) => catRank(a.category) - catRank(b.category));
 
 /* פג תוקף: הצעה שעוד לא נסגרה ותאריך התוקף עבר */
 export const isExpired = (q: Pick<Quote, 'status' | 'validUntil'>, today: string) => ['draft', 'sent', 'handling', 'noanswer'].includes(q.status) && !!q.validUntil && q.validUntil < today;

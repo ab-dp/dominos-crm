@@ -291,3 +291,10 @@ describe('ציר זמן בתיק לקוח (שלב 8)', () => {
     expect(dayLabel('2026-11-22', '2026-11-25')).toBe('יום ראשון 22.11.2026');
   });
 });
+import { sortLines } from '../src/data/quotes';
+describe('הצעות – אחר בסוף (7ה)', () => {
+  it('שורת "אחר" אחרי הקטגוריות הקבועות', () => {
+    const l = (category: string, name: string) => ({ category, name, qty: 1, unitPrice: 1 });
+    expect(sortLines([l('אחר', 'מפיות'), l('משקאות', 'קולה'), l('פיצות', 'משפחתית')]).map((x) => x.name)).toEqual(['משפחתית', 'קולה', 'מפיות']);
+  });
+});

@@ -152,14 +152,14 @@ const PART_PH: Record<number, string[]> = { 2: ['חצי 1', 'חצי 2'], 4: ['ר
 type Field = 'qty' | 'name' | 'tops' | 'price' | `part${number}`;
 
 /* revealProblems: מונה – כל הגדלה (שמירה שנחסמה, "הצג") עוברת ללשונית של השורה הלא שלמה הראשונה ומעמידה עליה את הסמן */
-/* tab – קטגוריה שנקבעת מבחוץ (הבוחר המדורג): אז שורת הלשוניות כאן מוסתרת, חוץ מכשיש שורות "אחר" ישנות */
+/* tab – קטגוריה שנקבעת מבחוץ (הבוחר המדורג, כולל "אחר"): אז שורת הלשוניות כאן מוסתרת, חוץ מכשיש שורה עם בעיה */
 export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProblems = 0, noHints = false, tab: outerTab }: { lines: Line[]; setLines: (f: (ls: Line[]) => Line[]) => void; catalog: CatalogItem[]; onTouched?: () => void; revealProblems?: number; noHints?: boolean; tab?: string }) {
   const allHints = useHints();
   // noHints – הבוחר המדורג פעיל: בלי הצעות שנלמדות מהיסטוריה (שמות, תוספות, "בפעם האחרונה"); רק מה שבמחירון
   const hints = noHints ? NO_HINTS : allHints;
   const rootRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState(() => outerTab ?? (lines.length ? categoryOf(lines[0]) : PIZZA));
-  useEffect(() => { if (outerTab && CATEGORIES.includes(outerTab)) setTab(outerTab); }, [outerTab]);
+  useEffect(() => { if (outerTab && (CATEGORIES.includes(outerTab) || outerTab === OTHER)) setTab(outerTab); }, [outerTab]);
   useEffect(() => {
     if (!revealProblems) return;
     const used = pricesUsed(lines);
@@ -232,7 +232,7 @@ export function ItemsBuilder({ lines, setLines, catalog, onTouched, revealProble
 
   return (
     <div className="ib" ref={rootRef}>
-      {(!outerTab || showOther || lines.some(lineProblem)) && <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
+      {(!outerTab || lines.some(lineProblem)) && <div className="ib-tabs" role="tablist" aria-label="קטגוריה">
         {tabs.map((c) => {
           const n = count(c);
           const bad = lines.some((l) => categoryOf(l) === c && lineProblem(l));

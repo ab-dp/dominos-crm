@@ -61,10 +61,15 @@ export type PickerMode = 'order' | 'quote' | 'list';
 /* שם השורה בהצעת מחיר: סוג, וריאציה וסוג התוספת */
 export const quoteName = (name: string, kindName?: string) => [name, kindName?.trim()].filter(Boolean).join(' ');
 
-/* active – הקטגוריה שנבחרה מבחוץ (למשל קפיצה לשורה עם שגיאה); bad – קטגוריה עם שורה חסרה (מסומנת בלשונית) */
-export function MenuPicker({ catalog, onAdd, onCategory, counts, mode = 'order', category, active, bad, only }: {
+/* משלוח בבוחר: סוגי המשלוח מהמחירון (לשונית "משלוח"). הבחירה קובעת את דמי המשלוח של ההזמנה / ההצעה – לא שורה, כדי שלא ייספר פעמיים */
+export type FeeOption = { id: string; name: string; price?: number };
+export type FeePick = { options: FeeOption[]; chosen?: string; amount: string; onPick: (o: FeeOption | null) => void; onAmount: (text: string) => void };
+
+/* active – הקטגוריה שנבחרה מבחוץ (למשל קפיצה לשורה עם שגיאה); bad – קטגוריה עם שורה חסרה (מסומנת בלשונית).
+   fee – לשונית "משלוח" (רק כשיש משלוח); other – לשונית "אחר": מוצר כללי בטקסט חופשי עם כמות ומחיר */
+export function MenuPicker({ catalog, onAdd, onCategory, counts, mode = 'order', category, active, bad, only, fee, other = false }: {
   catalog: CatalogItem[]; onAdd: (l: Line) => void | false; onCategory?: (name: string) => void; counts?: (name: string) => number;
-  mode?: PickerMode; category?: string; active?: string; bad?: (name: string) => boolean; only?: string[];
+  mode?: PickerMode; category?: string; active?: string; bad?: (name: string) => boolean; only?: string[]; fee?: FeePick; other?: boolean;
 }) {
   const { menu } = useMenu();
   const cats = menu.categories.filter((c) => c.active && (!only || only.includes(fixedCategory(c))));
@@ -72,11 +77,15 @@ export function MenuPicker({ catalog, onAdd, onCategory, counts, mode = 'order',
   const [catId, setCatId] = useState(() => (byActive() ?? cats[0])?.id ?? '');
   const cat = category !== undefined ? cats.find((c) => fixedCategory(c) === category) : cats.find((c) => c.id === catId) ?? byActive() ?? cats[0];
   const isList = mode === 'list';
+  const [extra, setExtra] = useState<'' | 'fee' | 'other'>(() => (other && active === OTHER ? 'other' : ''));
+  const [oName, setOName] = useState('');
   useEffect(() => {
     if (!active) return;
+    if (other && active === OTHER) { setExtra('other'); return; }
     const c = cats.find((x) => fixedCategory(x) === active);
-    if (c && c.id !== cat?.id) setCatId(c.id);
+    if (c && (c.id !== cat?.id || extra)) { setCatId(c.id); setExtra(''); }
   }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (extra === 'fee' && !fee) setExtra(''); }, [!fee]); // eslint-disable-line react-hooks/exhaustive-deps
   const [itemId, setItemId] = useState('');
   const [varIdState, setVarId] = useState('');
   const varId = varIdState;
@@ -164,18 +173,75 @@ export function MenuPicker({ catalog, onAdd, onCategory, counts, mode = 'order',
     if (!isList) requestAnimationFrame(() => root.current?.querySelector<HTMLElement>('[data-step="type"] button')?.focus());
   };
 
-  if (!cats.length || (category !== undefined && !cat)) return null;
+  /* "אחר": מוצר כללי – שם בטקסט חופשי, כמות ומחיר (תמיד ידני) */
+  const addOther = () => {
+    const name = oName.trim();
+    if (!name) { setErr('כתבו את שם המוצר'); return; }
+    const q = Number(qty.replace(/\D/g, '')) || 0;
+    if (q <= 0) { setErr('כמות'); return; }
+    const u = price === null ? 0 : money(price);
+    onAdd({ key: newId(), group: OTHER, name, qty: q, unitPrice: u || 0, ...(u ? { manualPrice: true } : {}) });
+    setAdded(''); const msg = `נוסף: ${q} ${name}`; requestAnimationFrame(() => setAdded(msg));
+    setOName(''); setQty('1'); setPrice(null); setErr('');
+    requestAnimationFrame(() => root.current?.querySelector<HTMLElement>('[data-step="oname"] input')?.focus());
+  };
+  const pickCat = (id: string) => { setCatId(id); setExtra(''); setErr(''); const c = cats.find((x) => x.id === id); if (c && c.id === cat?.id) onCategory?.(fixedCategory(c)); };
+  const pickExtra = (x: 'fee' | 'other') => { setExtra(x); setErr(''); setPrice(null); setQty('1'); if (x === 'other') onCategory?.(OTHER); };
+
+  if ((!cats.length && !other && !fee) || (category !== undefined && !cat)) return null;
   return (
     <div className={`mpk ${category !== undefined ? 'mpk--inline' : ''}`} ref={root} role="group" aria-label="בוחר פריטים">
       {category === undefined && <div className="mpk__cats" role="tablist" aria-label="קטגוריה" onKeyDown={onTabKey}>
         {cats.map((c) => {
-          const n = counts?.(fixedCategory(c)) ?? 0; const on = c.id === cat?.id; const isBad = bad?.(fixedCategory(c));
-          return <button key={c.id} type="button" role="tab" aria-selected={on} tabIndex={on ? 0 : -1} className={`${on ? 'is-on' : ''} ${isBad ? 'is-bad' : ''}`} onClick={() => setCatId(c.id)}>
+          const n = counts?.(fixedCategory(c)) ?? 0; const on = !extra && c.id === cat?.id; const isBad = bad?.(fixedCategory(c));
+          return <button key={c.id} type="button" role="tab" aria-selected={on} tabIndex={on ? 0 : -1} className={`${on ? 'is-on' : ''} ${isBad ? 'is-bad' : ''}`} onClick={() => pickCat(c.id)}>
             {c.name}{n > 0 && <span className="mpk__n"><Ltr>{n}</Ltr></span>}{isBad && <span className="sr-only"> – יש שורה חסרה</span>}
           </button>;
         })}
+        {other && (() => { const n = counts?.(OTHER) ?? 0; const on = extra === 'other'; const isBad = bad?.(OTHER); return (
+          <button type="button" role="tab" aria-selected={on} tabIndex={on ? 0 : -1} className={`${on ? 'is-on' : ''} ${isBad ? 'is-bad' : ''}`} onClick={() => pickExtra('other')}>
+            אחר{n > 0 && <span className="mpk__n"><Ltr>{n}</Ltr></span>}{isBad && <span className="sr-only"> – יש שורה חסרה</span>}
+          </button>
+        ); })()}
+        {fee && (
+          <button type="button" role="tab" aria-selected={extra === 'fee'} tabIndex={extra === 'fee' ? 0 : -1} className={extra === 'fee' ? 'is-on' : ''} onClick={() => pickExtra('fee')}>
+            משלוח{money(fee.amount) > 0 && <span className="mpk__n"><Ltr>{fmtMoney(money(fee.amount))}</Ltr></span>}
+          </button>
+        )}
       </div>}
-      {cat && (
+      {extra === 'other' && (
+        <div className="mpk__tray">
+          <Step id="oname" label="מוצר">
+            <input className="input input--sm mpk__tops" value={oName} onChange={(e) => { setOName(e.target.value); setErr(''); }} aria-label="שם המוצר"
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); focusStep(e.currentTarget); } }} />
+          </Step>
+          <Step id="qty" label="כמות ומחיר">
+            <input className="input input--sm input--ltr mpk__qty" inputMode="numeric" value={qty} onChange={(e) => { setQty(e.target.value.replace(/\D/g, '')); setErr(''); }} aria-label="כמות"
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); addOther(); } }} />
+            <span className="mpk__x" aria-hidden="true">×</span>
+            <input className="input input--sm input--ltr mpk__price" inputMode="decimal" value={price ?? ''} placeholder="₪" onChange={(e) => setPrice(e.target.value)} aria-label="מחיר ליחידה"
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); addOther(); } }} />
+            {(Number(qty) || 0) > 0 && money(price ?? '') > 0 && <span className="mpk__sum"><Ltr>{fmtMoney((Number(qty) || 0) * money(price ?? ''))}</Ltr></span>}
+            <Button size="sm" variant="secondary" type="button" icon={<Plus size={16} />} onClick={addOther}>הוסף</Button>
+          </Step>
+          {err && <p className="mpk__err" role="alert">{err}</p>}
+          <span className="sr-only" role="status">{added}</span>
+        </div>
+      )}
+      {extra === 'fee' && fee && (
+        <div className="mpk__tray">
+          <Step id="fee" label="סוג משלוח">
+            {fee.options.map((o) => (
+              <Opt key={o.id} on={fee.chosen === o.id} onKey={onOptKey} onPick={() => fee.onPick(o)}>{o.name}{o.price ? <> · <Ltr>{fmtMoney(o.price)}</Ltr></> : null}</Opt>
+            ))}
+            <Opt on={!fee.chosen && !money(fee.amount)} onKey={onOptKey} onPick={() => fee.onPick(null)}>בלי דמי משלוח</Opt>
+          </Step>
+          <Step id="feeamt" label="דמי משלוח">
+            <input className="input input--sm input--ltr mpk__price" inputMode="decimal" value={fee.amount} placeholder="₪" onChange={(e) => fee.onAmount(e.target.value)} aria-label="דמי משלוח (₪)" />
+          </Step>
+        </div>
+      )}
+      {cat && !extra && (
         <div className="mpk__tray">
           <Step id="type" label="סוג">
             {items.length ? items.map((i) => <Opt key={i.id} on={i.id === itemId} onKey={onOptKey} onPick={(el) => { if (isList && !(cat.steps.variation && i.variations.some((v) => v.active))) { setItemId(i.id); add({ itemId: i.id }); } else choose(setItemId, i.id, el); }}>{i.name}</Opt>) : <span className="muted">אין סוגים בתפריט</span>}
